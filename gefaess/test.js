@@ -75,3 +75,34 @@ const VF = Math.PI * 1600 * 100, gSp = ph => { const tn = Math.tan(ph), h = 100 
   return (mL * xL / m - RF) * Math.cos(ph) + ((mvC * shC.z + mL * zL) / m - shC.zst) * Math.sin(ph); };
 lo = 0; hi = 51 * D; for (let i = 0; i < 60; i++) { const m = (lo + hi) / 2; if (gSp(m) < 0) lo = m; else hi = m; }
 check('Zylinder randvoll, Standradius 25: Kippwinkel mit Auslaufen [°]', Core.tipAngle(cyl.S, cyl.s, VF * 0.99999, mvC, shC.z, RF, shC.zst), lo / D, 2e-3);
+// ---- Grundriss-Modus (Prisma) ----
+const rect = (a, b) => [{ x: -a / 2, y: -b / 2 }, { x: a / 2, y: -b / 2 }, { x: a / 2, y: b / 2 }, { x: -a / 2, y: b / 2 }];
+const pr = Core.prism(rect(120, 80), 100), capP = (g, th) => g.vol(g.spill(th), th) / 1000;
+check('Quader 120×80×100 Volumen [ml]', capP(pr, 0), 960);
+check('Quader voll, 20° über die 120er-Seite [ml]', capP(pr, 20 * D), 120 * 80 * (100 - 60 * Math.tan(20 * D)) / 1000);
+const pr90 = Core.prism(rect(80, 120), 100);
+check('Quader um 90° gedreht, 20° gekippt [ml]', capP(pr90, 20 * D), 120 * 80 * (100 - 40 * Math.tan(20 * D)) / 1000);
+const cP = Core.tiltCurveG(pr, 120 * 80 * 50, 3600); k = 0; while (cP[k] >= 120 * 80 * 50 * 0.9999) k++;
+check('Quader halbvoll, Ausgießbeginn [°]', k * 180 / 3600, Math.atan(100 / 120) / D, 2e-3);
+check('Quader jenseits 90°: leer [ml]', capP(pr, 120 * D), 0, 0);
+// SP der Flüssigkeit im gekippten Quader (Trapez): x = m·a²/(12h), z = h/2 + m²a²/(24h), m = tanθ
+const Mq = Core.cogG(pr, 120 * 80 * 50, 20 * D, 0, 0, 0);
+check('Quader h50 20° gekippt, SP x [mm]', Mq.x, Math.tan(20 * D) * 14400 / 600);
+check('Quader h50 20° gekippt, SP z [mm]', Mq.z, 25 + Math.tan(20 * D) ** 2 * 14400 / 1200);
+const shQ = Core.prismShell(rect(120, 80), 100, 4, 5), band = 400 * 4 + Math.PI * 16;
+check('Quader-Schale t4 tb5, Volumen [mm³]', shQ.vol, band * 100 + (9600 + band) * 5);
+check('Quader-Schale, Standkante [mm]', shQ.rf, 64, 0);
+// Kreis-Grundriss (720-Eck) = Zylinder aus dem Drehkörper-Kern: Volumen, Kippkapazität, Masse, Kippwinkel
+const circ = []; for (let i = 0; i < 720; i++) { const t = i / 720 * 2 * Math.PI; circ.push({ x: 40 * Math.cos(t), y: 40 * Math.sin(t) }); }
+const pc = Core.prism(circ, 100);
+check('Kreis-Grundriss r40 h100 = Zylinder [ml]', capP(pc, 0), capAt(cyl, 0), 1e-4);
+check('Kreis-Grundriss 20° gekippt = Zylinder [ml]', capP(pc, 20 * D), capAt(cyl, 20), 1e-3);
+const shP = Core.prismShell(circ, 100, 2, 5);
+check('Kreis-Grundriss Schale = Zylinderschale [mm³]', shP.vol, shC.vol, 1e-4);
+check('Kreis-Grundriss Kippwinkel 60 % = Drehkörper [°]',
+  Core.tipAngleG(pc, V60, mvC, shP.x, shP.z, 25, shP.zst), Core.tipAngle(cyl.S, cyl.s, V60, mvC, shC.z, 25, shC.zst), 2e-3);
+// Glättung geschlossen: 12-Eck auf dem Kreis r50 → Fläche nahe π r², Punkte bleiben nahe am Kreis
+const dod = []; for (let i = 0; i < 12; i++) { const t = i / 12 * 2 * Math.PI; dod.push({ x: 50 * Math.cos(t), z: 50 * Math.sin(t) }); }
+const sm12 = Core.closedSmooth(dod).map(p => ({ x: p.x, y: p.z }));
+check('12-Eck geglättet, Fläche ≈ π·50² [mm²]', Core.prismShell(sm12, 1, 0, 0).A, Math.PI * 2500, 3e-3);
+check('12-Eck geglättet läuft durch die Kontrollpunkte', Core.closedSmooth(dod)[30].x, dod[3].x, 1e-9);
