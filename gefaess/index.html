@@ -26,7 +26,20 @@
       <button id="undo" title="Rückgängig (Strg+Z)">↶</button>
       <button id="fitB">Einpassen</button>
     </div>
+    <div class="row" id="partRow">
+      <span class="note">Bearbeiten</span>
+      <button id="p_body" class="on">Körper</button>
+      <button id="p_spout">Tülle</button>
+      <button id="p_handle">Henkel</button>
+      <button id="pDel" hidden title="ausgewähltes Teil entfernen">✕ entfernen</button>
+      <span class="sep"></span>
+      <label class="chk"><input type="checkbox" id="lid"> Deckel</label>
+    </div>
     <canvas id="ed"></canvas>
+    <div class="ctl" id="partCtl" hidden>
+      <label for="sd" id="sdL">Tülle Ø innen</label><input type="range" id="sd" min="4" max="30" step="1"><output id="sdO"></output>
+      <label for="hd" id="hdL">Henkel Ø</label><input type="range" id="hd" min="5" max="30" step="1"><output id="hdO"></output>
+    </div>
     <div class="ctl" id="planCtl" hidden>
       <label for="hP">Innenhöhe</label><input type="range" id="hP" min="10" max="400" step="1"><output id="hO"></output>
       <label for="psi">Kipprichtung</label><input type="range" id="psi" min="0" max="359" step="1"><output id="psiO"></output>
@@ -83,7 +96,8 @@
 
   <section class="panel wide">
     <h2>Modell &amp; Gültigkeit</h2>
-    <p class="note">Rotationskörper aus der gezeichneten Innenkontur. Volumen und Kippzustand sind geometrisch exakt (numerisch, Abweichung &lt; 0,5&nbsp;%). Kippen wird quasistatisch gerechnet: Die Flüssigkeit läuft über den tiefsten Punkt, der zwischen dem Becken und dem Rand liegt. Engstellen wie eine Flaschenschulter halten Flüssigkeit also korrekt zurück. Nicht modelliert: Oberflächenspannung, Tropfnase, Glucksen und Luftschleusen, Ausflussgeschwindigkeit, Ausgießtüllen. Gerechnet wird mit Wasser (1&nbsp;g/ml).</p>
+    <p class="note">Rotationskörper aus der gezeichneten Innenkontur. Volumen und Kippzustand sind geometrisch exakt (numerisch, Abweichung &lt; 0,5&nbsp;%). Kippen wird quasistatisch gerechnet: Die Flüssigkeit läuft über den tiefsten Punkt, der zwischen dem Becken und dem Rand liegt. Engstellen wie eine Flaschenschulter halten Flüssigkeit also korrekt zurück. Nicht modelliert: Oberflächenspannung, Tropfnase, Glucksen und Luftschleusen, Ausflussgeschwindigkeit. Gerechnet wird mit Wasser (1&nbsp;g/ml).</p>
+    <p class="note"><b>Tülle, Henkel, Deckel</b> (Drehkörper): Tülle und Henkel liegen in der Seitenansicht, also in der Spiegelebene der Kanne; gekippt wird zur Tülle hin (+x). Die Tülle ist ein kommunizierendes Gefäß: Es läuft aus, sobald der Spiegel die höchste Stelle des Weges vom Becken über Wand und Ansatz bis zur Spitze übersteigt – das begrenzt auch das Fassungsvermögen, wenn die Spitze tiefer liegt als der Rand. Mit Deckel zählt der Rand nicht als Überlauf. Wasser in der Tülle selbst wird vernachlässigt, ebenso Luftzufuhr (Deckelloch angenommen), Strahl, Nachtropfen. Masse: Tülle als Rohr mit der Wandstärke, Henkel als Vollstab, beide aus dem Gefäßmaterial; Deckel ohne Masse. Kippwinkel nur zur Tülle hin.</p>
     <p class="note"><b>Grundriss-Modus</b> (nicht rotationssymmetrisch): beliebiger geschlossener Grundriss, senkrechte Wand der Innenhöhe, flacher Boden – ein Prisma, z.&nbsp;B. Vase mit Wellenkontur oder rechteckige Dose. Gekippt wird um eine waagrechte Achse quer zur eingestellten Kipprichtung; Volumen, Überlauf am tiefsten Randpunkt, Schwerpunkt und Kippwinkel sind exakt für diese Geometrie (Streifenzerlegung, geprüft gegen Quader und Zylinder). Wand als Band der Wandstärke außen um die Kontur mit gerundeten Ecken (exakt für konvexe Grundrisse, bei Einbuchtungen genähert), Standkante = äußerster Punkt in Kipprichtung plus Wandstärke. Nicht erfasst: Gefäße, die sich nach oben verjüngen oder weiten, Seitwärtsdrehen beim Kippen über eine Ecke.</p>
     <p class="note"><b>Designklassiker</b> unter „Vorlage“: Außenmaße nach Hersteller- und Händlerangaben, Innenkontur und Wandstärken daraus nachempfunden – Annäherung, keine Werkszeichnung. Tüllen, Henkel und Deckel fehlen.</p>
     <p class="note">Gefäßgewicht als dünne Schale: Wandstärke × Mittelfläche (Innenkontur um halbe Wandstärke nach außen versetzt; exakt für Zylinder- und Kegelwände), dazu eine Bodenplatte unter dem flachen Boden. Gültig für Wandstärke deutlich kleiner als der Radius (Fehler wächst mit Wandstärke/Krümmungsradius, an Ecken genähert). Standradius auto = Bodenplatte; ein von Hand gesetzter Standradius verschiebt nur die Kippkante, seine Masse wird nicht gerechnet. Ohne flachen Boden (z.&nbsp;B. Rundboden, Standring) von Hand setzen. <b>Kippwinkel</b>: Neigung um die Standkante, ab der das Gefäß von selbst umfällt; das Wasser läuft dabei mit und läuft gegebenenfalls aus (quasistatisch, kein Rutschen, kein Henkel). <b>Umstoßkraft</b>: waagrechte Kraft am Rand, die das aufrechte, gefüllte Gefäß gerade ankippt.</p>
@@ -309,9 +323,34 @@ const Core = (() => {
 
   // ---- Kipp-Schnittstelle: jede Geometrie liefert vol(L,θ) [mm³], mom(L,θ) {V,Mx,Mz}, spill(θ) = Überlaufpegel,
   // yr(θ) = [min,max] der Weltlage y = z·cosθ − x·sinθ. Drehkörper und Prisma (Grundriss) nutzen dieselben Routinen.
-  function geoRot(S, s, sec) {
-    const sc = sec || sectionPolygon(s);
-    return { vol: (L, th) => volBelow(S, L, th), mom: (L, th) => momentsBelow(S, L, th), spill: th => barrier(s, th).L, yr: th => yRange(sc, th) };
+  // opt.spout = Mittellinie der Tülle {x,z}[] (Ansatz zuerst, Ausgießseite +x), opt.lid = Deckel zu (Rand ist kein Überlauf)
+  function geoRot(S, s, sec, opt = {}) {
+    const sc = sec || sectionPolygon(s), sp = opt.spout && opt.spout.length >= 2 ? opt.spout : null;
+    const spill = th => { const L = opt.lid ? Infinity : barrier(s, th).L; return sp ? Math.min(L, spoutLevel(s, sp, th)) : L; };
+    return { vol: (L, th) => volBelow(S, L, th), mom: (L, th) => momentsBelow(S, L, th), spill, yr: th => yRange(sc, th) };
+  }
+  // Tülle = kommunizierendes Gefäß: Es läuft aus, sobald der Spiegel die höchste Stelle des Weges
+  // Becken (tiefster Wandpunkt) → Wand → Ansatz → Tülle → Spitze übersteigt. Volumen in der Tülle vernachlässigt.
+  function spoutLevel(s, sp, th) {
+    const c = Math.cos(th), sn = Math.sin(th), y = p => p.z * c - p.x * sn;
+    let imin = 0, ymin = Infinity, ie = 0, de = Infinity;
+    for (let i = 0; i < s.length; i++) {
+      const yi = y(s[i]); if (yi < ymin) { ymin = yi; imin = i; }
+      const d = Math.hypot(s[i].x - sp[0].x, s[i].z - sp[0].z); if (d < de) { de = d; ie = i; }
+    }
+    let L = -Infinity;
+    for (let i = Math.min(imin, ie); i <= Math.max(imin, ie); i++) L = Math.max(L, y(s[i]));
+    for (const p of sp) L = Math.max(L, y(p));
+    return L;
+  }
+  // Rohr (d1 außen, d0 innen; d0 = 0: Vollstab) entlang einer Linie: Materialvolumen [mm³] und Schwerpunkt
+  function tube(pts, d1, d0) {
+    let V = 0, x = 0, z = 0; const A = Math.PI * (d1 * d1 - d0 * d0) / 4;
+    for (let i = 0; i + 1 < pts.length; i++) {
+      const a = pts[i], b = pts[i + 1], v = A * Math.hypot(b.x - a.x, b.z - a.z);
+      V += v; x += v * (a.x + b.x) / 2; z += v * (a.z + b.z) / 2;
+    }
+    return { vol: V, x: V ? x / V : 0, z: V ? z / V : 0 };
   }
   function solveLG(g, V, th, lo, hi) {
     for (let i = 0; i < 40; i++) { const m = 0.5 * (lo + hi); if (g.vol(m, th) < V) lo = m; else hi = m; }
@@ -425,7 +464,7 @@ const Core = (() => {
 
   return { sampled, trimLip, interiorPolygon, sectionPolygon, intervalsAt, buildSlices, segArea, volBelow, barrier, yRange, solveL, tiltCurve, cumTable, heightForVolume, clip, distSeg, rdp,
     momentsBelow, shell, cog, tipMargin, tipAngle, pushForce,
-    geoRot, solveLG, tiltCurveG, cogG, tipAngleG, prism, prismShell, closedSmooth };
+    geoRot, spoutLevel, tube, solveLG, tiltCurveG, cogG, tipAngleG, prism, prismShell, closedSmooth };
 })();
 if (typeof module !== 'undefined') module.exports = Core;
 // === CORE END
@@ -444,7 +483,14 @@ const PRESETS = {
   // Kartio Becher 40 cl (Kaj Franck, 1958): H 120, Ø 89, dicker Boden
   kartio:  { n: 'Kartio-Becher · Franck 1958', g: 1, p: [[0,0],[31,0],[32,2],[42,108]], t: 3, tb: 12, m: 'glas' },
   // Wasserkessel 9093, 2 l (Michael Graves, 1985): H 225, Ø 220 Boden; Kegelkörper bis zur Deckelöffnung, Tülle nicht modelliert
-  kessel:  { n: 'Kessel 9093 · Graves 1985', g: 1, p: [[0,0],[104,0],[108,5],[104,20],[56,110],[50,116]], t: 1, tb: 1, m: 'edelstahl' },
+  kessel:  { n: 'Kessel 9093 · Graves 1985', g: 1, p: [[0,0],[104,0],[108,5],[104,20],[56,110],[50,116]], t: 1, tb: 1, m: 'edelstahl',
+             sp: [[96,32],[122,58],[148,92]], sd: 12, hp: [[-50,118],[-38,178],[38,178],[50,118]], hd: 12, lid: true },
+  // Grundform Teekanne: bauchiger Körper, Tülle vom unteren Drittel bis knapp unter den Rand, Ohrhenkel, Deckel
+  teekanne: { n: 'Teekanne', p: [[0,0],[45,0],[60,14],[70,45],[66,80],[50,104],[40,112]], sp: [[66,35],[86,58],[100,86],[110,108]], sd: 12,
+             hp: [[-62,96],[-96,94],[-106,60],[-90,30],[-68,24]], hd: 14, lid: true },
+  // Tee-Extraktkännchen MT 49 (Marianne Brandt, 1924): Halbkugel auf Kreuzfuß, H 75 gesamt; Ø geschätzt, Messing ≈ Edelstahl
+  brandt:  { n: 'Teekännchen MT 49 · Brandt 1924', g: 1, p: [[0,0],[10.7,1.1],[21,4.2],[30.6,9.3],[38.9,16.1],[45.7,24.4],[50.8,34],[53.9,44.3],[55,55]],
+             sp: [[46,25],[60,38],[72,54]], sd: 8, hp: [[-50,48],[-66,62],[-80,72]], hd: 12, lid: true, r: 32, t: 1.5, tb: 0, m: 'edelstahl' },
   // Aalto-Vase 160 mm (Alvar Aalto, 1936): H 160, L 208, 1,55 kg; Grundriss nachempfunden, Tiefe geschätzt
   aalto:   { n: 'Aalto-Vase · Aalto 1936', g: 1, plan: [[-98,10],[-80,45],[-55,40],[-40,70],[-10,75],[5,50],[30,72],[60,65],[75,35],[98,20],[90,-15],[60,-25],[45,-60],[15,-75],[-5,-45],[-35,-60],[-65,-50],[-85,-25]], H: 150, sm: true, t: 4, tb: 10, m: 'glas' },
   // Kubus-Geschirr, großer Behälter (Wilhelm Wagenfeld, 1938): 184 × 184 × 83 mm, Pressglas, Ecken gerundet
@@ -457,12 +503,14 @@ const DEG = Math.PI / 180, STEPS = 360;
 // kind 'rot' = Drehkörper (pts = Profil r,z); 'plan' = Grundriss (plan = Punkte x, z = Tiefe y), Innenhöhe H, Kipprichtung psi [°]
 const S = { kind: 'rot', pts: toPts(PRESETS.karaffe.p), smooth: true, plan: toPts(PRESETS.kubus.plan), psmooth: false, H: 78, psi: 0,
   snap: 1, marks: true, mode: 'edit', fill: null, theta: 0, cur: 0, sel: -1, undo: [], lastPour: 0,
-  t: 3, tb: 6, mat: 'glas', foot: null }; // foot null = Standradius aus Geometrie
+  t: 3, tb: 6, mat: 'glas', foot: null, // foot null = Standradius aus Geometrie
+  spout: null, handle: null, lid: false, part: 'body' }; // Anbauteile (nur Drehkörper): {p: Mittellinie, d: Ø innen bzw. Stab-Ø}
 const MATS = { glas: ['Glas', 2.5], porzellan: ['Porzellan', 2.4], steinzeug: ['Steinzeug', 2.3], pp: ['PP', 0.9], edelstahl: ['Edelstahl', 7.9] };
 let G = {};
 const isPlan = () => S.kind === 'plan';
-const P = () => isPlan() ? S.plan : S.pts;            // aktuell bearbeitete Punkte
-const setP = a => { if (isPlan()) S.plan = a; else S.pts = a; };
+const P = () => isPlan() ? S.plan : S.part === 'spout' ? S.spout.p : S.part === 'handle' ? S.handle.p : S.pts; // aktuell bearbeitete Punkte
+const setP = a => { if (isPlan()) S.plan = a; else if (S.part === 'spout') S.spout.p = a; else if (S.part === 'handle') S.handle.p = a; else S.pts = a; };
+const mirror = () => !isPlan() && S.part === 'body'; // Profil wird gespiegelt; Tülle/Henkel liegen nur in der Seitenansicht
 const minPts = () => isPlan() ? 3 : 2;
 // Werte aus Datei/Link: nur bekannte Materialien, Zahlen im Reglerbereich
 const matOk = m => Object.hasOwn(MATS, m) ? m : 'glas';
@@ -488,16 +536,23 @@ function recomputeRot() {
   const poly = Core.interiorPolygon(samp);
   const sl = Core.buildSlices(poly, 500);
   const sec = Core.sectionPolygon(samp);
-  const geo = Core.geoRot(sl, samp, sec);
+  const sp = S.spout && S.spout.p.length >= 2 ? S.spout.p : null;
+  const geo = Core.geoRot(sl, samp, sec, { spout: sp, lid: S.lid });
   const cum = Core.cumTable(sl);
   let maxR = 0; samp.forEach(p => maxR = Math.max(maxR, p.x));
-  G = { wall, samp, poly, sl, cum, sec, geo, cap: geo.vol(geo.spill(0), 0) / 1000, maxR,
+  G = { wall, samp, poly, sl, cum, sec, geo, cap: geo.vol(geo.spill(0), 0) / 1000, capRim: Core.volBelow(sl, Core.barrier(samp, 0).L, 0) / 1000, maxR,
         rimR: samp[samp.length - 1].x, H: sl.zmax - sl.zmin, z0: sl.zmin, xc: 0,
-        walls: [wall, wall.map(p => ({ x: -p.x, z: p.z }))], lipAt: th => samp[Core.barrier(samp, th).idx],
+        walls: [wall, wall.map(p => ({ x: -p.x, z: p.z }))],
+        lipAt: th => sp && (S.lid || Core.spoutLevel(samp, sp, th) <= Core.barrier(samp, th).L) ? sp[sp.length - 1] : samp[Core.barrier(samp, th).idx],
         fillH: ml => Core.heightForVolume(sl, cum, ml * 1000) };
   const sh = Core.shell(wall, S.t, S.tb);
   let ztop = -Infinity; wall.forEach(p => ztop = Math.max(ztop, p.z));
-  Object.assign(G, { mv: MATS[S.mat][1] * sh.vol / 1000, xv: 0, zv: sh.z, zst: sh.zst, rf: S.foot ?? sh.rb, flat: sh.flat, hRim: ztop - sh.zst });
+  // Anbauteile aus demselben Material: Tülle als Rohr (Wandstärke t), Henkel als Vollstab
+  const parts = [{ vol: sh.vol, x: 0, z: sh.z }];
+  if (sp) parts.push(Core.tube(sp, S.spout.d + 2 * S.t, S.spout.d));
+  if (S.handle && S.handle.p.length >= 2) parts.push(Core.tube(S.handle.p, S.handle.d, 0));
+  const Vt = parts.reduce((a, q) => a + q.vol, 0), avg = k => parts.reduce((a, q) => a + q.vol * q[k], 0) / Vt;
+  Object.assign(G, { mv: MATS[S.mat][1] * Vt / 1000, xv: avg('x'), zv: avg('z'), zst: sh.zst, rf: S.foot ?? sh.rb, flat: sh.flat, hRim: ztop - sh.zst, ztop });
 }
 function recomputePlan() {
   const pl = S.psmooth ? Core.closedSmooth(S.plan) : S.plan.map(p => ({ x: p.x, z: p.z }));
@@ -554,9 +609,9 @@ function fitView() {
     V = { s: sc, ox: r.width / 2 - (x0 + x1) / 2 * sc, oy: r.height / 2 + (y0 + y1) / 2 * sc };
     return;
   }
-  const s = Core.sampled(S.pts, S.smooth);
+  const s = Core.sampled(S.pts, S.smooth).concat(S.spout ? S.spout.p : [], S.handle ? S.handle.p : []);
   let mx = 30, zmin = 0, zmax = 60;
-  s.forEach(p => { mx = Math.max(mx, p.x); zmin = Math.min(zmin, p.z); zmax = Math.max(zmax, p.z); });
+  s.forEach(p => { mx = Math.max(mx, Math.abs(p.x)); zmin = Math.min(zmin, p.z); zmax = Math.max(zmax, p.z); });
   const wW = 2 * (mx + 45), wH = (zmax - zmin) + 50;
   const sc = Math.min(r.width / wW, r.height / wH);
   V = { s: sc, ox: r.width / 2, oy: r.height / 2 + ((zmax + zmin) / 2) * sc };
@@ -582,13 +637,23 @@ function drawEditor() {
   if (stroke) {
     ctx.strokeStyle = css('--acc'); ctx.lineWidth = 2.5; ctx.lineCap = 'round';
     polyPath(ctx, stroke, w2s); ctx.stroke();
-    if (!isPlan()) { polyPath(ctx, stroke.map(p => ({ x: -p.x, z: p.z })), w2s); ctx.globalAlpha = .4; ctx.stroke(); ctx.globalAlpha = 1; }
+    if (mirror()) { polyPath(ctx, stroke.map(p => ({ x: -p.x, z: p.z })), w2s); ctx.globalAlpha = .4; ctx.stroke(); ctx.globalAlpha = 1; }
   }
+}
+// Tülle (Rohr), Henkel (Stab) und Deckel; T = Abbildung Gefäß → Bildschirm, sc = Pixel je mm
+function drawParts(ctx, T, sc) {
+  ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+  if (S.handle && S.handle.p.length >= 2) { ctx.strokeStyle = css('--ink'); ctx.lineWidth = Math.max(2, S.handle.d * sc); polyPath(ctx, S.handle.p, T); ctx.stroke(); }
+  if (S.spout && S.spout.p.length >= 2) {
+    ctx.strokeStyle = css('--ink'); ctx.lineWidth = Math.max(3, (S.spout.d + 2 * S.t) * sc); polyPath(ctx, S.spout.p, T); ctx.stroke();
+    ctx.strokeStyle = css('--panel'); ctx.lineWidth = Math.max(1, S.spout.d * sc); ctx.stroke();
+  }
+  if (S.lid && G.samp) { const r = G.samp[G.samp.length - 1].x; ctx.strokeStyle = css('--ink'); ctx.lineWidth = 3; polyPath(ctx, [{ x: -r, z: G.ztop }, { x: r, z: G.ztop }], T); ctx.stroke(); }
 }
 function drawPoints(ctx, closed) {
   if (S.mode !== 'edit') return;
   const pts = P();
-  if (isPlan() ? S.psmooth : S.smooth) { ctx.strokeStyle = css('--grid2'); ctx.lineWidth = 1; polyPath(ctx, pts, w2s); if (closed) ctx.closePath(); ctx.stroke(); }
+  if (isPlan() ? S.psmooth : mirror() && S.smooth) { ctx.strokeStyle = css('--grid2'); ctx.lineWidth = 1; polyPath(ctx, pts, w2s); if (closed) ctx.closePath(); ctx.stroke(); }
   pts.forEach((p, i) => {
     const [sx, sy] = w2s(p);
     ctx.beginPath(); ctx.arc(sx, sy, i === S.sel ? 6.5 : 5, 0, 7);
@@ -641,6 +706,7 @@ function drawProfile(ctx, w, h) {
   polyPath(ctx, G.wall.map(p => ({ x: -p.x, z: p.z })), w2s); ctx.stroke();
   ctx.strokeStyle = css('--ink'); ctx.lineWidth = 2.5;
   polyPath(ctx, G.wall, w2s); ctx.stroke();
+  drawParts(ctx, w2s, V.s);
   drawPoints(ctx, false);
   // stand plane and centre of gravity (filled, upright)
   ctx.strokeStyle = css('--mut'); ctx.lineWidth = 1; ctx.setLineDash([3, 4]);
@@ -661,21 +727,22 @@ function cross(ctx, [x, y], col, label) {
   ctx.fillStyle = css('--mut'); ctx.font = '11px system-ui'; ctx.fillText(label, x + 6, y - 6);
 }
 function snapP(p) {
-  const g = S.snap; let x = isPlan() ? p.x : Math.max(0, Math.abs(p.x)), z = p.z;
+  const g = S.snap; let x = mirror() ? Math.max(0, Math.abs(p.x)) : p.x, z = p.z;
   if (g) { x = Math.round(x / g) * g; z = Math.round(z / g) * g; }
   return { x, z };
 }
-function pushUndo() { S.undo.push(JSON.stringify([S.kind, P()])); if (S.undo.length > 100) S.undo.shift(); }
+const snap = () => JSON.stringify([S.kind, S.part, S.pts, S.plan, S.spout, S.handle]);
+function pushUndo() { S.undo.push(snap()); if (S.undo.length > 100) S.undo.shift(); }
 function evPos(e) { const r = ed.getBoundingClientRect(); return [e.clientX - r.left, e.clientY - r.top]; }
 function hitPoint(sx, sy) {
   let best = -1, bd = 14;
   P().forEach((p, i) => {
-    for (const sg of isPlan() ? [1] : [1, -1]) { const [px, py] = w2s({ x: sg * p.x, z: p.z }); const d = Math.hypot(px - sx, py - sy); if (d < bd) { bd = d; best = i; } }
+    for (const sg of mirror() ? [1, -1] : [1]) { const [px, py] = w2s({ x: sg * p.x, z: p.z }); const d = Math.hypot(px - sx, py - sy); if (d < bd) { bd = d; best = i; } }
   });
   return best;
 }
 function hitSegment(wp, any) { // any: nächstes Segment ohne Abstandsgrenze (Grundriss: neue Punkte immer einfügen)
-  const pts = P(), n = pts.length, q = isPlan() ? wp : { x: Math.abs(wp.x), z: wp.z };
+  const pts = P(), n = pts.length, q = mirror() ? { x: Math.abs(wp.x), z: wp.z } : wp;
   let best = -1, bd = any ? Infinity : 10 / V.s;
   for (let i = 0; i < (isPlan() ? n : n - 1); i++) { const d = Core.distSeg(q, pts[i], pts[(i + 1) % n]); if (d < bd) { bd = d; best = i; } }
   return best;
@@ -684,7 +751,7 @@ function hitSegment(wp, any) { // any: nächstes Segment ohne Abstandsgrenze (Gr
 ed.addEventListener('pointerdown', e => {
   ed.setPointerCapture(e.pointerId);
   const [sx, sy] = evPos(e), wp = s2w(sx, sy);
-  if (S.mode === 'draw') { stroke = [isPlan() ? wp : { x: Math.abs(wp.x), z: wp.z }]; drawEditor(); return; }
+  if (S.mode === 'draw') { stroke = [mirror() ? { x: Math.abs(wp.x), z: wp.z } : wp]; drawEditor(); return; }
   let i = hitPoint(sx, sy);
   const now = performance.now(), pts = P();
   if (i >= 0 && lastTap.i === i && now - lastTap.t < 350) {
@@ -704,7 +771,7 @@ ed.addEventListener('pointerdown', e => {
 ed.addEventListener('pointermove', e => {
   const [sx, sy] = evPos(e), wp = s2w(sx, sy);
   if (stroke) {
-    const q = isPlan() ? wp : { x: Math.abs(wp.x), z: wp.z }, l = stroke[stroke.length - 1];
+    const q = mirror() ? { x: Math.abs(wp.x), z: wp.z } : wp, l = stroke[stroke.length - 1];
     if (Math.hypot(q.x - l.x, q.z - l.z) > 0.8) { stroke.push(q); drawEditor(); }
   } else if (drag >= 0) { P()[drag] = snapP(wp); changed(); }
 });
@@ -714,6 +781,9 @@ function endPointer() {
       let p;
       if (isPlan()) { // geschlossen: Strich zum Anfang schließen, Endpunkt = Anfangspunkt weglassen
         p = Core.rdp(stroke.concat([stroke[0]]), 1.2).slice(0, -1);
+      } else if (!mirror()) { // Tülle/Henkel: offene Linie; Tülle beginnt am achsnahen Ende (Ansatz)
+        p = Core.rdp(stroke, 1.2);
+        if (S.part === 'spout' && Math.abs(p[0].x) > Math.abs(p[p.length - 1].x)) p.reverse();
       } else {
         p = Core.rdp(stroke, 1.2);
         if (p[0].z > p[p.length - 1].z) p.reverse();
@@ -740,9 +810,10 @@ window.addEventListener('keydown', e => {
 });
 function undo() {
   if (!S.undo.length) return;
-  const [k, a] = JSON.parse(S.undo.pop());
+  const [k, part, pts, plan, spout, handle] = JSON.parse(S.undo.pop());
+  Object.assign(S, { pts, plan, spout, handle });
   if (k !== S.kind) setKind(k, true);
-  setP(a); S.sel = -1; changed();
+  setPart(part); S.sel = -1; changed();
 }
 
 let raf = 0;
@@ -755,7 +826,7 @@ function drawTilt() {
   if (!G.geo) return;
   const th = S.theta * DEG, c = Math.cos(th), s = Math.sin(th);
   const zc = G.z0 + G.H / 2, xc = G.xc;
-  let R = 1; G.walls[0].forEach(p => R = Math.max(R, Math.hypot(p.x - xc, p.z - zc)));
+  let R = 1; G.walls[0].concat(isPlan() ? [] : [...(S.spout ? S.spout.p : []), ...(S.handle ? S.handle.p : [])]).forEach(p => R = Math.max(R, Math.hypot(p.x - xc, p.z - zc)));
   const sc = 0.40 * Math.min(w, h) / R, cx = w / 2, cy = h * 0.46;
   const T = p => { const X = (p.x - xc) * c + (p.z - zc) * s, Y = -(p.x - xc) * s + (p.z - zc) * c; return [cx + X * sc, cy - Y * sc]; };
 
@@ -791,6 +862,7 @@ function drawTilt() {
   // walls
   ctx.lineJoin = 'round'; ctx.lineCap = 'round'; ctx.strokeStyle = css('--ink'); ctx.lineWidth = 3;
   G.walls.forEach(wl => { polyPath(ctx, wl, T); ctx.stroke(); });
+  if (!isPlan()) drawParts(ctx, T, sc);
   // centre of gravity with plumb line; beyond the stand edge (+x side) the vessel would tip
   let tips = false;
   if (S.theta <= 90 && (S.foot != null || G.flat)) {
@@ -826,6 +898,15 @@ function drawCharts() {
 }
 
 // ---------- stats ----------
+const hasSpout = () => !isPlan() && !!S.spout && S.spout.p.length >= 2, hasHandle = () => !isPlan() && !!S.handle && S.handle.p.length >= 2;
+function capItem() {
+  const v = nf0.format(G.cap) + ' ml';
+  // Spitze tiefer als Rand: mit Deckel üblich (Spitze = Füllgrenze), offen läuft die Tülle beim Befüllen über
+  if (hasSpout() && G.cap < G.capRim - 1) return S.lid ? ['Fassungsvermögen', v, 'bis Tüllenspitze · Rand ' + nf0.format(G.capRim) + ' ml']
+    : ['Fassungsvermögen', '⚠ ' + v, 'Tülle tiefer als Rand: läuft beim Befüllen über · Rand ' + nf0.format(G.capRim) + ' ml', true];
+  if (hasSpout()) return ['Fassungsvermögen', v, 'bis Rand · Tülle reicht höher'];
+  return ['Fassungsvermögen', v, S.lid && !isPlan() ? 'bis Rand · Deckel zu, keine Tülle' : 'bis Rand'];
+}
 function drawStats() {
   if (!G.geo) return;
   const V0 = S.fill, c = G.curve, d = 180 / STEPS;
@@ -837,16 +918,16 @@ function drawStats() {
   for (let k = 1; k <= STEPS; k++) { const r = (c[k - 1] - c[k]) / d; if (r > rate) { rate = r; rateAt = k * d; } }
   const deg = v => v == null ? '–' : nf1.format(v) + '°';
   const items = [
-    ['Fassungsvermögen', nf0.format(G.cap) + ' ml', 'bis Rand'],
+    capItem(),
     ['Füllmenge', nf0.format(V0) + ' ml', nf0.format(G.cap ? 100 * V0 / G.cap : 0) + ' % · ' + nf0.format(fillHeight(V0) - G.z0) + ' mm hoch'],
     isPlan() ? ['Abmessungen', nf0.format(G.H) + ' mm', 'innen ' + nf0.format(G.L) + ' × ' + nf0.format(G.B) + ' mm · Kipprichtung ' + nf0.format(S.psi) + '°']
       : ['Abmessungen', nf0.format(G.H) + ' mm', 'Ø max ' + nf0.format(2 * G.maxR) + ' mm · Öffnung ' + nf0.format(2 * G.rimR) + ' mm'],
-    ['Ausgießbeginn', deg(start), 'erster Tropfen (quasistatisch)'],
+    ['Ausgießbeginn', deg(start), 'erster Tropfen (quasistatisch)' + (hasSpout() ? ', über die Tülle' : '')],
     ['50 % ausgegossen', deg(half), ''],
     ['Leer (≤ 1 %)', deg(empty), empty == null ? 'Rest bei 180°: ' + nf0.format(c[STEPS]) + ' ml' : ''],
     ['Max. Dosierrate', nf1.format(rate) + ' ml/°', rate > 0 ? 'bei ' + deg(rateAt) : ''],
     ['Gewicht Inhalt', nf0.format(S.cur) + ' g', 'Wasser, aktuell'],
-    ['Gewicht Gefäß', nf0.format(G.mv) + ' g', MATS[S.mat][0] + ', ' + nf1.format(MATS[S.mat][1]) + ' g/cm³'],
+    ['Gewicht Gefäß', nf0.format(G.mv) + ' g', MATS[S.mat][0] + ', ' + nf1.format(MATS[S.mat][1]) + ' g/cm³' + (hasSpout() || hasHandle() ? ', mit Tülle/Henkel' : '')],
     ['Schwerpunkt', G.stab ? nf0.format(G.stab.zF - G.zst) + ' mm' : '…', 'gefüllt, über Standfläche · leer ' + nf0.format(G.zv - G.zst) + ' mm'],
     S.foot == null && !G.flat
       ? ['Kippwinkel', '⚠ –', 'kein flacher Boden: Standradius setzen', true]
@@ -858,6 +939,8 @@ function drawStats() {
   $('tiltO').textContent = nf1.format(S.theta) + '°';
   $('wtO').textContent = nf1.format(S.t) + ' mm'; $('btO').textContent = nf1.format(S.tb) + ' mm';
   $('footO').textContent = nf0.format(G.rf) + ' mm' + (S.foot == null ? ' (auto)' : '');
+  if (S.spout) { $('sdO').textContent = nf0.format(S.spout.d) + ' mm'; $('sd').value = S.spout.d; }
+  if (S.handle) { $('hdO').textContent = nf0.format(S.handle.d) + ' mm'; $('hd').value = S.handle.d; }
   $('hO').textContent = nf0.format(S.H) + ' mm'; $('psiO').textContent = nf0.format(S.psi) + '°'; $('hP').value = S.H; $('psi').value = S.psi;
   $('wt').value = S.t; $('bt').value = S.tb; $('foot').value = G.rf; $('mat').value = S.mat; $('footAuto').checked = S.foot == null;
   $('state').textContent = S.cur < V0 - 0.5 ? nf0.format(V0 - S.cur) + ' ml ausgegossen' : '';
@@ -876,13 +959,17 @@ $('preset').onchange = e => {
   const v = PRESETS[e.target.value]; if (!v) return;
   pushUndo();
   if (v.plan) { S.plan = toPts(v.plan); S.H = v.H; S.psmooth = v.sm; setKind('plan', true); }
-  else { S.pts = toPts(v.p); setKind('rot', true); }
+  else {
+    S.pts = toPts(v.p); S.spout = v.sp ? { p: toPts(v.sp), d: v.sd } : null; S.handle = v.hp ? { p: toPts(v.hp), d: v.hd } : null; S.lid = !!v.lid;
+    setKind('rot', true);
+  }
   if (v.m) { S.t = v.t; S.tb = v.tb; S.mat = v.m; }
-  S.fill = null; S.foot = null; S.theta = 0; $('tilt').value = 0; S.sel = -1; recompute(); fitView(); drawAll(); e.target.value = '';
+  S.fill = null; S.foot = v.r ?? null; S.theta = 0; $('tilt').value = 0; S.sel = -1; recompute(); fitView(); drawAll(); e.target.value = '';
 };
 // Drehkörper ↔ Grundriss; beide Geometrien bleiben erhalten
 function setKind(k, quiet) {
   S.kind = k; S.sel = -1; const p = k === 'plan';
+  $('partRow').hidden = p; setPart('body');
   $('kRot').classList.toggle('on', !p); $('kPlan').classList.toggle('on', p);
   $('planCtl').hidden = !p; $('marksL').hidden = p;
   ['footL', 'foot', 'footO', 'footAutoL'].forEach(id => $(id).hidden = p); // Standkante folgt im Grundriss aus der Kontur
@@ -890,9 +977,29 @@ function setKind(k, quiet) {
   $('edT').textContent = p ? 'Grundriss (Innenkontur, senkrechte Wand)' : 'Profil (Innenkontur, rotationssymmetrisch)';
   $('edNote').textContent = p
     ? 'Grundriss von oben: Freihand eine geschlossene Kontur ziehen. Punkte: ziehen zum Verschieben, tippen fügt einen Punkt in die nächste Kante ein, Doppeltipp löscht. Höhe und Kipprichtung unten; der Pfeil zeigt die Seite, die beim Kippen absinkt. Raster 10 mm.'
-    : 'Freihand: Innenkontur vom Boden zum Rand ziehen, egal auf welcher Seite; sie wird gespiegelt. Punkte: ziehen zum Verschieben, auf die Linie tippen zum Einfügen, in freie Fläche tippen zum Anhängen, Doppeltipp zum Löschen. Ein fast waagrechter Freihand-Boden wird geebnet. Raster 10 mm.';
+    : 'Freihand: Innenkontur vom Boden zum Rand ziehen, egal auf welcher Seite; sie wird gespiegelt. Punkte: ziehen zum Verschieben, auf die Linie tippen zum Einfügen, in freie Fläche tippen zum Anhängen, Doppeltipp zum Löschen. Ein fast waagrechter Freihand-Boden wird geebnet. Tülle/Henkel: unter „Bearbeiten“ wählen; Tülle rechts (Ausgießseite) vom Ansatz am Körper zur Spitze. Raster 10 mm.';
   if (!quiet) { S.fill = null; S.theta = 0; $('tilt').value = 0; recompute(); fitView(); drawAll(); }
 }
+// Bearbeitungsziel im Drehkörper: Körper, Tülle oder Henkel (fehlendes Teil wird mit Vorschlag angelegt)
+function setPart(part) {
+  if (part === 'spout' && !S.spout || part === 'handle' && !S.handle) {
+    pushUndo(); const H = G.H || 100, z0 = G.z0 || 0, r = z => { const iv = G.poly ? Core.intervalsAt(G.poly, z0 + z * H) : []; return iv.length ? iv[iv.length - 1][1] : 40; };
+    if (part === 'spout') S.spout = { p: toPts([[r(0.3), z0 + 0.3 * H], [r(0.3) + 0.3 * H, z0 + 0.6 * H], [r(0.3) + 0.45 * H, z0 + 0.95 * H]].map(q => q.map(Math.round))), d: 10 };
+    else { const R = (G.maxR || 40) + 0.3 * H; S.handle = { p: toPts([[-r(0.75), z0 + 0.75 * H], [-R, z0 + 0.7 * H], [-R, z0 + 0.35 * H], [-r(0.3), z0 + 0.3 * H]].map(q => q.map(Math.round))), d: 12 }; }
+    S.part = part; changed(); fitView();
+  }
+  S.part = part; S.sel = -1;
+  ['body', 'spout', 'handle'].forEach(q => $('p_' + q).classList.toggle('on', q === part));
+  $('pDel').hidden = part === 'body';
+  $('sdL').hidden = $('sd').hidden = $('sdO').hidden = !S.spout; $('hdL').hidden = $('hd').hidden = $('hdO').hidden = !S.handle;
+  $('partCtl').hidden = isPlan() || !S.spout && !S.handle; $('lid').checked = S.lid;
+  drawEditor();
+}
+['body', 'spout', 'handle'].forEach(q => $('p_' + q).onclick = () => setPart(q));
+$('pDel').onclick = () => { pushUndo(); if (S.part === 'spout') S.spout = null; else S.handle = null; setPart('body'); changed(); };
+$('lid').onchange = e => { S.lid = e.target.checked; changed(); };
+$('sd').oninput = e => { S.spout.d = +e.target.value; changed(); };
+$('hd').oninput = e => { S.handle.d = +e.target.value; changed(); };
 $('kRot').onclick = () => { if (isPlan()) setKind('rot'); };
 $('kPlan').onclick = () => { if (!isPlan()) setKind('plan'); };
 $('hP').oninput = e => { S.H = +e.target.value; changed(); };
@@ -937,7 +1044,8 @@ $('play').onclick = () => {
 
 // export / import / share (Grundriss-Felder optional, version bleibt 1)
 $('exp').onclick = () => dpDownload({ type: 'designphysik/gefaess', version: 1, kind: S.kind, smooth: S.smooth, fill: S.fill, wall: S.t, bottom: S.tb, material: S.mat, foot: S.foot,
-  profile: S.pts.map(p => [p.x, p.z]), plan: S.plan.map(p => [p.x, p.z]), planSmooth: S.psmooth, height: S.H, direction: S.psi }, 'gefaess.json');
+  profile: S.pts.map(p => [p.x, p.z]), plan: S.plan.map(p => [p.x, p.z]), planSmooth: S.psmooth, height: S.H, direction: S.psi,
+  spout: S.spout && { p: S.spout.p.map(p => [p.x, p.z]), d: S.spout.d }, handle: S.handle && { p: S.handle.p.map(p => [p.x, p.z]), d: S.handle.d }, lid: S.lid }, 'gefaess.json');
 $('imp').onclick = () => $('file').click();
 $('file').onchange = async e => {
   const f = e.target.files[0]; if (!f) return;
@@ -955,6 +1063,9 @@ function apply(d, long) {
   S.H = num(g('height', 'h'), 80, 10, 400); S.psi = num(g('direction', 'a'), 0, 0, 359);
   S.fill = num(g('fill', 'f'), null, 0, 1e7); S.t = num(g('wall', 't'), 3, 0.5, 10); S.tb = num(g('bottom', 'b'), 6, 0, 20);
   S.mat = matOk(g('material', 'm')); S.foot = num(g('foot', 'r'), null, 1, 1000);
+  const part = (o, lo, hi, def) => { const q = o && ptsOk(o.p, 2, false); return q ? { p: q, d: num(o.d, def, lo, hi) } : null; };
+  S.spout = part(long ? d.spout : d.sp && { p: d.sp, d: d.sd }, 4, 30, 10); S.handle = part(long ? d.handle : d.hp && { p: d.hp, d: d.hd }, 5, 30, 12);
+  S.lid = !!g('lid', 'ld');
   setKind(plan ? 'plan' : 'rot', true); return true;
 }
 function load(d) {
@@ -965,7 +1076,8 @@ function load(d) {
 $('share').onclick = async () => {
   const r1 = a => a.map(p => [+p.x.toFixed(1), +p.z.toFixed(1)]);
   dpHashSet('g', Object.assign({ s: S.smooth ? 1 : 0, f: S.fill, t: S.t, b: S.tb, m: S.mat, r: S.foot, p: r1(S.pts) },
-    isPlan() ? { k: 'plan', q: r1(S.plan), ps: S.psmooth ? 1 : 0, h: S.H, a: S.psi } : {}));
+    isPlan() ? { k: 'plan', q: r1(S.plan), ps: S.psmooth ? 1 : 0, h: S.H, a: S.psi } : {},
+    S.spout ? { sp: r1(S.spout.p), sd: S.spout.d } : {}, S.handle ? { hp: r1(S.handle.p), hd: S.handle.d } : {}, S.lid ? { ld: 1 } : {}));
   try { await navigator.clipboard.writeText(location.href); $('share').textContent = 'Kopiert ✓'; } catch { $('share').textContent = 'In Adresszeile ✓'; }
   setTimeout(() => $('share').textContent = 'Link kopieren', 1500);
 };

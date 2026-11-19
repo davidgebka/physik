@@ -106,3 +106,22 @@ const dod = []; for (let i = 0; i < 12; i++) { const t = i / 12 * 2 * Math.PI; d
 const sm12 = Core.closedSmooth(dod).map(p => ({ x: p.x, y: p.z }));
 check('12-Eck geglättet, Fläche ≈ π·50² [mm²]', Core.prismShell(sm12, 1, 0, 0).A, Math.PI * 2500, 3e-3);
 check('12-Eck geglättet läuft durch die Kontrollpunkte', Core.closedSmooth(dod)[30].x, dod[3].x, 1e-9);
+// ---- Tülle, Deckel, Anbaumassen ----
+// Zylinder r40 h100, gerade Tülle vom Ansatz (40,20) zur Spitze (60,70): kommunizierende Gefäße
+const spT = P([[40, 20], [60, 70]]), capG = (g, th) => g.vol(g.spill(th), th) / 1000;
+const gTu = Core.geoRot(cyl.S, cyl.s, null, { spout: spT });
+check('Tülle unter Rand: Fassungsvermögen bis Spitze [ml]', capG(gTu, 0), Math.PI * 1600 * 70 / 1000);
+check('Tülle über Rand (Spitze z120): Rand begrenzt [ml]', capG(Core.geoRot(cyl.S, cyl.s, null, { spout: P([[40, 20], [60, 120]]) }), 0), Math.PI * 1600 * 100 / 1000);
+check('Tülle + Deckel: weiterhin bis Spitze [ml]', capG(Core.geoRot(cyl.S, cyl.s, null, { spout: spT, lid: true }), 0), Math.PI * 1600 * 70 / 1000);
+// halbvoll: Spiegel z(x) = 50 + x·tanθ erreicht die Spitze (60,70) bei tanθ = 20/60
+const cSp = Core.tiltCurveG(gTu, Math.PI * 1600 * 50, 3600); k = 0; while (cSp[k] >= Math.PI * 1600 * 50 * 0.9999) k++;
+check('Tülle, halbvoll: Ausgießbeginn über die Spitze [°]', k * 180 / 3600, Math.atan(1 / 3) / D, 2e-3);
+// Tülle mit Buckel: höchster Punkt des Weges (z 90) zählt, nicht die tiefere Spitze (z 70)
+check('Tülle mit Buckel: höchster Wegpunkt begrenzt [ml]', capG(Core.geoRot(cyl.S, cyl.s, null, { spout: P([[40, 20], [55, 90], [70, 70]]) }), 0), Math.PI * 1600 * 90 / 1000);
+const cLid = Core.tiltCurveG(Core.geoRot(cyl.S, cyl.s, null, { lid: true }), Math.PI * 1600 * 50, 360);
+check('Deckel zu, ohne Tülle: bei 180° nichts ausgelaufen [ml]', cLid[360] / 1000, Math.PI * 1600 * 50 / 1000, 1e-9);
+const tb = Core.tube(P([[0, 0], [0, 100]]), 10, 8);
+check('Rohr l100 Ø10/8: Volumen [mm³]', tb.vol, 100 * Math.PI * 36 / 4);
+check('Rohr: Schwerpunkt z [mm]', tb.z, 50);
+// Kippen mit außermittigem Gefäß-SP (Henkel): leer = atan((rf − x)/(z − zst))
+check('Leer, SP außermittig x −10: Kippwinkel [°]', Core.tipAngleG(Core.geoRot(cyl.S, cyl.s), 0, 500, -10, 40, 42, -5), Math.atan(52 / 45) / D, 2e-3);
