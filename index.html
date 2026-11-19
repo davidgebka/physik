@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Designphysik</title>
+<link rel="stylesheet" href="shared/style.css">
+</head>
+<body>
+<header><h1>Designphysik <small>· Physik für Produktdesign</small></h1></header>
+<div class="cards" id="cards"></div>
+<p class="note" style="text-align:center;padding:0 16px 24px">Werkzeuge für schnelle physikalische Abschätzungen im Entwurf. Jedes Modul nennt sein Modell und seine Gültigkeit.</p>
+<script src="shared/util.js"></script>
+<script>
+$('cards').innerHTML = DP_MODULES.map(m => `
+  <a class="card ${m.ready ? '' : 'off'}" href="${m.key}/index.html">
+    <span class="badge">${m.ready ? 'verfügbar' : 'in Arbeit'}</span>
+    <h3>${m.title}</h3><p>${m.desc}</p>
+  </a>`).join('');
+</script>
+</body>
+</html>

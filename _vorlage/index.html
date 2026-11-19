@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Designphysik · MODULNAME</title>
+<link rel="stylesheet" href="../shared/style.css">
+<!-- Modul-Akzent: eine Farbe pro Physik -->
+<style>:root{--akzent:#e0a020}</style>
+</head>
+<body>
+<header id="dp-header"></header>
+<main>
+  <section class="panel">
+    <h2>Eingabe / Editor</h2>
+    <canvas id="ed" style="aspect-ratio:1/1"></canvas>
+  </section>
+  <section class="panel">
+    <h2>Ergebnis</h2>
+    <canvas id="view" style="aspect-ratio:1/1"></canvas>
+  </section>
+  <section class="panel wide">
+    <h2>Kennwerte</h2>
+    <div class="stats" id="stats"></div>
+  </section>
+  <section class="panel wide">
+    <h2>Modell &amp; Gültigkeit</h2>
+    <p class="note">Pflicht: Welches Modell? Wie genau? Was ist nicht modelliert?</p>
+  </section>
+</main>
+
+<script src="../shared/util.js"></script>
+<script src="../shared/chart.js"></script>
+<script>
+// === CORE START
+// Reine Physik: kein DOM, keine globalen UI-Variablen. Wird von test.js in Node geladen.
+const Core = (() => {
+  function beispiel(x) { return 2 * x; }
+  return { beispiel };
+})();
+if (typeof module !== 'undefined') module.exports = Core;
+// === CORE END
+
+// ---- UI ----
+const S = {};           // Zustand (Eingaben)
+let G = {};             // abgeleitete Größen
+function recompute() { /* Core aufrufen, G füllen */ }
+function drawAll() { /* Canvas zeichnen mit prep(), chart() */ }
+
+dpHeader('MODULKEY', 'MODULTITEL');
+recompute(); drawAll();
+window.addEventListener('resize', drawAll);
+</script>
+</body>
+</html>

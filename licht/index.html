@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Designphysik · Lampenschirm</title>
+<link rel="stylesheet" href="../shared/style.css">
+<!-- Modul-Akzent Licht (Styleguide: Vorschlag --light) -->
+<style>:root{--light:#e0a020;--lightA:rgba(224,160,32,.25)}
+#ed{aspect-ratio:1/1.05;cursor:crosshair}#lvk{aspect-ratio:1/1}
+.bar{height:6px;background:var(--grid);border-radius:var(--r);overflow:hidden}.bar i{display:block;height:100%;width:0;background:var(--light)}
+.ctl input[type=number],.raw input{font:inherit;font-size:13px;width:84px;padding:4px 6px;border:1px solid var(--line);border-radius:var(--r)}
+.raw{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:6px;margin-top:6px}
+.raw label{font-size:12px;color:var(--mut);display:flex;justify-content:space-between;align-items:center;gap:6px}
+details summary{font-size:12.5px;cursor:pointer}
+.ctl select{min-width:0;width:100%}</style>
+</head>
+<body>
+<header id="dp-header"></header>
+
+<main>
+  <section class="panel">
+    <h2>Schirm (Profil, rotationssymmetrisch)</h2>
+    <div class="row">
+      <button id="mDraw">✎ Freihand</button>
+      <button id="mEdit" class="on">● Punkte</button>
+      <span class="sep"></span>
+      <select id="preset" aria-label="Vorlage"></select>
+      <button id="undo" title="Rückgängig (Strg+Z)">↶</button>
+      <button id="fitB">Einpassen</button>
+    </div>
+    <canvas id="ed"></canvas>
+    <div class="ctl">
+      <label for="phi">Lichtstrom</label>
+      <select id="phiP" aria-label="Lichtstrom-Vorgabe"></select>
+      <output><input type="number" id="phi" min="10" max="20000" step="1" aria-label="Lichtstrom in lm"> lm</output>
+      <label for="type">Abstrahlung</label>
+      <select id="type"><option value="iso">rundum (Glühlampenform)</option><option value="lambert">nach unten (LED-Modul)</option></select>
+      <span></span>
+      <label for="mat">Material</label>
+      <select id="mat"></select>
+      <span></span>
+    </div>
+    <details id="adv"><summary>Erweitert: Rohwerte des Materials</summary>
+      <div class="raw" id="raw"></div>
+      <p class="note" id="rawNote">Anteile je Auftreffen: ρd diffus reflektiert, ρs gespiegelt (innen/außen getrennt), τd diffus durchgelassen, τs klar durchgelassen; Rest wird absorbiert. Summe je Seite ≤ 1.</p>
+    </details>
+    <div class="row">
+      <button id="exp">Export</button>
+      <button id="imp">Import</button>
+      <button id="share">Link kopieren</button>
+      <input type="file" id="file" accept=".json,application/json" hidden>
+    </div>
+    <p class="note">Freihand: Schirmprofil ziehen, egal auf welcher Seite; es wird gespiegelt. Punkte: ziehen zum Verschieben, auf die Linie tippen zum Einfügen, in freie Fläche tippen zum Anhängen, Doppeltipp zum Löschen. Gelben Punkt (Lampe) ziehen; nahe der Achse rastet er ein. Innenseite = der Achse zugewandte Seite, bei waagrechten Profilen die der Lampe zugewandte. Raster 10 mm.</p>
+  </section>
+
+  <section class="panel">
+    <h2>Lichtverteilung (LVK)</h2>
+    <div class="row">
+      <button id="uKlm" class="on">cd/klm</button>
+      <button id="uCd">cd</button>
+      <span class="note" id="lvkLeg"></span>
+    </div>
+    <canvas id="lvk"></canvas>
+    <div class="bar"><i id="prog"></i></div>
+    <p class="note" id="status">…</p>
+  </section>
+
+  <section class="panel wide">
+    <h2>Kennwerte</h2>
+    <div class="stats" id="stats"></div>
+  </section>
+
+  <section class="panel wide">
+    <h2>Beleuchtungsstärke auf dem Tisch</h2>
+    <div class="ctl">
+      <label for="dist">Tisch unter der Lampe</label><input type="range" id="dist" min="100" max="2000" step="10"><output id="distO"></output>
+    </div>
+    <canvas id="ech" class="ch"></canvas>
+    <p class="note" id="eNote"></p>
+  </section>
+
+  <section class="panel wide">
+    <h2>Modell &amp; Gültigkeit</h2>
+    <p class="note"><b>Modell.</b> Der gezeichnete Schirm wird um die Achse gedreht und als dünne Schale ohne Wandstärke gerechnet. Von der Lampe (Punktquelle) aus werden Lichtteilchen in 3D verfolgt (Monte-Carlo-Photonenverfolgung): Bei jedem Auftreffen werden sie je nach Material diffus oder spiegelnd reflektiert, diffus oder klar durchgelassen oder absorbiert, bis sie den Schirm verlassen. Daraus folgen Lichtverteilungskurve (LVK), Wirkungsgrad η, Beleuchtungsstärke und Leuchtdichte. Das Bild wird mit jedem Rechenpaket ruhiger; angegeben ist die statistische Unsicherheit ±σ. Grundlage und Prüffälle: <code>claude/licht-grundlagen.md</code>, <code>licht/test.js</code>.</p>
+    <p class="note"><b>Begriffe.</b> LVK: Lichtstärke [cd] je Richtung; γ = 0° zeigt nach unten, C0–C180 und C90–C270 sind zwei senkrechte Schnittebenen (gleich, solange die Lampe auf der Achse sitzt). cd/klm = Lichtstärke je 1000 lm Lampenlichtstrom. Leuchtdichte [cd/m²]: wie hell eine Fläche wirkt. Abschirmwinkel: Winkel unter der Horizontalen, ab dem die Lampe direkt sichtbar wird.</p>
+    <p class="note"><b>Materialwerte</b> sind Richtwerte und meist die größte Fehlerquelle. Opalglas τ 30–65 % (Überfangopal), weiß lackiert ρ 75–90 %, Aluminium gebürstet ρ 55–58 %, Spiegel (eloxiertes, beschichtetes Aluminium) ρ 75–95 % – Wertebereiche nach der IES-Materialtabelle (UNCG eLight, „Material Properties“). Die Aufteilung von gebürstetem Aluminium in diffus/gespiegelt ist geschätzt. <b>Papier und Stoff hell sind Schätzwerte</b>, für sie wurde keine belastbare Messquelle gefunden; echte Werte schwanken stark mit Dicke, Webart und Farbe. Eigene Messwerte unter „Erweitert“ eintragen.</p>
+    <p class="note"><b>Blendhinweis.</b> ⚠ ab 20 000 cd/m²: Ab dieser Lampenleuchtdichte verlangt EN 12464-1 einen Mindestabschirmwinkel (20–50 kcd/m² → 15°, 50–500 kcd/m² → 20°, ab 500 kcd/m² → 30°). Hier auf die Leuchtdichte des Schirms übertragen – Richtwert, keine Normprüfung (UGR braucht den Raum). Der Abschirmwinkel ist rein geometrisch: Schirm undurchsichtig, Lampe als Punkt; Spiegelbilder und Durchsicht durch klare Materialien zählen nicht, eine reale Lampe ist etwas größer.</p>
+    <p class="note"><b>Gültig für</b> dünne, rotationssymmetrische Schirme, photometrisch (keine Farbe), Umgebung schwarz: Beleuchtungsstärke ist nur das direkte Licht der Leuchte auf einer unendlichen Tischebene, ohne Licht von Wänden und Decke. Liegt die Lampe neben der Achse, ist die Leuchtdichte rundum gemittelt dargestellt, und die LVK-Ebenen C0–C180 und C90–C270 sind Mittel über Sektoren von ±37,5°. <b>Nicht erfasst:</b> Wandstärke und Brechung, winkelabhängige Reflexion (Fresnel), Streukeulen halbglänzender Oberflächen, Farbe/Spektrum, Wärme, Raumreflexionen, LDT-Export.</p>
+  </section>
+</main>
+
+<script src="../shared/util.js"></script>
+<script src="../shared/chart.js"></script>
+<script>
+// === CORE START
+// Reine Physik: kein DOM, keine globalen UI-Variablen. Wird von test.js in Node geladen.
+// Grundlage: claude/licht-grundlagen.md. Vorwärts-Monte-Carlo-Photonenverfolgung in 3D
+// gegen eine Rotationsschale aus Kegelstümpfen. Längen in mm, Winkel in Grad.
+const Core = (() => {
+  // Lokale Kopien: globale Zugriffe laufen im vm-Kontext von tools/load-core.js über einen langsamen Umweg
+  const { sqrt, hypot, min, max, abs, cos, sin, acos, atan2, floor, round, imul, PI } = Math, INF = Infinity;
+  const EPS = 1e-6, MAXB = 1000;
+
+  // mulberry32: seedbar, damit Tests deterministisch sind
+  function rng(seed) {
+    let s = seed | 0;
+    return () => { s = s + 0x6D2B79F5 | 0; let t = imul(s ^ s >>> 15, 1 | s); t = t + imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+  }
+
+  // Eingaben prüfen: falsche Werte sollen laut scheitern, nicht still falsch rechnen
+  function validate(o) {
+    const bad = msg => { throw new Error('licht: ' + msg); }, num = v => typeof v === 'number' && isFinite(v);
+    if (!(o.N >= 1)) bad('N ≥ 1 nötig');
+    const dG = o.dGamma || 5, nC = o.nC || 1;
+    if (!(dG > 0) || abs(180 / dG - round(180 / dG)) > 1e-9) bad('dGamma muss 180° ganzzahlig teilen');
+    if (!(nC >= 1) || nC % 1) bad('nC muss eine ganze Zahl ≥ 1 sein');
+    const s = o.source; if (!s || !num(s.x) || !num(s.z) || !(s.phi >= 0) || (s.type !== 'iso' && s.type !== 'lambert')) bad('Quelle ungültig');
+    for (const p of o.profile) if (!num(p[0]) || !num(p[1]) || p[0] < 0) bad('Profilpunkt ungültig (r ≥ 0, endlich)');
+    const m = o.mat; if (!m || !m.in || !m.out) bad('Material braucht in, out, td, ts');
+    for (const sd of [m.in, m.out]) {
+      const v = [sd.rd, sd.rs, m.td, m.ts];
+      if (v.some(x => !num(x) || x < 0)) bad('Materialanteile müssen ≥ 0 sein');
+      if (v[0] + v[1] + v[2] + v[3] > 1 + 1e-9) bad('ρd + ρs + τd + τs ≤ 1 je Seite');
+    }
+    if (o.floor && !(o.floor.n >= 1 && o.floor.rMax > 0 && num(o.floor.z))) bad('Bodenebene ungültig');
+  }
+
+  // Segmente vorberechnet; Länge 0 oder Fläche 0 (auf der Achse) bleiben im Index, sind aber aus (on = 0)
+  function segs(P) {
+    const ns = max(0, P.length - 1), F = () => new Float64Array(ns);
+    const S = { ns, r1: F(), z1: F(), r2: F(), z2: F(), nr: F(), nz: F(), kk: F(), zlo: F(), zhi: F(), rlo: F(), rhi: F(), on: new Uint8Array(ns), t: 0 };
+    for (let i = 0; i < ns; i++) {
+      const [a, b] = P[i], [c, d] = P[i + 1], len = hypot(c - a, d - b);
+      S.r1[i] = a; S.z1[i] = b; S.r2[i] = c; S.z2[i] = d;
+      S.on[i] = len > 1e-9 && a + c > 0 ? 1 : 0; if (!S.on[i]) continue;
+      S.nr[i] = (d - b) / len; S.nz[i] = -(c - a) / len; // Außennormale in der r-z-Ebene
+      S.kk[i] = d !== b ? (c - a) / (d - b) : 0;
+      // Bereiche minimal überlappend: sonst schlüpft ein Strahl exakt durch einen Eckpunkt (Rundung)
+      const dz = 1e-9 * (1 + max(abs(b), abs(d))), dr = 1e-9 * (1 + max(a, c));
+      S.zlo[i] = min(b, d) - dz; S.zhi[i] = max(b, d) + dz; S.rlo[i] = min(a, c) - dr; S.rhi[i] = max(a, c) + dr;
+    }
+    return S;
+  }
+
+  // Nächster Schnitt des Strahls p + t·d (t > ε) mit einem Segment: Index oder −1, Abstand in S.t.
+  // last = eben getroffenes Segment; ein Kreisring (eben) ist von dort nicht wieder treffbar.
+  function nearest(S, px, py, pz, dx, dy, dz, last) {
+    const { ns, on, r1, z1, z2, kk, zlo, zhi, rlo, rhi } = S;
+    let best = INF, hs = -1;
+    for (let i = 0; i < ns; i++) {
+      if (!on[i]) continue;
+      if (z1[i] === z2[i]) { // Kreisring: Ebenenschnitt
+        if (dz === 0 || i === last) continue;
+        const t = (z1[i] - pz) / dz; if (t < EPS || t >= best) continue;
+        const rr = hypot(px + t * dx, py + t * dy);
+        if (rr >= rlo[i] && rr <= rhi[i]) { best = t; hs = i; }
+        continue;
+      }
+      const k = kk[i], a0 = r1[i] + k * (pz - z1[i]), a1 = k * dz;
+      const A = dx * dx + dy * dy - a1 * a1, B = 2 * (px * dx + py * dy - a0 * a1), C = px * px + py * py - a0 * a0;
+      let t0, t1;
+      if (abs(A) < 1e-12) { if (B === 0) continue; t0 = t1 = -C / B; }
+      else { // stabile Form ohne Auslöschung (Strahl fast parallel zur Mantellinie)
+        const D = B * B - 4 * A * C; if (D < 0) continue;
+        const q = -0.5 * (B + (B < 0 ? -sqrt(D) : sqrt(D)));
+        t0 = q / A; t1 = q !== 0 ? C / q : t0; if (t0 > t1) { const h = t0; t0 = t1; t1 = h; }
+      }
+      for (let j = 0; j < 2; j++) {
+        const t = j ? t1 : t0;
+        if (t < EPS || t >= best) continue;
+        const z = pz + t * dz;
+        if (z < zlo[i] || z > zhi[i] || a0 + a1 * t < 0) continue;
+        best = t; hs = i; break;
+      }
+    }
+    S.t = best; return hs;
+  }
+
+  // o = { profile: [[r,z],…] Innenseite = links in Zeichenrichtung; von unten nach oben gezeichnet also achsseitig.
+  //       Die UI muss die Zeichenrichtung sicherstellen, sonst tauschen Innen und Außen still die Rollen.
+  //       source: { x, z, phi [lm], type: 'iso'|'lambert' },
+  //       mat: { in: {rd, rs}, out: {rd, rs}, td, ts },  Rest absorbiert
+  //       N, seed, dGamma = 5, nC = 1, floor: { z, rMax, n } (optional) }
+  // Ergebnis: Zähler (flux, leave, ring) für ±σ, normiert I [cd], L [cd/m²], E [lx]
+  function trace(o) {
+    validate(o);
+    const P = o.profile, m = o.mat, src = o.source, N = o.N, R = rng(o.seed || 1);
+    const dG = o.dGamma || 5, nG = round(180 / dG) + 1, nC = o.nC || 1, dC = 360 / nC;
+    const S = segs(P), ns = S.ns, { nr, nz } = S;
+    const flux = new Float64Array(nC * nG), leave = new Float64Array(2 * ns); // leave[2i]: innen, [2i+1]: außen
+    const fl = o.floor, ring = fl ? new Float64Array(fl.n) : null, fz = fl ? fl.z : 0, fk = fl ? fl.n / fl.rMax : 0, fn = fl ? fl.n : 0;
+    // Material als lokale Zahlen [innen, außen] (Objekte aus anderem vm-Kontext sind in der Schleife langsam)
+    const RD = [m.in.rd, m.out.rd], RS = [m.in.rs, m.out.rs], TD = m.td, TS = m.ts, LAM = src.type === 'lambert';
+    let out = 0, nabs = 0, lost = 0, px, py, pz, dx, dy, dz;
+
+    function lambert(ax, ay, az) { // kosinusgewichtet um (ax,ay,az)
+      const u = R(), f = 2 * PI * R(), s = sqrt(u), c = sqrt(1 - u);
+      let tx, ty, tz; if (abs(ax) < 0.9) { tx = 0; ty = az; tz = -ay; } else { tx = -az; ty = 0; tz = ax; }
+      const tl = hypot(tx, ty, tz); tx /= tl; ty /= tl; tz /= tl;
+      const bx = ay * tz - az * ty, by = az * tx - ax * tz, bz = ax * ty - ay * tx;
+      const cf = s * cos(f), sf = s * sin(f);
+      dx = cf * tx + sf * bx + c * ax; dy = cf * ty + sf * by + c * ay; dz = cf * tz + sf * bz + c * az;
+    }
+
+    for (let k = 0; k < N; k++) {
+      px = src.x; py = 0; pz = src.z;
+      if (LAM) lambert(0, 0, -1); // shortcut: nur nach unten gerichtet, Richtung wählbar erst bei Bedarf
+      else { dz = 2 * R() - 1; const f = 2 * PI * R(), s = sqrt(1 - dz * dz); dx = s * cos(f); dy = s * sin(f); }
+      let b = 0, last = -1;
+      for (; b < MAXB; b++) {
+        const hs = nearest(S, px, py, pz, dx, dy, dz, last), best = S.t;
+        if (hs < 0) { // entweicht
+          out++;
+          const g = acos(max(-1, min(1, -dz))) * 180 / PI;
+          const c = ((atan2(dy, dx) * 180 / PI) + 360) % 360;
+          flux[(round(c / dC) % nC) * nG + round(g / dG)]++;
+          if (ring && dz < 0 && pz > fz) {
+            const t = (fz - pz) / dz, i = floor(hypot(px + t * dx, py + t * dy) * fk);
+            if (i < fn) ring[i]++;
+          }
+          break;
+        }
+        px += best * dx; py += best * dy; pz += best * dz; last = hs;
+        const rr = hypot(px, py), cx = rr > 0 ? px / rr : 0, cy = rr > 0 ? py / rr : 0;
+        const nx = nr[hs] * cx, ny = nr[hs] * cy, nzz = nz[hs];
+        const side = dx * nx + dy * ny + dz * nzz < 0 ? 1 : 0; // 1: von außen getroffen
+        const sg = side ? 1 : -1, rd = RD[side], rs = RS[side]; // (sg·n) zeigt zur getroffenen Seite
+        const u = R();
+        if (u < rd) { lambert(sg * nx, sg * ny, sg * nzz); leave[2 * hs + side]++; }
+        else if (u < rd + rs) { const dn = dx * nx + dy * ny + dz * nzz; dx -= 2 * dn * nx; dy -= 2 * dn * ny; dz -= 2 * dn * nzz; }
+        else if (u < rd + rs + TD) { lambert(-sg * nx, -sg * ny, -sg * nzz); leave[2 * hs + 1 - side]++; }
+        else if (u < rd + rs + TD + TS) { /* gerade durch */ }
+        else { nabs++; break; }
+      }
+      if (b === MAXB) lost++; // nie still verwerfen (licht-grundlagen §7)
+    }
+    return normalize({ N, out, abs: nabs, lost, flux, leave, ring }, o);
+  }
+
+  // Zähler → physikalische Größen. Auch für aufsummierte Pakete mehrerer trace()-Läufe gleicher Eingabe.
+  function normalize(c, o) {
+    const dG = o.dGamma || 5, nG = round(180 / dG) + 1, nC = o.nC || 1, dC = 360 / nC;
+    const S = segs(o.profile), ns = S.ns, N = c.N, fl = o.floor;
+    const w = o.source.phi / N, I = new Float64Array(nC * nG), dCr = dC * PI / 180; // Photon = phi/N lm
+    for (let g = 0; g < nG; g++) {
+      const lo = max(0, (g - 0.5) * dG) * PI / 180, hi = min(180, (g + 0.5) * dG) * PI / 180;
+      const dOm = dCr * (cos(lo) - cos(hi));
+      for (let k = 0; k < nC; k++) I[k * nG + g] = c.flux[k * nG + g] * w / dOm;
+    }
+    const L = new Float64Array(2 * ns); // Leuchtdichte je Segment/Seite [cd/m²], Lambert: L = M/π
+    for (let i = 0; i < ns; i++) {
+      if (!S.on[i]) continue;
+      const A = PI * (S.r1[i] + S.r2[i]) * hypot(S.r2[i] - S.r1[i], S.z2[i] - S.z1[i]) * 1e-6;
+      L[2 * i] = c.leave[2 * i] * w / A / PI; L[2 * i + 1] = c.leave[2 * i + 1] * w / A / PI;
+    }
+    let E = null;
+    if (c.ring) { E = new Float64Array(fl.n); const dr = fl.rMax / fl.n; for (let i = 0; i < fl.n; i++) E[i] = c.ring[i] * w / (PI * dr * dr * (2 * i + 1) * 1e-6); }
+    return { N, out: c.out, abs: c.abs, lost: c.lost, eta: c.out / N, dGamma: dG, nG, nC, flux: c.flux, I, leave: c.leave, L, ring: c.ring, E };
+  }
+
+  // Abschirmwinkel (EN 12464-1, rein geometrisch, Schirm undurchsichtig, Punktquelle): kleinster Winkel unter der
+  // Horizontalen, ab dem die Quelle sichtbar ist. Je C-Ebene (5°) größtes sichtbares γ ≤ 90° suchen, α = 90° − γ;
+  // ungünstigste Ebene zählt. 90° = von unten nie sichtbar.
+  function shield(o) {
+    const S = segs(o.profile), sx = o.source.x, sz = o.source.z;
+    const vis = (g, c) => { const sg = sin(g); return nearest(S, sx, 0, sz, sg * cos(c), sg * sin(c), -cos(g), -1) < 0; };
+    let alpha = 0, cw = 0;
+    for (let cd = 0; cd < 360; cd += sx === 0 ? 360 : 5) {
+      const c = cd * PI / 180; let g = PI / 2, step = 0.5 * PI / 180;
+      while (g >= 0 && !vis(g, c)) g -= step;
+      let a;
+      if (g < 0) a = 90;
+      else if (g >= PI / 2) a = 0;
+      else { let lo = g, hi = g + step; for (let i = 0; i < 30; i++) { const mid = (lo + hi) / 2; if (vis(mid, c)) lo = mid; else hi = mid; } a = 90 - lo * 180 / PI; }
+      if (cd === 0 || a < alpha) { alpha = a; cw = cd; }
+    }
+    return { alpha, c: cw };
+  }
+
+  return { trace, normalize, shield };
+})();
+if (typeof module !== 'undefined') module.exports = Core;
+// === CORE END
+// ---- Vorlagen & Materialien ----
+const D2R = Math.PI / 180, LIM = 20000; // Blendhinweis ab 20 000 cd/m² (EN 12464-1, siehe Modell & Gültigkeit)
+const sphereP = (R, rTop, n) => { const t1 = Math.PI - Math.asin(rTop / R), p = []; for (let i = 0; i <= n; i++) { const t = t1 * i / n; p.push([+(R * Math.sin(t)).toFixed(1), +(-R * Math.cos(t)).toFixed(1)]); } return p; };
+const PRESETS = {
+  kegel:    ['Kegelschirm', [[150, -110], [80, 70]], [0, 0], 'stoff'],
+  zylinder: ['Zylinder', [[100, -120], [100, 120]], [0, 0], 'papier'],
+  kugel:    ['Kugel (Opal)', sphereP(120, 25, 14), [0, 0], 'opal'],
+  glocke:   ['Glocke', [[170, -90], [160, -60], [130, -25], [95, 10], [70, 50], [55, 90], [40, 120]], [0, 40], 'weiss'],
+  scheibe:  ['Flache Scheibe', [[0, 40], [220, 40]], [0, 0], 'weiss']
+};
+const M = (rd, rs, td, ts) => ({ in: { rd, rs }, out: { rd, rs }, td, ts });
+const MATS = {
+  opal:    ['Opalglas', M(0.40, 0, 0.50, 0), 'τ 30–65 % (IES)'],
+  papier:  ['Papier hell', M(0.45, 0, 0.40, 0), 'Schätzwert'],
+  stoff:   ['Stoff hell', M(0.50, 0, 0.25, 0), 'Schätzwert'],
+  weiss:   ['Metall weiß lackiert', M(0.80, 0, 0, 0), 'ρ 75–90 % (IES)'],
+  alu:     ['Aluminium gebürstet', M(0.30, 0.26, 0, 0), 'ρ 55–58 % (IES)'],
+  spiegel: ['Spiegel', M(0.02, 0.88, 0, 0), 'ρ 75–95 % (IES)']
+};
+const PHI = [[470, '470 lm (≈ 40 W Glühlampe)'], [806, '806 lm (≈ 60 W)'], [1521, '1521 lm (≈ 100 W)'], [2452, '2452 lm (≈ 150 W)']];
+const toPts = a => a.map(([x, z]) => ({ x, z }));
+
+const S = { pts: toPts(PRESETS.kegel[1]), src: { x: 0, z: 0 }, phi: 806, type: 'iso', mat: 'stoff', raw: null, dist: 600,
+  unit: 'klm', mode: 'edit', sel: -1, undo: [] };
+let G = {}, R = null; // G: Geometrie für den Kern, R: aktuelles Ergebnis
+
+// ---- Geometrie für den Kern (keine Physik): Zeichenrichtung normieren, unterteilen ----
+const matNow = () => S.raw || MATS[S.mat][1];
+function orient(p) {
+  const a = p[0], b = p[p.length - 1];
+  // unten → oben; waagrecht: so, dass die Innenseite (links in Zeichenrichtung) zur Lampe zeigt
+  const rev = a.z > b.z || (a.z === b.z && (S.src.z >= a.z ? a.x > b.x : a.x < b.x));
+  return rev ? p.slice().reverse() : p;
+}
+function subdivide(p) { // ≈ 60 Abschnitte, damit die Leuchtdichte entlang der Kontur aufgelöst ist
+  let L = 0; for (let i = 1; i < p.length; i++) L += Math.hypot(p[i].x - p[i - 1].x, p[i].z - p[i - 1].z);
+  const h = Math.max(L / 60, 3), out = [[p[0].x, p[0].z]];
+  for (let i = 1; i < p.length; i++) {
+    const a = p[i - 1], b = p[i], n = Math.max(1, Math.ceil(Math.hypot(b.x - a.x, b.z - a.z) / h));
+    for (let k = 1; k <= n; k++) out.push([a.x + (b.x - a.x) * k / n, a.z + (b.z - a.z) * k / n]);
+  }
+  return out;
+}
+function opts() {
+  const prof = subdivide(orient(S.pts)), rMax = Math.max(500, Math.ceil(1.5 * S.dist / 100) * 100);
+  let zmin = Infinity; prof.forEach(q => zmin = Math.min(zmin, q[1]));
+  G = { prof, rMax, zmin, cut: S.src.z - S.dist >= zmin };
+  return { profile: prof, source: { x: S.src.x, z: S.src.z, phi: S.phi, type: S.type }, mat: matNow(), dGamma: 5, nC: 24,
+    floor: { z: S.src.z - S.dist, rMax, n: 30 } };
+}
+
+// ---- Rechnen: Web Worker mit dem CORE-Quelltext dieser Seite, fortschreitend in Paketen ----
+const CORE_SRC = document.currentScript.textContent.match(/\/\/ === CORE START([\s\S]*?)\/\/ === CORE END/)[1];
+const WORKER_SRC = CORE_SRC + `
+let job = 0;
+onmessage = e => { job = e.data.job; if (e.data.o) loop(e.data); };
+function loop(d) {
+  let k = 0;
+  const step = () => {
+    if (job !== d.job) return;
+    const r = Core.trace(Object.assign({}, d.o, { N: d.chunk, seed: (d.job * 7919 + ++k) * 0x9E3779B1 | 0 }));
+    postMessage({ job: d.job, N: r.N, out: r.out, abs: r.abs, lost: r.lost, flux: r.flux, leave: r.leave, ring: r.ring });
+    setTimeout(step, 0);
+  };
+  step();
+}`;
+const NMAX = 4e6; // Obergrenze, falls ein Ziel (z. B. E unter der Leuchte) nie erreicht wird
+let worker = null, J = { id: 0 };
+try { worker = new Worker(URL.createObjectURL(new Blob([WORKER_SRC], { type: 'text/javascript' }))); worker.onmessage = e => onChunk(e.data); }
+catch (e) { worker = null; } // shortcut: ohne Worker rechnet der Hauptthread in kleinen Paketen
+function restart() {
+  const o = opts();
+  try { Core.trace(Object.assign({}, o, { N: 1 })); } catch (e) { J = { id: J.id + 1, err: e.message }; if (worker) worker.postMessage({ job: J.id }); R = null; drawAll(); return; }
+  J = { id: J.id + 1, o, t0: performance.now(), acc: null, done: false, calm: null, sh: Core.shield({ profile: o.profile, source: o.source }).alpha };
+  R = null;
+  if (worker) worker.postMessage({ job: J.id, o, chunk: 20000 });
+  else { const id = J.id, step = () => { if (J.id !== id || J.done) return; onChunk(Object.assign({ job: id }, Core.trace(Object.assign({}, o, { N: 4000, seed: (id * 7919 + (J.k = (J.k || 0) + 1)) * 0x9E3779B1 | 0 })))); setTimeout(step, 0); }; setTimeout(step, 0); }
+  drawAll();
+}
+function onChunk(m) {
+  if (m.job !== J.id || J.done) return;
+  const a = J.acc;
+  if (!a) J.acc = { N: m.N, out: m.out, abs: m.abs, lost: m.lost, flux: Float64Array.from(m.flux), leave: Float64Array.from(m.leave), ring: Float64Array.from(m.ring) };
+  else { a.N += m.N; a.out += m.out; a.abs += m.abs; a.lost += m.lost; for (const k of ['flux', 'leave', 'ring']) for (let i = 0; i < a[k].length; i++) a[k][i] += m[k][i]; }
+  R = Core.normalize(J.acc, J.o);
+  derive();
+  if (R.prog >= 1 || R.N >= NMAX) { J.done = true; J.calm = performance.now() - J.t0; if (worker) worker.postMessage({ job: -J.id }); }
+  if (!J.raf) J.raf = requestAnimationFrame(() => { J.raf = 0; drawAll(); });
+}
+
+// ---- Auswertung des Ergebnisses (Statistik, Kennzahlen) ----
+const rel = n => n > 0 ? 1 / Math.sqrt(n) : Infinity;
+function derive() {
+  const nG = R.nG, nC = R.nC, sym = S.src.x === 0;
+  // LVK-Kurven: symmetrisch → Mittel über alle C; sonst C0/C180 und C90/C270 als Sektoren ±37,5° (5 Bins),
+  // weil eine einzelne 15°-Ebene nur 1/24 der Lichtteilchen hat. An den Polen ist C undefiniert → Mittel über alle C.
+  const ALL = Array.from({ length: nC }, (_, c) => c);
+  const curve = c0 => { const I = [], n = [];
+    for (let g = 0; g < nG; g++) {
+      const cs = sym || g === 0 || g === nG - 1 ? ALL : [-2, -1, 0, 1, 2].map(d => (c0 + d + nC) % nC);
+      let s = 0, m = 0; for (const c of cs) { s += R.I[c * nG + g]; m += R.flux[c * nG + g]; }
+      I.push(s / cs.length); n.push(m);
+    }
+    return { I, n }; };
+  const cv = sym ? [curve(0)] : [curve(0), curve(nC / 2), curve(nC / 4), curve(3 * nC / 4)];
+  R.lv = sym ? { A: [cv[0].I, cv[0].I], B: null } : { A: [cv[0].I, cv[1].I], B: [cv[2].I, cv[3].I] };
+  // Unsicherheit der Kurve: ungünstigste angezeigte Stützstelle ≥ 10 % des Maximums, ohne Polkappen
+  let imax = 0; cv.forEach(c => c.I.forEach(v => imax = Math.max(imax, v)));
+  let peak = 0; cv.forEach(c => { for (let g = 1; g < nG - 1; g++) if (c.I[g] >= 0.1 * imax) peak = Math.max(peak, rel(c.n[g])); });
+  // Anteil unten/oben: 90°-Bin je zur Hälfte
+  let dn = 0, up = 0; const g90 = Math.round(90 / R.dGamma);
+  for (let c = 0; c < nC; c++) for (let g = 0; g < nG; g++) { const f = R.flux[c * nG + g]; if (g < g90) dn += f; else if (g > g90) up += f; else { dn += f / 2; up += f / 2; } }
+  // max. Leuchtdichte (nur Abschnitte mit genug Treffern, sonst rauscht das Maximum nach oben)
+  let Lm = 0, Li = -1, Ln = 0;
+  for (let i = 0; i < R.L.length; i++) if (R.leave[i] >= 100 && R.L[i] > Lm) { Lm = R.L[i]; Li = i; Ln = R.leave[i]; }
+  R.st = { dn: dn / Math.max(1, R.out), up: up / Math.max(1, R.out), Lm, Li, sL: rel(Ln), sE: rel(R.ring[0]), sP: peak,
+    sEta: Math.sqrt(R.eta * (1 - R.eta) / R.N) };
+  // ruhig: LVK ±3 % (ungünstigste Stützstelle), E unter der Leuchte ±5 %, max. Leuchtdichte ±3 %
+  const q = [[0.03, R.st.sP], [0.05, R.st.sE]]; if (G.prof.length > 1) q.push([0.03, R.st.sL]);
+  R.prog = Math.min(1, Math.max(R.N / NMAX, Math.min(...q.map(([t, s]) => (t / s) ** 2))));
+}
+
+// ---- Editor ----
+const ed = $('ed');
+let V = null;
+function fitView() {
+  const r = ed.getBoundingClientRect(); if (!r.width) return;
+  let mx = 60, zmin = S.src.z - 20, zmax = S.src.z + 20;
+  S.pts.forEach(p => { mx = Math.max(mx, p.x); zmin = Math.min(zmin, p.z); zmax = Math.max(zmax, p.z); });
+  mx = Math.max(mx, S.src.x);
+  const wW = 2 * (mx + 40), wH = (zmax - zmin) + 70, sc = Math.min(r.width / wW, r.height / wH);
+  V = { s: sc, ox: r.width / 2, oy: r.height / 2 + ((zmax + zmin) / 2) * sc };
+}
+const w2s = p => [V.ox + p.x * V.s, V.oy - p.z * V.s];
+const s2w = (x, y) => ({ x: (x - V.ox) / V.s, z: (V.oy - y) / V.s });
+const hex = c => { const n = parseInt(c.slice(1), 16); return [n >> 16 & 255, n >> 8 & 255, n & 255]; };
+function lcol(L, Lsc) { // Falschfarbe: --grid2 (dunkel) → --light (hell); ab Grenzwert --warn
+  if (L >= LIM) return css('--warn');
+  const a = hex(css('--grid2')), b = hex(css('--light')), t = Math.min(1, L / Lsc);
+  return `rgb(${a.map((v, i) => Math.round(v + (b[i] - v) * t)).join(',')})`;
+}
+let stroke = null, drag = -1, dragSrc = false, lastTap = { t: 0, i: -1 };
+function drawEditor() {
+  if (!V) fitView();
+  const { ctx, w, h } = prep(ed);
+  const x0 = s2w(0, 0), x1 = s2w(w, h);
+  for (let g = Math.floor(x0.x / 10) * 10; g <= x1.x; g += 10) {
+    ctx.strokeStyle = g % 50 ? css('--grid') : css('--grid2'); ctx.lineWidth = 1;
+    const [sx] = w2s({ x: g, z: 0 }); ctx.beginPath(); ctx.moveTo(sx + .5, 0); ctx.lineTo(sx + .5, h); ctx.stroke();
+  }
+  for (let g = Math.floor(x1.z / 10) * 10; g <= x0.z; g += 10) {
+    ctx.strokeStyle = g % 50 ? css('--grid') : css('--grid2');
+    const [, sy] = w2s({ x: 0, z: g }); ctx.beginPath(); ctx.moveTo(0, sy + .5); ctx.lineTo(w, sy + .5); ctx.stroke();
+  }
+  ctx.setLineDash([3, 4]); ctx.strokeStyle = css('--mut'); ctx.lineWidth = 1; ctx.beginPath();
+  ctx.moveTo(V.ox + .5, 0); ctx.lineTo(V.ox + .5, h); ctx.stroke();
+  // Tischebene
+  ctx.font = '11px system-ui'; ctx.fillStyle = css('--mut');
+  const [, ty] = w2s({ x: 0, z: S.src.z - S.dist });
+  if (ty < h - 4) { ctx.beginPath(); ctx.moveTo(0, ty + .5); ctx.lineTo(w, ty + .5); ctx.stroke(); ctx.fillText('Tisch', 6, ty - 4); }
+  else ctx.fillText('Tisch ↓ ' + nf0.format(S.dist) + ' mm unter der Lampe', 6, h - 6);
+  ctx.setLineDash([]);
+  ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+  if (stroke) {
+    ctx.strokeStyle = css('--acc'); ctx.lineWidth = 2.5;
+    polyPath(ctx, stroke, w2s); ctx.stroke();
+    polyPath(ctx, stroke.map(p => ({ x: -p.x, z: p.z })), w2s); ctx.globalAlpha = .4; ctx.stroke(); ctx.globalAlpha = 1;
+  } else {
+    // Kontur: innen und außen getrennt in Falschfarbe der Leuchtdichte, sonst --ink
+    const P = G.prof || [], Lsc = R && R.st.Lm > 0 ? Math.min(R.st.Lm, LIM) : 1;
+    for (const sg of [1, -1]) for (let i = 0; i + 1 < P.length; i++) {
+      const a = { x: sg * P[i][0], z: P[i][1] }, b = { x: sg * P[i + 1][0], z: P[i + 1][1] };
+      const [ax, ay] = w2s(a), [bx, by] = w2s(b), len = Math.hypot(bx - ax, by - ay) || 1;
+      let nx = (by - ay) / len, ny = -(bx - ax) / len; if (sg < 0) { nx = -nx; ny = -ny; } // Bildschirm-Außennormale
+      for (const side of [0, 1]) {
+        const o = side ? 1.6 : -1.6;
+        ctx.strokeStyle = R && R.leave[2 * i + side] >= 30 ? lcol(R.L[2 * i + side], Lsc) : css('--ink');
+        ctx.lineWidth = R ? 3 : 2.2;
+        ctx.beginPath(); ctx.moveTo(ax + nx * o, ay + ny * o); ctx.lineTo(bx + nx * o, by + ny * o); ctx.stroke();
+      }
+    }
+    if (S.mode === 'edit') S.pts.forEach((p, i) => {
+      const [sx, sy] = w2s(p);
+      ctx.beginPath(); ctx.arc(sx, sy, i === S.sel ? 6.5 : 5, 0, 7);
+      ctx.fillStyle = i === S.sel ? css('--acc') : css('--panel'); ctx.fill();
+      ctx.strokeStyle = css('--ink'); ctx.lineWidth = 1.5; ctx.stroke();
+    });
+  }
+  // Lampe
+  const [lx, ly] = w2s(S.src);
+  ctx.beginPath(); ctx.arc(lx, ly, dragSrc ? 9 : 7.5, 0, 7); ctx.fillStyle = css('--light'); ctx.fill();
+  ctx.strokeStyle = css('--ink'); ctx.lineWidth = 1.5; ctx.stroke();
+  // Legende Leuchtdichte
+  if (R && R.st.Lm > 0 && !stroke) {
+    const Lsc = Math.min(R.st.Lm, LIM), bw = Math.min(140, w * 0.35);
+    for (let k = 0; k < bw; k++) { ctx.fillStyle = lcol(Lsc * k / bw, Lsc); ctx.fillRect(8 + k, 8, 1, 8); }
+    ctx.fillStyle = css('--mut'); ctx.fillText('0', 8, 28); ctx.textAlign = 'right';
+    ctx.fillText(nf0.format(Lsc) + ' cd/m²', 8 + bw, 28); ctx.textAlign = 'left';
+    ctx.fillText('Leuchtdichte (je Seite)', 8, 42);
+    if (R.st.Lm >= LIM) { ctx.fillStyle = css('--warn'); ctx.fillText('⚠ rot: ≥ 20 000 cd/m²', 8, 56); }
+  }
+}
+function pushUndo() { S.undo.push(JSON.stringify(S.pts)); if (S.undo.length > 100) S.undo.shift(); }
+function evPos(e) { const r = ed.getBoundingClientRect(); return [e.clientX - r.left, e.clientY - r.top]; }
+const snapP = p => ({ x: Math.max(0, Math.round(Math.abs(p.x))), z: Math.round(p.z) });
+function distSeg(p, a, b) {
+  const dx = b.x - a.x, dz = b.z - a.z, L2 = dx * dx + dz * dz;
+  let t = L2 ? ((p.x - a.x) * dx + (p.z - a.z) * dz) / L2 : 0; t = Math.max(0, Math.min(1, t));
+  return Math.hypot(p.x - a.x - t * dx, p.z - a.z - t * dz);
+}
+function rdp(pts, eps) {
+  if (pts.length < 3) return pts.slice();
+  let dmax = 0, idx = 0; const a = pts[0], b = pts[pts.length - 1];
+  for (let i = 1; i < pts.length - 1; i++) { const d = distSeg(pts[i], a, b); if (d > dmax) { dmax = d; idx = i; } }
+  if (dmax <= eps) return [a, b];
+  return rdp(pts.slice(0, idx + 1), eps).slice(0, -1).concat(rdp(pts.slice(idx), eps));
+}
+function hitPoint(sx, sy) {
+  let best = -1, bd = 14;
+  S.pts.forEach((p, i) => { for (const sg of [1, -1]) { const [px, py] = w2s({ x: sg * p.x, z: p.z }); const d = Math.hypot(px - sx, py - sy); if (d < bd) { bd = d; best = i; } } });
+  return best;
+}
+function hitSegment(wp) {
+  const q = { x: Math.abs(wp.x), z: wp.z }; let best = -1, bd = 10 / V.s;
+  for (let i = 0; i < S.pts.length - 1; i++) { const d = distSeg(q, S.pts[i], S.pts[i + 1]); if (d < bd) { bd = d; best = i; } }
+  return best;
+}
+ed.addEventListener('pointerdown', e => {
+  ed.setPointerCapture(e.pointerId);
+  const [sx, sy] = evPos(e), wp = s2w(sx, sy), [lx, ly] = w2s(S.src);
+  if (Math.hypot(sx - lx, sy - ly) < 16) { dragSrc = true; drawEditor(); return; }
+  if (S.mode === 'draw') { stroke = [{ x: Math.abs(wp.x), z: wp.z }]; drawEditor(); return; }
+  let i = hitPoint(sx, sy);
+  const now = performance.now();
+  if (i >= 0 && lastTap.i === i && now - lastTap.t < 350) {
+    if (S.pts.length > 2) { pushUndo(); S.pts.splice(i, 1); S.sel = -1; changed(); }
+    lastTap = { t: 0, i: -1 }; return;
+  }
+  lastTap = { t: now, i };
+  pushUndo();
+  if (i < 0) {
+    const sgi = hitSegment(wp);
+    if (sgi >= 0) { S.pts.splice(sgi + 1, 0, snapP(wp)); i = sgi + 1; }
+    else { S.pts.push(snapP(wp)); i = S.pts.length - 1; }
+    changed();
+  }
+  drag = i; S.sel = i; drawEditor();
+});
+ed.addEventListener('pointermove', e => {
+  const [sx, sy] = evPos(e), wp = s2w(sx, sy);
+  if (dragSrc) { const x = Math.round(Math.abs(wp.x)); S.src = { x: x < 4 ? 0 : x, z: Math.round(wp.z) }; changed(); }
+  else if (stroke) {
+    const q = { x: Math.abs(wp.x), z: wp.z }, l = stroke[stroke.length - 1];
+    if (Math.hypot(q.x - l.x, q.z - l.z) > 0.8) { stroke.push(q); drawEditor(); }
+  } else if (drag >= 0) { S.pts[drag] = snapP(wp); changed(); }
+});
+function endPointer() {
+  if (dragSrc) { dragSrc = false; drawEditor(); }
+  if (stroke) {
+    if (stroke.length > 3) {
+      const p = rdp(stroke, 1.5);
+      if (p[0].x < 6) p[0].x = 0;
+      pushUndo(); S.pts = p.map(q => ({ x: Math.round(q.x), z: Math.round(q.z) }));
+      setMode('edit');
+    }
+    stroke = null; changed(); fitView(); drawEditor();
+  }
+  if (drag >= 0) { drag = -1; const r = ed.getBoundingClientRect();
+    if (S.pts.some(p => { const [x, y] = w2s(p); return x < 10 || x > r.width - 10 || y < 10 || y > r.height - 10; })) { fitView(); drawEditor(); } }
+}
+ed.addEventListener('pointerup', endPointer);
+ed.addEventListener('pointercancel', endPointer);
+window.addEventListener('keydown', e => {
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') { e.preventDefault(); undo(); }
+  else if ((e.key === 'Delete' || e.key === 'Backspace') && S.sel >= 0 && S.pts.length > 2 && !/INPUT|SELECT/.test(document.activeElement.tagName)) {
+    pushUndo(); S.pts.splice(S.sel, 1); S.sel = -1; changed();
+  }
+});
+function undo() { if (!S.undo.length) return; S.pts = JSON.parse(S.undo.pop()); S.sel = -1; changed(); }
+function changed() { restart(); }
+
+// ---- LVK (Polardiagramm) ----
+function drawLvk() {
+  const cv = $('lvk'), { ctx, w, h } = prep(cv), cx = w / 2, cy = h / 2, rad = 0.42 * Math.min(w, h);
+  ctx.font = '11px system-ui'; ctx.lineWidth = 1;
+  const k = S.unit === 'klm' ? 1000 / S.phi : 1, u = S.unit === 'klm' ? 'cd/klm' : 'cd';
+  if (!R) { ctx.fillStyle = css('--mut'); ctx.textAlign = 'center'; ctx.fillText(J.err ? '⚠ ' + J.err : 'rechnet …', cx, cy); ctx.textAlign = 'left'; return; }
+  const curves = [R.lv.A, R.lv.B].filter(Boolean);
+  let mx = 0; curves.forEach(c => c.forEach(h2 => h2.forEach(v => mx = Math.max(mx, v * k))));
+  const st = niceStep(Math.max(mx, 1e-9) / 4), top = Math.ceil(mx / st) * st || 1, sc = rad / top;
+  const P = (g, r, side) => [cx + side * r * sc * Math.sin(g * D2R), cy + r * sc * Math.cos(g * D2R)];
+  ctx.strokeStyle = css('--grid2'); ctx.fillStyle = css('--mut');
+  for (let r = st; r <= top + 1e-9; r += st) { ctx.beginPath(); ctx.arc(cx, cy, r * sc, 0, 7); ctx.stroke(); ctx.fillText(nf0.format(r), cx + 3, cy + r * sc - 3); }
+  for (let g = 0; g < 180; g += 30) for (const sd of [1, -1]) { const [x, y] = P(g, top, sd); ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(x, y); ctx.stroke(); }
+  ctx.textAlign = 'center'; ctx.fillText('0°', cx, cy + rad + 14); ctx.fillText('180°', cx, cy - rad - 6);
+  ctx.fillText('90°', cx + rad + 14, cy + 4); ctx.fillText('90°', cx - rad - 14, cy + 4); ctx.textAlign = 'left';
+  const dG = R.dGamma, draw = (pair, col, dash) => {
+    ctx.beginPath();
+    pair[0].forEach((v, g) => { const [x, y] = P(g * dG, v * k, 1); g ? ctx.lineTo(x, y) : ctx.moveTo(x, y); });
+    for (let g = pair[1].length - 1; g >= 0; g--) { const [x, y] = P(g * dG, pair[1][g] * k, -1); ctx.lineTo(x, y); }
+    ctx.closePath(); ctx.strokeStyle = col; ctx.lineWidth = 2; ctx.setLineDash(dash); ctx.stroke(); ctx.setLineDash([]);
+  };
+  draw(R.lv.A, css('--light'), []);
+  if (R.lv.B) draw(R.lv.B, css('--ink'), [5, 4]);
+  ctx.fillStyle = css('--mut'); ctx.fillText(u, 8, 16);
+  if (R.lv.B) ctx.fillText('C180 ← → C0', 8, h - 8);
+}
+
+// ---- Diagramm E(r) ----
+function drawE() {
+  const cv = $('ech');
+  if (!R) { prep(cv); return; }
+  const n = R.E.length, dr = G.rMax / n, E = Array.from(R.E), sg = E.map((e, i) => e * rel(R.ring[i]));
+  const pts = E.map((e, i) => [(i + 0.5) * dr, e]), hi = pts.map(([r], i) => [r, E[i] + (isFinite(sg[i]) ? sg[i] : 0)]), lo = pts.map(([r], i) => [r, Math.max(0, E[i] - (isFinite(sg[i]) ? sg[i] : 0))]);
+  let ym = 1; hi.forEach(p => ym = Math.max(ym, p[1]));
+  chart(cv, { x0: 0, x1: G.rMax, y0: 0, y1: ym * 1.08, xl: 'Abstand von der Achse [mm]', yl: 'Beleuchtungsstärke [lx]',
+    series: [{ pts, color: css('--light'), fill: css('--lightA') }, { pts: hi, color: css('--mut'), width: 1, dash: [3, 4] }, { pts: lo, color: css('--mut'), width: 1, dash: [3, 4] }] });
+  $('eNote').innerHTML = (G.cut ? '<span style="color:var(--warn)">⚠ Die Tischebene schneidet den Schirm; Abschattung durch den Tisch ist nicht gerechnet.</span> ' : '') +
+    'Mittelwert je Ring (Breite ' + nf0.format(dr) + ' mm), gestrichelt ±σ. Nur direktes Licht der Leuchte, Raum schwarz.';
+}
+
+// ---- Kennwerte ----
+const pct = v => nf1.format(100 * v) + ' %', pm = s => !isFinite(s) ? '' : s < 5e-4 ? ' ±<0,1 %' : ' ±' + (s < 0.1 ? nf1.format(100 * s) : nf0.format(100 * s)) + ' %';
+function drawStats() {
+  $('distO').textContent = nf0.format(S.dist) + ' mm';
+  const prog = $('prog'), stt = $('status');
+  if (!R) { $('stats').innerHTML = ''; prog.style.width = '0'; stt.innerHTML = J.err ? '<span style="color:var(--warn)">⚠ ' + J.err + '</span>' : 'rechnet …'; $('lvkLeg').textContent = ''; return; }
+  const sh = J.sh, st = R.st, m = matNow();
+  const hidden = m.ts > 0 || m.in.rs + m.out.rs > 0; // nur klare Durchsicht und Spiegel zeigen ein Bild der Lampe
+  const items = [
+    ['Wirkungsgrad η', pct(R.eta), 'Leuchte gibt ' + nf0.format(R.eta * S.phi) + ' lm ab' + pm(st.sEta / Math.max(R.eta, 1e-9))],
+    ['Nach unten / oben', nf0.format(100 * st.dn) + ' / ' + nf0.format(100 * st.up) + ' %', 'des austretenden Lichts'],
+    ['Abschirmwinkel', nf1.format(sh) + '°', sh >= 90 ? 'Lampe von unten nicht sichtbar' : sh <= 0 ? 'Lampe seitlich direkt sichtbar' : 'Lampe direkt sichtbar ab ' + nf1.format(sh) + '° unter der Horizontalen' + (hidden ? '; Durchsicht/Spiegelbild nicht erfasst' : '')],
+    st.Li >= 0 ? ['Max. Leuchtdichte', (st.Lm >= LIM ? '⚠ ' : '') + nf0.format(st.Lm) + ' cd/m²', (st.Li % 2 ? 'außen' : 'innen') + pm(st.sL) + (st.Lm >= LIM ? ' · blendet ohne Abschirmung' : ''), st.Lm >= LIM] : ['Max. Leuchtdichte', '–', 'noch zu wenig Treffer'],
+    ['E unter der Leuchte', nf0.format(R.E[0]) + ' lx', 'Tisch ' + nf0.format(S.dist) + ' mm tiefer' + pm(st.sE)]
+  ];
+  if (R.lost > 1e-3 * R.N) items.push(['Nicht gerechnet', '⚠ ' + pct(R.lost / R.N), 'Licht nach 1000 Reflexionen abgebrochen', true]);
+  $('stats').innerHTML = items.map(([a, b, n, warn]) => `<div class="stat"><span>${a}</span><b${warn ? ' style="color:var(--warn)"' : ''}>${b}</b><span>${n}</span></div>`).join('');
+  prog.style.width = (100 * R.prog).toFixed(1) + '%';
+  stt.textContent = nf1.format(R.N / 1e6) + ' Mio. Lichtteilchen · LVK ±' + nf1.format(100 * st.sP) + ' % · ' +
+    (J.done ? 'ruhig nach ' + nf1.format(J.calm / 1000) + ' s' : 'wird ruhiger …') + (worker ? '' : ' · ohne Worker');
+  $('lvkLeg').textContent = S.src.x === 0 ? 'rotationssymmetrisch' : 'gelb C0–C180 · gestrichelt C90–C270 (Sektoren ±37,5°)';
+}
+
+function drawAll() { drawEditor(); drawLvk(); drawE(); drawStats(); }
+
+// ---- Bedienelemente ----
+function setMode(m) { S.mode = m; $('mDraw').classList.toggle('on', m === 'draw'); $('mEdit').classList.toggle('on', m === 'edit'); drawEditor(); }
+$('mDraw').onclick = () => setMode('draw');
+$('mEdit').onclick = () => setMode('edit');
+$('preset').innerHTML = '<option value="">Vorlage …</option>' + Object.entries(PRESETS).map(([k, v]) => `<option value="${k}">${v[0]}</option>`).join('');
+$('preset').onchange = e => {
+  const v = PRESETS[e.target.value]; if (!v) return;
+  pushUndo(); S.pts = toPts(v[1]); S.src = { x: v[2][0], z: v[2][1] }; S.mat = v[3]; S.raw = null; S.sel = -1;
+  syncCtl(); fitView(); restart(); e.target.value = '';
+};
+$('undo').onclick = undo;
+$('fitB').onclick = () => { fitView(); drawEditor(); };
+$('phiP').innerHTML = PHI.map(([v, t]) => `<option value="${v}">${t}</option>`).join('') + '<option value="">eigener Wert</option>';
+$('phiP').onchange = e => { if (e.target.value) { S.phi = +e.target.value; syncCtl(); restart(); } };
+$('phi').onchange = e => { S.phi = num(e.target.value, S.phi, 10, 20000); syncCtl(); restart(); };
+$('type').onchange = e => { S.type = e.target.value; restart(); };
+$('mat').innerHTML = Object.entries(MATS).map(([k, v]) => `<option value="${k}">${v[0]} · ${v[2]}</option>`).join('') + '<option value="">eigene Werte (Erweitert)</option>';
+$('mat').onchange = e => { if (!e.target.value) { $('adv').open = true; return; } S.mat = e.target.value; S.raw = null; syncCtl(); restart(); };
+const RAW = [['ρd innen', m => m.in.rd], ['ρs innen', m => m.in.rs], ['ρd außen', m => m.out.rd], ['ρs außen', m => m.out.rs], ['τd', m => m.td], ['τs', m => m.ts]];
+$('raw').innerHTML = RAW.map(([t], i) => `<label>${t}<input type="number" min="0" max="1" step="0.01" id="raw${i}"></label>`).join('');
+RAW.forEach((_, i) => $('raw' + i).onchange = () => {
+  const v = RAW.map((_, j) => num($('raw' + j).value, 0, 0, 1));
+  S.raw = { in: { rd: v[0], rs: v[1] }, out: { rd: v[2], rs: v[3] }, td: v[4], ts: v[5] }; syncCtl(); restart();
+});
+$('dist').oninput = e => { S.dist = +e.target.value; restart(); };
+$('uKlm').onclick = () => { S.unit = 'klm'; $('uKlm').classList.add('on'); $('uCd').classList.remove('on'); drawLvk(); };
+$('uCd').onclick = () => { S.unit = 'cd'; $('uCd').classList.add('on'); $('uKlm').classList.remove('on'); drawLvk(); };
+function syncCtl() {
+  $('phi').value = S.phi; $('phiP').value = PHI.some(p => p[0] === S.phi) ? S.phi : '';
+  $('type').value = S.type; $('mat').value = S.raw ? '' : S.mat; $('dist').value = S.dist;
+  const m = matNow(); RAW.forEach(([, f], i) => $('raw' + i).value = f(m));
+}
+
+// ---- Export / Import / Link (Werte aus Datei/Link begrenzen und prüfen) ----
+const num = (v, def, lo, hi) => v !== null && v !== '' && Number.isFinite(+v) ? Math.min(hi, Math.max(lo, +v)) : def;
+const prof = a => { const p = Array.isArray(a) ? a.filter(q => Array.isArray(q) && Number.isFinite(+q[0]) && Number.isFinite(+q[1])).map(([x, z]) => ({ x: Math.min(5000, Math.max(0, +x)), z: Math.min(5000, Math.max(-5000, +z)) })) : [];
+  return p.length >= 2 ? p : null; };
+function matFrom(m) { // Schlüssel einer Vorlage oder 6 Rohwerte [ρd in, ρs in, ρd außen, ρs außen, τd, τs]
+  if (typeof m === 'string' && Object.hasOwn(MATS, m)) return { mat: m, raw: null };
+  if (Array.isArray(m) && m.length === 6) {
+    const v = m.map(x => num(x, 0, 0, 1)), raw = { in: { rd: v[0], rs: v[1] }, out: { rd: v[2], rs: v[3] }, td: v[4], ts: v[5] };
+    try { Core.trace({ N: 1, profile: [], source: { x: 0, z: 0, phi: 1, type: 'iso' }, mat: raw }); return { mat: 'stoff', raw }; } catch (e) { /* ungültig → Vorgabe */ }
+  }
+  return { mat: 'stoff', raw: null };
+}
+const matOut = () => S.raw ? [S.raw.in.rd, S.raw.in.rs, S.raw.out.rd, S.raw.out.rs, S.raw.td, S.raw.ts] : S.mat;
+function apply(d) { // d = {p, s:[x,z,phi,type], m, d}
+  const p = prof(d.p); if (!p) return false;
+  const s = Array.isArray(d.s) ? d.s : [];
+  Object.assign(S, { pts: p, src: { x: num(s[0], 0, 0, 5000), z: num(s[1], 0, -5000, 5000) }, phi: num(s[2], 806, 10, 20000), type: s[3] === 'lambert' ? 'lambert' : 'iso',
+    dist: num(d.d, 600, 100, 2000), sel: -1 }, matFrom(d.m));
+  return true;
+}
+const snapshot = () => ({ p: S.pts.map(q => [q.x, q.z]), s: [S.src.x, S.src.z, S.phi, S.type], m: matOut(), d: S.dist });
+$('exp').onclick = () => dpDownload(Object.assign({ type: 'designphysik/licht', version: 1 }, snapshot()), 'lampenschirm.json');
+$('imp').onclick = () => $('file').click();
+$('file').onchange = async e => {
+  const f = e.target.files[0]; if (!f) return;
+  try { pushUndo(); if (!apply(JSON.parse(await f.text()))) throw new Error('kein gültiges Profil'); syncCtl(); fitView(); restart(); }
+  catch (err) { alert('Datei nicht lesbar: ' + err.message); }
+  e.target.value = '';
+};
+$('share').onclick = async () => {
+  dpHashSet('l', snapshot());
+  try { await navigator.clipboard.writeText(location.href); $('share').textContent = 'Kopiert ✓'; } catch { $('share').textContent = 'In Adresszeile ✓'; }
+  setTimeout(() => $('share').textContent = 'Link kopieren', 1500);
+};
+
+window.addEventListener('resize', () => { fitView(); drawAll(); });
+dpHeader('licht', 'Lampenschirm');
+apply(dpHashGet('l') || {});
+syncCtl();
+requestAnimationFrame(() => { fitView(); restart(); });
+</script>
+</body>
+</html>

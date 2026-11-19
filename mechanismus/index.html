@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Designphysik · Mechanismen</title>
+<link rel="stylesheet" href="../shared/style.css">
+<!-- Modul-Akzent (Vorschlag, Entscheidung beim Style-Chat) -->
+<style>
+:root{--mech:#2a8f86}
+#ed{aspect-ratio:4/3}
+.sel input[type=number]{width:80px;font:inherit;font-size:13px;padding:4px 6px;border:1px solid var(--line);border-radius:var(--r);font-variant-numeric:tabular-nums}
+.sel b{font-size:12px}
+.stat.warn b{color:var(--warn)}
+</style>
+</head>
+<body>
+<header id="dp-header"></header>
+<main>
+  <section class="panel">
+    <h2>Getriebe · Seitenansicht [mm]</h2>
+    <div class="row">
+      <button id="mBuild" class="on">Konstruieren</button><button id="mMove">Bewegen</button>
+      <span class="sep"></span>
+      <select id="tpl" aria-label="Vorlage">
+        <option value="">Vorlage …</option><option value="ks">Kurbelschwinge</option><option value="ds">Doppelschwinge (Klappdeckel)</option>
+        <option value="sk">Schubkurbel</option><option value="st">Klappstuhl</option><option value="leer">Leer</option>
+      </select>
+    </div>
+    <div class="row" id="tools">
+      <button data-t="drag" class="on">Ziehen</button><button data-t="point">Punkt</button><button data-t="fix">Gestell</button>
+      <button data-t="link">Glied</button><button data-t="slider">Schub</button><button data-t="del">Löschen</button>
+    </div>
+    <canvas id="ed"></canvas>
+    <div class="ctl"><label for="drv">Antrieb</label><input type="range" id="drv" step="0.1"><output id="drvO"></output></div>
+    <div class="row sel" id="selp"></div>
+    <p class="note" id="hint"></p>
+  </section>
+  <section class="panel">
+    <h2>Kennwerte</h2>
+    <div class="stats" id="stats"></div>
+    <h2>Abtrieb über Antrieb</h2>
+    <canvas id="c1" class="ch"></canvas>
+    <h2>Übertragungswinkel</h2>
+    <canvas id="c2" class="ch"></canvas>
+    <h2>Übersetzung</h2>
+    <canvas id="c3" class="ch"></canvas>
+    <h2>Haltemoment am Antrieb</h2>
+    <canvas id="c4" class="ch"></canvas>
+  </section>
+  <section class="panel wide">
+    <h2>Datei</h2>
+    <div class="row">
+      <button id="exp">Export JSON</button><button id="imp">Import JSON</button><input type="file" id="impF" accept=".json,application/json" hidden>
+      <button id="share">Link kopieren</button><span class="note" id="fileN"></span>
+    </div>
+  </section>
+  <section class="panel wide">
+    <h2>Modell &amp; Gültigkeit</h2>
+    <p class="note"><b>Modell:</b> ebenes Getriebe aus starren Gliedern, ideale Dreh- und Schubgelenke ohne Spiel und Reibung, quasistatisch (keine Massen, keine Trägheit). Ein Glied ist eine starre Punktmenge; Zusatzpunkte (Koppelpunkt, Lehne, Fuß) bewegen sich mit.</p>
+    <p class="note"><b>Lage:</b> Newton-Raphson auf den Schließbedingungen (Toleranz 1e-9 mm), Startwert = letzte Lage. Ein Schritt zählt nur, wenn er mit zwei Halbschritten auf 1e-6 mm übereinstimmt – so bleibt der Zweig (die Einbaulage) erhalten. Die Konstruktionslage ist immer zusammengebaut; Längen ergeben sich aus ihr.</p>
+    <p class="note"><b>Begriffe:</b> <i>Umkehrlage</i> – der Abtrieb kehrt um (Übersetzung 0); fluchten dabei Antriebsglied und Koppel, heißt sie Streck- bzw. Decklage. <i>Totlage</i> – der Antrieb kommt nicht weiter, jenseits gibt es keine Lage (Bewegungsgrenze, „klemmt“). <i>Übertragungswinkel μ</i> – Winkel zwischen Koppel und gestellnahem Abtriebsglied (0–90°); unter 40° drohen bei Reibung Klemmen und hohe Gelenkkräfte (Richtwert). <i>Übersetzung</i> – Abtriebs- je Antriebsbewegung, exakt aus der Geschwindigkeitsanalyse; an Totlagen unbeschränkt.</p>
+    <p class="note"><b>Gültigkeit:</b> Getriebetyp (Grashof), μ und Streck-/Decklage nur für erkannte Viergelenke und Schubkurbeln. Im Grenzfall (Durchschlag, z. B. Parallelogramm) ist der Zweig in der Verzweigungslage nicht eindeutig; das Werkzeug folgt der Tangente. Freiheitsgrad durch Abzählen (2 je beweglichem Punkt − Bedingungen): überbestimmte, aber bewegliche Getriebe (Parallelogramm mit drittem parallelem Glied) werden als blockiert gemeldet. Ein Schubgelenk, Führung fest am Gestell.</p>
+    <p class="note"><b>Kräfte (v1.1):</b> Punktlasten Fx/Fy [N] an beliebigen Punkten, z. B. Gewicht Fy = −m·9,81 N/kg am Schwerpunkt eines Glieds. Haltemoment [N·m] bzw. Haltekraft [N] am Antrieb aus virtueller Arbeit (Q = −Σ F·∂p/∂Antrieb): reibungsfrei, quasistatisch, ohne Eigengewicht der Glieder (nur, was als Last eingetragen ist). Positiv = in Richtung wachsender Antriebswerte. An Totlagen geht der Wert gegen ∞ (Diagramm begrenzt).</p>
+    <p class="note"><b>Nicht enthalten:</b> Gelenkkräfte, Reibung, Dynamik, Federn und Gasdruckfedern, Dynamik, Kollision der Glieder, Synthese aus Wunschlagen, mehrere Antriebe, bewegte Führungen.</p>
+  </section>
+</main>
+
+<script src="../shared/util.js"></script>
+<script src="../shared/chart.js"></script>
+<script>
+// === CORE START
+// Ebene Gelenkgetriebe: Lageanalyse über Schließbedingungen. Kein DOM. Einheiten mm und °.
+// Modell m: {pts:[{x,y,fix}], links:[[i,j,k…]], slider:{p,a,ang}?, drive:{link}|{slider:true}, out:{link}|{slider:true}, loads:[{p,fx,fy}]?, at}
+// pts ist die Konstruktionslage (immer zusammengebaut); Antriebswert v = absoluter Winkel des Antriebsglieds [°] bzw. Schieberweg ab a [mm].
+const Core = (() => {
+  const D = Math.PI / 180;
+  const sub = (a, b) => [a[0] - b[0], a[1] - b[1]], dot = (a, b) => a[0] * b[0] + a[1] * b[1];
+  const cr = (a, b) => a[0] * b[1] - a[1] * b[0], len = a => Math.hypot(a[0], a[1]);
+  const fold = deg => Math.min(deg, 180 - deg);
+  const ang = (p, q, r) => Math.acos(Math.max(-1, Math.min(1, dot(sub(p, q), sub(r, q)) / (len(sub(p, q)) * len(sub(r, q)))))) / D; // Winkel p-q-r
+
+  // Gauß mit Spaltenpivot auf erweiterter Matrix M (n×(n+1), flach, wird überschrieben); null bei Singularität.
+  // piv = kleinster/größter Pivot (Konditionshinweis).
+  function gauss(M, n) {
+    const w = n + 1; let pmax = 0, pmin = Infinity;
+    for (let c = 0; c < n; c++) {
+      let r = c; for (let i = c + 1; i < n; i++) if (Math.abs(M[i * w + c]) > Math.abs(M[r * w + c])) r = i;
+      if (r !== c) for (let j = c; j < w; j++) { const t = M[c * w + j]; M[c * w + j] = M[r * w + j]; M[r * w + j] = t; }
+      const p = Math.abs(M[c * w + c]); if (!(p > 1e-14)) return null;
+      pmax = Math.max(pmax, p); pmin = Math.min(pmin, p);
+      for (let i = c + 1; i < n; i++) { const f = M[i * w + c] / M[c * w + c]; if (f) for (let j = c; j < w; j++) M[i * w + j] -= f * M[c * w + j]; }
+    }
+    const x = new Float64Array(n);
+    for (let i = n - 1; i >= 0; i--) { let s = M[i * w + n]; for (let j = i + 1; j < n; j++) s -= M[i * w + j] * x[j]; x[i] = s / M[i * w + i]; }
+    return { x, piv: n ? pmin / pmax : 1 };
+  }
+
+  // Bauteile mit genau einem Gestellpunkt: {g: Drehpunkt, o: Richtungspunkt}
+  function pivoted(m, L) {
+    const piv = L.filter(i => m.pts[i].fix);
+    return piv.length === 1 ? { g: piv[0], o: L.find(i => i !== piv[0]) } : null;
+  }
+
+  // Gleichungssystem aufstellen. Glied: Basis p0p1 mit Abstand, weitere Punkte linear
+  // pk = p0 + a·d + b·rot90(d) – starr, kein Spiegeln, regulär auch bei kollinearen Punkten.
+  function compile(m) {
+    const P = m.pts.map(p => [p.x, p.y]), n = P.length, fix = m.pts.map(p => !!p.fix);
+    const known = fix.slice(), used = new Array(n).fill(false), eqs = [], S = { P, n, eqs };
+    m.links.forEach(L => L.forEach(i => used[i] = true));
+    if (m.links.some(L => L.length < 2 || new Set(L).size !== L.length || L.some(i => !(i >= 0 && i < n)))) return { err: 'Glied ungültig' };
+    if (m.slider) {
+      const { p, a } = m.slider; if (!(p >= 0 && p < n && a >= 0 && a < n) || !fix[a] || fix[p]) return { err: 'Schub: Führungspunkt muss Gestell, Gleitpunkt beweglich sein' };
+      S.sl = { p, a, u: [Math.cos(m.slider.ang * D), Math.sin(m.slider.ang * D)] }; used[p] = true;
+    }
+    if (m.drive && m.drive.link != null && m.links[m.drive.link]) {
+      const L = m.links[m.drive.link], pv = pivoted(m, L);
+      if (!pv) return { err: 'Antriebsglied braucht genau einen Gestellpunkt' };
+      const pts = L.filter(i => i !== pv.g);
+      S.drv = { kind: 'link', g: pv.g, pts, ref: pts.map(i => sub(P[i], P[pv.g])), th0: Math.atan2(P[pv.o][1] - P[pv.g][1], P[pv.o][0] - P[pv.g][0]) / D };
+      S.v0 = S.drv.th0; pts.forEach(i => known[i] = true);
+    } else if (m.drive && m.drive.slider && S.sl) {
+      S.drv = { kind: 'slide' }; S.v0 = dot(sub(P[S.sl.p], P[S.sl.a]), S.sl.u); known[S.sl.p] = true;
+    } else return { err: 'Kein Antrieb gewählt' };
+    if (m.out && m.out.link != null && m.links[m.out.link]) { const pv = pivoted(m, m.links[m.out.link]); if (pv) S.out = { kind: 'link', ...pv }; }
+    else if (m.out && m.out.slider && S.sl) S.out = { kind: 'slide' };
+    let lmin = Infinity;
+    for (const L of m.links) {
+      const [i, j] = L, d = sub(P[j], P[i]), Ld = len(d);
+      if (Ld < 1e-6) return { err: 'Glied mit zusammenfallenden Basispunkten' };
+      lmin = Math.min(lmin, Ld);
+      if (!(known[i] && known[j])) eqs.push({ t: 'd', i, j, L: Ld });
+      for (const k of L.slice(2)) {
+        if (known[i] && known[j] && known[k]) continue;
+        const r = sub(P[k], P[i]), a = dot(r, d) / (Ld * Ld), b = cr(d, r) / (Ld * Ld);
+        eqs.push({ t: 'l', i, j, k, a, b, c: 0 }, { t: 'l', i, j, k, a, b, c: 1 });
+      }
+    }
+    if (S.sl && S.drv.kind !== 'slide') eqs.push({ t: 's', p: S.sl.p, a: S.sl.a, u: S.sl.u });
+    S.cols = []; for (let i = 0; i < n; i++) if (used[i] && !known[i]) S.cols.push(2 * i, 2 * i + 1);
+    S.kc = (S.drv.kind === 'link' ? S.drv.pts : [S.sl.p]).flatMap(i => [2 * i, 2 * i + 1]); // vom Antrieb bewegte Koordinaten
+    S.dof = 1 + S.cols.length - eqs.length;
+    S.cap = 0.1 * (isFinite(lmin) ? lmin : 10);
+    if (S.dof !== 1) return { err: S.dof > 1 ? `unterbestimmt: ${S.dof} Freiheitsgrade` : `überbestimmt: ${S.dof} Freiheitsgrade`, dof: S.dof };
+    S.X0 = Float64Array.from(P.flat());
+    return S;
+  }
+
+  function evalF(S, X) {
+    const m = S.eqs.length; if (!S.J) { S.J = S.eqs.map(() => new Float64Array(X.length)); S.f = new Float64Array(m); S.M = new Float64Array(m * (m + 1)); }
+    const f = S.f, J = S.J;
+    S.eqs.forEach((e, r) => {
+      const R = J[r]; R.fill(0);
+      if (e.t === 'd') {
+        const dx = X[2 * e.j] - X[2 * e.i], dy = X[2 * e.j + 1] - X[2 * e.i + 1];
+        f[r] = (dx * dx + dy * dy - e.L * e.L) / (2 * e.L); // in mm skaliert
+        R[2 * e.j] += dx / e.L; R[2 * e.j + 1] += dy / e.L; R[2 * e.i] -= dx / e.L; R[2 * e.i + 1] -= dy / e.L;
+      } else if (e.t === 'l') {
+        const { i, j, k, a, b } = e, d0 = X[2 * j] - X[2 * i], d1 = X[2 * j + 1] - X[2 * i + 1];
+        if (e.c === 0) { f[r] = X[2 * k] - X[2 * i] - a * d0 + b * d1; R[2 * k] += 1; R[2 * i] += a - 1; R[2 * j] -= a; R[2 * i + 1] -= b; R[2 * j + 1] += b; }
+        else { f[r] = X[2 * k + 1] - X[2 * i + 1] - a * d1 - b * d0; R[2 * k + 1] += 1; R[2 * i + 1] += a - 1; R[2 * j + 1] -= a; R[2 * i] += b; R[2 * j] -= b; }
+      } else {
+        const { p, a, u } = e; f[r] = (X[2 * p] - X[2 * a]) * u[1] - (X[2 * p + 1] - X[2 * a + 1]) * u[0];
+        R[2 * p] += u[1]; R[2 * p + 1] -= u[0]; R[2 * a] -= u[1]; R[2 * a + 1] += u[0];
+      }
+    });
+    return { f, J };
+  }
+  // Ju·x = rhs lösen (Ju = Spalten der Unbekannten)
+  function solveU(S, J, rhs) {
+    const n = S.cols.length, w = n + 1, M = S.M || new Float64Array(0);
+    for (let r = 0; r < n; r++) { for (let c = 0; c < n; c++) M[r * w + c] = J[r][S.cols[c]]; M[r * w + n] = rhs(r); }
+    return gauss(M, n);
+  }
+
+  // bekannte Antriebspunkte für Antriebswert v setzen
+  function place(S, X, v) {
+    const d = S.drv;
+    if (d.kind === 'link') {
+      const t = (v - d.th0) * D, c = Math.cos(t), s = Math.sin(t), g = d.g;
+      d.pts.forEach((i, n) => { const r = d.ref[n]; X[2 * i] = X[2 * g] + c * r[0] - s * r[1]; X[2 * i + 1] = X[2 * g + 1] + s * r[0] + c * r[1]; });
+    } else { const { p, a, u } = S.sl; X[2 * p] = X[2 * a] + v * u[0]; X[2 * p + 1] = X[2 * a + 1] + v * u[1]; }
+  }
+
+  function newton(S, X) {
+    for (let it = 0; it < 30; it++) {
+      const { f, J } = evalF(S, X), sol = solveU(S, J, r => -f[r]);
+      if (!sol) return null;
+      let dm = 0; S.cols.forEach((c, n) => { X[c] += sol.x[n]; dm = Math.max(dm, Math.abs(sol.x[n])); });
+      if (!(dm < 1e6)) return null;
+      if (dm < 1e-10) return { it, piv: sol.piv };
+    }
+    return null;
+  }
+
+  // Geschwindigkeiten aller Koordinaten je ° (bzw. mm) Antrieb: Ju·q̇ = −Jk·ṗk
+  function velocity(S, X) {
+    const Xd = new Float64Array(X.length), d = S.drv;
+    if (d.kind === 'link') { const g = d.g; d.pts.forEach(i => { Xd[2 * i] = -(X[2 * i + 1] - X[2 * g + 1]) * D; Xd[2 * i + 1] = (X[2 * i] - X[2 * g]) * D; }); }
+    else { Xd[2 * S.sl.p] = S.sl.u[0]; Xd[2 * S.sl.p + 1] = S.sl.u[1]; }
+    const { J } = evalF(S, X);
+    const sol = solveU(S, J, r => { let s = 0; for (const c of S.kc) s -= J[r][c] * Xd[c]; return s; });
+    if (!sol) return null;
+    S.cols.forEach((c, n) => Xd[c] = sol.x[n]);
+    return Xd;
+  }
+
+  // Ein Schritt: Prädiktor erster Ordnung (Verschiebung begrenzt) + Newton
+  function tryStep(S, X, v, h) {
+    const Y = Float64Array.from(X), Xd = velocity(S, X);
+    if (Xd) { let mx = 0; S.cols.forEach(c => mx = Math.max(mx, Math.abs(Xd[c] * h))); const k = mx > S.cap ? S.cap / mx : 1; S.cols.forEach(c => Y[c] += Xd[c] * h * k); }
+    place(S, Y, v + h);
+    return newton(S, Y) ? Y : null;
+  }
+  const maxDiff = (A, B) => { let m = 0; for (let i = 0; i < A.length; i++) m = Math.max(m, Math.abs(A[i] - B[i])); return m; };
+
+  // Von (X, v) nach v1 fahren, ohne Zweigwechsel: Schritt gilt nur, wenn er mit zwei Halbschritten übereinstimmt.
+  // ok=false: keine Lage jenseits v (Totlage, Antrieb blockiert), v auf 1e-6 genau.
+  function advance(S, X, v, v1, hmax = 2) {
+    X = Float64Array.from(X); let h = hmax;
+    while (Math.abs(v1 - v) > 1e-12) {
+      const hh = Math.sign(v1 - v) * Math.min(h, Math.abs(v1 - v));
+      const Y1 = tryStep(S, X, v, hh), Ya = Y1 && tryStep(S, X, v, hh / 2), Yb = Ya && tryStep(S, Ya, v + hh / 2, hh / 2);
+      if (Yb && maxDiff(Y1, Yb) < 1e-6) { X = Yb; v = Math.abs(v1 - v - hh) < 1e-12 ? v1 : v + hh; h = Math.min(hmax, 2 * h); }
+      else if ((h /= 2) < 1e-6) return { X, v, ok: false };
+    }
+    return { X, v, ok: true };
+  }
+
+  function run(S, X, v, end, dv) {
+    const out = [];
+    while (Math.abs(end - v) > 1e-9) {
+      const r = advance(S, X, v, v + Math.sign(end - v) * Math.min(dv, Math.abs(end - v)));
+      X = r.X; v = r.v; out.push({ v, X });
+      if (!r.ok) return { out, lim: v };
+    }
+    return { out, lim: null };
+  }
+
+  function outVal(S, X) {
+    const o = S.out; if (!o) return NaN;
+    if (o.kind === 'link') return Math.atan2(X[2 * o.o + 1] - X[2 * o.g + 1], X[2 * o.o] - X[2 * o.g]) / D;
+    return (X[2 * S.sl.p] - X[2 * S.sl.a]) * S.sl.u[0] + (X[2 * S.sl.p + 1] - X[2 * S.sl.a + 1]) * S.sl.u[1];
+  }
+  // Übersetzung dAbtrieb/dAntrieb (°/°, mm/°, °/mm, mm/mm)
+  function ratio(S, X) {
+    const o = S.out, Xd = o && velocity(S, X); if (!Xd) return NaN;
+    if (o.kind === 'link') { const rx = X[2 * o.o] - X[2 * o.g], ry = X[2 * o.o + 1] - X[2 * o.g + 1]; return (rx * Xd[2 * o.o + 1] - ry * Xd[2 * o.o]) / (rx * rx + ry * ry) / D; }
+    return Xd[2 * S.sl.p] * S.sl.u[0] + Xd[2 * S.sl.p + 1] * S.sl.u[1];
+  }
+
+  // Haltemoment [N·m] bzw. Haltekraft [N] am Antrieb im Gleichgewicht mit Punktlasten {p, fx, fy} [N] (virtuelle Arbeit,
+  // reibungsfrei): Q·δv + Σ F·δp = 0. Positiv = in Richtung wachsender Antriebswerte.
+  function driveLoad(S, X, loads) {
+    if (!loads || !loads.length) return NaN;
+    const Xd = velocity(S, X); if (!Xd) return NaN;
+    let w = 0; for (const l of loads) w += l.fx * Xd[2 * l.p] + l.fy * Xd[2 * l.p + 1];
+    return S.drv.kind === 'link' ? -w / D / 1000 : -w; // je ° → je rad, N·mm → N·m
+  }
+
+  // Topologie: Viergelenk ('4') oder Schubkurbel ('S'), sonst null
+  function topo(m) {
+    const fix = i => !!m.pts[i].fix, deg = new Array(m.pts.length).fill(0), sp = m.slider ? m.slider.p : -1;
+    m.links.forEach(L => L.forEach(i => deg[i]++));
+    const joint = i => deg[i] >= 2 || (fix(i) && deg[i] >= 1) || i === sp;
+    const mov = m.links.map((L, k) => ({ k, J: L.filter(joint) })).filter(o => m.links[o.k].filter(fix).length < 2);
+    if (mov.some(o => o.J.length !== 2)) return null;
+    const ends = o => ({ g: o.J.find(fix), m: o.J.find(i => !fix(i)) });
+    if (!m.slider && mov.length === 3) {
+      const g = mov.filter(o => o.J.some(fix)); if (g.length !== 2) return null;
+      const e1 = ends(g[0]), e3 = ends(g[1]), c = mov.find(o => !g.includes(o));
+      if (e1.m == null || e3.m == null || e1.m === e3.m || !c.J.includes(e1.m) || !c.J.includes(e3.m)) return null;
+      return { kind: '4', A0: e1.g, A: e1.m, B: e3.m, B0: e3.g, l1: g[0].k, l2: c.k, l3: g[1].k };
+    }
+    if (m.slider && mov.length === 2) {
+      const g = mov.find(o => o.J.some(fix)), c = mov.find(o => o !== g); if (!g || !c) return null;
+      const e = ends(g); if (e.m == null || !c.J.includes(e.m) || !c.J.includes(sp)) return null;
+      return { kind: 'S', A0: e.g, A: e.m, P: sp, l1: g.k, l2: c.k };
+    }
+    return null;
+  }
+
+  // Grashof; d = Gestell, b = Koppel, a/c gestellnahe Glieder
+  function grashof(a, b, c, d) {
+    const s = [a, b, c, d].sort((x, y) => x - y), lhs = s[0] + s[3], rhs = s[1] + s[2];
+    if (Math.abs(lhs - rhs) <= 1e-9 * s[3]) return 'Grenzfall (Durchschlag)';
+    if (lhs > rhs) return 'Doppelschwinge (Nicht-Grashof)';
+    const mn = s[0];
+    if (d === mn) return 'Doppelkurbel';
+    if (b === mn) return 'Doppelschwinge (Grashof)';
+    return 'Kurbelschwinge';
+  }
+  function sliderType(r, l, e) {
+    const x = r + Math.abs(e) - l;
+    return Math.abs(x) <= 1e-9 * l ? 'Grenzfall (Durchschlag)' : x < 0 ? 'Schubkurbel (umlauffähig)' : 'Schubschwinge (nicht umlauffähig)';
+  }
+  // Kennwerte zur Topologie
+  function topoInfo(m, T) {
+    const p = i => [m.pts[i].x, m.pts[i].y], L = (i, j) => len(sub(p(i), p(j)));
+    if (T.kind === '4') { const a = L(T.A0, T.A), b = L(T.A, T.B), c = L(T.B, T.B0), d = L(T.A0, T.B0); return { a, b, c, d, type: grashof(a, b, c, d) }; }
+    const u = [Math.cos(m.slider.ang * D), Math.sin(m.slider.ang * D)], r = L(T.A0, T.A), l = L(T.A, T.P), e = cr(sub(p(T.A0), p(m.slider.a)), u);
+    return { r, l, e, type: sliderType(r, l, e) };
+  }
+
+  // Übertragungswinkel [°, 0…90] am gestellnahen Glied, das nicht Antrieb ist (Schubkurbel: am Abtrieb)
+  function trans(m, S, T, X) {
+    if (!T) return NaN;
+    const p = i => [X[2 * i], X[2 * i + 1]], dl = m.drive.link;
+    if (T.kind === '4') return dl === T.l3 ? fold(ang(p(T.B), p(T.A), p(T.A0))) : fold(ang(p(T.A), p(T.B), p(T.B0)));
+    if (S.drv.kind === 'slide') return fold(ang(p(T.P), p(T.A), p(T.A0)));
+    const v = sub(p(T.P), p(T.A)), phi = fold(Math.acos(Math.min(1, Math.abs(dot(v, S.sl.u)) / len(v))) / D);
+    return 90 - phi;
+  }
+
+  // Geschlossene Lösungen (Testreferenz). Viergelenk: A0=(0,0), B0=(d,0), σ=±1 Zweig (Seite von B zu A→B0)
+  function fourbarClosed(a, b, c, d, th, sig) {
+    const A = [a * Math.cos(th), a * Math.sin(th)], e = sub([d, 0], A), f = len(e);
+    if (f > b + c || f < Math.abs(b - c)) return null;
+    const x = (b * b - c * c + f * f) / (2 * f), h = Math.sqrt(Math.max(0, b * b - x * x)), ux = e[0] / f, uy = e[1] / f;
+    const B = [A[0] + x * ux - sig * h * uy, A[1] + x * uy + sig * h * ux];
+    return { A, B, psi: Math.atan2(B[1], B[0] - d) };
+  }
+  // Schubkurbel: Kurbel um (0,0), Führung y = e in x-Richtung → Kolbenweg x
+  const sliderClosed = (r, l, e, th) => r * Math.cos(th) + Math.sqrt(l * l - (r * Math.sin(th) - e) ** 2);
+  // μ Viergelenk nach Kosinussatz, θ ab Gestelllinie A0→B0
+  const transFourbar = (a, b, c, d, th) => fold(Math.acos((b * b + c * c - a * a - d * d + 2 * a * d * Math.cos(th)) / (2 * b * c)) / D);
+
+  // Komplettanalyse: Lauf aus der Konstruktionslage in beide Richtungen, Umkehrlagen, Ist-Lage
+  function analyze(m, dv = 1) {
+    const S = compile(m); if (S.err) return S;
+    const T = topo(m), v0 = S.v0, crank = S.drv.kind === 'link';
+    let span = 360; if (!crank) { let s = 0; m.links.forEach(L => { s += len(sub(S.P[L[1]], S.P[L[0]])); }); span = 2 * s; }
+    const dvv = crank ? dv : span / 720;
+    const f = run(S, S.X0, v0, v0 + span, dvv);
+    const full = crank && f.lim === null;
+    const b = full ? { out: [], lim: null } : run(S, S.X0, v0, v0 - span, dvv);
+    const smp = [...b.out.reverse(), { v: v0, X: S.X0 }, ...f.out];
+    let prev = null;
+    for (const s of smp) {
+      s.out = outVal(S, s.X); s.i = ratio(S, s.X); s.mu = trans(m, S, T, s.X); s.Q = driveLoad(S, s.X, m.loads);
+      if (S.out && S.out.kind === 'link' && prev != null) s.out += 360 * Math.round((prev - s.out) / 360); // stetig
+      prev = s.out;
+    }
+    // Umkehrlagen: Vorzeichenwechsel der Übersetzung, Bisektion mit zweigtreuem Fahren
+    const rev = [];
+    for (let k = 1; k < smp.length; k++) {
+      const A = smp[k - 1], B = smp[k];
+      if (!(isFinite(A.i) && isFinite(B.i)) || A.i * B.i > 0 || A.i === 0) continue;
+      let va = A.v, Xa = A.X, ia = A.i, vb = B.v;
+      for (let it = 0; it < 40 && Math.abs(vb - va) > 1e-9; it++) {
+        const vm = (va + vb) / 2, r = advance(S, Xa, va, vm); if (!r.ok) break;
+        const im = ratio(S, r.X); if (im * ia > 0) { va = vm; Xa = r.X; ia = im; } else vb = vm;
+      }
+      const X = advance(S, Xa, va, (va + vb) / 2).X;
+      rev.push({ v: (va + vb) / 2, X, kind: revKind(T, m, S, X) });
+    }
+    const cur = advance(S, S.X0, v0, m.at == null ? v0 : m.at);
+    return { S, T, info: T && topoInfo(m, T), smp, full, lim: [b.lim, f.lim], rev, cur };
+  }
+  // Umkehrlage als Streck-/Decklage Antrieb–Koppel benennen (nur bei erkannter Topologie, Kurbelantrieb)
+  function revKind(T, m, S, X) {
+    if (!T || S.drv.kind !== 'link') return 'Umkehrlage';
+    const p = i => [X[2 * i], X[2 * i + 1]];
+    const [g, j, o] = T.kind === '4' ? (m.drive.link === T.l1 ? [T.A0, T.A, T.B] : [T.B0, T.B, T.A]) : [T.A0, T.A, T.P];
+    const w = ang(p(g), p(j), p(o));
+    return w > 179 ? 'Strecklage' : w < 1 ? 'Decklage' : 'Umkehrlage';
+  }
+
+  return { D, gauss, compile, place, newton, velocity, advance, run, outVal, ratio, driveLoad, topo, topoInfo, trans, grashof, sliderType,
+    fourbarClosed, sliderClosed, transFourbar, analyze };
+})();
+if (typeof module !== 'undefined') module.exports = Core;
+// === CORE END
+
+// ---- UI ----
+const RAD = Math.PI / 180, nf2 = new Intl.NumberFormat('de-DE', { maximumFractionDigits: 2, minimumFractionDigits: 2 });
+const P = (x, y, fix) => fix ? { x: +x.toFixed(1), y: +y.toFixed(1), fix: 1 } : { x: +x.toFixed(1), y: +y.toFixed(1) };
+const cpl = (a, b, s, t) => [a[0] + s * (b[0] - a[0]) - t * (b[1] - a[1]), a[1] + s * (b[1] - a[1]) + t * (b[0] - a[0])];
+const TPL = {
+  ks() { const r = Core.fourbarClosed(40, 120, 80, 100, 60 * RAD, 1), C = cpl(r.A, r.B, 0.5, 0.5);
+    return { pts: [P(0, 0, 1), P(...r.A), P(...r.B), P(100, 0, 1), P(...C)], links: [[0, 1], [1, 2, 4], [2, 3]], drive: { link: 0 }, out: { link: 2 }, trace: 4 }; },
+  ds() { // Deckel = Koppel, angetrieben über die vordere Schwinge
+    // Deckel 2 kg, Schwerpunkt Deckelmitte → 19,6 N
+    return { pts: [P(20, -95, 1), P(60, 10), P(130, 10), P(80, -120, 1), P(400, 10), P(-10, 0, 1), P(410, 0, 1), P(410, -150, 1), P(-10, -150, 1), P(230, 10)],
+      links: [[0, 1], [1, 2, 4, 9], [2, 3], [5, 6, 7, 8]], drive: { link: 0 }, out: { link: 2 }, trace: 4, loads: [{ p: 9, fx: 0, fy: -19.6 }] }; },
+  sk() { const a = [40 * Math.cos(60 * RAD), 40 * Math.sin(60 * RAD)], p = [Core.sliderClosed(40, 120, 0, 60 * RAD), 0], M = cpl(a, p, 0.5, 0.25);
+    return { pts: [P(0, 0, 1), P(...a), P(...p), P(...M)], links: [[0, 1], [1, 2, 3]], slider: { p: 2, a: 0, ang: 0 }, drive: { link: 0 }, out: { slider: true }, trace: 3 }; },
+  st() { // Vorderbein+Lehne = Gestell; Sitz hochklappen → Hinterbein klappt an
+    return { pts: [P(400, 0, 1), P(60, 850, 1), P(298, 255, 1), P(219.8, 450.5, 1), P(405.1, 369.8), P(60, 0), P(300, 450.5), P(620, 450.5)],
+      links: [[0, 1, 2, 3], [2, 4, 5], [4, 6], [3, 6, 7]], drive: { link: 3 }, out: { link: 1 }, trace: 5 }; },
+  leer() { return { pts: [], links: [], drive: {}, out: {} }; }
+};
+
+let S, A, X;
+const UI = { mode: 'build', tool: 'drag', sel: null, chain: [], pick: null, drag: null, view: null, blocked: false };
+const cv = $('ed');
+const HINT = {
+  drag: 'Punkt ziehen verschiebt ihn (1-mm-Raster). Punkt oder Glied antippen, um es zu wählen.',
+  point: 'Tippen setzt einen beweglichen Punkt.',
+  fix: 'Tippen setzt einen Gestellpunkt; Tippen auf einen Punkt schaltet Gestell an/aus.',
+  link: 'Punkte nacheinander antippen (leere Stelle legt einen an). Letzten Punkt erneut antippen beendet das Glied.',
+  slider: 'Erst Gleitpunkt, dann Gestellpunkt antippen. Die Führung verläuft durch beide.',
+  del: 'Punkt oder Glied antippen, um es zu löschen.',
+  move: 'Irgendwo ziehen oder Regler bewegen: dreht bzw. schiebt den Antrieb (orange). Der Zweig bleibt erhalten; an Totlagen stoppt die Bewegung.'
+};
+
+// ---- Hilfen ----
+const ok = () => A && !A.err;
+const crank = () => ok() && A.S.drv.kind === 'link';
+const uD = () => crank() ? '°' : ' mm';
+const uQ = () => crank() ? ' N·m' : ' N';
+const uO = () => A.S.out && A.S.out.kind === 'link' ? '°' : ' mm';
+const fixed = i => !!S.pts[i].fix;
+const wrapD = d => ((d % 360) + 540) % 360 - 180;
+function pos(i, Xa) { return Xa ? [Xa[2 * i], Xa[2 * i + 1]] : [S.pts[i].x, S.pts[i].y]; }
+const curX = () => UI.mode === 'move' && ok() ? X : null;
+// Anzeige der Antriebsachse: Umlauf → 0…360, sonst um 0 zentriert
+function dispV(v) { if (!A.full) return v - A.shift; const x = ((v % 360) + 360) % 360; return x > 359.95 ? 0 : x; }
+
+// ---- Rechnen ----
+function recompute(refit = true) {
+  if (UI.mode === 'build') delete S.at;
+  A = Core.analyze(S);
+  if (ok()) {
+    X = A.cur.X; S.at = A.cur.v;
+    const s = A.smp; A.shift = crank() && !A.full ? 360 * Math.round((s[0].v + s[s.length - 1].v) / 720) : 0;
+    let d = s.map(o => ({ v: o.v, out: o.out, i: o.i, mu: o.mu, Q: o.Q }));
+    if (A.full) { d = d.slice(0, -1).map(o => ({ ...o, v: dispV(o.v) })); const k = d.reduce((b, o, j) => o.v < d[b].v ? j : b, 0); d = [...d.slice(k), ...d.slice(0, k)]; }
+    else d.forEach(o => o.v = dispV(o.v));
+    if (A.S.out && A.S.out.kind === 'link') { for (let j = 1; j < d.length; j++) d[j].out += 360 * Math.round((d[j - 1].out - d[j].out) / 360);
+      const sh = 360 * Math.round(d[0].out / 360); d.forEach(o => o.out -= sh); A.oshift = sh; } else A.oshift = 0;
+    A.disp = d;
+  }
+  UI.blocked = false;
+  if (refit || !UI.view) fit(refit === 'full' || !UI.view);
+  drawAll(); renderSel();
+  if (!UI.drag) save();
+}
+// Ansicht: voll einpassen (Laden) oder nur erweitern, wenn Inhalt herausragt – kein Springen beim Konstruieren
+function fit(full) {
+  let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+  const add = (x, y) => { x0 = Math.min(x0, x); x1 = Math.max(x1, x); y0 = Math.min(y0, y); y1 = Math.max(y1, y); };
+  S.pts.forEach(p => add(p.x, p.y));
+  if (ok()) for (const s of A.smp) for (let i = 0; i < S.pts.length; i++) add(s.X[2 * i], s.X[2 * i + 1]);
+  if (!isFinite(x0)) { x0 = -100; x1 = 300; y0 = -100; y1 = 200; }
+  const m = Math.max(x1 - x0, y1 - y0, 50) * 0.08, v = UI.view;
+  if (!full && v && x0 >= v.x0 && x1 <= v.x1 && y0 >= v.y0 && y1 <= v.y1) return;
+  UI.view = full || !v ? { x0: x0 - m, x1: x1 + m, y0: y0 - m, y1: y1 + m }
+    : { x0: Math.min(v.x0, x0 - m), x1: Math.max(v.x1, x1 + m), y0: Math.min(v.y0, y0 - m), y1: Math.max(v.y1, y1 + m) };
+}
+function makeT(w, h) {
+  const v = UI.view, k = Math.min(w / (v.x1 - v.x0), h / (v.y1 - v.y0));
+  const ox = w / 2 - k * (v.x0 + v.x1) / 2, oy = h / 2 + k * (v.y0 + v.y1) / 2;
+  return { k, f: p => [ox + k * p[0], oy - k * p[1]], inv: (sx, sy) => [(sx - ox) / k, (oy - sy) / k] };
+}
+
+// ---- Zeichnen ----
+function hull(pts) { // konvexe Hülle (monotone Kette); kollinear → 2 Endpunkte
+  const p = pts.slice().sort((a, b) => a[0] - b[0] || a[1] - b[1]), c = (o, a, b) => (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]);
+  const lo = [], up = [];
+  for (const q of p) { while (lo.length > 1 && c(lo[lo.length - 2], lo[lo.length - 1], q) <= 1e-9) lo.pop(); lo.push(q); }
+  for (const q of p.reverse()) { while (up.length > 1 && c(up[up.length - 2], up[up.length - 1], q) <= 1e-9) up.pop(); up.push(q); }
+  return lo.slice(0, -1).concat(up.slice(0, -1));
+}
+function drawLinks(ctx, T, Xa, style) {
+  S.links.forEach((L, k) => {
+    const h = hull(L.map(i => T(pos(i, Xa)))), ground = L.filter(fixed).length >= 2;
+    if (h.length < 2) return;
+    ctx.beginPath(); h.forEach(([x, y], j) => j ? ctx.lineTo(x, y) : ctx.moveTo(x, y)); if (h.length > 2) ctx.closePath();
+    if (style) { ctx.strokeStyle = style.c; ctx.setLineDash(style.dash); ctx.lineWidth = 1; ctx.stroke(); ctx.setLineDash([]); return; }
+    if (h.length > 2 && !ground) { ctx.fillStyle = css('--grid'); ctx.fill(); }
+    const sel = UI.sel && UI.sel.t === 'l' && UI.sel.i === k, drv = UI.mode === 'move' && S.drive && S.drive.link === k;
+    ctx.strokeStyle = sel || drv ? css('--acc') : ground ? css('--mut') : css('--ink'); ctx.lineWidth = ground ? 4 : 2.5; ctx.lineJoin = 'round'; ctx.stroke();
+  });
+}
+function drawAll() { drawEd(); drawCharts(); renderStats(); syncDrive(); }
+function drawEd() {
+  const { ctx, w, h } = prep(cv), TT = makeT(w, h), T = TT.f; UI.T = TT;
+  // Raster: fein ≥ 6 px, grob = 5 × fein
+  let f = 10; while (f * TT.k < 6) f *= 5;
+  for (const [st, col] of [[f, '--grid'], [5 * f, '--grid2']]) {
+    ctx.strokeStyle = css(col); ctx.lineWidth = 1; ctx.beginPath();
+    const [ax, ay] = TT.inv(0, h), [bx, by] = TT.inv(w, 0);
+    for (let x = Math.ceil(ax / st) * st; x <= bx; x += st) { const sx = Math.round(T([x, 0])[0]) + .5; ctx.moveTo(sx, 0); ctx.lineTo(sx, h); }
+    for (let y = Math.ceil(ay / st) * st; y <= by; y += st) { const sy = Math.round(T([0, y])[1]) + .5; ctx.moveTo(0, sy); ctx.lineTo(w, sy); }
+    ctx.stroke();
+  }
+  ctx.font = '11px system-ui'; ctx.fillStyle = css('--mut'); ctx.fillText(`Raster ${nf0.format(f)} / ${nf0.format(5 * f)} mm`, 6, h - 6);
+  const Xa = curX();
+  if (ok()) {
+    A.rev.forEach(r => drawLinks(ctx, T, r.X, { c: css('--mut'), dash: [3, 4] }));
+    if (A.lim[0] != null) drawLinks(ctx, T, A.smp[0].X, { c: css('--warn'), dash: [3, 4] });
+    if (A.lim[1] != null) drawLinks(ctx, T, A.smp[A.smp.length - 1].X, { c: css('--warn'), dash: [3, 4] });
+    if (S.trace != null && S.trace < S.pts.length) {
+      ctx.strokeStyle = css('--mech'); ctx.lineWidth = 2; polyPath(ctx, A.smp.map(s => pos(S.trace, s.X)), T); if (A.full) ctx.closePath(); ctx.stroke();
+    }
+  }
+  if (S.slider && S.slider.p < S.pts.length && S.slider.a < S.pts.length) { // Führung + Gleitstein
+    const a = pos(S.slider.a, Xa), u = [Math.cos(S.slider.ang * RAD), Math.sin(S.slider.ang * RAD)], L = 4 * Math.max(UI.view.x1 - UI.view.x0, UI.view.y1 - UI.view.y0);
+    ctx.strokeStyle = css('--mut'); ctx.lineWidth = 1; ctx.setLineDash([3, 4]); polyPath(ctx, [[a[0] - L * u[0], a[1] - L * u[1]], [a[0] + L * u[0], a[1] + L * u[1]]], T); ctx.stroke(); ctx.setLineDash([]);
+    const [px, py] = T(pos(S.slider.p, Xa));
+    ctx.save(); ctx.translate(px, py); ctx.rotate(-S.slider.ang * RAD); ctx.fillStyle = css('--panel'); ctx.strokeStyle = css('--ink'); ctx.lineWidth = 1.5;
+    ctx.fillRect(-11, -7, 22, 14); ctx.strokeRect(-11, -7, 22, 14); ctx.restore();
+  }
+  drawLinks(ctx, T, Xa);
+  if (UI.chain.length) { ctx.strokeStyle = css('--acc'); ctx.setLineDash([3, 4]); ctx.lineWidth = 1.5; polyPath(ctx, UI.chain.map(i => pos(i, Xa)), T); ctx.stroke(); ctx.setLineDash([]); }
+  // Punkte
+  const deg = S.pts.map(() => 0); S.links.forEach(L => L.forEach(i => deg[i]++));
+  S.pts.forEach((p, i) => {
+    const [x, y] = T(pos(i, Xa)), sel = (UI.sel && UI.sel.t === 'p' && UI.sel.i === i) || UI.chain.includes(i) || UI.pick === i;
+    if (p.fix) { ctx.strokeStyle = css('--ink'); ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x - 7, y + 11); ctx.lineTo(x + 7, y + 11); ctx.closePath(); ctx.stroke();
+      ctx.beginPath(); for (let k = -7; k <= 7; k += 4) { ctx.moveTo(x + k, y + 11); ctx.lineTo(x + k - 3, y + 15); } ctx.stroke(); }
+    if (UI.mode === 'move' && deg[i] < 2 && !p.fix && !(S.slider && S.slider.p === i)) return;
+    ctx.beginPath(); ctx.arc(x, y, UI.mode === 'move' ? 4 : 5, 0, 7); ctx.fillStyle = sel ? css('--acc') : css('--panel'); ctx.fill();
+    ctx.strokeStyle = css('--ink'); ctx.lineWidth = 1.5; ctx.stroke();
+  });
+  if (ok() && S.trace != null && S.trace < S.pts.length) { const [x, y] = T(pos(S.trace, Xa)); ctx.beginPath(); ctx.arc(x, y, 3.5, 0, 7); ctx.fillStyle = css('--mech'); ctx.fill(); }
+  // Lastpfeile: feste Länge, Richtung = Kraft, Betrag als Text
+  for (const l of S.loads || []) { if (l.p >= S.pts.length) continue;
+    const [x, y] = T(pos(l.p, Xa)), F = Math.hypot(l.fx, l.fy); if (!F) continue;
+    const ux = l.fx / F, uy = -l.fy / F, L = 42, tx = x + ux * L, ty = y + uy * L, hx = -uy * 5, hy = ux * 5;
+    ctx.strokeStyle = ctx.fillStyle = css('--ink'); ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(tx, ty); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(tx, ty); ctx.lineTo(tx - ux * 9 + hx, ty - uy * 9 + hy); ctx.lineTo(tx - ux * 9 - hx, ty - uy * 9 - hy); ctx.closePath(); ctx.fill();
+    ctx.font = '11px system-ui'; ctx.fillText(nf1.format(F) + ' N', tx + 6, ty + 4); }
+  // Beschriftung: Antrieb / Abtrieb / Länge des gewählten Glieds
+  ctx.fillStyle = css('--mut'); ctx.font = '11px system-ui';
+  const tag = (L, txt) => { if (!L) return; const c = L.map(i => T(pos(i, Xa))).reduce((s, q) => [s[0] + q[0] / L.length, s[1] + q[1] / L.length], [0, 0]); ctx.fillText(txt, c[0] + 8, c[1] - 8); };
+  if (S.drive && S.drive.link != null) tag(S.links[S.drive.link], 'Antrieb');
+  if (S.out && S.out.link != null) tag(S.links[S.out.link], 'Abtrieb');
+  if (UI.mode === 'build' && UI.sel && UI.sel.t === 'l') { const L = S.links[UI.sel.i]; if (L) { const a = pos(L[0]), b = pos(L[1]), m = T([(a[0] + b[0]) / 2, (a[1] + b[1]) / 2]);
+    ctx.fillText(nf1.format(Math.hypot(b[0] - a[0], b[1] - a[1])) + ' mm', m[0] + 8, m[1] + 14); } }
+}
+function blank(c, txt) { const { ctx, w, h } = prep(c); ctx.font = '11px system-ui'; ctx.fillStyle = css('--mut'); ctx.textAlign = 'center'; ctx.fillText(txt, w / 2, h / 2); }
+function drawCharts() {
+  if (!ok()) { ['c1', 'c2', 'c3', 'c4'].forEach(id => blank($(id), A ? A.err : '')); return; }
+  const d = A.disp, x0 = d[0].v, x1 = Math.max(d[d.length - 1].v, x0 + 1e-6), M = css('--mech'), I = css('--ink'), W = css('--warn');
+  const xl = crank() ? 'Antrieb θ [°]' : 'Antrieb s [mm]', xs = A.full ? 60 : undefined, cur = [{ x: dispV(S.at), color: I }];
+  const rng = (ys, pad) => { let a = Math.min(...ys), b = Math.max(...ys); if (b - a < 1e-6) { a -= 1; b += 1; } const m = (b - a) * pad; return [a - m, b + m]; };
+  if (A.S.out) {
+    const [y0, y1] = rng(d.map(o => o.out), 0.06), near = v => d.reduce((b, o) => Math.abs(o.v - v) < Math.abs(b.v - v) ? o : b, d[0]).out;
+    chart($('c1'), { x0, x1, y0, y1, xs, xl, yl: A.S.out.kind === 'link' ? 'Abtrieb ψ [°]' : 'Abtrieb s [mm]', series: [{ pts: d.map(o => [o.v, o.out]), color: M }], vlines: cur,
+      points: A.rev.map(r => [dispV(r.v), near(dispV(r.v)), I]) });
+    const ai = d.map(o => Math.abs(o.i)).filter(isFinite).sort((a, b) => a - b), lim = Math.max(5 * (ai[ai.length >> 1] || 0), 0.1);
+    // je 10 °/mm Antrieb: chart.js beschriftet ganzzahlig
+    const pi = d.filter(o => isFinite(o.i)).map(o => [o.v, 10 * Math.max(-lim, Math.min(lim, o.i))]), [iy0, iy1] = rng(pi.map(p => p[1]).concat(0), 0.06);
+    chart($('c3'), { x0, x1, y0: iy0, y1: iy1, xs, xl, yl: `Abtrieb je 10${uD()} Antrieb [${uO().trim()}]`, series: [{ pts: pi, color: M }, { pts: [[x0, 0], [x1, 0]], color: css('--mut'), width: 1, dash: [3, 4] }], vlines: cur });
+  } else { blank($('c1'), 'Abtrieb wählen: Glied mit Gestellpunkt oder Schub'); blank($('c3'), 'Abtrieb wählen'); }
+  if (S.loads && S.loads.length) {
+    // Begrenzung: größter Betrag außerhalb ±2 um Totlagen (dort → ∞)
+    const lims = A.lim.filter(v => v != null).map(dispV), aq = d.filter(o => lims.every(l => Math.abs(o.v - l) > 2)).map(o => Math.abs(o.Q)).filter(isFinite).sort((a, b) => a - b);
+    const ql = Math.max(1.1 * (aq[aq.length - 1] || 0), 1e-3);
+    // kleine Momente in N·mm: chart.js beschriftet ganzzahlig
+    const k = crank() && Math.min(ql, aq[aq.length - 1] || 0) < 5 ? 1000 : 1;
+    const pq = d.filter(o => isFinite(o.Q)).map(o => [o.v, k * Math.max(-ql, Math.min(ql, o.Q))]), [qy0, qy1] = rng(pq.map(p => p[1]).concat(0), 0.06);
+    chart($('c4'), { x0, x1, y0: qy0, y1: qy1, xs, xl, yl: crank() ? `Haltemoment M [${k > 1 ? 'N·mm' : 'N·m'}]` : 'Haltekraft F [N]', series: [{ pts: pq, color: M }, { pts: [[x0, 0], [x1, 0]], color: css('--mut'), width: 1, dash: [3, 4] }], vlines: cur });
+  } else blank($('c4'), 'Last an einem Punkt eintragen (Konstruieren → Punkt wählen → Fx/Fy)');
+  if (A.T) chart($('c2'), { x0, x1, y0: 0, y1: 90, xs, xl, yl: 'μ [°]', series: [{ pts: d.map(o => [o.v, o.mu]), color: M }, { pts: [[x0, 40], [x1, 40]], color: W, width: 1, dash: [4, 4] }], vlines: cur });
+  else blank($('c2'), 'μ nur für Viergelenk und Schubkurbel');
+}
+// aktueller Abtrieb im Bezugssystem des Diagramms (Winkel stetig zur Kurve)
+function outNow() {
+  let v = Core.outVal(A.S, X); if (uO() !== '°') return v;
+  const c = dispV(S.at), r = A.disp.reduce((b, o) => Math.abs(o.v - c) < Math.abs(b.v - c) ? o : b, A.disp[0]).out;
+  v -= A.oshift; return v - 360 * Math.round((v - r) / 360);
+}
+function stat(v, label, warn) { return `<div class="stat${warn ? ' warn' : ''}"><b>${v}</b><span>${label}</span></div>`; }
+function renderStats() {
+  if (!ok()) { $('stats').innerHTML = stat('⚠', A ? A.err : '', true); return; }
+  const fD = v => nf1.format(v) + uD(), s = A.smp, h = [];
+  h.push(stat(A.info ? A.info.type : '–', A.info ? 'Getriebetyp' : 'Getriebetyp (nur Viergelenk/Schubkurbel)'));
+  h.push(stat(A.full ? 'Umlauf 360°' : `${fD(dispV(s[0].v))} … ${fD(dispV(s[s.length - 1].v))}`, 'Bewegungsbereich Antrieb'));
+  h.push(stat(fD(dispV(S.at)), 'Antrieb aktuell'));
+  if (A.S.out) {
+    h.push(stat(nf1.format(outNow()) + uO(), 'Abtrieb aktuell'));
+    const os = A.disp.map(o => o.out); h.push(stat(nf1.format(Math.max(...os) - Math.min(...os)) + uO(), 'Hub Abtrieb'));
+    const i = Core.ratio(A.S, X), ui = uO().trim() + '/' + uD().trim();
+    h.push(stat(isFinite(i) && Math.abs(i) < 1000 ? nf2.format(i) + (ui === '°/°' ? '' : ' ' + ui) : '∞', 'Übersetzung aktuell'));
+  }
+  if (A.T) {
+    const mu = Core.trans(S, A.S, A.T, X), mn = s.reduce((b, o) => o.mu < b.mu ? o : b, s[0]);
+    h.push(stat((mu < 40 ? '⚠ ' : '') + nf1.format(mu) + '°', 'μ aktuell', mu < 40));
+    h.push(stat((mn.mu < 40 ? '⚠ ' : '') + nf1.format(mn.mu) + '°', `μ min bei ${fD(dispV(mn.v))}`, mn.mu < 40));
+  }
+  if (S.loads && S.loads.length) {
+    const lims = A.lim.filter(v => v != null), q = Core.driveLoad(A.S, X, S.loads);
+    const qs = s.filter(o => lims.every(l => Math.abs(o.v - l) > 2)).map(o => o.Q).filter(isFinite), qm = qs.reduce((b, v) => Math.abs(v) > Math.abs(b) ? v : b, 0);
+    const f = v => (crank() ? nf2 : nf1).format(v) + uQ();
+    h.push(stat(isFinite(q) && Math.abs(q) < 1e6 ? f(q) : '∞', crank() ? 'Haltemoment aktuell' : 'Haltekraft aktuell'));
+    h.push(stat(f(qm), (crank() ? 'Haltemoment' : 'Haltekraft') + (lims.length ? ' max. (ohne ±2' + uD().trim() + ' um Totlagen)' : ' max.')));
+  }
+  const kinds = [...new Set(A.rev.map(r => r.kind))].join(' / ') || 'Umkehrlagen';
+  h.push(stat(A.rev.length ? A.rev.map(r => dispV(r.v)).sort((a, b) => a - b).map(v => nf1.format(v)).join(' · ') + uD() : 'keine', kinds + ' (Abtrieb kehrt um)'));
+  const lim = A.lim.filter(v => v != null).map(dispV).sort((a, b) => a - b);
+  h.push(stat((UI.blocked ? '⚠ ' : '') + (lim.length ? lim.map(v => nf1.format(v)).join(' · ') + uD() : 'keine'), UI.blocked ? 'Totlage erreicht – klemmt' : 'Totlagen (Antrieb blockiert)', UI.blocked));
+  if (S.trace != null && S.trace < S.pts.length) {
+    const xs = s.map(o => o.X[2 * S.trace]), ys = s.map(o => o.X[2 * S.trace + 1]);
+    h.push(stat(`${nf0.format(Math.max(...xs) - Math.min(...xs))} × ${nf0.format(Math.max(...ys) - Math.min(...ys))} mm`, 'Bahnkurve B × H'));
+  }
+  $('stats').innerHTML = h.join('');
+}
+function syncDrive() {
+  const r = $('drv'), o = $('drvO');
+  r.disabled = UI.mode !== 'move' || !ok();
+  if (!ok()) { o.textContent = '–'; return; }
+  const s = A.smp; r.min = A.full ? 0 : dispV(s[0].v); r.max = A.full ? 360 : dispV(s[s.length - 1].v); r.step = crank() ? 0.1 : 0.1;
+  const v = UI.mode === 'move' ? S.at : A.S.v0; r.value = dispV(v); o.textContent = nf1.format(dispV(v)) + uD();
+}
+
+// ---- Auswahlfeld ----
+function renderSel() {
+  const el = $('selp'), s = UI.sel; $('hint').textContent = UI.mode === 'move' ? HINT.move : HINT[UI.tool];
+  if (UI.mode !== 'build' || !s) { el.innerHTML = ''; return; }
+  if (s.t === 'p') {
+    const p = S.pts[s.i], sl = S.slider && S.slider.p === s.i;
+    el.innerHTML = `<b>Punkt</b> x <input type="number" id="sx" step="1" value="${p.x}"> y <input type="number" id="sy" step="1" value="${p.y}"> mm
+      <label class="chk"><input type="checkbox" id="sf" ${p.fix ? 'checked' : ''}> Gestell</label>
+      <button id="st" class="${S.trace === s.i ? 'on' : ''}">Bahnkurve</button>
+      <span class="sep"></span><b>Last</b> Fx <input type="number" id="lx" step="1" value="${ld(s.i).fx}"> Fy <input type="number" id="ly" step="1" value="${ld(s.i).fy}"> N` +
+      (sl ? `<span class="sep"></span><b>Schub</b><button id="sd" class="${S.drive.slider ? 'on' : ''}">Antrieb</button><button id="so" class="${S.out.slider ? 'on' : ''}">Abtrieb</button><button id="sr">entfernen</button>` : '');
+    const xy = () => { const x = +$('sx').value, y = +$('sy').value; if (isFinite(x) && isFinite(y)) { p.x = x; p.y = y; slAng(s.i); recompute(); } };
+    $('sx').onchange = xy; $('sy').onchange = xy;
+    $('sf').onchange = e => { e.target.checked ? p.fix = 1 : delete p.fix; recompute(); };
+    $('st').onclick = () => { S.trace = s.i; recompute(false); };
+    const lf = () => { const fx = +$('lx').value || 0, fy = +$('ly').value || 0; S.loads = (S.loads || []).filter(l => l.p !== s.i);
+      if (fx || fy) S.loads.push({ p: s.i, fx, fy }); recompute(false); };
+    $('lx').onchange = lf; $('ly').onchange = lf;
+    if (sl) { $('sd').onclick = () => { S.drive = { slider: true }; recompute(); }; $('so').onclick = () => { S.out = { slider: true }; recompute(false); };
+      $('sr').onclick = () => { delete S.slider; if (S.drive.slider) S.drive = {}; if (S.out.slider) S.out = {}; recompute(); }; }
+  } else {
+    const L = S.links[s.i], b = pos(L[0]), d = L.slice(1).map(i => nf1.format(Math.hypot(pos(i)[0] - b[0], pos(i)[1] - b[1])));
+    el.innerHTML = `<b>Glied</b> <span class="note">Abstände ab erstem Punkt: ${d.join(' / ')} mm</span>
+      <button id="sd" class="${S.drive.link === s.i ? 'on' : ''}">Antrieb</button><button id="so" class="${S.out.link === s.i ? 'on' : ''}">Abtrieb</button>`;
+    $('sd').onclick = () => { S.drive = { link: s.i }; recompute(); };
+    $('so').onclick = () => { S.out = { link: s.i }; recompute(false); };
+  }
+}
+
+// ---- Bearbeiten ----
+const ld = i => (S.loads || []).find(l => l.p === i) || { fx: 0, fy: 0 };
+function slAng(i) { const sl = S.slider; if (sl && (sl.p === i || sl.a === i)) { const p = S.pts[sl.p], a = S.pts[sl.a]; if (Math.hypot(p.x - a.x, p.y - a.y) > 1e-6) sl.ang = Math.atan2(p.y - a.y, p.x - a.x) / RAD; } }
+function delPoint(i) {
+  const m = j => j > i ? j - 1 : j, old = S.links;
+  S.pts.splice(i, 1);
+  const keep = old.map(L => L.filter(j => j !== i).map(m)), idx = []; S.links = [];
+  keep.forEach((L, k) => { if (L.length >= 2) { idx[k] = S.links.length; S.links.push(L); } });
+  for (const key of ['drive', 'out']) if (S[key].link != null) S[key] = idx[S[key].link] != null ? { link: idx[S[key].link] } : {};
+  if (S.slider) { if (S.slider.p === i || S.slider.a === i) { delete S.slider; if (S.drive.slider) S.drive = {}; if (S.out.slider) S.out = {}; } else { S.slider.p = m(S.slider.p); S.slider.a = m(S.slider.a); } }
+  if (S.trace === i) delete S.trace; else if (S.trace != null) S.trace = m(S.trace);
+  if (S.loads) S.loads = S.loads.filter(l => l.p !== i).map(l => ({ ...l, p: m(l.p) }));
+}
+function delLink(k) {
+  S.links.splice(k, 1);
+  for (const key of ['drive', 'out']) { const l = S[key].link; if (l === k) S[key] = {}; else if (l > k) S[key] = { link: l - 1 }; }
+}
+function hitPoint(sx, sy) { let best = -1, bd = 12; S.pts.forEach((p, i) => { const [x, y] = UI.T.f(pos(i, curX())), d = Math.hypot(x - sx, y - sy); if (d < bd) { bd = d; best = i; } }); return best; }
+function hitLink(sx, sy) {
+  let best = -1, bd = 7;
+  S.links.forEach((L, k) => { const h = hull(L.map(i => UI.T.f(pos(i)))); for (let j = 0; j < h.length; j++) { const a = h[j], b = h[(j + 1) % h.length], dx = b[0] - a[0], dy = b[1] - a[1];
+    const t = Math.max(0, Math.min(1, ((sx - a[0]) * dx + (sy - a[1]) * dy) / (dx * dx + dy * dy || 1))), d = Math.hypot(a[0] + t * dx - sx, a[1] + t * dy - sy); if (d < bd) { bd = d; best = k; } } });
+  return best;
+}
+function evPos(e) { const r = cv.getBoundingClientRect(); return [e.clientX - r.left, e.clientY - r.top]; }
+const snap = v => Math.round(v);
+
+cv.addEventListener('pointerdown', e => {
+  const [sx, sy] = evPos(e), mm = UI.T.inv(sx, sy); cv.setPointerCapture(e.pointerId);
+  if (UI.mode === 'move') { if (!ok()) return; UI.drag = { move: true, off: S.at - driveAt(mm) }; return; }
+  const hp = hitPoint(sx, sy), add = fix => { S.pts.push(P(snap(mm[0]), snap(mm[1]), fix)); return S.pts.length - 1; };
+  switch (UI.tool) {
+    case 'drag': if (hp >= 0) { UI.sel = { t: 'p', i: hp }; UI.drag = { i: hp }; } else { const hl = hitLink(sx, sy); UI.sel = hl >= 0 ? { t: 'l', i: hl } : null; } drawEd(); renderSel(); return;
+    case 'point': UI.sel = { t: 'p', i: hp >= 0 ? hp : add(false) }; break;
+    case 'fix': if (hp >= 0) { S.pts[hp].fix ? delete S.pts[hp].fix : S.pts[hp].fix = 1; UI.sel = { t: 'p', i: hp }; } else UI.sel = { t: 'p', i: add(true) }; break;
+    case 'link': { const i = hp >= 0 ? hp : add(false), c = UI.chain;
+      if (c.length && c[c.length - 1] === i) { if (c.length >= 2) { S.links.push(c.slice()); UI.sel = { t: 'l', i: S.links.length - 1 }; } UI.chain = []; }
+      else if (!c.includes(i)) c.push(i); break; }
+    case 'slider': if (hp < 0) return;
+      if (UI.pick == null) { if (!fixed(hp)) UI.pick = hp; drawEd(); return; }
+      if (fixed(hp) && hp !== UI.pick) { S.slider = { p: UI.pick, a: hp, ang: 0 }; slAng(UI.pick); UI.sel = { t: 'p', i: UI.pick }; }
+      UI.pick = null; break;
+    case 'del': if (hp >= 0) delPoint(hp); else { const hl = hitLink(sx, sy); if (hl >= 0) delLink(hl); } UI.sel = null; break;
+  }
+  recompute();
+});
+let raf = 0;
+cv.addEventListener('pointermove', e => {
+  if (!UI.drag) return;
+  const mm = UI.T.inv(...evPos(e));
+  if (UI.drag.move) { go(driveAt(mm) + UI.drag.off); return; }
+  const p = S.pts[UI.drag.i]; p.x = snap(mm[0]); p.y = snap(mm[1]); slAng(UI.drag.i);
+  if (!raf) raf = requestAnimationFrame(() => { raf = 0; recompute(false); });
+});
+cv.addEventListener('pointerup', () => { if (!UI.drag) return; const mv = UI.drag.move; UI.drag = null; if (mv) save(); else recompute(true); });
+// Antriebswert, den der Zeiger vorgibt (ohne Versatz)
+function driveAt(mm) {
+  if (crank()) { const g = pos(A.S.drv.g), a = Math.atan2(mm[1] - g[1], mm[0] - g[0]) / RAD; return S.at + wrapD(a - S.at); }
+  const a = pos(S.slider.a), u = A.S.sl.u; return (mm[0] - a[0]) * u[0] + (mm[1] - a[1]) * u[1];
+}
+// Antrieb zweigtreu auf t fahren
+function go(t) {
+  const s = A.smp; if (!A.full) t = Math.max(s[0].v, Math.min(s[s.length - 1].v, t));
+  const r = Core.advance(A.S, X, S.at, t); X = r.X; S.at = r.v;
+  UI.blocked = !r.ok || A.lim.some(l => l != null && Math.abs(S.at - l) < 1e-3);
+  drawAll();
+}
+$('drv').addEventListener('input', e => {
+  if (!ok()) return; const r = e.target, v = +r.value, s = A.smp;
+  if (A.full) return go(S.at + wrapD(v - dispV(S.at)));
+  go(v > +r.max - 0.1 ? s[s.length - 1].v : v < +r.min + 0.1 ? s[0].v : v + A.shift); // Reglerraster: Enden exakt anfahren
+});
+$('drv').addEventListener('change', save);
+
+// ---- Modus, Werkzeuge, Vorlagen ----
+function setMode(m) {
+  if (m === UI.mode) return;
+  if (m === 'move' && !ok()) { $('hint').textContent = '⚠ ' + (A ? A.err : '') + ' – erst ein bewegliches Getriebe mit Antrieb konstruieren.'; return; }
+  if (m === 'build' && ok()) S.pts.forEach((p, i) => { p.x = +X[2 * i].toFixed(3); p.y = +X[2 * i + 1].toFixed(3); }); // Ist-Lage wird Konstruktionslage
+  UI.mode = m; UI.chain = []; UI.pick = null;
+  $('mBuild').classList.toggle('on', m === 'build'); $('mMove').classList.toggle('on', m === 'move');
+  document.querySelectorAll('#tools button').forEach(b => b.disabled = m === 'move');
+  recompute(m === 'build');
+}
+$('mBuild').onclick = () => setMode('build'); $('mMove').onclick = () => setMode('move');
+document.querySelectorAll('#tools button').forEach(b => b.onclick = () => {
+  UI.tool = b.dataset.t; UI.chain = []; UI.pick = null;
+  document.querySelectorAll('#tools button').forEach(x => x.classList.toggle('on', x === b)); drawEd(); renderSel();
+});
+window.addEventListener('keydown', e => { if (e.key === 'Escape') { UI.chain = []; UI.pick = null; drawEd(); } });
+function load(m, mode) {
+  S = m; UI.sel = null; UI.chain = []; UI.pick = null; UI.mode = 'build'; UI.view = null;
+  $('mBuild').classList.add('on'); $('mMove').classList.remove('on'); document.querySelectorAll('#tools button').forEach(b => b.disabled = false);
+  const at = S.at; recompute('full');
+  if (mode === 'move' && ok()) { setMode('move'); if (at != null) go(at); save(); }
+}
+$('tpl').onchange = e => { if (TPL[e.target.value]) load(TPL[e.target.value]()); e.target.value = ''; };
+
+// ---- Datei & Teilen ----
+const TYPE = 'designphysik/mechanismus';
+function exportObj() { const o = { type: TYPE, version: 1, pts: S.pts, links: S.links, drive: S.drive, out: S.out };
+  if (S.slider) o.slider = S.slider; if (S.trace != null) o.trace = S.trace; if (S.loads && S.loads.length) o.loads = S.loads; if (UI.mode === 'move' && ok()) o.at = +S.at.toFixed(4); return o; }
+function save() { dpHashSet('m', exportObj()); }
+// Eingang prüfen (Datei/Hash sind fremd)
+function parse(o) {
+  if (!o || o.type !== TYPE || !Array.isArray(o.pts) || !Array.isArray(o.links)) return null;
+  if (!o.pts.every(p => p && isFinite(p.x) && isFinite(p.y)) || !o.links.every(L => Array.isArray(L) && L.every(Number.isInteger))) return null;
+  const n = o.pts.length, idx = i => Number.isInteger(i) && i >= 0 && i < n;
+  const m = { pts: o.pts.map(p => p.fix ? { x: +p.x, y: +p.y, fix: 1 } : { x: +p.x, y: +p.y }), links: o.links, drive: o.drive || {}, out: o.out || {} };
+  if (o.slider && idx(o.slider.p) && idx(o.slider.a) && isFinite(o.slider.ang)) m.slider = { p: o.slider.p, a: o.slider.a, ang: +o.slider.ang };
+  if (idx(o.trace)) m.trace = o.trace;
+  if (Array.isArray(o.loads)) m.loads = o.loads.filter(l => l && idx(l.p) && isFinite(l.fx) && isFinite(l.fy)).map(l => ({ p: l.p, fx: +l.fx, fy: +l.fy }));
+  if (isFinite(o.at)) m.at = +o.at;
+  return m;
+}
+$('exp').onclick = () => dpDownload(exportObj(), 'mechanismus.json');
+$('imp').onclick = () => $('impF').click();
+$('impF').onchange = e => { const f = e.target.files[0]; if (!f) return; f.text().then(t => { let m = null; try { m = parse(JSON.parse(t)); } catch {}
+  $('fileN').textContent = m ? 'Geladen: ' + f.name : '⚠ Keine gültige Mechanismus-Datei'; if (m) load(m, m.at != null ? 'move' : 'build'); }); e.target.value = ''; };
+$('share').onclick = () => { save(); const u = location.href; (navigator.clipboard ? navigator.clipboard.writeText(u) : Promise.reject()).then(() => $('fileN').textContent = 'Link kopiert', () => $('fileN').textContent = 'Link steht in der Adresszeile'); };
+
+dpHeader('mechanismus', 'Mechanismen');
+{ const h = parse(dpHashGet('m')); load(h || TPL.ks(), h && h.at != null ? 'move' : 'build'); }
+window.addEventListener('resize', drawAll);
+</script>
+</body>
+</html>

@@ -1,0 +1,87 @@
+# Designphysik – Konzept, Architektur, Konventionen
+
+Zentrales Dokument. Jede Sitzung liest es zuerst (siehe `CLAUDE.md`) und trägt Entscheidungen, die alle Module betreffen, hier ein.
+
+## Ziel
+Niederschwellige Browser-Werkzeugsuite für Produktdesign (nicht Physikunterricht). Selbst gehostet, statische Dateien, kein Build-Schritt, keine externen Abhängigkeiten. Zielgruppe bewusst offen.
+
+## Arbeitsweise (ab 19.11.2026 im Repository `davidgebka/physik`)
+- **Zentraler Chat** (Orchestrator): Gesamtkonzept, Konventionen, `shared/` (außer style.css), `tools/`, `_vorlage/`, Startseite; prüft Pull Requests und führt nach `main` zusammen.
+- **Style-Chat**: Branch `style`; `docs/styleguide.md` und `shared/style.css` – sonst nichts in `shared/`. Token-Änderungen kurz im Styleguide begründen.
+- **Ein Chat pro Modul**: Branch `modul/<key>`; ändert nur `<modul>/` und den eigenen Abschnitt unter „Module“.
+- `main` ist immer lauffähig; die CI (`.github/workflows/test.yml`) führt bei jedem Push alle `*/test.js` aus.
+
+### Ablauf für einen Modul-Chat
+1. `CLAUDE.md`, dieses Dokument, `docs/styleguide.md`, `README.md`, `shared/*` und `_vorlage/*` lesen; `gefaess/` dient als Referenzbeispiel.
+2. Branch `modul/<key>` von `main` anlegen (neues Modul: `_vorlage/` nach `<key>/` kopieren).
+3. Entwickeln; `node <key>/test.js` grün; im Browser prüfen (Desktop und 390 px).
+4. Stand unten bei „Module“ eintragen, Pull Request nach `main` öffnen.
+5. **`shared/` nicht selbst ändern.** Bedarf unter „Wünsche an shared“ eintragen; bis dahin modul-lokal lösen.
+
+## Architekturentscheidung (19.11.2026)
+- **Kein gemeinsamer Profil-Editor.** Jedes Modul bekommt einen Editor, der zu seinem Problem passt:
+  - Licht: Schirm als offene dünne Schale (oben und unten offen), Lichtquelle frei positionierbar
+  - Flüssigkeit: geschlossener Hohlraum mit Boden und Öffnung
+  - Last: Querschnitt, Spannweite, Auflager, Lasten
+  - Mechanismen: ebenes Gelenkgetriebe aus Gliedern und Drehgelenken in der Seitenansicht
+- **Gemeinsam bleibt nur, was die Zusammenführung billig macht:** Einheiten, Look & Feel, Diagramme, Dateiformat, Dateistruktur.
+
+## Konventionen (verbindlich)
+- **Struktur:** `index.html` (Startseite) · `shared/` (style.css, util.js, chart.js) · `tools/` (load-core.js, check.js) · `_vorlage/` · `<modul>/index.html` + `<modul>/test.js` · `docs/`
+- **Modul-Registry:** `DP_MODULES` in `shared/util.js` – einzige Stelle; Kopfzeile per `dpHeader(key, titel)`
+- **Shared-Globale:** `$`, `nf0`, `nf1`, `css`, `prep`, `polyPath`, `dpDownload`, `dpHashGet/Set`, `niceStep`, `chart`
+- **Links** immer explizit auf `…/index.html` (damit file:// funktioniert)
+- **Technik:** Vanilla JS, Canvas 2D (WebGL/WebGPU nur, wo nötig), keine CDNs
+- **Einheiten:** mm, ml, g, N, lm/cd/lx, Winkel in Grad in der UI; deutsche Zahlenformatierung
+- **Rechenkern** im Block `// === CORE START … CORE END`, ohne DOM, endet mit `if (typeof module !== 'undefined') module.exports = Core;`. Jede Physik wird gegen analytische Fälle verifiziert (test.js).
+- **Gültigkeit:** Jedes Modul hat einen Abschnitt „Modell & Gültigkeit“.
+- **Export:** JSON `{type:"designphysik/<modul>", version, …}`; Teilen per URL-Hash `#<kürzel>=…`
+- **Look:** Grundrichtung D „Ulmer Raster“ (19.11.2026), verbindlich nach `docs/styleguide.md`. Farben nur aus style.css; `--acc` (Orange) nur für Bedienung; ein Akzent pro Physik (Wasser `--water #3d86de`; Vorschlag Licht `--light #e0a020`, Last `--load #5b55c9`; Mechanismen: Akzent offen → Style-Chat, modul-lokal vorerst `--mech #2a8f86`).
+
+## Integration
+- **19.11.2026, Stand 1** (zentraler Chat): Gefäß v1.3.3, Licht v1, Mechanismen v1.1 zusammengeführt. Registry: Licht und Mechanismen `ready: true`. Tests mit neuem load-core: Gefäß 29/29, Licht 61/61 (8,6 s statt ~12 s), Mechanismen 40/40. Browser (Chrome headless, file://, 1280 px und 390 px): Startseite → jedes Modul → Kopfzeile zurück, Navigation zwischen Modulen, Licht „ruhig nach 1,0 s“, Konsole fehlerfrei.
+- **19.11.2026, Umzug nach GitHub**: Stand 1 als erster Commit in `davidgebka/physik`; Dokumente aus dem claude.ai-Projekt nach `docs/`; Projektanweisungen → `CLAUDE.md`; CI ergänzt. Das claude.ai-Projekt ist ab jetzt nicht mehr Quelle für Code.
+
+## Module
+1. **Gefäß & Kippen** – v1 fertig (`gefaess/`). Volumen, Eichstriche, Füllkurve, quasistatisches Kippen mit Überlaufbarriere (Schulter, Kammer), Lippen-Trimmung, Kippkurve, Kennwerte. Tests: Zylinder, Kegel, Halbkugel, gekippter Zylinder, Ausgießbeginn, Lippen-Trimmung.
+   v1.1 (19.11.2026): Canvas-Farben nur noch über Tokens (Achse `--mut` [3,4], Spiegelseite `--mut`, Kontrollpolygon `--grid2`, Griffe `--panel`; ausgewählter Punkt und Freihandstrich `--acc`).
+   v1.2 (19.11.2026): Glättung = Catmull-Rom-Tangenten mit monotoner Begrenzung je Koordinate (Fritsch-Carlson). Jedes Segment bleibt im Rechteck seiner Kontrollpunkte: kein Boden unter z=0, kein x<0, breitester Kontrollpunkt = breitester Punkt; geglätteter Zylinder bleibt exakt. Geglättete Vorlagen haben dadurch leicht andere Volumina als v1. Tests ergänzt (glatter Zylinder, Karaffe min z/max r, 200 Zufallsprofile).
+   v1.3 (19.11.2026): Schwerpunkt & Kippsicherheit. Gefäß als dünne Schale (Wandstärke × Mittelfläche + Bodenplatte unter flachem Boden; Material Glas/Porzellan/Steinzeug/PP/Edelstahl), Standradius auto = Bodenplatte oder manuell. Kennwerte: Gewicht Gefäß, Schwerpunkt (gefüllt/leer), Kippwinkel um die Standkante mit mitlaufendem und auslaufendem Wasser (gefüllt/leer), Umstoßkraft am Rand. Editor zeigt Standfläche und Schwerpunkt, Kippansicht Lot und ⚠ jenseits der Standkante. Export/Hash um Wand, Boden, Material, Standradius erweitert (optional, version bleibt 1).
+   v1.3.2 (19.11.2026, zwei Review-Runden): Mittelfläche = Innenkontur um t/2 nach außen versetzt (Gehrung an Ecken) → Zylinder exakt, Masse vorher ~4 % zu klein · Standfläche am tiefsten Punkt statt am ersten · ohne flachen Boden (Rundboden) Kippwinkel/Umstoßkraft „–“ mit ⚠ statt Scheinwert, kein Lot in der Kippansicht · „Standradius auto“ als Häkchen (Touch) · Import/Link validiert (Material nur bekannte Schlüssel, Zahlen begrenzt) · Kippwinkel-Rechnung ~1/3 schneller. 28 Tests, u. a. Hohlhalbkugel (V, SP), Kippwinkel mit Flüssigkeit gegen geschlossene Lösung gekippter Zylinder (31,722° vs. 31,723°).
+   v1.3.3 (19.11.2026, Review-Runden 3+4): Freihand-Boden wird beim Abschluss geebnet (fast waagrechtes erstes Stück am Achsenpunkt) – vorher meldete praktisch jedes Freihand-Gefäß „kein flacher Boden“ · Profil und Füllmenge aus Link/Import validiert (ungültige Punkte verworfen, sonst Vorlage bleibt; vorher NaN) · fehlende Einheiten in Kennwert-Notizen ergänzt · Hinweis: manueller Standradius verschiebt nur die Kippkante, ohne Masse. 29 Tests, neu: Kippwinkel mit Auslaufen gegen geschlossene Lösung (randvoller Zylinder, 28,813° vs. 28,812°). Browser: recompute ~6 ms, Kippwinkel ~12 ms je Fall (Desktop-Chrome), weiter entprellt wegen Telefonen.
+   Offen: Ausgießtülle · Ausflussdynamik · echte Außenkontur (ersetzt dünne Schale) · Diagramm „Kippwinkel über Füllmenge“ (verschoben).
+2. **Licht / Lampenschirm** – **v1 fertig** (`licht/`, Key `licht`, Hash `#l=`, 19.11.2026). Rechengrundlage `docs/licht-grundlagen.md` (inkl. Stand der Technik).
+   UI: Profil-Editor (Freihand + Punkte, gespiegelt; Zeichenrichtung intern normiert: unten → oben, waagrechte Profile so, dass die Innenseite zur Lampe zeigt), Lampe ziehbar (rastet nahe der Achse ein), Vorlagen Kegelschirm/Zylinder/Kugel (Opal)/Glocke/Flache Scheibe (je mit passendem Material). Lichtstrom 470/806/1521/2452 lm oder frei, Abstrahlung rundum oder nach unten. Material-Presets Opalglas, Papier hell, Stoff hell, Metall weiß lackiert, Aluminium gebürstet, Spiegel; Rohwerte unter „Erweitert“. Ergebnisse: LVK polar (cd/klm ↔ cd; Lampe neben der Achse → C0–C180 und C90–C270 als Sektoren ±37,5°, Polkappen über alle C), E(r) auf Tischebene mit ±σ (Höhe einstellbar) + Wert unter der Leuchte, Leuchtdichte als Falschfarbe auf der Kontur je Seite (`--grid2` → `--light`, ab 20 000 cd/m² `--warn` + ⚠), Kennwerte η, unten/oben, Abschirmwinkel (geometrisch), max. Leuchtdichte. Export/Import JSON `{type:"designphysik/licht", version:1, p, s:[x,z,phi,type], m: key | [ρd in, ρs in, ρd außen, ρs außen, τd, τs], d}`, Link `#l=` mit Validierung.
+   Rechnen: Web Worker aus Blob mit dem CORE-Quelltext der Seite (läuft unter file:// in Chrome; ohne Worker automatisch Hauptthread in kleinen Paketen), Pakete à 20 000 Lichtteilchen, Neustart bei jeder Änderung. „Ruhig“ = LVK ±3 % an der ungünstigsten Stützstelle (≥ 10 % des Maximums, ohne Polkappen), E unter der Leuchte ±5 %, max. Leuchtdichte ±3 %; Obergrenze 4 Mio.
+   **Laufzeit bis „ruhig“** (Desktop-Chrome headless, Worker, 19.11.2026): Kegelschirm 1,0 s · Glocke 1,1 s · Scheibe 0,6 s · Zylinder 1,3 s · Kugel (Opal) 3,6 s · Kegel mit Lampe 60 mm neben der Achse 3,1 s. Telefon nicht gemessen: Chrome drosselt Worker in der Emulation nicht; erwartet Faktor 3–5 langsamer (Schätzung), die UI bleibt flüssig, weil nur der Worker rechnet.
+   CORE v1: `trace`, neu `normalize` (Zähler → Größen, für aufsummierte Worker-Pakete) und `shield` (Abschirmwinkel geometrisch, ungünstigste C-Ebene). Dabei gefunden und behoben: Strahlen exakt durch einen Eckpunkt zwischen zwei Segmenten schlüpften wegen Rundung durch (Bereichsgrenzen jetzt minimal überlappend) – in der Zufallsverfolgung praktisch nie getroffen, in der Rasterabtastung des Abschirmwinkels schon.
+   test.js: 61 Prüfungen, ~9 s, u. a. T14 (normalize bitgleich, summierte Pakete normiert) und T15 (Abschirmwinkel: Zylinder 45°, Lampe außermittig 90° − atan 1,6, geschlossene Kugel 90°, ohne Schirm 0°). Mutationstest 10/10, 0 Fehlalarme in 20 Seeds.
+   Browser geprüft (Chrome headless, file://): Desktop 1280 px und 390 px (kein Überlaufen), alle Vorlagen, Lampe ziehen, Freihand oben→unten, ungültige Rohwerte (Meldung statt Rechnung), Link speichern/neu laden identisch, unsinniger Link → Vorgabe; Konsole fehlerfrei. Nicht geprüft: echtes Telefon/Touch, Safari, Firefox.
+   Materialquellen: Opalglas, weiß lackiert, Aluminium gebürstet, Spiegel nach IES-Materialtabelle (UNCG eLight); **Papier und Stoff sind Schätzwerte** (keine belastbare Quelle gefunden), so in UI und „Modell & Gültigkeit“ gekennzeichnet.
+   Offen (Vorschläge): LDT-Export (Isym 1/2, 24 C-Ebenen, cd/klm; Feldreihenfolge gegen Spezifikation prüfen) · Wand- und Raumberechnung (Wandebene als zweite Tally-Ebene; Raumreflexion über UGR/LDT an DIALux/Relux abgeben) · Kugel-/Opalbirnen-Quelle mit Ausdehnung (weiche Schattenkanten, realistischer Abschirmwinkel) · Quelle aus LVK-Tabelle (LED-Datenblatt) · Lambert-Quelle in beliebiger Richtung (Up-Light) · Halbglanz als Streukeule (Henyey-Greenstein) und Fresnel für Klarglas · Farbe/Spektrum (Farbtemperatur, Papier wirkt warm) · Brechung/Wandstärke · gemessene Werte für Papier und Stoff (einfacher Aufbau: Luxmeter vor/hinter der Probe) · Telefon-Laufzeit auf echtem Gerät messen.
+3. **Last / Statik** – noch nicht begonnen (Key `last`). Ziel: Bank/Regalbrett, Material inkl. Holz, Durchbiegung, Spannung, Sicherheitsfaktor.
+4. **Mechanismen** – **v1.1 fertig** (`mechanismus/`, Key `mechanismus`, Hash `#m=`, 19.11.2026). Editor Seitenansicht [mm]: Punkt, Gestell, Glied (= starre Punktmenge, Zusatzpunkte wie Koppelpunkt/Lehne/Fuß), ein Schubgelenk (Führung durch Gestell- und Gleitpunkt), Löschen, x/y numerisch; Modi Konstruieren/Bewegen. Antrieb = Glied mit genau einem Gestellpunkt oder Schieber, per Regler und Ziehen; Abtrieb ebenso.
+   Kern: Schließbedingungen – Basis p0p1 als Abstand, weitere Punkte linear `pk = p0 + a·d + b·rot90(d)` (starr, kein Spiegeln, auch kollinear regulär); Newton-Raphson, Prädiktor 1. Ordnung, Schritt nur gültig bei Übereinstimmung mit zwei Halbschritten (1e-6 mm) → kein Zweigsprung; Totlage = jenseits keine Lage (auf 1e-6 ° bzw. mm). Ausgaben: Bahnkurve, Grashof-/Schubkurbel-Typ, Bewegungsbereich, Umkehrlagen (Streck-/Decklage), Totlagen („klemmt“), μ über Antrieb (⚠ < 40°), Übersetzung exakt aus Geschwindigkeitsanalyse; Typ/μ nur für erkannte Viergelenke und Schubkurbeln. Vorlagen: Kurbelschwinge, Doppelschwinge (Klappdeckel, mit 2-kg-Deckel als Last), Schubkurbel, Klappstuhl. Export/Hash `{type:"designphysik/mechanismus", version:1, pts, links, slider?, drive, out, trace?, loads?, at?}` – pts = Konstruktionslage, at = Antriebswert, loads = `[{p, fx, fy}]` [N].
+   v1.1 (19.11.2026): Kräfte quasistatisch über virtuelle Arbeit – Punktlasten Fx/Fy [N] je Punkt (Gewicht Fy = −m·9,81) → Haltemoment am Antrieb [N·m] bzw. Haltekraft am Schieber [N], `Q = −Σ F·∂p/∂v` aus der Geschwindigkeitsanalyse; reibungsfrei, ohne Eigengewicht der Glieder. Diagramm über dem Antrieb, Kennwerte aktuell und Maximum (ohne ±2 um Totlagen, dort → ∞), Lastpfeile im Editor.
+   test.js: 40 Prüfungen – Grashof 5 Klassen inkl. Durchschlag · Viergelenk Newton = geschlossene Lösung über 360° (≤ 1e-6 mm) · Schubkurbel e = 0/15 Kolbenweg, Umkehrlagen 0°/180° · μ = Kosinussatz, Extrema bei 0°/180° · Übersetzung = zentrale Differenz (rel. 1e-6) · 0,1°-Lauf ohne Zweigwechsel · Nicht-Grashof-Totlage ±91,79° analytisch, Überfahren als blockiert gemeldet · Scherenhub 2 Stufen H = 2·L·sin α · Hebel M = W·r·cos θ · Schubkurbel M gegen Kolbenlast geschlossen · Scherenhub-Haltekraft −2Ws/√(L²−s²) · Energiebilanz ∫M dθ = W·Δy und ∮ = 0. Browser: Analyse ~4–6 ms, Zeichnen ~1,5 ms je Getriebe.
+   Offen: Federn/Gasdruckfedern (baut auf v1.1 auf) · Gelenkkräfte, Reibung · Dynamik · Kollision · Synthese aus Wunschlagen · mehrere Antriebe/Schubgelenke, bewegte Führungen · Anschläge (Klappdeckel-Vorlage durchläuft den ganzen kinematischen Bereich) · Typ/μ für Getriebe mit mehr als 4 Gliedern · Workarounds für Achsbeschriftung („je 10 °“, N·mm) können entfallen (chart.js beschriftet mit Nachkommastellen).
+5. **Ideen** (★ = Top 5 nach Nutzen pro Aufwand, 19.11.2026):
+   - Mechanik & Bedienung: Schnapphaken ★ (Füge-/Lösekraft, Dehnung) · Festkörpergelenk/Filmscharnier · Tasten-Haptik (Kraft-Weg, Snap-Ratio) · Bedienkräfte (Drehmoment Schraubdeckel, Hebel, DIN 33411) · Rutschen vs. Kippen ★ · Fall & Stoß (g-Last, Polster) · Eigenfrequenz (Regal, Glas) · Seil & Abhängung (Kettenlinie, Pendelleuchte) · Biegen (K-Faktor, Rückfederung, Dampfbiegen)
+   - Wärme: Berührtemperatur ★ (Wärmeeindringkoeffizient) · Abkühlen/Warmhalten (Tasse) · Kühlkörper für LED (koppelt an Licht)
+   - Fluide & Akustik: Nachtropfen am Ausguss ★ (Teekanneneffekt, koppelt an Gefäß) · Schwimmen/Metazentrum (Geometrie aus Gefäß) · Resonator (Helmholtz, Flaschenton)
+   - Licht & Umwelt: Sonnenstand & Schatten · Lichtleiter (Totalreflexion Acryl)
+   - Material & Energie: Holz arbeitet / Wärmedehnung ★ (Quellmaß, Fugen) · Energiebudget (Akku, Solar) · Gewicht/Material/CO₂ · Federn
+   - Kippsicherheit/Schwerpunkt: für Gefäße in gefaess v1.3 umgesetzt; allgemeiner Körper offen
+
+## Wünsche an shared
+(Modul-Chats tragen hier ein; der zentrale Chat bzw. der Style-Chat arbeitet sie ab.)
+
+Offen:
+- **Style-Chat** (Mechanismen, 19.11.2026): Akzentfarbe Mechanismen festlegen; Vorschlag `--mech #2a8f86` (Petrol, getrennt von Wasser-Blau und Bedien-Orange), modul-lokal gesetzt. Genutzt für Bahnkurve und Diagrammkurven; ternäre Glieder `--grid` gefüllt, Gestellglieder `--mut` 4 px, Antriebsglied im Modus Bewegen `--acc`, Lastpfeile `--ink`.
+- **Style-Chat** (Licht, 19.11.2026): `--light #e0a020` ist im Modul gesetzt (plus `--lightA` = Alpha .25 für Flächen) → Status „Vorschlag“ im Styleguide auf „fest“ setzen, wenn einverstanden. Neu im Modul, bitte bewerten: Falschfarbe für Leuchtdichte als Verlauf `--grid2` → `--light` (aus Tokens interpoliert, keine Hex-Werte im Modul), Werte ≥ Grenzwert in `--warn` mit ⚠-Text; Lampe als `--light`-Kreis mit `--ink`-Rand; Fortschrittsbalken 6 px `--grid` mit `--light`-Füllung.
+
+Erledigt (19.11.2026, zentraler Chat, Integration Stand 1):
+- **tools/load-core.js** (Licht): `Math` nicht mehr in den vm-Kontext gereicht. Licht-Test 8,6 s statt ~12 s; Gefäß und Mechanismen unverändert grün.
+- **shared/util.js** (Mechanismen, Licht): `mechanismus` eingetragen, `licht` auf `ready: true` mit neuer `desc`.
+- **shared/chart.js** (Mechanismen): Achsbeschriftung mit Nachkommastellen nach Schrittweite (2,5 → „2,5“, 0,25 → „0,25“), Ticks als k·Schritt ohne Summenfehler, kein „-0“.
+- **README.md** (Mechanismen, Licht): `licht/` und `mechanismus/` in Struktur und Tests.
