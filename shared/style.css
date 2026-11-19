@@ -1,10 +1,10 @@
 /* Designphysik – gemeinsames Stylesheet. Gilt für Startseite und alle Module.
-   Grundrichtung D „Ulmer Raster“: kühles Grau, Helvetica, Radius 2, ein Bedien-Orange (--acc) nur für aktive Elemente.
+   Grundrichtung D „Ulmer Raster“: kühles Grau, Arial, Radius 2, ein Bedien-Orange (--acc) nur für aktive Elemente.
    Modul-spezifische Akzente als eigene Variablen im Modul setzen, z.B. --water. */
 :root{--bg:#e9e9e7;--panel:#fff;--ink:#222;--mut:#6e6e6e;--line:#d2d2cf;--grid:#ececea;--grid2:#d6d6d3;--acc:#c2410c;--warn:#c62828;--r:2px}
 *{box-sizing:border-box}
 html,body{margin:0}
-body{font:14px/1.4 "Helvetica Neue",Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink)}
+body{font:14px/1.4 Arial,sans-serif;background:var(--bg);color:var(--ink)}
 header{display:flex;align-items:center;gap:14px;padding:10px 16px;border-bottom:1px solid var(--line);background:var(--panel);flex-wrap:wrap}
 header h1{font-size:15px;margin:0;font-weight:700;letter-spacing:0}
 header h1 small{font-weight:400;color:var(--mut)}
