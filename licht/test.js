@@ -165,3 +165,76 @@ check('T15 Quelle bei x = 30: 90° − atan(1,6) (C = 180°)', sh(cyl, { ...iso,
 check('T15 geschlossene Opalkugel: 90° (nie sichtbar)', sh(sphere(50, Math.PI, 120), iso), 90, 0);
 check('T15 ohne Schirm: 0°', sh([], iso), 0, 0);
 check('T15 Scheibe unter der Quelle: 0° (seitlich sichtbar)', sh(disc, iso), 0, 0);
+
+// T16 Mehrere Teile mit eigenem Material
+{
+  const bits = (u, v) => u.length === v.length && u.every((x, i) => x === v[i]) ? 1 : 0;
+  const one = run({ name: 'T16a eins', profile: [[50, -50], [50, 0], [50, 50]], source: iso, mat: mat(0.6, 0, 0.2, 0) });
+  const two = run({ name: 'T16a zwei', parts: [{ profile: [[50, -50], [50, 0]], mat: mat(0.6, 0, 0.2, 0) }, { profile: [[50, 0], [50, 50]], mat: mat(0.6, 0, 0.2, 0) }], source: iso });
+  check('T16a in zwei Teile geteilt = ein Teil (flux, leave bitgleich)', bits(one.flux, two.flux) * bits(one.leave, two.leave), 1, 0);
+  // Zylinder R50: unten z −50…0, oben 0…100; schwarzer Teil fängt sin(Kante)/2, klarer Teil (τs = 1) lässt alles durch
+  const lo = [[50, -50], [50, 0]], hi = [[50, 0], [50, 100]], clear = mat(0, 0, 0, 1);
+  const eA = 1 - Math.sin(Math.atan(1)) / 2, eB = 1 - Math.sin(Math.atan(2)) / 2;
+  r = run({ name: 'T16b', parts: [{ profile: lo, mat: black }, { profile: hi, mat: clear }], source: iso });
+  check('T16b unten schwarz, oben klar: η = 1 − sin 45°/2', r.eta, eA, sig(eA));
+  r = run({ name: 'T16c', parts: [{ profile: lo, mat: clear }, { profile: hi, mat: black }], source: iso });
+  check('T16c unten klar, oben schwarz: η = 1 − sin(atan 2)/2', r.eta, eB, sig(eB));
+  let t = 0; try { Core.trace({ N: 10, parts: [{ profile: cyl }], source: iso }); } catch (e) { t = 1; }
+  check('T16 wirft: Teil ohne Material', t, 1, 0);
+}
+
+// T17 Extrusion (Langfeld), sehr lang → 2D: Projektion einer Kugel-Gleichverteilung auf die x-z-Ebene ist winkelgleich
+{
+  const L = 1e6, walls = [{ profile: [[-30, -50], [-30, 50]], mat: black }, { profile: [[30, -50], [30, 50]], mat: black }];
+  const e17 = 1 - 2 * Math.atan(50 / 30) / Math.PI;
+  r = run({ name: 'T17a', shape: 'ext', len: L, parts: walls, source: iso });
+  check('T17a zwei schwarze Wände: η = 1 − 2·atan(h/a)/π', r.eta, e17, sig(e17));
+  // Rechteckrohr (Enden offen), τd = 1: jedes Teilchen, das eine Wand trifft, tritt dort genau einmal diffus nach außen aus
+  const box = [[-40, -20], [40, -20], [40, 20], [-40, 20], [-40, -20]], len = 1200, opal = mat(0, 0, 1, 0);
+  const lsum = (r, side) => [0, 1, 2, 3].reduce((a, i) => a + r.leave[2 * i + side], 0);
+  r = run({ name: 'T17b', shape: 'ext', len, profile: box, source: iso, mat: opal });
+  let sum = 0; for (let i = 0; i < 4; i++) { const sl = Math.hypot(box[i + 1][0] - box[i][0], box[i + 1][1] - box[i][1]); sum += (r.L[2 * i] + r.L[2 * i + 1]) * sl * len * 1e-6 * Math.PI; }
+  check('T17b Rohr τd = 1: η', r.eta, 1, 0);
+  check('T17b Rohr: Σ L·A·π = Φ · (Wandaustritte / N) (Fläche Streifen = Länge · len)', sum / (PHI * lsum(r, 1) / N), 1, 1e-9);
+  check('T17b Rohr: innen nichts', lsum(r, 0), 0, 0);
+  r = run({ name: 'T17c', shape: 'ext', len, profile: box.slice().reverse(), source: iso, mat: opal });
+  check('T17c umgekehrt gezeichnet: Austritt jetzt auf Seite „innen“', lsum(r, 1), 0, 0);
+  r = run({ name: 'T17d', shape: 'ext', len: 1e6, profile: box, source: iso, mat: opal });
+  check('T17d sehr langes Rohr: Wandaustritte / N → 1', lsum(r, 1) / N, 1, 2e-3);
+  // T17e kurzes Rohr 100 × 100, Länge 100, innen schwarz, außen Spiegel: Licht entweicht nur durch die offenen Enden.
+  // Raumwinkel Rechteck 2a × 2b im Abstand d: 4·asin(ab/√((a²+d²)(b²+d²))); Linienquelle → Mittel über y0 (Mittelpunktregel)
+  const sq = [[-50, -50], [50, -50], [50, 50], [-50, 50], [-50, -50]], Om = d => 4 * Math.asin(2500 / (2500 + d * d));
+  let eEnd = 0; for (let i = 0; i < 20000; i++) { const y = -50 + (i + 0.5) * 100 / 20000; eEnd += (Om(50 - y) + Om(50 + y)) / (4 * Math.PI) / 20000; }
+  r = run({ name: 'T17e', shape: 'ext', len: 100, profile: sq, source: iso, mat: { in: { rd: 0, rs: 0 }, out: { rd: 0, rs: 1 }, td: 0, ts: 0 } });
+  check('T17e Linienquelle, η = Austritt durch die Enden', r.eta, eEnd, sig(eEnd));
+  r = run({ name: 'T17f', shape: 'ext', len: 100, profile: sq, source: iso, mat: { in: { rd: 0, rs: 0 }, out: { rd: 1, rs: 0 }, td: 0, ts: 0 } });
+  check('T17f wie T17e mit außen ρd = 1 (Seiten je Material nicht vertauscht)', r.eta, eEnd, sig(eEnd));
+  check('T17e Punktquelle wäre 1/3 – Abstand [σ]', Math.abs(eEnd - 1 / 3) / (sig(eEnd) / 4) > 8 ? 1 : 0, 1, 0);
+}
+
+// T18 Extrusion, Tisch: nackte Linienquelle bei x = 100, Tisch 500 mm tiefer. Anteil je Streifen [x1, x2] =
+// (atan((x2 − 100)/d) − atan((x1 − 100)/d)) / 2π; E = Anteil·Φ / (Streifenbreite · L)
+{
+  const L = 1e6, d = 500, fl = { z: -d, rMax: 500, n: 5 };
+  r = run({ name: 'T18', shape: 'ext', len: L, parts: [], source: { ...iso, x: 100 }, floor: fl });
+  let z = 0;
+  for (let i = 0; i < 5; i++) {
+    const x1 = -500 + 200 * i, x2 = x1 + 200, p = (Math.atan((x2 - 100) / d) - Math.atan((x1 - 100) / d)) / (2 * Math.PI);
+    z = Math.max(z, Math.abs(r.ring[i] - N * p) / Math.sqrt(N * p));
+    if (i === 3) check('T18 E Streifen 100…300 mm [lx]', r.E[3], p * PHI / (200 * L * 1e-6), 4 / Math.sqrt(N * p));
+  }
+  check('T18 max. Abweichung Streifen [σ]', z, 0, ZMAX);
+}
+
+// T19 Extrusion, Abschirmwinkel quer: Wände x = ±30, z −50…50
+{
+  const walls = [[[-30, -50], [-30, 50]], [[30, -50], [30, 50]]].map(profile => ({ profile }));
+  const shx = x => Core.shield({ shape: 'ext', len: 1000, parts: walls, source: { ...iso, x } }).alpha;
+  check('T19 Quelle mittig: atan(50/30)', shx(0), Math.atan(50 / 30) / D, 1e-4);
+  check('T19 Quelle bei x = 10: ungünstige Seite C180, atan(50/40)', shx(10), Math.atan(50 / 40) / D, 1e-4);
+  const thr = (name, o) => { let t = 0; try { Core.trace(Object.assign({ N: 10, source: iso, parts: [] }, o)); } catch (e) { t = 1; } check('T19 wirft: ' + name, t, 1, 0); };
+  thr('ext ohne Länge', { shape: 'ext' });
+  thr('unbekannte Form', { shape: 'kugel', len: 100 });
+  let t = 1; try { Core.trace({ N: 10, shape: 'ext', len: 100, profile: [[-50, 0], [50, 0]], source: iso, mat: black }); } catch (e) { t = 0; }
+  check('T19 ext erlaubt x < 0', t, 1, 0);
+}
