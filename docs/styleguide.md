@@ -2,7 +2,7 @@
 
 Verbindlich für Startseite und alle Module. Technische Quelle der Wahrheit ist `shared/style.css`; dieses Dokument erklärt die Regeln dahinter. Änderungen an Tokens und style.css nur durch den Style-Chat auf Branch `style` (siehe `docs/konzept.md`, Arbeitsweise).
 
-**Grundrichtung: D – Ulmer Raster** (entschieden 19.11.2026). Systematisch, kühl, „Braun-Gerät“: Grautöne, Helvetica, fast eckig, ein Bedien-Orange nur für aktive Elemente.
+**Grundrichtung: D – Ulmer Raster** (entschieden 19.11.2026). Systematisch, kühl, „Braun-Gerät“: Grautöne, Arial (Helvetica-Anmutung), fast eckig, ein Bedien-Orange nur für aktive Elemente.
 
 ## 1. Prinzipien
 1. **Werkzeug, nicht Lehrbuch.** Geometrie und Ergebnis dominieren, Text ist Beschriftung.
@@ -35,7 +35,7 @@ Verbindlich für Startseite und alle Module. Technische Quelle der Wahrheit ist 
 Regeln: Physik-Akzent nur für das simulierte Medium und dessen Kurven, Füllung mit Alpha 0.18–0.30. `--acc` nie für Daten/Kurven, Physik-Akzent nie für Bedienung. Vergleichskurven `--ink` gestrichelt oder `--mut`.
 
 ## 3. Typografie
-- Stack: `"Helvetica Neue", Helvetica, Arial, sans-serif`, Basis 14 px / 1.4.
+- Stack: `Arial, sans-serif` (überall vorhanden; lokale Helvetica-Installationen mit defektem Bold-Schnitt führten zu hohlen Überschriften), Basis 14 px / 1.4.
 - Stufen: Kopf h1 15 px/700 · Panel-h2 11.5 px Versalien/700, Sperrung .09em, `--mut` · Kennwert 17 px/600 · Body 14 px · Bedienelemente 13 px · Labels/Notizen 11–12 px.
 - Zahlen immer `font-variant-numeric: tabular-nums`.
 - Canvas-Beschriftung: `11px system-ui`, `--mut` (Canvas-Schrift ist noch nicht an den Stack gekoppelt).
