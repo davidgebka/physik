@@ -85,6 +85,7 @@ details summary{font-size:12.5px;cursor:pointer}
     <p class="note"><b>Modell.</b> Der gezeichnete Schirm wird um die Achse gedreht und als dünne Schale ohne Wandstärke gerechnet. Von der Lampe (Punktquelle) aus werden Lichtteilchen in 3D verfolgt (Monte-Carlo-Photonenverfolgung): Bei jedem Auftreffen werden sie je nach Material diffus oder spiegelnd reflektiert, diffus oder klar durchgelassen oder absorbiert, bis sie den Schirm verlassen. Daraus folgen Lichtverteilungskurve (LVK), Wirkungsgrad η, Beleuchtungsstärke und Leuchtdichte. Das Bild wird mit jedem Rechenpaket ruhiger; angegeben ist die statistische Unsicherheit ±σ. Grundlage und Prüffälle: <code>claude/licht-grundlagen.md</code>, <code>licht/test.js</code>.</p>
     <p class="note"><b>Begriffe.</b> LVK: Lichtstärke [cd] je Richtung; γ = 0° zeigt nach unten, C0–C180 und C90–C270 sind zwei senkrechte Schnittebenen (gleich, solange die Lampe auf der Achse sitzt). cd/klm = Lichtstärke je 1000 lm Lampenlichtstrom. Leuchtdichte [cd/m²]: wie hell eine Fläche wirkt. Abschirmwinkel: Winkel unter der Horizontalen, ab dem die Lampe direkt sichtbar wird.</p>
     <p class="note"><b>Materialwerte</b> sind Richtwerte und meist die größte Fehlerquelle. Opalglas τ 30–65 % (Überfangopal), weiß lackiert ρ 75–90 %, Aluminium gebürstet ρ 55–58 %, Spiegel (eloxiertes, beschichtetes Aluminium) ρ 75–95 % – Wertebereiche nach der IES-Materialtabelle (UNCG eLight, „Material Properties“). Die Aufteilung von gebürstetem Aluminium in diffus/gespiegelt ist geschätzt. <b>Papier und Stoff hell sind Schätzwerte</b>, für sie wurde keine belastbare Messquelle gefunden; echte Werte schwanken stark mit Dicke, Webart und Farbe. Eigene Messwerte unter „Erweitert“ eintragen.</p>
+    <p class="note"><b>Designklassiker</b> unter „Vorlage“: Außenmaße nach Hersteller- und Händlerangaben, Profil nachempfunden – Annäherung, keine Werkszeichnung. Gerechnet wird nur der Schirm (Fuß, Bogen, Fassung fehlen), Lampe als Punkt; Messing (Golden Bell) als gebürstetes Aluminium, gelochte Scheitel (Arco, Golden Bell) als offene Kreisöffnung. Mehrschalige Leuchten wie PH 5 lassen sich mit einem einzigen Profil nicht abbilden.</p>
     <p class="note"><b>Blendhinweis.</b> ⚠ ab 20 000 cd/m²: Ab dieser Lampenleuchtdichte verlangt EN 12464-1 einen Mindestabschirmwinkel (20–50 kcd/m² → 15°, 50–500 kcd/m² → 20°, ab 500 kcd/m² → 30°). Hier auf die Leuchtdichte des Schirms übertragen – Richtwert, keine Normprüfung (UGR braucht den Raum). Der Abschirmwinkel ist rein geometrisch: Schirm undurchsichtig, Lampe als Punkt; Spiegelbilder und Durchsicht durch klare Materialien zählen nicht, eine reale Lampe ist etwas größer.</p>
     <p class="note"><b>Gültig für</b> dünne, rotationssymmetrische Schirme, photometrisch (keine Farbe), Umgebung schwarz: Beleuchtungsstärke ist nur das direkte Licht der Leuchte auf einer unendlichen Tischebene, ohne Licht von Wänden und Decke. Liegt die Lampe neben der Achse, ist die Leuchtdichte rundum gemittelt dargestellt, und die LVK-Ebenen C0–C180 und C90–C270 sind Mittel über Sektoren von ±37,5°. <b>Nicht erfasst:</b> Wandstärke und Brechung, winkelabhängige Reflexion (Fresnel), Streukeulen halbglänzender Oberflächen, Farbe/Spektrum, Wärme, Raumreflexionen, LDT-Export.</p>
   </section>
@@ -285,12 +286,32 @@ if (typeof module !== 'undefined') module.exports = Core;
 // ---- Vorlagen & Materialien ----
 const D2R = Math.PI / 180, LIM = 20000; // Blendhinweis ab 20 000 cd/m² (EN 12464-1, siehe Modell & Gültigkeit)
 const sphereP = (R, rTop, n) => { const t1 = Math.PI - Math.asin(rTop / R), p = []; for (let i = 0; i <= n; i++) { const t = t1 * i / n; p.push([+(R * Math.sin(t)).toFixed(1), +(-R * Math.cos(t)).toFixed(1)]); } return p; };
+// Kugel Radius R um (0,0), unten offen mit Radius rBot, oben offen mit rTop (0 = geschlossen)
+const sphereOpen = (R, rBot, rTop, n) => { const t0 = Math.asin(rBot / R), t1 = Math.PI - Math.asin(rTop / R), p = [];
+  for (let i = 0; i <= n; i++) { const t = t0 + (t1 - t0) * i / n; p.push([+(R * Math.sin(t)).toFixed(1), +(-R * Math.cos(t)).toFixed(1)]); } return p; };
+// Viertelkreis (Semi): Rand r = R bei z0, Scheitel bei z0 + R, Mittelpunkt außen (R, z0 + R); Scheitelöffnung rTop
+const arcP = (R, rTop, n, z0) => { const t1 = Math.acos(1 - rTop / R), p = [];
+  for (let i = 0; i <= n; i++) { const t = Math.PI / 2 - (Math.PI / 2 - t1) * i / n; p.push([+(R - R * Math.cos(t)).toFixed(1), +(z0 + R - R * Math.sin(t)).toFixed(1)]); } return p; };
+// Halbellipse (Kuppel): Rand r = a bei z0, Scheitel z0 + b, Scheitelöffnung rTop
+const ellipseP = (a, b, rTop, n, z0) => { const t1 = Math.asin(rTop / a), p = [];
+  for (let i = 0; i <= n; i++) { const t = Math.PI / 2 - (Math.PI / 2 - t1) * i / n; p.push([+(a * Math.sin(t)).toFixed(1), +(z0 + b * Math.cos(t)).toFixed(1)]); } return p; };
 const PRESETS = {
   kegel:    ['Kegelschirm', [[150, -110], [80, 70]], [0, 0], 'stoff'],
   zylinder: ['Zylinder', [[100, -120], [100, 120]], [0, 0], 'papier'],
   kugel:    ['Kugel (Opal)', sphereP(120, 25, 14), [0, 0], 'opal'],
   glocke:   ['Glocke', [[170, -90], [160, -60], [130, -25], [95, 10], [70, 50], [55, 90], [40, 120]], [0, 40], 'weiss'],
-  scheibe:  ['Flache Scheibe', [[0, 40], [220, 40]], [0, 0], 'weiss']
+  scheibe:  ['Flache Scheibe', [[0, 40], [220, 40]], [0, 0], 'weiss'],
+  // Designklassiker (5. Feld = 1): Maße nach Hersteller-/Händlerangaben, Kontur nachempfunden; nur der Schirm, ohne Fuß/Gestell
+  // A330S „Golden Bell“ (Alvar Aalto, 1937): Ø 170, H 200, Messing → Näherung Aluminium gebürstet
+  goldenbell: ['Golden Bell · Aalto 1937', [[85, -125], [83, -112], [74, -90], [57, -60], [43, -30], [36, 0], [34, 35], [30, 60], [16, 75]], [0, -20], 'alu', 1],
+  // Semi (Bonderup & Thorup, 1968): Ø 470, H 235, Viertelkreis-Profil, innen weiß lackiert
+  semi:     ['Semi · Bonderup & Thorup 1968', arcP(235, 20, 12, -150), [0, -50], 'weiss', 1],
+  // Akari 55A (Isamu Noguchi, 1951): Papierkugel Ø 550, H 550, unten und oben offen
+  akari:    ['Akari 55A · Noguchi 1951', sphereOpen(275, 110, 50, 18), [0, 0], 'papier', 1],
+  // Arco (Achille Castiglioni, 1962): Reflektor Ø ≈ 320, Aluminium poliert; gelochter Scheitel als Öffnung genähert
+  arco:     ['Arco-Reflektor · Castiglioni 1962', ellipseP(160, 170, 30, 12, -110), [0, -50], 'spiegel', 1],
+  // WG 24 (Wilhelm Wagenfeld, 1924): Opalglaskuppel Ø 180, unten offen auf dem Fuß, oben geschlossen
+  wg24:     ['WG 24 · Wagenfeld 1924', sphereOpen(90, 50, 0, 14), [0, 0], 'opal', 1]
 };
 const M = (rd, rs, td, ts) => ({ in: { rd, rs }, out: { rd, rs }, td, ts });
 const MATS = {
@@ -632,7 +653,8 @@ function drawAll() { drawEditor(); drawLvk(); drawE(); drawStats(); }
 function setMode(m) { S.mode = m; $('mDraw').classList.toggle('on', m === 'draw'); $('mEdit').classList.toggle('on', m === 'edit'); drawEditor(); }
 $('mDraw').onclick = () => setMode('draw');
 $('mEdit').onclick = () => setMode('edit');
-$('preset').innerHTML = '<option value="">Vorlage …</option>' + Object.entries(PRESETS).map(([k, v]) => `<option value="${k}">${v[0]}</option>`).join('');
+$('preset').innerHTML = '<option value="">Vorlage …</option>' + [['Grundformen', 0], ['Designklassiker', 1]].map(([t, g]) => `<optgroup label="${t}">` +
+  Object.entries(PRESETS).filter(([, v]) => (v[4] || 0) === g).map(([k, v]) => `<option value="${k}">${v[0]}</option>`).join('') + '</optgroup>').join('');
 $('preset').onchange = e => {
   const v = PRESETS[e.target.value]; if (!v) return;
   pushUndo(); S.pts = toPts(v[1]); S.src = { x: v[2][0], z: v[2][1] }; S.mat = v[3]; S.raw = null; S.sel = -1;
