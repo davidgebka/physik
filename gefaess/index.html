@@ -459,8 +459,9 @@ const Core = (() => {
     }
     return out;
   }
-  // Horizontal force at height h above the stand plane that starts tipping (upright): F·h = m·g·rf. m in g → N
-  const pushForce = (m, rf, h) => m / 1000 * 9.81 * rf / h;
+  // Horizontal force at height h above the stand plane that starts tipping (upright): F·h = m·g·a,
+  // a = horizontal distance centre of gravity → stand edge. m in g → N
+  const pushForce = (m, a, h) => m / 1000 * 9.81 * a / h;
 
   return { sampled, trimLip, interiorPolygon, sectionPolygon, intervalsAt, buildSlices, segArea, volBelow, barrier, yRange, solveL, tiltCurve, cumTable, heightForVolume, clip, distSeg, rdp,
     momentsBelow, shell, cog, tipMargin, tipAngle, pushForce,
@@ -579,7 +580,7 @@ function stabLater() {
   clearTimeout(stabT);
   stabT = setTimeout(() => {
     const g = Core.cogG(G.geo, S.fill * 1000, 0, G.mv, G.xv, G.zv);
-    G.stab = { zF: g.z, mF: g.m,
+    G.stab = { xF: g.x, zF: g.z, mF: g.m,
       tipE: Core.tipAngleG(G.geo, 0, G.mv, G.xv, G.zv, G.rf, G.zst),
       tipF: Core.tipAngleG(G.geo, S.fill * 1000, G.mv, G.xv, G.zv, G.rf, G.zst) };
     drawEditor(); drawStats();
@@ -705,7 +706,7 @@ function drawProfile(ctx, w, h) {
   // stand plane and centre of gravity (filled, upright)
   ctx.strokeStyle = css('--mut'); ctx.lineWidth = 1; ctx.setLineDash([3, 4]);
   polyPath(ctx, [{ x: -G.rf, z: G.zst }, { x: G.rf, z: G.zst }], w2s); ctx.stroke(); ctx.setLineDash([]);
-  if (G.stab) cross(ctx, w2s({ x: 0, z: G.stab.zF }), css('--ink'), 'S');
+  if (G.stab) cross(ctx, w2s({ x: G.stab.xF, z: G.stab.zF }), css('--ink'), 'S');
   // dims
   ctx.fillStyle = css('--mut'); ctx.font = '11px Arial, sans-serif';
   const top = G.samp[G.samp.length - 1];
@@ -725,8 +726,9 @@ function snapP(p) {
   if (g) { x = Math.round(x / g) * g; z = Math.round(z / g) * g; }
   return { x, z };
 }
-const snap = () => JSON.stringify([S.kind, S.part, S.pts, S.plan, S.spout, S.handle]);
-function pushUndo() { S.undo.push(snap()); if (S.undo.length > 100) S.undo.shift(); }
+const snap = () => JSON.stringify([S.kind, S.part, S.pts, S.plan, S.spout, S.handle, S.lid, S.H, S.psi, S.psmooth, S.smooth]);
+function pushUndo(sn) { S.undo.push(sn || snap()); if (S.undo.length > 100) S.undo.shift(); }
+let pend = null; // Schnappschuss beim Antippen; erst beim ersten Verschieben als Rückgängig-Schritt
 function evPos(e) { const r = ed.getBoundingClientRect(); return [e.clientX - r.left, e.clientY - r.top]; }
 function hitPoint(sx, sy) {
   let best = -1, bd = 14;
@@ -753,8 +755,9 @@ ed.addEventListener('pointerdown', e => {
     lastTap = { t: 0, i: -1 }; return;
   }
   lastTap = { t: now, i };
-  pushUndo();
+  pend = snap();
   if (i < 0) {
+    pushUndo(pend); pend = null;
     const sgi = hitSegment(wp, isPlan());
     if (sgi >= 0) { pts.splice(sgi + 1, 0, snapP(wp)); i = sgi + 1; }
     else { pts.push(snapP(wp)); i = pts.length - 1; }
@@ -767,7 +770,11 @@ ed.addEventListener('pointermove', e => {
   if (stroke) {
     const q = mirror() ? { x: Math.abs(wp.x), z: wp.z } : wp, l = stroke[stroke.length - 1];
     if (Math.hypot(q.x - l.x, q.z - l.z) > 0.8) { stroke.push(q); drawEditor(); }
-  } else if (drag >= 0) { P()[drag] = snapP(wp); changed(); }
+  } else if (drag >= 0) {
+    const q = snapP(wp), o = P()[drag]; if (q.x === o.x && q.z === o.z) return;
+    if (pend) { pushUndo(pend); pend = null; }
+    P()[drag] = q; changed();
+  }
 });
 function endPointer() {
   if (stroke) {
@@ -790,7 +797,7 @@ function endPointer() {
     }
     stroke = null; changed(); fitView(); drawAll();
   }
-  if (drag >= 0) { drag = -1; const r = ed.getBoundingClientRect();
+  if (drag >= 0) { drag = -1; pend = null; const r = ed.getBoundingClientRect();
     if (P().some(p => { const [x, y] = w2s(p); return x < 10 || x > r.width - 10 || y < 10 || y > r.height - 10; })) { fitView(); drawAll(); } }
 }
 ed.addEventListener('pointerup', endPointer);
@@ -798,16 +805,15 @@ ed.addEventListener('pointercancel', endPointer);
 
 window.addEventListener('keydown', e => {
   if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') { e.preventDefault(); undo(); }
-  else if ((e.key === 'Delete' || e.key === 'Backspace') && S.sel >= 0 && P().length > minPts() && document.activeElement.tagName !== 'INPUT') {
+  else if ((e.key === 'Delete' || e.key === 'Backspace') && S.sel >= 0 && P().length > minPts() && !/^(INPUT|SELECT|TEXTAREA)$/.test(document.activeElement.tagName)) {
     pushUndo(); P().splice(S.sel, 1); S.sel = -1; changed();
   }
 });
 function undo() {
   if (!S.undo.length) return;
-  const [k, part, pts, plan, spout, handle] = JSON.parse(S.undo.pop());
-  Object.assign(S, { pts, plan, spout, handle });
-  if (k !== S.kind) setKind(k, true);
-  setPart(part); S.sel = -1; changed();
+  const [k, part, pts, plan, spout, handle, lid = S.lid, H = S.H, psi = S.psi, psmooth = S.psmooth, smooth = S.smooth] = JSON.parse(S.undo.pop());
+  Object.assign(S, { pts, plan, spout, handle, lid, H, psi, psmooth, smooth });
+  setKind(k, true); setPart(part); S.sel = -1; changed();
 }
 
 let raf = 0;
@@ -926,7 +932,7 @@ function drawStats() {
     S.foot == null && !G.flat
       ? ['Kippwinkel', '⚠ –', 'kein flacher Boden: Standradius setzen', true]
       : ['Kippwinkel', G.stab ? deg(G.stab.tipF) : '…', G.stab ? 'gefüllt · leer ' + deg(G.stab.tipE) : ''],
-    ['Umstoßkraft', S.foot == null && !G.flat ? '–' : G.stab ? nf1.format(Core.pushForce(G.stab.mF, G.rf, G.hRim)) + ' N' : '…', 'waagrecht am Rand, gefüllt']
+    ['Umstoßkraft', S.foot == null && !G.flat ? '–' : G.stab ? nf1.format(Core.pushForce(G.stab.mF, G.rf - G.stab.xF, G.hRim)) + ' N' : '…', 'waagrecht am Rand, gefüllt']
   ];
   $('stats').innerHTML = items.map(([a, b, n, warn]) => `<div class="stat"><span>${a}</span><b${warn ? ' style="color:var(--warn)"' : ''}>${b}</b><span>${n}</span></div>`).join('');
   $('fillO').textContent = nf0.format(V0) + ' ml';
@@ -1063,7 +1069,7 @@ function apply(d, long) {
   setKind(plan ? 'plan' : 'rot', true); return true;
 }
 function load(d) {
-  const keep = JSON.stringify([S.kind, P()]);
+  const keep = snap();
   if (!apply(d, true)) throw new Error(d.kind === 'plan' ? 'kein gültiger Grundriss' : 'kein gültiges Profil');
   S.undo.push(keep); S.theta = 0; $('tilt').value = 0; recompute(); fitView(); drawAll();
 }

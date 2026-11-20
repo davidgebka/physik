@@ -125,3 +125,6 @@ check('Rohr l100 Ø10/8: Volumen [mm³]', tb.vol, 100 * Math.PI * 36 / 4);
 check('Rohr: Schwerpunkt z [mm]', tb.z, 50);
 // Kippen mit außermittigem Gefäß-SP (Henkel): leer = atan((rf − x)/(z − zst))
 check('Leer, SP außermittig x −10: Kippwinkel [°]', Core.tipAngleG(Core.geoRot(cyl.S, cyl.s), 0, 500, -10, 40, 42, -5), Math.atan(52 / 45) / D, 2e-3);
+// Umstoßkraft mit außermittigem Schwerpunkt: Hebelarm = Standkante − x_SP (leer, cogG liefert x)
+{ const g = Core.cogG(Core.geoRot(cyl.S, cyl.s), 0, 0, 500, -10, 40);
+  check('Umstoßkraft SP x −10, Kante 42, h 100 [N]', Core.pushForce(g.m, 42 - g.x, 100), 0.5 * 9.81 * 52 / 100); }
