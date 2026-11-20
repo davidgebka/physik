@@ -125,3 +125,66 @@ check('Rohr l100 Ø10/8: Volumen [mm³]', tb.vol, 100 * Math.PI * 36 / 4);
 check('Rohr: Schwerpunkt z [mm]', tb.z, 50);
 // Kippen mit außermittigem Gefäß-SP (Henkel): leer = atan((rf − x)/(z − zst))
 check('Leer, SP außermittig x −10: Kippwinkel [°]', Core.tipAngleG(Core.geoRot(cyl.S, cyl.s), 0, 500, -10, 40, 42, -5), Math.atan(52 / 45) / D, 2e-3);
+// Umstoßkraft mit außermittigem Schwerpunkt: Hebelarm = Standkante − x_SP (leer, cogG liefert x)
+{ const g = Core.cogG(Core.geoRot(cyl.S, cyl.s), 0, 0, 500, -10, 40);
+  check('Umstoßkraft SP x −10, Kante 42, h 100 [N]', Core.pushForce(g.m, 42 - g.x, 100), 0.5 * 9.81 * 52 / 100); }
+// Gegenrichtung beim Drehkörper = gespiegelter Schwerpunkt: SP x −10 nach −x gekippt ≡ SP +10 nach +x
+check('Gegenseite: SP x −10 zur −x-Kante [°]', Core.tipAngleG(Core.geoRot(cyl.S, cyl.s), 0, 500, 10, 40, 42, -5), Math.atan(32 / 45) / D, 2e-3);
+// Konturprüfung: Selbstkreuzung (offen/geschlossen) und abwärts laufende Wand
+check('Becher kreuzt sich nicht', +Core.selfCross(P([[0, 0], [33, 0], [36, 3], [40, 95]]), false), 0, 0);
+check('Schleife kreuzt sich', +Core.selfCross(P([[0, 0], [40, 0], [40, 60], [10, 30], [60, 30]]), false), 1, 0);
+check('Quadrat geschlossen ok', +Core.selfCross(P([[0, 0], [10, 0], [10, 10], [0, 10]]), true), 0, 0);
+check('Achterschleife geschlossen kreuzt', +Core.selfCross(P([[0, 0], [10, 10], [10, 0], [0, 10]]), true), 1, 0);
+// ---- Taschenmodell: getrennte Wasserkörper mit eigenem Spiegel (Schichten 250) ----
+const pg = (a, opt = {}) => { const s = Core.trimLip(Core.sampled(P(a), false)); return Core.pocketGraph(Core.buildSlices(Core.interiorPolygon(s), 250), s, opt); };
+const ml = l => l.map(x => x.W / 1000), gC = pg([[0, 0], [40, 0], [40, 100]]);
+check('Taschen: Zylinder Fassungsvermögen [ml]', Core.lakeSum(Core.fillLakes(gC, 1e9).lakes) / 1000, Math.PI * 1600 * 100 / 1000);
+check('Taschen: Zylinder voll, 20° [ml]', Core.tiltRun(gC, Math.PI * 1600 * 100, 360).ret[40] / 1000, Math.PI * 1600 * (100 - 40 * Math.tan(20 * D)) / 1000);
+{ const r = Core.tiltRun(gC, Math.PI * 1600 * 50, 1800).ret; let k = 0; while (r[k] >= Math.PI * 1600 * 50 * 0.9999) k++;
+  check('Taschen: Zylinder halbvoll, Ausgießbeginn [°]', k * 180 / 1800, Math.atan(1.25) / D, 2e-3); }
+// Doppelbecken: Innenbecher r20 h50 (Wand 2 mm) in Ringrinne r22…40, Außenwand h100; Strahl fällt in den Becher
+const gD = pg([[0, 0], [20, 0], [20, 50], [22, 50], [22, 0], [40, 0], [40, 100]]), A1 = Math.PI * 400, A2 = Math.PI * (1600 - 484);
+{ const f = Core.fillLakes(gD, 40000).lakes;
+  check('Doppelbecken 40 ml: ein See im Becher, Spiegel [mm]', f.length === 1 ? f[0].L : -1, 40000 / A1); }
+{ const f = Core.fillLakes(gD, 100000).lakes.sort((a, b) => b.L - a.L);
+  check('Doppelbecken 100 ml: Becher voll [ml]', f.length === 2 ? f[0].W / 1000 : -1, A1 * 50 / 1000);
+  check('Doppelbecken 100 ml: Überlauf in der Rinne, Spiegel [mm]', f.length === 2 ? f[1].L : -1, (100000 - A1 * 50) / A2); }
+check('Doppelbecken 300 ml: vereinigt, Spiegel [mm]', Core.fillLakes(gD, 300000).lakes[0].L, 50 + (300000 - (A1 + A2) * 50) / (Math.PI * 1600));
+check('Doppelbecken Fassungsvermögen = Zylinder − Wand [ml]', Core.lakeSum(Core.fillLakes(gD, 1e9).lakes) / 1000, (Math.PI * 1600 * 100 - Math.PI * 84 * 50) / 1000);
+// 40 ml, auf 50° gekippt: Becher hält π r²(h − r tanθ), der Rest läuft in die Rinne, nichts geht verloren
+{ const t = Core.tiltRun(gD, 40000, 180).lakes[50], cup = t.reduce((m, l) => (l.L > m.L ? l : m)); // Becher = höherer Spiegel
+  check('Doppelbecken 50°: Becher hält [ml]', cup.W / 1000, A1 * (50 - 20 * Math.tan(50 * D)) / 1000);
+  check('Doppelbecken 50°: nichts ausgelaufen [ml]', Core.lakeSum(t) / 1000, 40); }
+// Flasche 10° nach unten (100°): Bauch r40 h100, flache Schulter, Hals r10 bis z150. Der Bauch hält Wasser bis zur
+// Halsunterkante (10|100), obwohl die Mündung tiefer liegt (alte Annahme „ein Becken am tiefsten Wandpunkt“ ergab leer)
+{ const gB = pg([[0, 0], [40, 0], [40, 100], [10, 100], [10, 150]]), th = 100 * D, L = 100 * Math.cos(th) - 10 * Math.sin(th);
+  const r = Core.tiltRun(gB, Math.PI * (1600 * 100 + 100 * 50), 180);
+  check('Flasche 100°: Bauch hält bis zur Halsunterkante [ml]', r.ret[100] / 1000, Core.volBelow(cyl.S, L, th) / 1000, 3e-3); }
+// Zickzackwand (Ringrinnen): Inhalt nimmt beim Kippen nie zu, am Anfang die Füllmenge
+{ const gZ = pg([[0, 0], [15, 0], [25, 120], [35, 20], [45, 120], [55, 20], [65, 130]]), r = Core.tiltRun(gZ, 500000, 180).ret;
+  let up = 0; for (let k = 1; k <= 180; k++) up = Math.max(up, r[k] - r[k - 1]);
+  check('Zickzack: Füllmenge erhalten [ml]', r[0] / 1000, 500); check('Zickzack: Inhalt steigt nie [mm³]', up, 0, 1e-6); }
+// Tülle (kommunizierende Gefäße) und Kippwinkel im Taschenmodell = bisherige Lösungen
+check('Taschen: Tülle unter Rand, bis Spitze [ml]', Core.lakeSum(Core.fillLakes(pg([[0, 0], [40, 0], [40, 100]], { spout: spT }), 1e9).lakes) / 1000, Math.PI * 1600 * 70 / 1000, 3e-3);
+{ const r = Core.tiltRun(pg([[0, 0], [40, 0], [40, 100]], { spout: spT }), Math.PI * 1600 * 50, 1800).ret; let k = 0; while (r[k] >= Math.PI * 1600 * 50 * 0.9999) k++;
+  check('Taschen: Tülle halbvoll, Ausgießbeginn [°]', k * 180 / 1800, Math.atan(1 / 3) / D, 4e-3); } // 250 Schichten: ±0,07°
+check('Taschen: Deckel ohne Tülle, 180° nichts verloren [ml]', Core.tiltRun(pg([[0, 0], [40, 0], [40, 100]], { lid: true }), Math.PI * 1600 * 50, 90).ret[90] / 1000, Math.PI * 1600 * 50 / 1000, 1e-6);
+check('Taschen: Kippwinkel 60 % = geschlossene Lösung [°]', Core.tipAngleP(gC, V60, mvC, 0, shC.z, 25, shC.zst), Core.tipAngle(cyl.S, cyl.s, V60, mvC, shC.z, 25, shC.zst), 2e-3);
+// ---- Zwei Konturen (Schlauch mit Kreisquerschnitten zwischen hinten A und vorne B) ----
+const tgr = (A, B) => Core.tubeGraph(Core.resample(P(A), 250), Core.resample(P(B), 250));
+const tvol = g => { const o = new Float64Array(4); let V = 0; for (let i = 0; i < g.n; i++) { g.vol(i, 1e9, 1, 0, o); V += o[0]; } return V / 1000; };
+const gTc = tgr([[-40, 0], [-40, 100]], [[40, 0], [40, 100]]);
+check('Schlauch symmetrisch = Zylinder, Fassungsvermögen [ml]', Core.lakeSum(Core.fillLakes(gTc, 1e9).lakes) / 1000, Math.PI * 1600 * 100 / 1000);
+check('Schlauch symmetrisch, voll 20° [ml]', Core.tiltRun(gTc, Math.PI * 1600 * 100, 360).ret[40] / 1000, Math.PI * 1600 * (100 - 40 * Math.tan(20 * D)) / 1000);
+{ const r = Core.tiltRun(gTc, Math.PI * 1600 * 50, 1800).ret; let k = 0; while (r[k] >= Math.PI * 1600 * 50 * 0.9999) k++;
+  check('Schlauch symmetrisch, halbvoll Ausgießbeginn [°]', k / 10, Math.atan(1.25) / D, 2e-3); }
+check('Schiefer Zylinder (waagrechte Kreise) = π r² h [ml]', tvol(tgr([[-40, 0], [-10, 100]], [[40, 0], [70, 100]])), Math.PI * 1600 * 100 / 1000);
+{ const a = 20 * D, s = Math.sin(a), c = Math.cos(a); // Achse um 20° geneigt, Boden senkrecht dazu
+  const g = tgr([[-40 * c, 40 * s], [-40 * c + 100 * s, 40 * s + 100 * c]], [[40 * c, -40 * s], [40 * c + 100 * s, -40 * s + 100 * c]]);
+  check('Geneigter Zylinder: Fassungsvermögen π r²(h − r tanα) [ml]', Core.lakeSum(Core.fillLakes(g, 1e9).lakes) / 1000, Math.PI * 1600 * (100 - 40 * Math.tan(a)) / 1000); }
+{ const tor = (Rc, r) => { const A = [], B = []; for (let i = 0; i <= 90; i++) { const t = i * D; A.push([(Rc - r) * Math.sin(t), Rc - (Rc - r) * Math.cos(t)]); B.push([(Rc + r) * Math.sin(t), Rc - (Rc + r) * Math.cos(t)]); } return tgr(A, B); };
+  check('Viertel-Torus Rc100 r30: Volumen π r²·Rc·π/2 [ml]', tvol(tor(100, 30)), Math.PI * 900 * 100 * Math.PI / 2 / 1000, 2e-3);
+  check('Zu eng gebogen (Rc20 < r30) wird erkannt', +!!tor(20, 30).bad, 1, 0); }
+{ const sh = Core.tubeShell(Core.resample(P([[-40, 0], [-40, 100]]), 250), Core.resample(P([[40, 0], [40, 100]]), 250), 2, 5);
+  check('Schlauch-Schale symmetrisch = Zylinderschale [mm³]', sh.vol, shC.vol, 1e-9); check('Schlauch-Schale SP z [mm]', sh.z, shC.z, 1e-9);
+  check('Schlauch: Kippwinkel 60 % = geschlossene Lösung [°]', Core.tipAngleP(gTc, V60, mvC, 0, shC.z, 25, shC.zst), Core.tipAngle(cyl.S, cyl.s, V60, mvC, shC.z, 25, shC.zst), 2e-3); }
