@@ -170,3 +170,21 @@ check('Taschen: Tülle unter Rand, bis Spitze [ml]', Core.lakeSum(Core.fillLakes
   check('Taschen: Tülle halbvoll, Ausgießbeginn [°]', k * 180 / 1800, Math.atan(1 / 3) / D, 4e-3); } // 250 Schichten: ±0,07°
 check('Taschen: Deckel ohne Tülle, 180° nichts verloren [ml]', Core.tiltRun(pg([[0, 0], [40, 0], [40, 100]], { lid: true }), Math.PI * 1600 * 50, 90).ret[90] / 1000, Math.PI * 1600 * 50 / 1000, 1e-6);
 check('Taschen: Kippwinkel 60 % = geschlossene Lösung [°]', Core.tipAngleP(gC, V60, mvC, 0, shC.z, 25, shC.zst), Core.tipAngle(cyl.S, cyl.s, V60, mvC, shC.z, 25, shC.zst), 2e-3);
+// ---- Zwei Konturen (Schlauch mit Kreisquerschnitten zwischen hinten A und vorne B) ----
+const tgr = (A, B) => Core.tubeGraph(Core.resample(P(A), 250), Core.resample(P(B), 250));
+const tvol = g => { const o = new Float64Array(4); let V = 0; for (let i = 0; i < g.n; i++) { g.vol(i, 1e9, 1, 0, o); V += o[0]; } return V / 1000; };
+const gTc = tgr([[-40, 0], [-40, 100]], [[40, 0], [40, 100]]);
+check('Schlauch symmetrisch = Zylinder, Fassungsvermögen [ml]', Core.lakeSum(Core.fillLakes(gTc, 1e9).lakes) / 1000, Math.PI * 1600 * 100 / 1000);
+check('Schlauch symmetrisch, voll 20° [ml]', Core.tiltRun(gTc, Math.PI * 1600 * 100, 360).ret[40] / 1000, Math.PI * 1600 * (100 - 40 * Math.tan(20 * D)) / 1000);
+{ const r = Core.tiltRun(gTc, Math.PI * 1600 * 50, 1800).ret; let k = 0; while (r[k] >= Math.PI * 1600 * 50 * 0.9999) k++;
+  check('Schlauch symmetrisch, halbvoll Ausgießbeginn [°]', k / 10, Math.atan(1.25) / D, 2e-3); }
+check('Schiefer Zylinder (waagrechte Kreise) = π r² h [ml]', tvol(tgr([[-40, 0], [-10, 100]], [[40, 0], [70, 100]])), Math.PI * 1600 * 100 / 1000);
+{ const a = 20 * D, s = Math.sin(a), c = Math.cos(a); // Achse um 20° geneigt, Boden senkrecht dazu
+  const g = tgr([[-40 * c, 40 * s], [-40 * c + 100 * s, 40 * s + 100 * c]], [[40 * c, -40 * s], [40 * c + 100 * s, -40 * s + 100 * c]]);
+  check('Geneigter Zylinder: Fassungsvermögen π r²(h − r tanα) [ml]', Core.lakeSum(Core.fillLakes(g, 1e9).lakes) / 1000, Math.PI * 1600 * (100 - 40 * Math.tan(a)) / 1000); }
+{ const tor = (Rc, r) => { const A = [], B = []; for (let i = 0; i <= 90; i++) { const t = i * D; A.push([(Rc - r) * Math.sin(t), Rc - (Rc - r) * Math.cos(t)]); B.push([(Rc + r) * Math.sin(t), Rc - (Rc + r) * Math.cos(t)]); } return tgr(A, B); };
+  check('Viertel-Torus Rc100 r30: Volumen π r²·Rc·π/2 [ml]', tvol(tor(100, 30)), Math.PI * 900 * 100 * Math.PI / 2 / 1000, 2e-3);
+  check('Zu eng gebogen (Rc20 < r30) wird erkannt', +!!tor(20, 30).bad, 1, 0); }
+{ const sh = Core.tubeShell(Core.resample(P([[-40, 0], [-40, 100]]), 250), Core.resample(P([[40, 0], [40, 100]]), 250), 2, 5);
+  check('Schlauch-Schale symmetrisch = Zylinderschale [mm³]', sh.vol, shC.vol, 1e-9); check('Schlauch-Schale SP z [mm]', sh.z, shC.z, 1e-9);
+  check('Schlauch: Kippwinkel 60 % = geschlossene Lösung [°]', Core.tipAngleP(gTc, V60, mvC, 0, shC.z, 25, shC.zst), Core.tipAngle(cyl.S, cyl.s, V60, mvC, shC.z, 25, shC.zst), 2e-3); }
