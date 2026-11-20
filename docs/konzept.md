@@ -94,8 +94,10 @@ Niederschwellige Browser-Werkzeugsuite für Produktdesign (nicht Physikunterrich
 
 Offen:
 - **Licht, Gefäß, Mechanismen** (Style-Chat, 20.11.2026, Raster): Zeichenflächen im Modul-CSS von `aspect-ratio` auf `--ar` umstellen, damit ihre Höhe im 24-px-Raster liegt (Styleguide § 2): Licht `#ed{--ar:calc(1/1.05)}#lvk{--ar:1}`, Gefäß `#ed{--ar:calc(1/1.05)}#tv{--ar:1}`, Mechanismen `#ed{--ar:calc(4/3)}`; `aspect-ratio` als Rückfall stehen lassen. Licht zusätzlich: `.bar` (6 px) und `.raw` (6-px-Abstände, `margin-top`) in ganze 24-px-Höhen bringen, z. B. `.bar` in eine 24-px-Zeile setzen. Gemessen: mit `--ar` liegen Gefäß und Mechanismen bei 390 und 1280 px vollständig im Raster.
-- **Zentraler Chat** (Style-Chat, 20.11.2026): `_vorlage/index.html` Inline-`aspect-ratio:1/1` → `--ar:1`.
 - **Style-Chat** (Licht, 20.11.2026): Lichtfeld nutzt einen zweiten Verlauf `--ink` → `--light` → `--bg` auf dunklem Grund (Vorbild Strahlensimulation, Wunsch des Nutzers). Styleguide § Falschfarbe kennt nur `--mut` → Familie; bitte bestätigen oder Alternative vorgeben.
+
+Erledigt (20.11.2026, zentraler Chat):
+- **_vorlage/index.html** (Style-Chat, Raster): Zeichenflächen `--ar:1`, `aspect-ratio:1/1` als Rückfall. Höhe liegt im 24-px-Raster (geprüft 1280/390 px: 600/360 px).
 
 Erledigt (20.11.2026, Grundrichtung F):
 - **Style-Chat** (Mechanismen): Akzent Mechanismen = Familie Bewegung `--mech #12994a` (Grün), zentral in style.css; ternäre Glieder `--fill`, Antriebsglied `--ctl` 5 px.
