@@ -29,17 +29,18 @@ Niederschwellige Browser-Werkzeugsuite für Produktdesign (nicht Physikunterrich
 ## Konventionen (verbindlich)
 - **Struktur:** `index.html` (Startseite) · `shared/` (style.css, util.js, chart.js) · `tools/` (load-core.js, check.js) · `_vorlage/` · `<modul>/index.html` + `<modul>/test.js` · `docs/`
 - **Modul-Registry:** `DP_MODULES` in `shared/util.js` – einzige Stelle; Kopfzeile per `dpHeader(key, titel)`
-- **Shared-Globale:** `$`, `nf0`, `nf1`, `css`, `prep`, `polyPath`, `dpDownload`, `dpHashGet/Set`, `niceStep`, `chart`
+- **Shared-Globale:** `$`, `nf0`, `nf1`, `css`, `prep`, `polyPath`, `dpDots`, `dpMq`, `dpDownload`, `dpHashGet/Set`, `niceStep`, `chart`
 - **Links** immer explizit auf `…/index.html` (damit file:// funktioniert)
 - **Technik:** Vanilla JS, Canvas 2D (WebGL/WebGPU nur, wo nötig), keine CDNs
 - **Einheiten:** mm, ml, g, N, lm/cd/lx, Winkel in Grad in der UI; deutsche Zahlenformatierung
 - **Rechenkern** im Block `// === CORE START … CORE END`, ohne DOM, endet mit `if (typeof module !== 'undefined') module.exports = Core;`. Jede Physik wird gegen analytische Fälle verifiziert (test.js).
 - **Gültigkeit:** Jedes Modul hat einen Abschnitt „Modell & Gültigkeit“.
 - **Export:** JSON `{type:"designphysik/<modul>", version, …}`; Teilen per URL-Hash `#<kürzel>=…`
-- **Look:** Grundrichtung D „Ulmer Raster“ (19.11.2026), verbindlich nach `docs/styleguide.md`. Farben nur aus style.css; `--acc` (Orange) nur für Bedienung; ein Akzent pro Physik (Wasser `--water #3d86de`; Vorschlag Licht `--light #e0a020`, Last `--load #5b55c9`; Mechanismen: Akzent offen → Style-Chat, modul-lokal vorerst `--mech #2a8f86`).
+- **Look:** Grundrichtung F „Punktraster“ (20.11.2026, ersetzt D), verbindlich nach `docs/styleguide.md`. Weiß, alles Schwarz, Punktraster 24 px; Bedienung `--ctl` (Schwarz). Farbe nur je **Physik-Familie** (`--water` Fluid, `--light` Licht, `--mech` Bewegung, reserviert `--load` Kraft & Festigkeit; jeweils `-a` für Flächen) und `--warn` (Rot). Alle Farben stehen in style.css, Module definieren keine eigenen. Neue Module nehmen die Farbe ihrer Familie; Modulfarbe in `DP_MODULES[].color`. Canvas-Raster als Punkte über `dpDots()`.
 
 ## Integration
 - **19.11.2026, Stand 1** (zentraler Chat): Gefäß v1.3.3, Licht v1, Mechanismen v1.1 zusammengeführt. Registry: Licht und Mechanismen `ready: true`. Tests mit neuem load-core: Gefäß 29/29, Licht 61/61 (8,6 s statt ~12 s), Mechanismen 40/40. Browser (Chrome headless, file://, 1280 px und 390 px): Startseite → jedes Modul → Kopfzeile zurück, Navigation zwischen Modulen, Licht „ruhig nach 1,0 s“, Konsole fehlerfrei.
+- **20.11.2026, Grundrichtung F „Punktraster“** (auf Wunsch des Nutzers in einer Sitzung, Definition zuerst): Styleguide neu (vollständige Token-Liste mit Kontrasten, Physik-Familien statt Modulfarben, Migrationstabelle D → F), style.css neu, `util.js` (`DP_MODULES[].color`, Modulquadrat `dpMq`, `dpDots`), `chart.js` (Punkte statt Gitterlinien, Achsen schwarz), Startseite. Module nur Darstellung: lokale Farbdefinitionen entfernt, Token-Migration, Canvas-Raster als Punkte mit Maßstabsangabe, Griffe als Quadrate (Gefäß, Licht), Licht-Linien 2,5 px, Antriebsglied 5 px. CORE unverändert, alle Tests grün. Browser (Chrome headless, file://, 1280 und 390 px): Startseite, drei Module, kein Überlaufen, Konsole fehlerfrei.
 - **19.11.2026, Umzug nach GitHub**: Stand 1 als erster Commit in `davidgebka/physik`; Dokumente aus dem claude.ai-Projekt nach `docs/`; Projektanweisungen → `CLAUDE.md`; CI ergänzt. Das claude.ai-Projekt ist ab jetzt nicht mehr Quelle für Code.
 
 ## Module
@@ -83,8 +84,11 @@ Niederschwellige Browser-Werkzeugsuite für Produktdesign (nicht Physikunterrich
 (Modul-Chats tragen hier ein; der zentrale Chat bzw. der Style-Chat arbeitet sie ab.)
 
 Offen:
-- **Style-Chat** (Mechanismen, 19.11.2026): Akzentfarbe Mechanismen festlegen; Vorschlag `--mech #2a8f86` (Petrol, getrennt von Wasser-Blau und Bedien-Orange), modul-lokal gesetzt. Genutzt für Bahnkurve und Diagrammkurven; ternäre Glieder `--grid` gefüllt, Gestellglieder `--mut` 4 px, Antriebsglied im Modus Bewegen `--acc`, Lastpfeile `--ink`.
-- **Style-Chat** (Licht, 19.11.2026): `--light #e0a020` ist im Modul gesetzt (plus `--lightA` = Alpha .25 für Flächen) → Status „Vorschlag“ im Styleguide auf „fest“ setzen, wenn einverstanden. Neu im Modul, bitte bewerten: Falschfarbe für Leuchtdichte als Verlauf `--grid2` → `--light` (aus Tokens interpoliert, keine Hex-Werte im Modul), Werte ≥ Grenzwert in `--warn` mit ⚠-Text; Lampe als `--light`-Kreis mit `--ink`-Rand; Fortschrittsbalken 6 px `--grid` mit `--light`-Füllung.
+- (keine)
+
+Erledigt (20.11.2026, Grundrichtung F):
+- **Style-Chat** (Mechanismen): Akzent Mechanismen = Familie Bewegung `--mech #12994a` (Grün), zentral in style.css; ternäre Glieder `--fill`, Antriebsglied `--ctl` 5 px.
+- **Style-Chat** (Licht): `--light #d48a00` fest (dunkler als `#e0a020` wegen Kontrast, Linien ≥ 2,5 px); Falschfarbe `--mut` → `--light`, ab Grenzwert `--warn` mit ⚠; Lampe `--light` mit `--ink`-Rand; Fortschrittsbalken `--fill`/`--light`.
 
 Erledigt (19.11.2026, zentraler Chat, Integration Stand 1):
 - **tools/load-core.js** (Licht): `Math` nicht mehr in den vm-Kontext gereicht. Licht-Test 8,6 s statt ~12 s; Gefäß und Mechanismen unverändert grün.

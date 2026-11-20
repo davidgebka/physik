@@ -5,11 +5,10 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Designphysik · Lampenschirm</title>
 <link rel="stylesheet" href="../shared/style.css">
-<!-- Modul-Akzent Licht (Styleguide: Vorschlag --light) -->
-<style>:root{--light:#e0a020;--lightA:rgba(224,160,32,.25)}
+<style>
 #ed{aspect-ratio:1/1.05;cursor:crosshair}#lvk{aspect-ratio:1/1}
-.bar{height:6px;background:var(--grid);border-radius:var(--r);overflow:hidden}.bar i{display:block;height:100%;width:0;background:var(--light)}
-.ctl input[type=number],.raw input{font:inherit;font-size:13px;width:84px;padding:4px 6px;border:1px solid var(--line);border-radius:var(--r)}
+.bar{height:6px;background:var(--fill);overflow:hidden}.bar i{display:block;height:100%;width:0;background:var(--light)}
+.ctl input[type=number],.raw input{font:inherit;font-size:13px;width:84px;padding:4px 6px;border:1px solid var(--ink);}
 .raw{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:6px;margin-top:6px}
 .raw label{font-size:12px;color:var(--mut);display:flex;justify-content:space-between;align-items:center;gap:6px}
 details summary{font-size:12.5px;cursor:pointer}
@@ -542,33 +541,27 @@ const s2w = (x, y) => ({ x: (x - V.ox) / V.s, z: (V.oy - y) / V.s });
 const hex = c => { const n = parseInt(c.slice(1), 16); return [n >> 16 & 255, n >> 8 & 255, n & 255]; };
 function lcol(L, Lsc) { // Falschfarbe: --grid2 (dunkel) → --light (hell); ab Grenzwert --warn
   if (L >= LIM) return css('--warn');
-  const a = hex(css('--grid2')), b = hex(css('--light')), t = Math.min(1, L / Lsc);
+  const a = hex(css('--mut')), b = hex(css('--light')), t = Math.min(1, L / Lsc);
   return `rgb(${a.map((v, i) => Math.round(v + (b[i] - v) * t)).join(',')})`;
 }
 let stroke = null, drag = -1, dragSrc = false, lastTap = { t: 0, i: -1, p: -1 };
 function drawEditor() {
   if (!V) fitView();
   const { ctx, w, h } = prep(ed);
-  const x0 = s2w(0, 0), x1 = s2w(w, h);
-  for (let g = Math.floor(x0.x / 10) * 10; g <= x1.x; g += 10) {
-    ctx.strokeStyle = g % 50 ? css('--grid') : css('--grid2'); ctx.lineWidth = 1;
-    const [sx] = w2s({ x: g, z: 0 }); ctx.beginPath(); ctx.moveTo(sx + .5, 0); ctx.lineTo(sx + .5, h); ctx.stroke();
-  }
-  for (let g = Math.floor(x1.z / 10) * 10; g <= x0.z; g += 10) {
-    ctx.strokeStyle = g % 50 ? css('--grid') : css('--grid2');
-    const [, sy] = w2s({ x: 0, z: g }); ctx.beginPath(); ctx.moveTo(0, sy + .5); ctx.lineTo(w, sy + .5); ctx.stroke();
-  }
+  const fDot = dpDots(ctx, w, h, V.s, V.ox, V.oy);
+  ctx.font = '11px Arial, sans-serif'; ctx.fillStyle = css('--ink2'); ctx.textAlign = 'right';
+  ctx.fillText('1 Punkt = ' + nf0.format(fDot) + ' mm', w - 6, h - 6); ctx.textAlign = 'left';
   ctx.setLineDash([3, 4]); ctx.strokeStyle = css('--mut'); ctx.lineWidth = 1;
   if (S.sym) { ctx.beginPath(); ctx.moveTo(V.ox + .5, 0); ctx.lineTo(V.ox + .5, h); ctx.stroke(); }
   // Tischebene
-  ctx.font = '11px system-ui'; ctx.fillStyle = css('--mut');
+  ctx.font = '11px Arial, sans-serif'; ctx.fillStyle = css('--mut');
   const [, ty] = w2s({ x: 0, z: S.src.z - S.dist });
   if (ty < h - 4) { ctx.beginPath(); ctx.moveTo(0, ty + .5); ctx.lineTo(w, ty + .5); ctx.stroke(); ctx.fillText('Tisch', 6, ty - 4); }
   else ctx.fillText('Tisch ↓ ' + nf0.format(S.dist) + ' mm unter der Lampe', 6, h - 6);
   ctx.setLineDash([]);
   ctx.lineJoin = 'round'; ctx.lineCap = 'round';
   if (stroke) {
-    ctx.strokeStyle = css('--acc'); ctx.lineWidth = 2.5;
+    ctx.strokeStyle = css('--ctl'); ctx.lineWidth = 2.5;
     polyPath(ctx, stroke, w2s); ctx.stroke();
     if (S.sym) { polyPath(ctx, stroke.map(mir), w2s); ctx.globalAlpha = .4; ctx.stroke(); ctx.globalAlpha = 1; }
   }
@@ -590,14 +583,14 @@ function drawEditor() {
   }
   if (S.mode === 'edit' && !stroke) S.parts.forEach((pt, pi) => pt.pts.forEach((p, i) => {
     const [sx, sy] = w2s(p), on = pi === S.cur;
-    ctx.beginPath(); ctx.arc(sx, sy, on && i === S.sel ? 6.5 : on ? 5 : 3.5, 0, 7);
-    ctx.fillStyle = on && i === S.sel ? css('--acc') : on ? css('--panel') : css('--grid2'); ctx.fill();
-    ctx.strokeStyle = css('--ink'); ctx.lineWidth = on ? 1.5 : 1; ctx.stroke();
+    const a = on && i === S.sel ? 5 : on ? 4 : 2.5; ctx.beginPath(); ctx.rect(Math.round(sx) - a, Math.round(sy) - a, 2 * a, 2 * a);
+    ctx.fillStyle = on && i === S.sel ? css('--ctl') : on ? css('--bg') : css('--mut'); ctx.fill();
+    if (on && i !== S.sel) { ctx.strokeStyle = css('--ink'); ctx.lineWidth = 1.5; ctx.stroke(); }
   }));
   // Schirmnummern, sobald es mehrere gibt
   if (S.parts.length > 1 && !stroke) S.parts.forEach((pt, pi) => { if (!pt.pts.length) return;
     let top = pt.pts[0]; pt.pts.forEach(p => { if (p.z > top.z) top = p; });
-    const [sx, sy] = w2s(top); ctx.fillStyle = pi === S.cur ? css('--acc') : css('--mut'); ctx.fillText(String(pi + 1), sx + 7, sy - 7); });
+    const [sx, sy] = w2s(top); ctx.fillStyle = pi === S.cur ? css('--ctl') : css('--mut'); ctx.fillText(String(pi + 1), sx + 7, sy - 7); });
   // Lampe
   const [lx, ly] = w2s(S.src);
   ctx.beginPath(); ctx.arc(lx, ly, dragSrc ? 9 : 7.5, 0, 7); ctx.fillStyle = css('--light'); ctx.fill();
@@ -699,14 +692,14 @@ function changed() { syncCtl(); restart(); }
 // ---- LVK (Polardiagramm) ----
 function drawLvk() {
   const cv = $('lvk'), { ctx, w, h } = prep(cv), cx = w / 2, cy = h / 2, rad = 0.42 * Math.min(w, h);
-  ctx.font = '11px system-ui'; ctx.lineWidth = 1;
+  ctx.font = '11px Arial, sans-serif'; ctx.lineWidth = 1;
   const k = S.unit === 'klm' ? 1000 / S.phi : 1, u = S.unit === 'klm' ? 'cd/klm' : 'cd';
   if (!R) { ctx.fillStyle = css('--mut'); ctx.textAlign = 'center'; ctx.fillText(J.err ? '⚠ ' + J.err : 'rechnet …', cx, cy); ctx.textAlign = 'left'; return; }
   const curves = [R.lv.A, R.lv.B].filter(Boolean);
   let mx = 0; curves.forEach(c => c.forEach(h2 => h2.forEach(v => mx = Math.max(mx, v * k))));
   const st = niceStep(Math.max(mx, 1e-9) / 4), top = Math.ceil(mx / st) * st || 1, sc = rad / top;
   const P = (g, r, side) => [cx + side * r * sc * Math.sin(g * D2R), cy + r * sc * Math.cos(g * D2R)];
-  ctx.strokeStyle = css('--grid2'); ctx.fillStyle = css('--mut');
+  ctx.strokeStyle = css('--dot'); ctx.fillStyle = css('--ink2');
   for (let r = st; r <= top + 1e-9; r += st) { ctx.beginPath(); ctx.arc(cx, cy, r * sc, 0, 7); ctx.stroke(); ctx.fillText(nf0.format(r), cx + 3, cy + r * sc - 3); }
   for (let g = 0; g < 180; g += 30) for (const sd of [1, -1]) { const [x, y] = P(g, top, sd); ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(x, y); ctx.stroke(); }
   ctx.textAlign = 'center'; ctx.fillText('0°', cx, cy + rad + 14); ctx.fillText('180°', cx, cy - rad - 6);
@@ -715,7 +708,7 @@ function drawLvk() {
     ctx.beginPath();
     pair[0].forEach((v, g) => { const [x, y] = P(g * dG, v * k, 1); g ? ctx.lineTo(x, y) : ctx.moveTo(x, y); });
     for (let g = pair[1].length - 1; g >= 0; g--) { const [x, y] = P(g * dG, pair[1][g] * k, -1); ctx.lineTo(x, y); }
-    ctx.closePath(); ctx.strokeStyle = col; ctx.lineWidth = 2; ctx.setLineDash(dash); ctx.stroke(); ctx.setLineDash([]);
+    ctx.closePath(); ctx.strokeStyle = col; ctx.lineWidth = dash.length ? 1.5 : 2.5; ctx.setLineDash(dash); ctx.stroke(); ctx.setLineDash([]);
   };
   draw(R.lv.A, css('--light'), []);
   if (R.lv.B) draw(R.lv.B, css('--ink'), [5, 4]);
@@ -731,7 +724,7 @@ function drawE() {
   const pts = E.map((e, i) => [x0 + (i + 0.5) * dr, e]), hi = pts.map(([r], i) => [r, E[i] + (isFinite(sg[i]) ? sg[i] : 0)]), lo = pts.map(([r], i) => [r, Math.max(0, E[i] - (isFinite(sg[i]) ? sg[i] : 0))]);
   let ym = 1; hi.forEach(p => ym = Math.max(ym, p[1]));
   chart(cv, { x0, x1: G.rMax, y0: 0, y1: ym * 1.08, xl: S.sym ? 'Abstand von der Achse [mm]' : 'Abstand quer zur Leuchte [mm]', yl: 'Beleuchtungsstärke [lx]',
-    series: [{ pts, color: css('--light'), fill: css('--lightA') }, { pts: hi, color: css('--mut'), width: 1, dash: [3, 4] }, { pts: lo, color: css('--mut'), width: 1, dash: [3, 4] }] });
+    series: [{ pts, color: css('--light'), fill: css('--light-a'), width: 2.5 }, { pts: hi, color: css('--mut'), width: 1, dash: [3, 4] }, { pts: lo, color: css('--mut'), width: 1, dash: [3, 4] }] });
   $('eNote').innerHTML = (G.cut ? '<span style="color:var(--warn)">⚠ Die Tischebene schneidet den Schirm; Abschattung durch den Tisch ist nicht gerechnet.</span> ' : '') +
     (S.sym ? 'Mittelwert je Ring (Breite ' : 'Mittelwert je Streifen quer zur Leuchte, gemittelt über ihre Länge (Breite ') + nf0.format(dr) + ' mm), gestrichelt ±σ. Nur direktes Licht der Leuchte, Raum schwarz.';
 }

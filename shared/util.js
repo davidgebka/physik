@@ -3,19 +3,21 @@
 
 // ---- Modul-Registry: einzige Stelle, an der Module angemeldet werden ----
 const DP_MODULES = [
-  { key: 'gefaess', name: 'Gefäß',  title: 'Gefäß & Kippen',  desc: 'Volumen, Eichstriche, Ausgießen über Neigung', ready: true },
-  { key: 'licht',   name: 'Licht',  title: 'Lampenschirm',    desc: 'Schirm zeichnen: Lichtverteilung, Beleuchtungsstärke, Leuchtdichte, Blendung', ready: true },
-  { key: 'mechanismus', name: 'Mechanik', title: 'Mechanismen', desc: 'Gelenkgetriebe skizzieren und bewegen: Bahnkurve, Totlagen, Übertragungswinkel, Haltemoment', ready: true },
-  { key: 'last',    name: 'Last',   title: 'Belastung',       desc: 'Durchbiegung, Spannung, Sicherheit', ready: false }
+  { key: 'gefaess', name: 'Gefäß',  title: 'Gefäß & Kippen',  desc: 'Volumen, Eichstriche, Ausgießen über Neigung', ready: true, color: '--water' },
+  { key: 'licht',   name: 'Licht',  title: 'Lampenschirm',    desc: 'Schirm zeichnen: Lichtverteilung, Beleuchtungsstärke, Leuchtdichte, Blendung', ready: true, color: '--light' },
+  { key: 'mechanismus', name: 'Mechanik', title: 'Mechanismen', desc: 'Gelenkgetriebe skizzieren und bewegen: Bahnkurve, Totlagen, Übertragungswinkel, Haltemoment', ready: true, color: '--mech' },
+  { key: 'last',    name: 'Last',   title: 'Belastung',       desc: 'Durchbiegung, Spannung, Sicherheit', ready: false, color: '--load' }
 ];
 
-// Kopfzeile mit Modulnavigation in <header id="dp-header"> rendern
+// Kopfzeile mit Modulnavigation in <header id="dp-header"> rendern; Modulquadrat in der Familienfarbe (Styleguide § 4)
+const dpMq = (m, off) => `<i class="mq${off ? ' off' : ''}" style="--c:var(${m.color})"></i>`;
 function dpHeader(activeKey, subtitle) {
   const el = document.getElementById('dp-header'); if (!el) return;
+  const cur = DP_MODULES.find(m => m.key === activeKey);
   const nav = DP_MODULES.map(m => m.ready
-    ? `<a href="../${m.key}/index.html" class="${m.key === activeKey ? 'on' : ''}">${m.name}</a>`
-    : `<span title="folgt">${m.name}</span>`).join('');
-  el.innerHTML = `<h1><a href="../index.html">Designphysik</a> <small>· ${subtitle || ''}</small></h1><nav>${nav}</nav>`;
+    ? `<a href="../${m.key}/index.html" class="${m.key === activeKey ? 'on' : ''}">${dpMq(m)}${m.name}</a>`
+    : `<span title="folgt">${dpMq(m, true)}${m.name}</span>`).join('');
+  el.innerHTML = `<h1><a href="../index.html">Designphysik</a> <small>${cur ? dpMq(cur) : ''}${subtitle || ''}</small></h1><nav>${nav}</nav>`;
 }
 
 // ---- DOM / Zahlen ----
@@ -32,6 +34,20 @@ function prep(cv) {
   if (cv.width !== W || cv.height !== H) { cv.width = W; cv.height = H; }
   const ctx = cv.getContext('2d'); ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, r.width, r.height);
   return { ctx, w: r.width, h: r.height };
+}
+// Punktraster in mm (Styleguide § 7): Bildschirm = ox + x·k, oy − y·k; fein 10 mm (--dot), grob 5 × fein (--mut).
+// Feine Stufe verfünffacht sich, bis die Punkte ≥ 8 px auseinander liegen. Liefert die feine Stufe in mm.
+function dpDots(ctx, w, h, k, ox, oy) {
+  let f = 10; while (f * k < 8) f *= 5;
+  const fine = css('--dot'), coarse = css('--mut');
+  const i0 = Math.ceil(-ox / (f * k)), i1 = Math.floor((w - ox) / (f * k));
+  const j0 = Math.ceil((oy - h) / (f * k)), j1 = Math.floor(oy / (f * k));
+  for (let i = i0; i <= i1; i++) for (let j = j0; j <= j1; j++) {
+    const big = i % 5 === 0 && j % 5 === 0;
+    ctx.fillStyle = big ? coarse : fine;
+    ctx.beginPath(); ctx.arc(Math.round(ox + i * f * k) + .5, Math.round(oy - j * f * k) + .5, big ? 1.5 : 1, 0, 7); ctx.fill();
+  }
+  return f;
 }
 // Pfad aus Punkten; T: Punkt → [sx, sy]
 function polyPath(ctx, pts, T) { ctx.beginPath(); pts.forEach((p, i) => { const [x, y] = T(p); i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); }); }

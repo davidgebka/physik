@@ -9,23 +9,25 @@ function chart(cv, o) {
   const m = { l: 44, r: 12, t: 10, b: 30 };
   const X = v => m.l + (v - o.x0) / (o.x1 - o.x0) * (w - m.l - m.r);
   const Y = v => h - m.b - (v - o.y0) / (o.y1 - o.y0 || 1) * (h - m.t - m.b);
-  ctx.font = '11px system-ui'; ctx.fillStyle = css('--mut'); ctx.lineWidth = 1;
+  ctx.font = '11px Arial, sans-serif'; ctx.fillStyle = css('--ink2'); ctx.lineWidth = 1;
+  const xt = [], yt = [];
   const sx = o.xs || niceStep((o.x1 - o.x0) / 6), sy = niceStep((o.y1 - o.y0) / 5 || 1);
   // Ticks als k·Schritt (keine Summenfehler), Nachkommastellen nach Schrittweite (0,25 → 2), kein „-0“
   const ticks = (a, b, s, f) => { const d = (String(+s.toPrecision(6)).split('.')[1] || '').length;
     const nf = new Intl.NumberFormat('de-DE', { minimumFractionDigits: d, maximumFractionDigits: d });
     for (let k = Math.ceil(a / s - 1e-9); k * s <= b + 1e-9 * Math.abs(s); k++) f(k * s, nf.format(k ? k * s : 0)); };
   ticks(o.x0, o.x1, sx, (v, t) => {
-    ctx.strokeStyle = css('--grid'); ctx.beginPath(); ctx.moveTo(X(v) + .5, m.t); ctx.lineTo(X(v) + .5, h - m.b); ctx.stroke();
-    ctx.textAlign = 'center'; ctx.fillText(t, X(v), h - m.b + 14);
+    xt.push(X(v)); ctx.textAlign = 'center'; ctx.fillText(t, X(v), h - m.b + 14);
   });
   ticks(o.y0, o.y1, sy, (v, t) => {
-    ctx.strokeStyle = css('--grid'); ctx.beginPath(); ctx.moveTo(m.l, Y(v) + .5); ctx.lineTo(w - m.r, Y(v) + .5); ctx.stroke();
-    ctx.textAlign = 'right'; ctx.fillText(t, m.l - 5, Y(v) + 4);
+    yt.push(Y(v)); ctx.textAlign = 'right'; ctx.fillText(t, m.l - 5, Y(v) + 4);
   });
   ctx.textAlign = 'center'; ctx.fillText(o.xl, (m.l + w - m.r) / 2, h - 3);
   ctx.save(); ctx.translate(10, (m.t + h - m.b) / 2); ctx.rotate(-Math.PI / 2); ctx.fillText(o.yl, 0, 0); ctx.restore();
   ctx.textAlign = 'left';
+  // Raster: Punkte an den Tick-Kreuzungen, Achsen links und unten (Styleguide § 8)
+  ctx.fillStyle = css('--dot'); for (const x of xt) for (const y of yt) { ctx.beginPath(); ctx.arc(Math.round(x) + .5, Math.round(y) + .5, 1, 0, 7); ctx.fill(); }
+  ctx.strokeStyle = css('--ink'); ctx.beginPath(); ctx.moveTo(m.l + .5, m.t); ctx.lineTo(m.l + .5, h - m.b + .5); ctx.lineTo(w - m.r, h - m.b + .5); ctx.stroke();
   for (const sr of o.series) {
     ctx.beginPath(); sr.pts.forEach(([a, b], i) => i ? ctx.lineTo(X(a), Y(b)) : ctx.moveTo(X(a), Y(b)));
     if (sr.fill) { ctx.save(); ctx.lineTo(X(sr.pts[sr.pts.length - 1][0]), Y(o.y0)); ctx.lineTo(X(sr.pts[0][0]), Y(o.y0)); ctx.closePath(); ctx.fillStyle = sr.fill; ctx.fill(); ctx.restore();
