@@ -130,3 +130,10 @@ check('Leer, SP außermittig x −10: Kippwinkel [°]', Core.tipAngleG(Core.geoR
   check('Umstoßkraft SP x −10, Kante 42, h 100 [N]', Core.pushForce(g.m, 42 - g.x, 100), 0.5 * 9.81 * 52 / 100); }
 // Gegenrichtung beim Drehkörper = gespiegelter Schwerpunkt: SP x −10 nach −x gekippt ≡ SP +10 nach +x
 check('Gegenseite: SP x −10 zur −x-Kante [°]', Core.tipAngleG(Core.geoRot(cyl.S, cyl.s), 0, 500, 10, 40, 42, -5), Math.atan(32 / 45) / D, 2e-3);
+// Konturprüfung: Selbstkreuzung (offen/geschlossen) und abwärts laufende Wand
+check('Becher kreuzt sich nicht', +Core.selfCross(P([[0, 0], [33, 0], [36, 3], [40, 95]]), false), 0, 0);
+check('Schleife kreuzt sich', +Core.selfCross(P([[0, 0], [40, 0], [40, 60], [10, 30], [60, 30]]), false), 1, 0);
+check('Quadrat geschlossen ok', +Core.selfCross(P([[0, 0], [10, 0], [10, 10], [0, 10]]), true), 0, 0);
+check('Achterschleife geschlossen kreuzt', +Core.selfCross(P([[0, 0], [10, 10], [10, 0], [0, 10]]), true), 1, 0);
+check('Karaffe: Wand steigt monoton [mm]', Core.maxDescent(P([[0,0],[40,0],[47,8],[53,45],[50,95],[36,140],[24,175],[22,205],[28,225]])), 0, 0);
+check('Zickzack-Wand: Abstieg [mm]', Core.maxDescent(P([[0, 0], [20, 0], [30, 80], [40, 20], [50, 90]])), 60, 0);

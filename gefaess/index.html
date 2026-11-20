@@ -96,7 +96,7 @@
 
   <section class="panel wide">
     <h2>Modell &amp; Gültigkeit</h2>
-    <p class="note">Rotationskörper aus der gezeichneten Innenkontur. Volumen und Kippzustand sind geometrisch exakt (numerisch, Abweichung &lt; 0,5&nbsp;%). Kippen wird quasistatisch gerechnet: Die Flüssigkeit läuft über den tiefsten Punkt, der zwischen dem Becken und dem Rand liegt. Engstellen wie eine Flaschenschulter halten Flüssigkeit also korrekt zurück. Nicht modelliert: Oberflächenspannung, Tropfnase, Glucksen und Luftschleusen, Ausflussgeschwindigkeit. Gerechnet wird mit Wasser (1&nbsp;g/ml).</p>
+    <p class="note">Rotationskörper aus der gezeichneten Innenkontur. Volumen und Kippzustand sind geometrisch exakt (numerisch, Abweichung &lt; 0,5&nbsp;%). Kippen wird quasistatisch gerechnet: Die Flüssigkeit läuft über den tiefsten Punkt, der zwischen dem Becken und dem Rand liegt. Engstellen wie eine Flaschenschulter halten Flüssigkeit also korrekt zurück. Die Kontur muss eine einfache Linie vom Boden zum Rand sein: Kreuzt sie sich, wird sie nicht übernommen bzw. als ungültig markiert. Läuft die Wand zwischendurch wieder abwärts, entstehen getrennte Taschen; gerechnet wird trotzdem mit einem gemeinsamen Wasserspiegel (⚠ unter Kennwerte). Nicht modelliert: Oberflächenspannung, Tropfnase, Glucksen und Luftschleusen, Ausflussgeschwindigkeit. Gerechnet wird mit Wasser (1&nbsp;g/ml).</p>
     <p class="note"><b>Tülle, Henkel, Deckel</b> (Drehkörper): Tülle und Henkel liegen in der Seitenansicht, also in der Spiegelebene der Kanne; gekippt wird zur Tülle hin (+x). Die Tülle ist ein kommunizierendes Gefäß: Es läuft aus, sobald der Spiegel die höchste Stelle des Weges vom Becken über Wand und Ansatz bis zur Spitze übersteigt – das begrenzt auch das Fassungsvermögen, wenn die Spitze tiefer liegt als der Rand. Mit Deckel zählt der Rand nicht als Überlauf. Wasser in der Tülle selbst wird vernachlässigt, ebenso Luftzufuhr (Deckelloch angenommen), Strahl, Nachtropfen. Masse: Tülle als Rohr mit der Wandstärke, Henkel als Vollstab, beide aus dem Gefäßmaterial; Deckel ohne Masse. Kippwinkel zur Tülle hin und zur Gegenseite (Henkel), angezeigt wird der kleinere; zur Gegenseite läuft nur über den Rand aus. Kippansicht und Kippkurve zeigen das Kippen zur Tülle.</p>
     <p class="note"><b>Grundriss-Modus</b> (nicht rotationssymmetrisch): beliebiger geschlossener Grundriss, senkrechte Wand der Innenhöhe, flacher Boden – ein Prisma, z.&nbsp;B. Vase mit Wellenkontur oder rechteckige Dose. Gekippt wird um eine waagrechte Achse quer zur eingestellten Kipprichtung; Volumen, Überlauf am tiefsten Randpunkt, Schwerpunkt und Kippwinkel sind exakt für diese Geometrie (Streifenzerlegung, geprüft gegen Quader und Zylinder). Wand als Band der Wandstärke außen um die Kontur mit gerundeten Ecken (exakt für konvexe Grundrisse, bei Einbuchtungen genähert), Standkante = äußerster Punkt in Kipprichtung plus Wandstärke. Nicht erfasst: Gefäße, die sich nach oben verjüngen oder weiten, Seitwärtsdrehen beim Kippen über eine Ecke.</p>
     <p class="note"><b>Designklassiker</b> unter „Vorlage“: Außenmaße nach Hersteller- und Händlerangaben, Innenkontur und Wandstärken daraus nachempfunden – Annäherung, keine Werkszeichnung. Tüllen, Henkel und Deckel fehlen.</p>
@@ -459,13 +459,31 @@ const Core = (() => {
     }
     return out;
   }
+  // Kontur kreuzt sich selbst (nicht benachbarte Abschnitte schneiden sich echt); closed: letzter → erster Punkt gehört dazu
+  function selfCross(p, closed) {
+    const n = p.length, m = closed ? n : n - 1;
+    const o = (a, b, c) => (b.x - a.x) * (c.z - a.z) - (b.z - a.z) * (c.x - a.x);
+    for (let i = 0; i < m; i++) for (let j = i + 2; j < m; j++) {
+      if (closed && i === 0 && j === n - 1) continue;
+      const a = p[i], b = p[(i + 1) % n], c = p[j], d = p[(j + 1) % n];
+      if (o(a, b, c) * o(a, b, d) < 0 && o(c, d, a) * o(c, d, b) < 0) return true;
+    }
+    return false;
+  }
+  // Größter Abstieg der Wand unter ihr bisheriges Maximum [mm] (Boden → Rand): > 0 = Wand läuft wieder abwärts,
+  // es entstehen getrennte Taschen, das Modell mit einem Wasserspiegel gilt dann nur genähert
+  function maxDescent(s) {
+    let top = -Infinity, d = 0;
+    for (const p of s) { top = Math.max(top, p.z); d = Math.max(d, top - p.z); }
+    return d;
+  }
   // Horizontal force at height h above the stand plane that starts tipping (upright): F·h = m·g·a,
   // a = horizontal distance centre of gravity → stand edge. m in g → N
   const pushForce = (m, a, h) => m / 1000 * 9.81 * a / h;
 
   return { sampled, trimLip, interiorPolygon, sectionPolygon, intervalsAt, buildSlices, segArea, volBelow, barrier, yRange, solveL, tiltCurve, cumTable, heightForVolume, clip, distSeg, rdp,
     momentsBelow, shell, cog, tipMargin, tipAngle, pushForce,
-    geoRot, spoutLevel, tube, solveLG, tiltCurveG, cogG, tipAngleG, prism, prismShell, closedSmooth };
+    geoRot, spoutLevel, tube, solveLG, tiltCurveG, cogG, tipAngleG, prism, prismShell, closedSmooth, selfCross, maxDescent };
 })();
 if (typeof module !== 'undefined') module.exports = Core;
 // === CORE END
@@ -541,7 +559,9 @@ function recomputeRot() {
   const geo = Core.geoRot(sl, samp, sec, { spout: sp, lid: S.lid });
   const cum = Core.cumTable(sl);
   let maxR = 0; samp.forEach(p => maxR = Math.max(maxR, p.x));
-  G = { wall, samp, poly, sl, cum, sec, geo, cap: geo.vol(geo.spill(0), 0) / 1000, capRim: Core.volBelow(sl, Core.barrier(samp, 0).L, 0) / 1000, maxR,
+  const bad = Core.selfCross(samp, false) ? 'Kontur kreuzt sich selbst: Innenraum nicht eindeutig, Werte ungültig'
+    : Core.maxDescent(samp) > Math.max(2, 0.02 * (sl.zmax - sl.zmin)) ? 'Wand läuft abwärts: getrennte Taschen, gerechnet mit einem Wasserspiegel – Kippwerte nur genähert' : '';
+  G = { bad, wall, samp, poly, sl, cum, sec, geo, cap: geo.vol(geo.spill(0), 0) / 1000, capRim: Core.volBelow(sl, Core.barrier(samp, 0).L, 0) / 1000, maxR,
         rimR: samp[samp.length - 1].x, H: sl.zmax - sl.zmin, z0: sl.zmin, xc: 0,
         walls: [wall, wall.map(p => ({ x: -p.x, z: p.z }))],
         lipAt: th => sp && (S.lid || Core.spoutLevel(samp, sp, th) <= Core.barrier(samp, th).L) ? sp[sp.length - 1] : samp[Core.barrier(samp, th).idx],
@@ -562,7 +582,7 @@ function recomputePlan() {
   const geo = Core.prism(rp, H), { xmin, xmax } = geo;
   let bx0 = Infinity, bx1 = -Infinity, by0 = Infinity, by1 = -Infinity;
   pl.forEach(p => { bx0 = Math.min(bx0, p.x); bx1 = Math.max(bx1, p.x); by0 = Math.min(by0, p.z); by1 = Math.max(by1, p.z); });
-  G = { planS: pl, geo, cap: geo.A * H / 1000, H, z0: 0, xc: (xmin + xmax) / 2, maxR: (xmax - xmin) / 2, L: bx1 - bx0, B: by1 - by0,
+  G = { bad: Core.selfCross(pl, true) ? 'Grundriss kreuzt sich selbst: Fläche nicht eindeutig, Werte ungültig' : '', planS: pl, geo, cap: geo.A * H / 1000, H, z0: 0, xc: (xmin + xmax) / 2, maxR: (xmax - xmin) / 2, L: bx1 - bx0, B: by1 - by0,
         sec: [{ x: xmin, z: 0 }, { x: xmax, z: 0 }, { x: xmax, z: H }, { x: xmin, z: H }],
         walls: [[{ x: xmin, z: H }, { x: xmin, z: 0 }, { x: xmax, z: 0 }, { x: xmax, z: H }]],
         lipAt: () => ({ x: xmax, z: H }), fillH: ml => Math.min(H, ml * 1000 / geo.A) };
@@ -799,7 +819,8 @@ function endPointer() {
         // Freihand-Boden ist nie exakt waagrecht: flaches erstes Stück vom Achsenpunkt aus ebnen
         if (p.length > 2 && p[0].x === 0 && Math.abs(p[1].z - p[0].z) < Math.max(2, 0.1 * p[1].x)) p[0].z = p[1].z = Math.min(p[0].z, p[1].z);
       }
-      if (p.length >= minPts()) { pushUndo(); setP(p.map(q => ({ x: +q.x.toFixed(1), z: +q.z.toFixed(1) }))); }
+      if (mirror() || isPlan() ? Core.selfCross(p, isPlan()) : false) flash('⚠ Kontur kreuzt sich selbst – nicht übernommen. Bitte ohne Überkreuzen zeichnen.');
+      else if (p.length >= minPts()) { pushUndo(); setP(p.map(q => ({ x: +q.x.toFixed(1), z: +q.z.toFixed(1) }))); }
       setMode('edit');
     }
     stroke = null; changed(); fitView(); drawAll();
@@ -823,6 +844,10 @@ function undo() {
   setKind(k, true); setPart(part); S.sel = -1; changed();
 }
 
+// kurze Meldung unter dem Editor, danach wieder die Bedienhinweise
+let flashT = 0, noteTxt = '';
+function flash(t) { clearTimeout(flashT); $('edNote').textContent = t; $('edNote').style.color = 'var(--warn)';
+  flashT = setTimeout(() => { $('edNote').textContent = noteTxt; $('edNote').style.color = ''; }, 4000); }
 let raf = 0;
 function changed() { recompute(); if (!raf) raf = requestAnimationFrame(() => { raf = 0; drawAll(); }); }
 
@@ -858,12 +883,15 @@ function drawTilt() {
     }
   }
   // pour stream
-  const pouring = performance.now() - S.lastPour < 450 && S.cur > 0.05;
+  const pouring = S.theta > 0 && performance.now() - S.lastPour < 450 && S.cur > 0.05;
   if (pouring) {
     const [x0, y0] = T(G.lipAt(th));
+    // seitlich mindestens bis außerhalb der Kontur unterhalb der Ausgussstelle, dann fallen
+    let xr = x0; G.walls.flat().concat(isPlan() ? [] : [...(S.spout ? S.spout.p : []), ...(S.handle ? S.handle.p : [])])
+      .forEach(p => { const [x, y] = T(p); if (y > y0 + 1) xr = Math.max(xr, x); });
+    const dx = Math.max(15 + 45 * Math.sqrt(Math.max(0, Math.sin(th))), xr - x0 + 8);
     ctx.strokeStyle = css('--water'); ctx.lineWidth = 4; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(x0, y0);
-    const v = 10 + 30 * Math.sqrt(Math.max(0, Math.sin(th)));
-    for (let u = 0; u <= 1.0001; u += 0.05) ctx.lineTo(x0 + v * u * 1.5, y0 + (h - y0) * u * u);
+    for (let u = 0; u <= 1.0001; u += 0.025) ctx.lineTo(x0 + dx * Math.sqrt(u), y0 + (h - y0) * u * u);
     ctx.stroke();
   }
   // walls
@@ -887,7 +915,9 @@ function drawTilt() {
   ctx.font = '12px Arial, sans-serif'; ctx.fillStyle = css('--mut');
   ctx.fillText(nf0.format(S.cur) + ' ml im Gefäß', 12, 40);
   ctx.fillText('↓ g', w - 30, 22);
-  if (tips) { ctx.fillStyle = css('--warn'); ctx.fillText('⚠ kippt, wenn abgestellt', 12, 58); }
+  ctx.fillStyle = css('--warn');
+  if (tips) ctx.fillText('⚠ kippt, wenn abgestellt', 12, 58);
+  if (G.bad) ctx.fillText('⚠ ' + G.bad.split(':')[0], 12, tips ? 76 : 58);
 }
 
 // ---------- charts ----------
@@ -956,6 +986,7 @@ function drawStats() {
       : tipItem(deg),
     pushItem()
   ];
+  if (G.bad) items.unshift(['Geometrie', '⚠ prüfen', G.bad, true]);
   $('stats').innerHTML = items.map(([a, b, n, warn]) => `<div class="stat"><span>${a}</span><b${warn ? ' style="color:var(--warn)"' : ''}>${b}</b><span>${n}</span></div>`).join('');
   $('fillO').textContent = nf0.format(V0) + ' ml';
   $('tiltO').textContent = nf1.format(S.theta) + '°';
@@ -997,7 +1028,7 @@ function setKind(k, quiet) {
   ['footL', 'foot', 'footO', 'footAutoL'].forEach(id => $(id).hidden = p); // Standkante folgt im Grundriss aus der Kontur
   $('smooth').checked = p ? S.psmooth : S.smooth;
   $('edT').textContent = p ? 'Grundriss (Innenkontur, senkrechte Wand)' : 'Profil (Innenkontur, rotationssymmetrisch)';
-  $('edNote').textContent = p
+ noteTxt = $('edNote').textContent = p
     ? 'Grundriss von oben: Freihand eine geschlossene Kontur ziehen. Punkte: ziehen zum Verschieben, tippen fügt einen Punkt in die nächste Kante ein, Doppeltipp löscht. Höhe und Kipprichtung unten; der Pfeil zeigt die Seite, die beim Kippen absinkt. Raster 10 mm.'
     : 'Freihand: Innenkontur vom Boden zum Rand ziehen, egal auf welcher Seite; sie wird gespiegelt. Punkte: ziehen zum Verschieben, auf die Linie tippen zum Einfügen, in freie Fläche tippen zum Anhängen, Doppeltipp zum Löschen. Ein fast waagrechter Freihand-Boden wird geebnet. Tülle/Henkel: unter „Bearbeiten“ wählen; Tülle rechts (Ausgießseite) vom Ansatz am Körper zur Spitze. Raster 10 mm.';
   if (!quiet) { S.fill = null; S.theta = 0; $('tilt').value = 0; recompute(); fitView(); drawAll(); }
@@ -1037,10 +1068,11 @@ $('wt').oninput = e => { S.t = +e.target.value; changed(); };
 $('bt').oninput = e => { S.tb = +e.target.value; changed(); };
 $('foot').oninput = e => { S.foot = +e.target.value; changed(); };
 $('footAuto').onchange = e => { S.foot = e.target.checked ? null : Math.round(G.rf); changed(); };
-$('fill').oninput = e => { S.fill = +e.target.value; updateCurve(); S.cur = curveMinUpTo(S.theta); drawAll(); };
+$('fill').oninput = e => { S.fill = +e.target.value; S.lastPour = 0; updateCurve(); S.cur = curveMinUpTo(S.theta); drawAll(); };
 
 function setTheta(t) {
   const prev = S.theta; S.theta = t;
+  if (t < prev) S.lastPour = 0; // zurückkippen: Strahl reißt ab
   if (t > prev) {
     const k0 = Math.round(prev / 180 * STEPS), k1 = Math.round(t / 180 * STEPS);
     let m = S.cur; for (let k = k0; k <= k1; k++) m = Math.min(m, G.curve[k]);
@@ -1053,7 +1085,7 @@ function setTheta(t) {
   setTimeout(drawTilt, 480);
 }
 $('tilt').oninput = e => setTheta(+e.target.value);
-$('refill').onclick = () => { stopPlay(); S.theta = 0; S.cur = S.fill; $('tilt').value = 0; drawAll(); };
+$('refill').onclick = () => { stopPlay(); S.lastPour = 0; S.theta = 0; S.cur = S.fill; $('tilt').value = 0; drawAll(); };
 let playId = 0;
 function stopPlay() { cancelAnimationFrame(playId); playId = 0; $('play').textContent = '▶ Durchkippen'; }
 $('play').onclick = () => {
