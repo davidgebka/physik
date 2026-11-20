@@ -1488,19 +1488,21 @@ $('undo').onclick = undo;
 $('fitB').onclick = () => { fitView(); drawEditor(); };
 // Fotovorlage: lokal geladen, auf max. 1600 px verkleinert (flüssiges Zeichnen auf dem Telefon)
 $('photoB').onclick = () => $('photoF').click();
-$('photoF').onchange = e => {
+$('photoF').onchange = async e => {
   const f = e.target.files[0]; e.target.value = ''; if (!f) return;
   const url = URL.createObjectURL(f), im = new Image();
-  im.onload = () => {
-    URL.revokeObjectURL(url);
-    const k = Math.min(1, 1600 / Math.max(im.naturalWidth, im.naturalHeight)), c = document.createElement('canvas');
-    c.width = Math.round(im.naturalWidth * k); c.height = Math.round(im.naturalHeight * k); c.getContext('2d').drawImage(im, 0, 0, c.width, c.height);
-    const ar = c.height / c.width, H = Math.max(60, G.H || 100) * 1.1; // Startgröße: Fotohöhe ≈ Gefäßhöhe, Mitte auf der Achse
-    PH = { img: c, ar, w: Math.round(Math.min(1000, Math.max(20, H / ar))), x: 0, z: Math.round(G.z0 || 0), op: 0.5, show: true };
-    photoUi(); fitView(); drawEditor();
-  };
-  im.onerror = () => { URL.revokeObjectURL(url); flash('⚠ Bild nicht lesbar.'); };
-  im.src = url;
+  try { im.src = url; await im.decode(); } catch { URL.revokeObjectURL(url); flash('⚠ Bild nicht lesbar.'); return; }
+  const k = Math.min(1, 1600 / Math.max(im.naturalWidth, im.naturalHeight)), W = Math.max(1, Math.round(im.naturalWidth * k)), H = Math.max(1, Math.round(im.naturalHeight * k));
+  // Handyfotos sind oft größer als die Grafiktextur des Telefons – drawImage zeichnet dann stumm nichts.
+  // Deshalb schon beim Dekodieren verkleinern; ohne createImageBitmap direkt aus dem <img>.
+  let src = im; try { src = await createImageBitmap(f, { resizeWidth: W, resizeHeight: H, resizeQuality: 'high', imageOrientation: 'from-image' }); } catch { }
+  const c = document.createElement('canvas'), cx = c.getContext('2d', { willReadFrequently: true }); c.width = W; c.height = H; cx.drawImage(src, 0, 0, W, H);
+  URL.revokeObjectURL(url); if (src.close) src.close();
+  const d = cx.getImageData(0, 0, W, H).data; let any = false; for (let i = 3; i < d.length; i += 4 * 97) if (d[i]) { any = true; break; }
+  if (!any) { flash('⚠ Foto konnte nicht dargestellt werden (zu groß?). Bitte verkleinert oder als Bildschirmfoto laden.'); return; }
+  const ar = H / W, Hv = Math.max(60, G.H || 100) * 1.1; // Startgröße: Fotohöhe ≈ Gefäßhöhe, Mitte auf der Achse
+  PH = { img: c, ar, w: Math.round(Math.min(1000, Math.max(20, Hv / ar))), x: 0, z: Math.round(G.z0 || 0), op: 0.5, show: true };
+  photoUi(); fitView(); drawEditor();
 };
 function photoUi() {
   $('photoCtl').hidden = $('photoRow').hidden = !PH; if (!PH) return;
