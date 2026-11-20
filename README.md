@@ -3,6 +3,8 @@
 Browser-Werkzeuge für physikalische Abschätzungen im Produktdesign. Statische Dateien, kein Build-Schritt, keine externen Abhängigkeiten.
 
 ## Starten
+Online (GitHub Pages, Stand `main`): https://davidgebka.github.io/physik/
+
 Ordner auf einen beliebigen Webserver legen, oder lokal:
     python3 -m http.server 8000   →  http://localhost:8000
 Funktioniert auch per Doppelklick auf index.html (file://).
