@@ -724,9 +724,11 @@ const Core = (() => {
   // Anzahl getrennter Becken (lokaler Tiefpunkte) bei Neigung th
   function basins(g, th) { const st = pState(g, th); let n = 0; for (let i = 0; i < g.n; i++) if (pStep(st, i) === i) n++; return n; }
   // aufrecht von oben befüllen
-  function fillLakes(g, V) { const st = pState(g, 0), r = pour(st, descend(st, g.land), V); return { lakes: st.lakes.filter(Boolean), lost: r.lost }; }
+  // Profil ohne Innenraum (flach oder nur auf der Achse) → kein Knoten: nichts hält Wasser
+  function fillLakes(g, V) { if (!g.n) return { lakes: [], lost: Math.max(0, V) }; const st = pState(g, 0), r = pour(st, descend(st, g.land), V); return { lakes: st.lakes.filter(Boolean), lost: r.lost }; }
   // Füllkurve: Spiegel des Sees, in den der Strahl fällt, nach n gleichen Portionen bis Vmax; multi = zeitweise mehrere Seen
   function fillCurve(g, Vmax, n = 120) {
+    if (!g.n) return { L: new Float64Array(n + 1), multi: false };
     const st = pState(g, 0), L = new Float64Array(n + 1); let multi = false;
     L[0] = st.h[descend(st, g.land)];
     for (let k = 1; k <= n; k++) {
