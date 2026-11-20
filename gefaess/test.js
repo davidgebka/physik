@@ -188,3 +188,11 @@ check('Schiefer Zylinder (waagrechte Kreise) = π r² h [ml]', tvol(tgr([[-40, 0
 { const sh = Core.tubeShell(Core.resample(P([[-40, 0], [-40, 100]]), 250), Core.resample(P([[40, 0], [40, 100]]), 250), 2, 5);
   check('Schlauch-Schale symmetrisch = Zylinderschale [mm³]', sh.vol, shC.vol, 1e-9); check('Schlauch-Schale SP z [mm]', sh.z, shC.z, 1e-9);
   check('Schlauch: Kippwinkel 60 % = geschlossene Lösung [°]', Core.tipAngleP(gTc, V60, mvC, 0, shC.z, 25, shC.zst), Core.tipAngle(cyl.S, cyl.s, V60, mvC, shC.z, 25, shC.zst), 2e-3); }
+// Profil ohne Innenraum (flach bzw. nur auf der Achse): kein Absturz, Fassungsvermögen 0
+for (const [name, a] of [['flach', [[0, 0], [40, 0], [40, 0]]], ['auf der Achse', [[0, 0], [0, 100]]]]) {
+  const s0 = Core.trimLip(Core.sampled(P(a), true)), g0 = Core.pocketGraph(Core.buildSlices(Core.interiorPolygon(s0), 250), s0, {});
+  check('Ohne Innenraum (' + name + '): Fassungsvermögen [ml]', Core.lakeSum(Core.fillLakes(g0, 1e6).lakes) / 1000, 0, 0);
+  check('Ohne Innenraum (' + name + '): Kipplauf 180° [ml]', Core.tiltRun(g0, 1e5, 36).ret[36], 0, 0);
+  check('Ohne Innenraum (' + name + '): Kippwinkel ohne Wasser = atan(40/10) [°]', Core.tipAngleP(g0, 1e5, 100, 0, 5, 40, -5), Math.atan(4) / D, 2e-3);
+}
+
