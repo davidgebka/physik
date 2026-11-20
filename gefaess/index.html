@@ -26,6 +26,8 @@
       <select id="preset" aria-label="Vorlage"></select>
       <button id="undo" title="Rückgängig (Strg+Z)">↶</button>
       <button id="fitB">Einpassen</button>
+      <button id="photoB" title="Foto als Vorlage zum Nachzeichnen laden (bleibt auf dem Gerät)">Foto …</button>
+      <input type="file" id="photoF" accept="image/*" hidden>
     </div>
     <div class="row" id="partRow">
       <span class="note">Bearbeiten</span>
@@ -45,6 +47,16 @@
     <div class="ctl" id="partCtl" hidden>
       <label for="sd" id="sdL">Tülle Ø innen</label><input type="range" id="sd" min="4" max="30" step="1"><output id="sdO"></output>
       <label for="hd" id="hdL">Henkel Ø</label><input type="range" id="hd" min="5" max="30" step="1"><output id="hdO"></output>
+    </div>
+    <div class="ctl" id="photoCtl" hidden>
+      <label for="phW">Fotobreite</label><input type="range" id="phW" min="20" max="1000" step="1"><output id="phWO"></output>
+      <label for="phX">Foto ↔</label><input type="range" id="phX" min="-500" max="500" step="1"><output id="phXO"></output>
+      <label for="phZ">Foto ↕</label><input type="range" id="phZ" min="-500" max="500" step="1"><output id="phZO"></output>
+      <label for="phO">Deckkraft</label><input type="range" id="phO" min="10" max="100" step="5"><output id="phOO"></output>
+    </div>
+    <div class="row" id="photoRow" hidden>
+      <label class="chk"><input type="checkbox" id="phShow" checked> Foto zeigen</label>
+      <button id="phDel">✕ Foto entfernen</button>
     </div>
     <div class="ctl" id="planCtl" hidden>
       <label for="hP">Innenhöhe</label><input type="range" id="hP" min="10" max="400" step="1"><output id="hO"></output>
@@ -106,6 +118,7 @@
     <p class="note"><b>Tülle, Henkel, Deckel</b> (Drehkörper): Tülle und Henkel liegen in der Seitenansicht, also in der Spiegelebene der Kanne; gekippt wird zur Tülle hin (+x). Die Tülle ist ein kommunizierendes Gefäß: Es läuft aus, sobald der Spiegel die höchste Stelle des Weges vom Becken über Wand und Ansatz bis zur Spitze übersteigt – das begrenzt auch das Fassungsvermögen, wenn die Spitze tiefer liegt als der Rand. Mit Deckel zählt der Rand nicht als Überlauf. Wasser in der Tülle selbst wird vernachlässigt, ebenso Luftzufuhr (Deckelloch angenommen), Strahl, Nachtropfen. Masse: Tülle als Rohr mit der Wandstärke, Henkel als Vollstab, beide aus dem Gefäßmaterial; Deckel ohne Masse. Kippwinkel zur Tülle hin und zur Gegenseite (Henkel), angezeigt wird der kleinere; zur Gegenseite läuft nur über den Rand aus. Kippansicht und Kippkurve zeigen das Kippen zur Tülle.</p>
     <p class="note"><b>Grundriss-Modus</b> (nicht rotationssymmetrisch): beliebiger geschlossener Grundriss, senkrechte Wand der Innenhöhe, flacher Boden – ein Prisma, z.&nbsp;B. Vase mit Wellenkontur oder rechteckige Dose. Gekippt wird um eine waagrechte Achse quer zur eingestellten Kipprichtung; Volumen, Überlauf am tiefsten Randpunkt, Schwerpunkt und Kippwinkel sind exakt für diese Geometrie (Streifenzerlegung, geprüft gegen Quader und Zylinder). Wand als Band der Wandstärke außen um die Kontur mit gerundeten Ecken (exakt für konvexe Grundrisse, bei Einbuchtungen genähert), Standkante = äußerster Punkt in Kipprichtung plus Wandstärke. Nicht erfasst: Gefäße, die sich nach oben verjüngen oder weiten, Seitwärtsdrehen beim Kippen über eine Ecke.</p>
     <p class="note"><b>Zwei Konturen</b>: Kontur hinten und vorne in der Seitenansicht, jeweils vom Boden zur Mündung. Dazwischen liegen Kreisquerschnitte, deren Durchmesser je einen Punkt hinten mit dem Punkt vorne verbindet, der beim gleichen Anteil der Bogenlänge liegt; der Kreis steht senkrecht zur Zeichenebene (dünne Linien im Editor). So entstehen geneigte Hälse, schiefe und gebogene Formen; der Drehkörper ist der Sonderfall gespiegelter Konturen. Die Form ist spiegelsymmetrisch zur Zeichenebene. Gekippt wird in der Zeichenebene nach vorne (Kippansicht, Kurven) und für den Kippwinkel auch nach hinten; seitliches Kippen wird nicht gerechnet. Weil der tiefste Punkt jedes Querschnitts auf einer der beiden Konturen liegt, gilt das Taschenmodell exakt bis auf die Unterteilung (250 Abschnitte, geprüft gegen Zylinder, schiefen und geneigten Zylinder, Torusabschnitt). Mündung = letzter Querschnitt (auch schräg), Boden = erster Querschnitt; nur ein waagrechter Boden ist Standfläche. Biegt die Form enger als ihr Radius, durchdringen sich Querschnitte (⚠). Masse: Schale der Wandstärke um die Kreisquerschnitte plus Bodenplatte.</p>
+    <p class="note"><b>Foto als Vorlage</b>: „Foto …“ legt ein Bild halbdurchsichtig unter den Editor, darauf die Kontur von Hand nachzeichnen (Freihand oder Punkte). Maßstab: Fotobreite so einstellen, dass ein bekanntes Maß stimmt (H und Ø stehen im Editor, 1 Punkt des Rasters ist angegeben); mit „Foto ↔“ die Gefäßmitte auf die gestrichelte Achse legen. Am genauesten ist eine Aufnahme genau von der Seite aus größerem Abstand (Tele), sonst verzerrt die Perspektive. Gezeichnet wird die Innenkontur – auf dem Foto sieht man die Außenkontur, also um die Wandstärke nach innen versetzen. Das Foto bleibt auf dem Gerät und wird weder exportiert noch im Link gespeichert.</p>
     <p class="note"><b>Designklassiker</b> unter „Vorlage“: Außenmaße nach Hersteller- und Händlerangaben, Innenkontur und Wandstärken daraus nachempfunden – Annäherung, keine Werkszeichnung. Tüllen, Henkel und Deckel fehlen.</p>
     <p class="note">Gefäßgewicht als dünne Schale: Wandstärke × Mittelfläche (Innenkontur um halbe Wandstärke nach außen versetzt; exakt für Zylinder- und Kegelwände), dazu eine Bodenplatte unter dem flachen Boden. Gültig für Wandstärke deutlich kleiner als der Radius (Fehler wächst mit Wandstärke/Krümmungsradius, an Ecken genähert). Standradius auto = Bodenplatte; ein von Hand gesetzter Standradius verschiebt nur die Kippkante, seine Masse wird nicht gerechnet. Ohne flachen Boden (z.&nbsp;B. Rundboden, Standring) von Hand setzen. <b>Kippwinkel</b>: Neigung um die Standkante, ab der das Gefäß von selbst umfällt; das Wasser läuft dabei mit und läuft gegebenenfalls aus (quasistatisch, kein Rutschen, kein Henkel). <b>Umstoßkraft</b>: waagrechte Kraft am Rand, die das aufrechte, gefüllte Gefäß gerade ankippt.</p>
   </section>
@@ -974,7 +987,18 @@ function drawLakes(ctx, T, th, lakes) {
 // ---------- editor ----------
 const ed = $('ed');
 let V = null; // editor view {s, ox, oy}
+// Fotovorlage zum Nachzeichnen: nur Anzeige, nicht in Export/Link/Rückgängig. x = Mitte, z = Unterkante, w = Breite [mm]
+let PH = null;
+const phBox = () => ({ x0: PH.x - PH.w / 2, x1: PH.x + PH.w / 2, z0: PH.z, z1: PH.z + PH.w * PH.ar });
 function fitView() {
+  fitGeo();
+  if (!V || !PH || !PH.show) return;
+  const r = ed.getBoundingClientRect(), a = s2w(0, r.height), b = s2w(r.width, 0), p = phBox(), m = 10 / V.s;
+  const x0 = Math.min(a.x, p.x0 - m), x1 = Math.max(b.x, p.x1 + m), z0 = Math.min(a.z, p.z0 - m), z1 = Math.max(b.z, p.z1 + m);
+  const sc = Math.min(r.width / (x1 - x0), r.height / (z1 - z0));
+  V = { s: sc, ox: r.width / 2 - (x0 + x1) / 2 * sc, oy: r.height / 2 + (z0 + z1) / 2 * sc };
+}
+function fitGeo() {
   const r = ed.getBoundingClientRect(); if (!r.width) return;
   if (isPlan()) {
     const s = S.psmooth ? Core.closedSmooth(S.plan) : S.plan;
@@ -1005,6 +1029,7 @@ let stroke = null, drag = -1, lastTap = { t: 0, i: -1 };
 function drawEditor() {
   if (!V) fitView();
   const { ctx, w, h } = prep(ed);
+  if (PH && PH.show) { const p = phBox(), [sx, sy] = w2s({ x: p.x0, z: p.z1 }); ctx.globalAlpha = PH.op; ctx.drawImage(PH.img, sx, sy, PH.w * V.s, PH.w * PH.ar * V.s); ctx.globalAlpha = 1; }
   // Punktraster (Styleguide § 7)
   const fDot = dpDots(ctx, w, h, V.s, V.ox, V.oy);
   ctx.font = '11px Arial, sans-serif'; ctx.fillStyle = css('--ink2'); ctx.textAlign = 'right';
@@ -1461,6 +1486,31 @@ $('hP').oninput = e => { S.H = +e.target.value; changed(true); };
 $('psi').oninput = e => { S.psi = +e.target.value; changed(true); };
 $('undo').onclick = undo;
 $('fitB').onclick = () => { fitView(); drawEditor(); };
+// Fotovorlage: lokal geladen, auf max. 1600 px verkleinert (flüssiges Zeichnen auf dem Telefon)
+$('photoB').onclick = () => $('photoF').click();
+$('photoF').onchange = e => {
+  const f = e.target.files[0]; e.target.value = ''; if (!f) return;
+  const url = URL.createObjectURL(f), im = new Image();
+  im.onload = () => {
+    URL.revokeObjectURL(url);
+    const k = Math.min(1, 1600 / Math.max(im.naturalWidth, im.naturalHeight)), c = document.createElement('canvas');
+    c.width = Math.round(im.naturalWidth * k); c.height = Math.round(im.naturalHeight * k); c.getContext('2d').drawImage(im, 0, 0, c.width, c.height);
+    const ar = c.height / c.width, H = Math.max(60, G.H || 100) * 1.1; // Startgröße: Fotohöhe ≈ Gefäßhöhe, Mitte auf der Achse
+    PH = { img: c, ar, w: Math.round(Math.min(1000, Math.max(20, H / ar))), x: 0, z: Math.round(G.z0 || 0), op: 0.5, show: true };
+    photoUi(); fitView(); drawEditor();
+  };
+  im.onerror = () => { URL.revokeObjectURL(url); flash('⚠ Bild nicht lesbar.'); };
+  im.src = url;
+};
+function photoUi() {
+  $('photoCtl').hidden = $('photoRow').hidden = !PH; if (!PH) return;
+  $('phShow').checked = PH.show;
+  [['phW', PH.w, ' mm'], ['phX', PH.x, ' mm'], ['phZ', PH.z, ' mm'], ['phO', Math.round(PH.op * 100), ' %']].forEach(([id, v, u]) => { $(id).value = v; $(id + 'O').textContent = nf0.format(v) + u; });
+}
+[['phW', v => PH.w = v], ['phX', v => PH.x = v], ['phZ', v => PH.z = v], ['phO', v => PH.op = v / 100]].forEach(([id, f]) =>
+  $(id).oninput = e => { f(+e.target.value); photoUi(); drawEditor(); });
+$('phShow').onchange = e => { PH.show = e.target.checked; fitView(); drawEditor(); };
+$('phDel').onclick = () => { PH = null; photoUi(); fitView(); drawEditor(); };
 $('smooth').onchange = e => { if (isPlan()) S.psmooth = e.target.checked; else if (isTube()) S.tsmooth = e.target.checked; else S.smooth = e.target.checked; changed(); };
 $('snap').onchange = e => { S.snap = +e.target.value; };
 $('marks').onchange = e => { S.marks = e.target.checked; drawEditor(); };
