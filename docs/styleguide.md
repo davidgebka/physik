@@ -73,7 +73,8 @@ Nur diese Farben sind erlaubt. Module definieren **keine eigenen Farben** in `:r
 - **Bedienung** ist immer `--ctl` (Schwarz). Aktiv = schwarz gefüllt mit `--ctl-ink`; nicht aktiv = `--bg` mit 1 px `--ink`-Rahmen.
 - **Serien in einem Diagramm** (höchstens 3): 1. Familie durchgezogen 2 px (Licht 2,5 px) · 2. `--ink` gestrichelt [4,4] · 3. `--mut` gestrichelt [3,4]. Aktueller Zustand: senkrechte Linie `--ink`.
 - **Warnung:** Wert oder Linie in `--warn`, dazu immer ⚠ und ein Satz. Grenzbereich als `--warn-a`-Fläche. Bewegung (Grün) und Warnung (Rot) treffen in Mechanismen aufeinander; deshalb nie Bedeutung nur über Farbe.
-- **Falschfarbe** (Leuchtdichte): Verlauf `--mut` → Familie, ab Grenzwert `--warn` mit ⚠-Text. Der einzige erlaubte Verlauf.
+- **Falschfarbe** (Leuchtdichte): Verlauf `--mut` → Familie, ab Grenzwert `--warn` mit ⚠-Text.
+- **Feldbild** (Lichtfeld, seit 20.11.2026): Verlauf `--ink` → Familie → `--bg` auf dunklem Grund – dunkel heißt wenig, hell viel, wie bei einer Belichtung. Darüber Konturen, Lampe und Beschriftung in `--bg`, Legende als Verlaufsbalken mit 0 und Bezugswert. Neben der Falschfarbe der einzige erlaubte Verlauf.
 - **Modulkennung:** Quadrat 12 × 12 px in der Familienfarbe vor dem Modulnamen – Kopfzeile, Navigation, Startseite. Farbe kommt aus `DP_MODULES[].color`.
 
 ## 5. Typografie
@@ -94,7 +95,7 @@ Nur diese Farben sind erlaubt. Module definieren **keine eigenen Farben** in `:r
 - `.stats`/`.stat`: Zellen ohne Außenkasten, oben und unten 1 px `--ink`, zwischen Zellen 1 px `--ink`; Label 11 px, Wert 22 px auf 48 px, Notiz 11 px `--ink2`; kein Innenabstand unten (Zelle 72, 96, 120 … px). Überschreitung: `.stat.warn` → Wert `--warn` mit ⚠.
 - `.note`: 12 px / 24 px `--ink2`.
 - Startseite: `.card` = oben 1 px `--ink`, Modulquadrat + Titel, Beschreibung `--ink2`; `.card.off` in `--mut`.
-- Keine Radien, keine Schatten, keine Verläufe (außer Falschfarbe).
+- Keine Radien, keine Schatten, keine Verläufe (außer Falschfarbe und Feldbild).
 
 ## 7. Zeichenfläche (Editor-Canvas)
 - **Raster = Maßstab:** Punkte statt Linien über `dpDots(ctx, w, h, k, ox, oy)` aus `shared/util.js` (Bildschirm = `ox + x·k`, `oy − y·k`, mm). Fein alle 10 mm (Ø 2 px, `--dot`), grob alle 50 mm (Ø 3 px, `--mut`). Liegen feine Punkte enger als 8 px, wird die Stufe verfünffacht (50/250 mm …). Maßstab als Text in einer unteren Ecke: „1 Punkt = 10 mm“ (`dpDots` liefert die Stufe).
