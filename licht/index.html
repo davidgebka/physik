@@ -183,8 +183,13 @@ const Core = (() => {
     if (S.ext) return nearestExt(S, px, py, pz, dx, dy, dz, last);
     const { ns, on, r1, z1, z2, kk, zlo, zhi, rlo, rhi } = S;
     let best = INF, hs = -1;
+    const iz = dz !== 0 ? 1 / dz : 0;
     for (let i = 0; i < ns; i++) {
       if (!on[i]) continue;
+      if (iz !== 0) { // Strahlabschnitt in der z-Schicht des Segments liegt ganz hinter dem Start oder jenseits des besten Treffers
+        let ta = (zlo[i] - pz) * iz, tb = (zhi[i] - pz) * iz; if (ta > tb) { const q = ta; ta = tb; tb = q; }
+        if (tb < EPS || ta >= best) continue;
+      } else if (pz < zlo[i] || pz > zhi[i]) continue;
       if (z1[i] === z2[i]) { // Kreisring: Ebenenschnitt
         if (dz === 0 || i === last) continue;
         const t = (z1[i] - pz) / dz; if (t < EPS || t >= best) continue;
@@ -432,6 +437,7 @@ const matOf = pt => pt.raw || MATS[pt.mat][1];
 const mir = q => ({ x: -q.x || 0, z: q.z });
 function toExt(pt) {
   const p = pt.pts, c = q => part(q, pt.mat, pt.raw);
+  if (p.length < 2) return [c(p.slice())];
   if (p.length && p[p.length - 1].x === 0) return [c([...p, ...p.slice(0, -1).reverse().map(mir)])];
   if (p.length && p[0].x === 0) return [c([...p.slice(1).reverse().map(mir), ...p])];
   return [c(p.map(mir)), c(p.slice())];
@@ -515,13 +521,15 @@ function loop(d) {
   step();
 }`;
 const NMAX = 4e6, FMIN = 1e6; // Obergrenze, falls ein Ziel (z. B. E unter der Leuchte) nie erreicht wird
-let worker = null, J = { id: 0 };
+let worker = null, J = { id: 0 }, shC = {};
 try { worker = new Worker(URL.createObjectURL(new Blob([WORKER_SRC], { type: 'text/javascript' }))); worker.onmessage = e => onChunk(e.data); }
 catch (e) { worker = null; } // shortcut: ohne Worker rechnet der Hauptthread in kleinen Paketen
 function restart() {
   const o = opts();
   try { Core.trace(Object.assign({}, o, { N: 1 })); } catch (e) { J = { id: J.id + 1, err: e.message }; if (worker) worker.postMessage({ job: J.id }); R = null; drawAll(); return; }
-  J = { id: J.id + 1, o, t0: performance.now(), acc: null, done: false, calm: null, sh: Core.shield(o).alpha };
+  const shK = JSON.stringify([o.shape, o.parts.map(q => q.profile), o.source.x, o.source.z]);
+  if (shK !== shC.k) shC = { k: shK, a: Core.shield(o).alpha };
+  J = { id: J.id + 1, o, t0: performance.now(), acc: null, done: false, calm: null, sh: shC.a };
   R = null;
   if (worker) worker.postMessage({ job: J.id, o, chunk: 20000 });
   else { const id = J.id, step = () => { if (J.id !== id || J.done) return; onChunk(Object.assign({ job: id }, Core.trace(Object.assign({}, o, { N: 4000, seed: (id * 7919 + (J.k = (J.k || 0) + 1)) * 0x9E3779B1 | 0 })))); setTimeout(step, 0); }; setTimeout(step, 0); }
@@ -595,7 +603,7 @@ function lcol(L, Lsc) { // Falschfarbe: --grid2 (dunkel) → --light (hell); ab 
   const a = hex(css('--mut')), b = hex(css('--light')), t = Math.min(1, L / Lsc);
   return `rgb(${a.map((v, i) => Math.round(v + (b[i] - v) * t)).join(',')})`;
 }
-let stroke = null, drag = -1, dragSrc = false, lastTap = { t: 0, i: -1, p: -1 };
+let stroke = null, drag = -1, dragSrc = false, lastTap = { t: 0, i: -1, p: -1 }, pend = null; // pend: Schnappschuss beim Antippen, Rückgängig-Schritt erst beim ersten Verschieben
 function drawEditor() {
   if (!V) fitView();
   const { ctx, w, h } = prep(ed);
@@ -659,7 +667,7 @@ function drawEditor() {
   if (!S.sym) { ctx.fillStyle = css('--mut'); ctx.textAlign = 'right'; ctx.fillText('Querschnitt · Länge ' + nf0.format(S.len) + ' mm', w - 8, 16); ctx.textAlign = 'left'; }
 }
 const snap = () => JSON.stringify({ parts: S.parts, cur: S.cur, sym: S.sym, src: S.src });
-function pushUndo() { S.undo.push(snap()); if (S.undo.length > 100) S.undo.shift(); }
+function pushUndo(sn) { S.undo.push(sn || snap()); if (S.undo.length > 100) S.undo.shift(); }
 function evPos(e) { const r = ed.getBoundingClientRect(); return [e.clientX - r.left, e.clientY - r.top]; }
 const snapP = p => ({ x: S.sym ? Math.max(0, Math.round(Math.abs(p.x))) : Math.round(p.x) || 0, z: Math.round(p.z) });
 const fold = p => S.sym ? { x: Math.abs(p.x), z: p.z } : p;
@@ -688,7 +696,7 @@ function hitSegment(wp) {
 ed.addEventListener('pointerdown', e => {
   ed.setPointerCapture(e.pointerId);
   const [sx, sy] = evPos(e), wp = s2w(sx, sy), [lx, ly] = w2s(S.src);
-  if (Math.hypot(sx - lx, sy - ly) < 16) { pushUndo(); dragSrc = true; drawEditor(); return; }
+  if (Math.hypot(sx - lx, sy - ly) < 16) { pend = snap(); dragSrc = true; drawEditor(); return; }
   if (S.mode === 'draw') { stroke = [fold(wp)]; drawEditor(); return; }
   let [pi, i] = hitPoint(sx, sy);
   const now = performance.now();
@@ -697,8 +705,9 @@ ed.addEventListener('pointerdown', e => {
     lastTap = { t: 0, i: -1, p: -1 }; return;
   }
   lastTap = { t: now, i, p: pi };
-  pushUndo();
+  pend = snap();
   if (i < 0) {
+    pushUndo(pend); pend = null;
     const [si, sgi] = hitSegment(wp);
     if (sgi >= 0) { pi = si; S.parts[pi].pts.splice(sgi + 1, 0, snapP(wp)); i = sgi + 1; }
     else { pi = S.cur; cur().pts.push(snapP(wp)); i = cur().pts.length - 1; }
@@ -709,13 +718,17 @@ ed.addEventListener('pointerdown', e => {
 });
 ed.addEventListener('pointermove', e => {
   const [sx, sy] = evPos(e), wp = s2w(sx, sy);
-  if (dragSrc) { const x = Math.round(S.sym ? Math.abs(wp.x) : wp.x); S.src = { x: Math.abs(x) < 4 ? 0 : x, z: Math.round(wp.z) }; changed(); }
+  if (dragSrc) { const x = Math.round(S.sym ? Math.abs(wp.x) : wp.x), q = { x: Math.abs(x) < 4 ? 0 : x, z: Math.round(wp.z) };
+    if (q.x === S.src.x && q.z === S.src.z) return;
+    if (pend) { pushUndo(pend); pend = null; } S.src = q; changed(true); }
   else if (stroke) {
     const q = fold(wp), l = stroke[stroke.length - 1];
     if (Math.hypot(q.x - l.x, q.z - l.z) > 0.8) { stroke.push(q); drawEditor(); }
-  } else if (drag >= 0) { cur().pts[drag] = snapP(wp); changed(); }
+  } else if (drag >= 0) { const q = snapP(wp), o = cur().pts[drag]; if (q.x === o.x && q.z === o.z) return;
+    if (pend) { pushUndo(pend); pend = null; } cur().pts[drag] = q; changed(true); }
 });
 function endPointer() {
+  pend = null; if (dirty) changed();
   if (dragSrc) { dragSrc = false; drawEditor(); }
   if (stroke) {
     if (stroke.length > 3) {
@@ -738,7 +751,12 @@ window.addEventListener('keydown', e => {
   }
 });
 function undo() { if (!S.undo.length) return; Object.assign(S, JSON.parse(S.undo.pop())); S.sel = -1; fitView(); changed(); }
-function changed() { syncCtl(); restart(); }
+// later: Ziehen – höchstens ein Neustart je Bild (Abschirmwinkel, Worker, Zeichnen)
+let dirty = false, craf = 0;
+function changed(later) {
+  if (!later) { dirty = false; syncCtl(); restart(); return; }
+  dirty = true; if (!craf) craf = requestAnimationFrame(() => { craf = 0; if (dirty) changed(); });
+}
 
 // ---- LVK (Polardiagramm) ----
 function drawLvk() {
@@ -923,7 +941,7 @@ $('exp').onclick = () => dpDownload(Object.assign({ type: 'designphysik/licht', 
 $('imp').onclick = () => $('file').click();
 $('file').onchange = async e => {
   const f = e.target.files[0]; if (!f) return;
-  try { pushUndo(); if (!apply(JSON.parse(await f.text()))) throw new Error('kein gültiges Profil'); syncCtl(); fitView(); restart(); }
+  try { const keep = snap(); if (!apply(JSON.parse(await f.text()))) throw new Error('kein gültiges Profil'); pushUndo(keep); syncCtl(); fitView(); restart(); }
   catch (err) { alert('Datei nicht lesbar: ' + err.message); }
   e.target.value = '';
 };

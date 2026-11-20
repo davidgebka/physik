@@ -7,7 +7,7 @@ function niceStep(raw) {
 function chart(cv, o) {
   const { ctx, w, h } = prep(cv);
   const m = { l: 44, r: 12, t: 10, b: 30 };
-  const X = v => m.l + (v - o.x0) / (o.x1 - o.x0) * (w - m.l - m.r);
+  const X = v => m.l + (v - o.x0) / (o.x1 - o.x0 || 1) * (w - m.l - m.r);
   const Y = v => h - m.b - (v - o.y0) / (o.y1 - o.y0 || 1) * (h - m.t - m.b);
   ctx.font = '11px Arial, sans-serif'; ctx.fillStyle = css('--ink2'); ctx.lineWidth = 1;
   const xt = [], yt = [];
@@ -26,9 +26,10 @@ function chart(cv, o) {
   ctx.save(); ctx.translate(10, (m.t + h - m.b) / 2); ctx.rotate(-Math.PI / 2); ctx.fillText(o.yl, 0, 0); ctx.restore();
   ctx.textAlign = 'left';
   // Raster: Punkte an den Tick-Kreuzungen, Achsen links und unten (Styleguide § 8)
-  ctx.fillStyle = css('--dot'); for (const x of xt) for (const y of yt) { ctx.beginPath(); ctx.arc(Math.round(x) + .5, Math.round(y) + .5, 1, 0, 7); ctx.fill(); }
+  ctx.fillStyle = css('--dot'); ctx.beginPath(); for (const x of xt) for (const y of yt) { const px = Math.round(x) + .5, py = Math.round(y) + .5; ctx.moveTo(px + 1, py); ctx.arc(px, py, 1, 0, 7); } ctx.fill();
   ctx.strokeStyle = css('--ink'); ctx.beginPath(); ctx.moveTo(m.l + .5, m.t); ctx.lineTo(m.l + .5, h - m.b + .5); ctx.lineTo(w - m.r, h - m.b + .5); ctx.stroke();
   for (const sr of o.series) {
+    if (!sr.pts.length) continue;
     ctx.beginPath(); sr.pts.forEach(([a, b], i) => i ? ctx.lineTo(X(a), Y(b)) : ctx.moveTo(X(a), Y(b)));
     if (sr.fill) { ctx.save(); ctx.lineTo(X(sr.pts[sr.pts.length - 1][0]), Y(o.y0)); ctx.lineTo(X(sr.pts[0][0]), Y(o.y0)); ctx.closePath(); ctx.fillStyle = sr.fill; ctx.fill(); ctx.restore();
       ctx.beginPath(); sr.pts.forEach(([a, b], i) => i ? ctx.lineTo(X(a), Y(b)) : ctx.moveTo(X(a), Y(b))); }

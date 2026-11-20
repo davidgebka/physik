@@ -675,11 +675,13 @@ let raf = 0;
 cv.addEventListener('pointermove', e => {
   if (!UI.drag) return;
   const mm = UI.T.inv(...evPos(e));
-  if (UI.drag.move) { go(driveAt(mm) + UI.drag.off); return; }
+  if (UI.drag.move) { UI.drag.to = driveAt(mm) + UI.drag.off; if (!raf) raf = requestAnimationFrame(() => { raf = 0; if (UI.drag && UI.drag.move) go(UI.drag.to); }); return; } // ein Schritt je Bild
   const p = S.pts[UI.drag.i]; p.x = snap(mm[0]); p.y = snap(mm[1]); slAng(UI.drag.i);
   if (!raf) raf = requestAnimationFrame(() => { raf = 0; recompute(false); });
 });
-cv.addEventListener('pointerup', () => { if (!UI.drag) return; const mv = UI.drag.move; UI.drag = null; if (mv) save(); else recompute(true); });
+function endDrag() { if (!UI.drag) return; const d = UI.drag; UI.drag = null; if (d.move) { if (d.to != null) go(d.to); save(); } else recompute(true); }
+cv.addEventListener('pointerup', endDrag);
+cv.addEventListener('pointercancel', endDrag); // sonst bleibt UI.drag hängen: Punkt folgt dem Zeiger, Link wird nicht mehr gespeichert
 // Antriebswert, den der Zeiger vorgibt (ohne Versatz)
 function driveAt(mm) {
   if (crank()) { const g = pos(A.S.drv.g), a = Math.atan2(mm[1] - g[1], mm[0] - g[0]) / RAD; return S.at + wrapD(a - S.at); }
@@ -731,8 +733,8 @@ function save() { dpHashSet('m', exportObj()); }
 // Eingang prüfen (Datei/Hash sind fremd)
 function parse(o) {
   if (!o || o.type !== TYPE || !Array.isArray(o.pts) || !Array.isArray(o.links)) return null;
-  if (!o.pts.every(p => p && isFinite(p.x) && isFinite(p.y)) || !o.links.every(L => Array.isArray(L) && L.every(Number.isInteger))) return null;
-  const n = o.pts.length, idx = i => Number.isInteger(i) && i >= 0 && i < n;
+  const n = o.pts.length, idx = i => Number.isInteger(i) && i >= 0 && i < n; // Glied mit fremdem Index: Zeichnen stürzt ab
+  if (!o.pts.every(p => p && isFinite(p.x) && isFinite(p.y)) || !o.links.every(L => Array.isArray(L) && L.every(idx))) return null;
   const m = { pts: o.pts.map(p => p.fix ? { x: +p.x, y: +p.y, fix: 1 } : { x: +p.x, y: +p.y }), links: o.links, drive: o.drive || {}, out: o.out || {} };
   if (o.slider && idx(o.slider.p) && idx(o.slider.a) && isFinite(o.slider.ang)) m.slider = { p: o.slider.p, a: o.slider.a, ang: +o.slider.ang };
   if (idx(o.trace)) m.trace = o.trace;
