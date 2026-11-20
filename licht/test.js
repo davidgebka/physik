@@ -238,3 +238,46 @@ check('T15 Scheibe unter der Quelle: 0° (seitlich sichtbar)', sh(disc, iso), 0,
   let t = 1; try { Core.trace({ N: 10, shape: 'ext', len: 100, profile: [[-50, 0], [50, 0]], source: iso, mat: black }); } catch (e) { t = 0; }
   check('T19 ext erlaubt x < 0', t, 1, 0);
 }
+
+// T20 Lichtfeld E0 (Raumbeleuchtungsstärke, Weglängen-Schätzer) gegen geschlossene Lösungen.
+// Verglichen wird ∫E0 dV über einen Zellbereich (Σ F·V) mit der numerisch integrierten Lösung (10 × 10 Stützstellen je Zelle).
+{
+  const fRot = { x0: 0, x1: 300, z0: -300, z1: 300, nx: 30, nz: 60 }, fExt = { x0: -300, x1: 300, z0: -300, z1: 300, nx: 60, nz: 60 };
+  // Zellen mit Mittelpunkt im Abstand 100…280 mm von der Quelle, zusätzlich Filter sel(x, z, h)
+  function cmp(name, r, fd, ext, len, E0, sel = () => true, tol = 0.02) {
+    const hx = (fd.x1 - fd.x0) / fd.nx, hz = (fd.z1 - fd.z0) / fd.nz; let got = 0, want = 0, n = 0;
+    for (let i = 0; i < fd.nx; i++) for (let j = 0; j < fd.nz; j++) {
+      const xc = fd.x0 + (i + 0.5) * hx, zc = fd.z0 + (j + 0.5) * hz, d = Math.hypot(xc, zc);
+      if (d < 100 || d > 280 || !sel(xc, zc, hx)) continue;
+      const a = fd.x0 + i * hx, V = (ext ? hx * len : Math.PI * ((a + hx) ** 2 - a * a)) * hz;
+      got += r.F[j * fd.nx + i] * V; n++;
+      for (let u = 0; u < 10; u++) for (let v = 0; v < 10; v++) {
+        const x = a + (u + 0.5) * hx / 10, z = fd.z0 + j * hz + (v + 0.5) * hz / 10;
+        want += E0(x, z) * (ext ? len : 2 * Math.PI * x) * hx * hz / 100;
+      }
+    }
+    if (want > 0) check(name + ' (' + n + ' Zellen)', got / want, 1, tol);
+    return got;
+  }
+  const pt = (x, z) => PHI / (4 * Math.PI * (x * x + z * z) * 1e-6); // nackte Punktquelle E0 = Φ/4πd² [lx]
+  r = run({ name: 'T20a', profile: [], source: iso, mat: black, field: fRot });
+  cmp('T20a nackte Punktquelle, Ringzellen: ∫E0 dV / Lösung', r, fRot, false, 0, pt);
+  // schwarzer Zylinder R50 h100: Schatten |z| < r (r > 50) exakt dunkel, Lichtkegel wie ohne Schirm
+  r = run({ name: 'T20b', profile: cyl, source: iso, mat: black, field: fRot });
+  check('T20b Schatten hinter schwarzem Zylinder (502 Zellen): ∫E0 dV', cmp('T20b Schattenzone', r, fRot, false, 0, () => 0, (x, z, h) => x - h / 2 > 50 && Math.abs(z) + h / 2 < x - h / 2, Infinity), 0, 0);
+  cmp('T20b Lichtkegel |z| > r: ∫E0 dV / Lösung', r, fRot, false, 0, pt, (x, z, h) => Math.abs(z) - h / 2 > x + h / 2);
+  // Opalkugel R50, τd = 1: außen leuchtet die Kugel lambertsch mit L = Φ/(4π²R²) → E0 = L·2π(1 − √(1 − R²/d²))
+  const Rs = 50, Ls = PHI / (4 * Math.PI ** 2 * (Rs * 1e-3) ** 2);
+  r = run({ name: 'T20c', profile: sphere(Rs, Math.PI, 120), source: iso, mat: mat(0, 0, 1, 0), field: fRot });
+  cmp('T20c Opalkugel τd = 1, außen: ∫E0 dV / Lösung', r, fRot, false, 0, (x, z) => Ls * 2 * Math.PI * (1 - Math.sqrt(1 - Rs * Rs / (x * x + z * z))));
+  // Linienquelle Länge L, gemittelt über die Länge: Ē0(a) = Φ/(4π L a H)·[2H·atan(2H/a) − (a/2)·ln(1 + 4H²/a²)]
+  const Lx = 2000, Hx = Lx / 2;
+  r = run({ name: 'T20d', shape: 'ext', len: Lx, parts: [], source: iso, field: fExt });
+  cmp('T20d Linienquelle, Quaderzellen: ∫E0 dV / Lösung', r, fExt, true, Lx, (x, z) => { const a = Math.hypot(x, z) * 1e-3, H = Hx * 1e-3;
+    return PHI / (4 * Math.PI * Lx * 1e-3 * a * H) * (2 * H * Math.atan(2 * H / a) - a / 2 * Math.log(1 + 4 * H * H / (a * a))); });
+  // normalize reproduziert F bitgleich; Eingabeprüfung
+  const re = Core.normalize(r, { shape: 'ext', len: Lx, parts: [], source: iso, field: fExt });
+  check('T20e normalize(trace).F = trace.F (bitgleich)', re.F.every((v, i) => v === r.F[i]) ? 1 : 0, 1, 0);
+  let t = 0; try { Core.trace({ N: 1, profile: [], source: iso, mat: black, field: { ...fRot, x0: -10 } }); } catch (e) { t = 1; }
+  check('T20e wirft: rot mit x0 < 0', t, 1, 0);
+}

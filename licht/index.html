@@ -62,8 +62,11 @@ details summary{font-size:12.5px;cursor:pointer}
   </section>
 
   <section class="panel">
-    <h2>Lichtverteilung (LVK)</h2>
+    <h2 id="lvkT">Lichtverteilung (LVK)</h2>
     <div class="row">
+      <button id="vLvk" class="on">LVK</button>
+      <button id="vFld" title="Raumbeleuchtungsstärke im Schnitt durch die Leuchte: Lichtkegel, Schatten, Aufhellung">Lichtfeld</button>
+      <span class="sep"></span>
       <button id="uKlm" class="on">cd/klm</button>
       <button id="uCd">cd</button>
       <span class="note" id="lvkLeg"></span>
@@ -89,7 +92,7 @@ details summary{font-size:12.5px;cursor:pointer}
 
   <section class="panel wide">
     <h2>Modell &amp; Gültigkeit</h2>
-    <p class="note"><b>Modell.</b> Symmetrie an: Der gezeichnete Schirm wird um die Achse gedreht. Symmetrie aus (Langfeldleuchte): Der Querschnitt wird entlang der Länge gezogen, die Enden sind offen, die Lampe ist ein gleichmäßig leuchtender Stab über die ganze Länge. Alle Schirme sind dünne Schalen ohne Wandstärke, jeder mit eigenem Material; getrennte Schirme werfen Licht aufeinander. Von der Lampe (Punktquelle) aus werden Lichtteilchen in 3D verfolgt (Monte-Carlo-Photonenverfolgung): Bei jedem Auftreffen werden sie je nach Material diffus oder spiegelnd reflektiert, diffus oder klar durchgelassen oder absorbiert, bis sie den Schirm verlassen. Daraus folgen Lichtverteilungskurve (LVK), Wirkungsgrad η, Beleuchtungsstärke und Leuchtdichte. Das Bild wird mit jedem Rechenpaket ruhiger; angegeben ist die statistische Unsicherheit ±σ. Grundlage und Prüffälle: <code>docs/licht-grundlagen.md</code>, <code>licht/test.js</code>.</p>
+    <p class="note"><b>Modell.</b> Symmetrie an: Der gezeichnete Schirm wird um die Achse gedreht. Symmetrie aus (Langfeldleuchte): Der Querschnitt wird entlang der Länge gezogen, die Enden sind offen, die Lampe ist ein gleichmäßig leuchtender Stab über die ganze Länge. Alle Schirme sind dünne Schalen ohne Wandstärke, jeder mit eigenem Material; getrennte Schirme werfen Licht aufeinander. Von der Lampe (Punktquelle) aus werden Lichtteilchen in 3D verfolgt (Monte-Carlo-Photonenverfolgung): Bei jedem Auftreffen werden sie je nach Material diffus oder spiegelnd reflektiert, diffus oder klar durchgelassen oder absorbiert, bis sie den Schirm verlassen. Daraus folgen Lichtverteilungskurve (LVK), Wirkungsgrad η, Beleuchtungsstärke und Leuchtdichte. <b>Lichtfeld:</b> Raumbeleuchtungsstärke E₀ [lx] im Schnitt durch die Leuchte – das Licht, das aus allen Richtungen an einem Punkt im Raum ankommt (Summe der Weglängen der Lichtteilchen je Rasterzelle). Symmetrisch: Mittel über Ringe um die Achse; Langfeld: Mittel über die Länge. Helligkeit ∝ (E₀/Bezug)^0,4, Bezug = 99. Perzentil (direkt an der Lampe wächst E₀ mit 1/Abstand² unbegrenzt); wird nur gerechnet, solange die Ansicht offen ist, und braucht mindestens 1 Mio. Lichtteilchen. Das Bild wird mit jedem Rechenpaket ruhiger; angegeben ist die statistische Unsicherheit ±σ. Grundlage und Prüffälle: <code>docs/licht-grundlagen.md</code>, <code>licht/test.js</code>.</p>
     <p class="note"><b>Begriffe.</b> LVK: Lichtstärke [cd] je Richtung; γ = 0° zeigt nach unten, C0–C180 und C90–C270 sind zwei senkrechte Schnittebenen (gleich, solange die Lampe auf der Achse sitzt). Bei der Langfeldleuchte ist C0–C180 quer, C90–C270 längs zur Leuchte. cd/klm = Lichtstärke je 1000 lm Lampenlichtstrom. Leuchtdichte [cd/m²]: wie hell eine Fläche wirkt. Abschirmwinkel: Winkel unter der Horizontalen, ab dem die Lampe direkt sichtbar wird.</p>
     <p class="note"><b>Materialwerte</b> sind Richtwerte und meist die größte Fehlerquelle. Opalglas τ 30–65 % (Überfangopal), weiß lackiert ρ 75–90 %, Aluminium gebürstet ρ 55–58 %, Spiegel (eloxiertes, beschichtetes Aluminium) ρ 75–95 % – Klarglas τ 80–90 % – Wertebereiche nach der IES-Materialtabelle (UNCG eLight, „Material Properties“). Die Aufteilung von gebürstetem Aluminium in diffus/gespiegelt ist geschätzt. <b>Papier, Stoff, Filz, Acryl satiniert und Kunststoff halbopak sind Schätzwerte</b>, für sie wurde keine belastbare Messquelle gefunden; echte Werte schwanken stark mit Dicke, Webart und Farbe. Eigene Messwerte unter „Erweitert“ eintragen.</p>
     <p class="note"><b>Designklassiker</b> unter „Vorlage“: Außenmaße nach Hersteller- und Händlerangaben, Profil nachempfunden – Annäherung, keine Werkszeichnung. Gerechnet wird nur der Schirm (Fuß, Bogen, Fassung fehlen), Lampe als Punkt; Messing (Golden Bell) als gebürstetes Aluminium, gelochte Scheitel (Arco, Golden Bell) als offene Kreisöffnung. Mehrschalige Leuchten wie PH 5 lassen sich mit einem einzigen Profil nicht abbilden.</p>
@@ -144,6 +147,8 @@ const Core = (() => {
       }
     }
     if (o.floor && !(o.floor.n >= 1 && o.floor.rMax > 0 && num(o.floor.z))) bad('Bodenebene ungültig');
+    const F = o.field;
+    if (F && !([F.x0, F.x1, F.z0, F.z1].every(num) && F.x1 > F.x0 && F.z1 > F.z0 && F.nx >= 1 && F.nz >= 1 && F.nx % 1 === 0 && F.nz % 1 === 0 && (ext || F.x0 >= 0))) bad('Lichtfeld ungültig');
   }
 
   // Segmente aller Teile hintereinander vorberechnet, Material je Segment; Länge 0 oder (rot) Fläche 0 auf der
@@ -230,6 +235,9 @@ const Core = (() => {
   //       mat: { in: {rd, rs}, out: {rd, rs}, td, ts },  Rest absorbiert
   //       N, seed, dGamma = 5, nC = 1, floor: { z, rMax, n } (optional) }
   // floor: 'rot' Ringe um die Achse bis rMax; 'ext' n Streifen quer von −rMax bis rMax, gemittelt über |y| ≤ len/2.
+  // field: { x0, x1, z0, z1, nx, nz } (optional) Raster der Schnittebene für die Raumbeleuchtungsstärke E0 [lx]
+  //   (Weglängen-Schätzer: E0 = Σ Weglänge · Φ_Teilchen / Zellvolumen). 'rot': x = r ≥ 0, Zelle = Ring;
+  //   'ext': x quer, Zelle = Quader über die ganze Länge (gemittelt über |y| ≤ len/2).
   // Ergebnis: Zähler (flux, leave, ring) für ±σ, normiert I [cd], L [cd/m²], E [lx]
   function trace(o) {
     validate(o);
@@ -240,6 +248,24 @@ const Core = (() => {
     const fl = o.floor, ring = fl ? new Float64Array(fl.n) : null, fz = fl ? fl.z : 0, fn = fl ? fl.n : 0;
     const fk = fl ? (ext ? fl.n / (2 * fl.rMax) : fl.n / fl.rMax) : 0, fo = fl && ext ? fl.rMax : 0;
     const LAM = src.type === 'lambert';
+    const FD = o.field, fld = FD ? new Float64Array(FD.nx * FD.nz) : null;
+    const fkx = FD ? FD.nx / (FD.x1 - FD.x0) : 0, fkz = FD ? FD.nz / (FD.z1 - FD.z0) : 0, fh = FD ? 1 / max(fkx, fkz) : 0;
+    const fxl = FD ? (ext ? FD.x0 : -FD.x1) : 0, fyl = FD ? (ext ? H : FD.x1) : 0;
+    // Weg p + t·d, 0 < t < tm, in Schritten fh (zufällig versetzt, erwartungstreu) auf das Raster verteilen
+    let ta = 0, tb = 0;
+    function clip(p, d, lo, hi) { // Strahlabschnitt [ta, tb] auf lo ≤ p + t·d ≤ hi kürzen; false = ganz außerhalb
+      if (d === 0) return p >= lo && p <= hi;
+      let t1 = (lo - p) / d, t2 = (hi - p) / d; if (t1 > t2) { const q = t1; t1 = t2; t2 = q; }
+      if (t1 > ta) ta = t1; if (t2 < tb) tb = t2; return true;
+    }
+    function dep(tm) {
+      ta = 0; tb = tm;
+      if (!clip(pz, dz, FD.z0, FD.z1) || !clip(px, dx, fxl, FD.x1) || !clip(py, dy, -fyl, fyl) || ta >= tb) return;
+      for (let t = ta + R() * fh; t < tb; t += fh) {
+        const x = px + t * dx, y = py + t * dy, ix = floor(((ext ? x : sqrt(x * x + y * y)) - FD.x0) * fkx), iz = floor((pz + t * dz - FD.z0) * fkz);
+        if (ix >= 0 && ix < FD.nx && iz >= 0 && iz < FD.nz) fld[iz * FD.nx + ix] += fh;
+      }
+    }
     let out = 0, nabs = 0, lost = 0, px, py, pz, dx, dy, dz;
 
     function lambert(ax, ay, az) { // kosinusgewichtet um (ax,ay,az)
@@ -258,6 +284,7 @@ const Core = (() => {
       let b = 0, last = -1;
       for (; b < MAXB; b++) {
         const hs = nearest(S, px, py, pz, dx, dy, dz, last), best = S.t;
+        if (fld) dep(best);
         if (hs < 0) { // entweicht
           out++;
           const g = acos(max(-1, min(1, -dz))) * 180 / PI;
@@ -286,7 +313,7 @@ const Core = (() => {
       }
       if (b === MAXB) lost++; // nie still verwerfen (licht-grundlagen §7)
     }
-    return normalize({ N, out, abs: nabs, lost, flux, leave, ring }, o);
+    return normalize({ N, out, abs: nabs, lost, flux, leave, ring, fld }, o);
   }
 
   // Zähler → physikalische Größen. Auch für aufsummierte Pakete mehrerer trace()-Läufe gleicher Eingabe.
@@ -311,7 +338,15 @@ const Core = (() => {
       if (ext) { const A = 2 * fl.rMax / fl.n * o.len * 1e-6; for (let i = 0; i < fl.n; i++) E[i] = c.ring[i] * w / A; }
       else { const dr = fl.rMax / fl.n; for (let i = 0; i < fl.n; i++) E[i] = c.ring[i] * w / (PI * dr * dr * (2 * i + 1) * 1e-6); }
     }
-    return { N, out: c.out, abs: c.abs, lost: c.lost, eta: c.out / N, dGamma: dG, nG, nC, flux: c.flux, I, leave: c.leave, L, ring: c.ring, E };
+    let F = null; const FD = o.field;
+    if (c.fld && FD) {
+      F = new Float64Array(FD.nx * FD.nz); const ddx = (FD.x1 - FD.x0) / FD.nx, ddz = (FD.z1 - FD.z0) / FD.nz;
+      for (let i = 0; i < FD.nx; i++) {
+        const a = FD.x0 + i * ddx, V = (ext ? ddx * o.len : PI * ((a + ddx) ** 2 - a * a)) * ddz; // mm³
+        for (let j = 0; j < FD.nz; j++) F[j * FD.nx + i] = c.fld[j * FD.nx + i] * w / V * 1e6;
+      }
+    }
+    return { N, out: c.out, abs: c.abs, lost: c.lost, eta: c.out / N, dGamma: dG, nG, nC, flux: c.flux, I, leave: c.leave, L, ring: c.ring, E, fld: c.fld || null, F };
   }
 
   // Abschirmwinkel (EN 12464-1, rein geometrisch, Schirm undurchsichtig, Punktquelle): kleinster Winkel unter der
@@ -386,7 +421,7 @@ const part = (pts, mat = 'stoff', raw = null) => ({ pts, mat, raw });
 
 // sym: true = rotationssymmetrisch (Profil r ≥ 0, gespiegelt angezeigt), false = Langfeld (Querschnitt frei, Länge len)
 const S = { parts: [part(toPts(PRESETS.kegel[1]))], cur: 0, sym: true, len: 1200, src: { x: 0, z: 0 }, phi: 806, type: 'iso', dist: 600,
-  unit: 'klm', mode: 'edit', sel: -1, undo: [] };
+  unit: 'klm', view: 'lvk', mode: 'edit', sel: -1, undo: [] };
 let G = {}, R = null; // G: Geometrie für den Kern, R: aktuelles Ergebnis
 const cur = () => S.parts[S.cur];
 const matOf = pt => pt.raw || MATS[pt.mat][1];
@@ -450,9 +485,17 @@ function opts() {
   const gp = live.map(({ pt, i }) => { const prof = subdivide(orient(pt.pts), h); prof.forEach(q => zmin = Math.min(zmin, q[1])); const o = { prof, off, i }; off += prof.length - 1; return o; });
   const n = S.sym ? 30 : 61; // Langfeld: Streifen von −rMax bis rMax, ungerade → ein Streifen mittig unter der Achse
   const diff = live.some(({ pt }) => { const m = matOf(pt); return m.in.rd + m.out.rd + m.td > 0; });
+  // Lichtfeld: Ausschnitt um Schirme und Lampe mit Rand, quadratisch (Canvas 1:1); 'rot' nur r ≥ 0, gespiegelt angezeigt
+  let fd = null;
+  if (S.view === 'field') {
+    let mx = Math.abs(S.src.x), z0 = S.src.z, z1 = S.src.z;
+    gp.forEach(q => q.prof.forEach(([x, z]) => { mx = Math.max(mx, Math.abs(x)); z0 = Math.min(z0, z); z1 = Math.max(z1, z); }));
+    const m = Math.max(60, 0.35 * Math.max(2 * mx, z1 - z0)), side = Math.max(2 * (mx + m), z1 - z0 + 2 * m), zc = (z0 + z1) / 2;
+    fd = { x0: S.sym ? 0 : -side / 2, x1: side / 2, z0: zc - side / 2, z1: zc + side / 2, nx: S.sym ? 60 : 120, nz: 120 };
+  }
   G = { parts: gp, ns: off, diff, rMax, n, e0: S.sym ? 0 : (n - 1) / 2, zmin, cut: S.src.z - S.dist >= zmin };
   return { shape: S.sym ? 'rot' : 'ext', len: S.len, parts: gp.map(q => ({ profile: q.prof, mat: matOf(S.parts[q.i]) })),
-    source: { x: S.src.x, z: S.src.z, phi: S.phi, type: S.type }, dGamma: 5, nC: 24, floor: { z: S.src.z - S.dist, rMax, n } };
+    source: { x: S.src.x, z: S.src.z, phi: S.phi, type: S.type }, dGamma: 5, nC: 24, floor: { z: S.src.z - S.dist, rMax, n }, field: fd || undefined };
 }
 
 // ---- Rechnen: Web Worker mit dem CORE-Quelltext dieser Seite, fortschreitend in Paketen ----
@@ -465,12 +508,12 @@ function loop(d) {
   const step = () => {
     if (job !== d.job) return;
     const r = Core.trace(Object.assign({}, d.o, { N: d.chunk, seed: (d.job * 7919 + ++k) * 0x9E3779B1 | 0 }));
-    postMessage({ job: d.job, N: r.N, out: r.out, abs: r.abs, lost: r.lost, flux: r.flux, leave: r.leave, ring: r.ring });
+    postMessage({ job: d.job, N: r.N, out: r.out, abs: r.abs, lost: r.lost, flux: r.flux, leave: r.leave, ring: r.ring, fld: r.fld });
     setTimeout(step, 0);
   };
   step();
 }`;
-const NMAX = 4e6; // Obergrenze, falls ein Ziel (z. B. E unter der Leuchte) nie erreicht wird
+const NMAX = 4e6, FMIN = 1e6; // Obergrenze, falls ein Ziel (z. B. E unter der Leuchte) nie erreicht wird
 let worker = null, J = { id: 0 };
 try { worker = new Worker(URL.createObjectURL(new Blob([WORKER_SRC], { type: 'text/javascript' }))); worker.onmessage = e => onChunk(e.data); }
 catch (e) { worker = null; } // shortcut: ohne Worker rechnet der Hauptthread in kleinen Paketen
@@ -486,8 +529,8 @@ function restart() {
 function onChunk(m) {
   if (m.job !== J.id || J.done) return;
   const a = J.acc;
-  if (!a) J.acc = { N: m.N, out: m.out, abs: m.abs, lost: m.lost, flux: Float64Array.from(m.flux), leave: Float64Array.from(m.leave), ring: Float64Array.from(m.ring) };
-  else { a.N += m.N; a.out += m.out; a.abs += m.abs; a.lost += m.lost; for (const k of ['flux', 'leave', 'ring']) for (let i = 0; i < a[k].length; i++) a[k][i] += m[k][i]; }
+  if (!a) J.acc = { N: m.N, out: m.out, abs: m.abs, lost: m.lost, flux: Float64Array.from(m.flux), leave: Float64Array.from(m.leave), ring: Float64Array.from(m.ring), fld: m.fld ? Float64Array.from(m.fld) : null };
+  else { a.N += m.N; a.out += m.out; a.abs += m.abs; a.lost += m.lost; for (const k of ['flux', 'leave', 'ring', 'fld']) if (a[k]) for (let i = 0; i < a[k].length; i++) a[k][i] += m[k][i]; }
   R = Core.normalize(J.acc, J.o);
   derive();
   if (R.prog >= 1 || R.N >= NMAX) { J.done = true; J.calm = performance.now() - J.t0; if (worker) worker.postMessage({ job: -J.id }); }
@@ -528,6 +571,7 @@ function derive() {
   // Leuchtdichte entsteht nur an streuenden Flächen (Klarglas, Spiegel ohne Streuanteil: nie ruhig)
   const q = [[0.03, R.st.sP], [0.05, sEq]]; if (G.ns > 0 && G.diff) q.push([0.03, R.st.sL]);
   R.prog = Math.min(1, Math.max(R.N / NMAX, Math.min(...q.map(([t, s]) => (t / s) ** 2))));
+  if (R.F) R.prog = Math.min(R.prog, R.N / FMIN); // Lichtfeld: mindestens FMIN Teilchen, sonst rauschen die dunklen Bereiche
 }
 
 // ---- Editor ----
@@ -697,6 +741,7 @@ function changed() { syncCtl(); restart(); }
 
 // ---- LVK (Polardiagramm) ----
 function drawLvk() {
+  if (S.view === 'field') return drawField();
   const cv = $('lvk'), { ctx, w, h } = prep(cv), cx = w / 2, cy = h / 2, rad = 0.42 * Math.min(w, h);
   ctx.font = '11px Arial, sans-serif'; ctx.lineWidth = 1;
   const k = S.unit === 'klm' ? 1000 / S.phi : 1, u = S.unit === 'klm' ? 'cd/klm' : 'cd';
@@ -720,6 +765,39 @@ function drawLvk() {
   if (R.lv.B) draw(R.lv.B, css('--ink'), [5, 4]);
   ctx.fillStyle = css('--mut'); ctx.fillText(u, 8, 16);
   if (R.lv.B) ctx.fillText('C180 ← → C0', 8, h - 8);
+}
+
+// ---- Lichtfeld: Raumbeleuchtungsstärke E0 im Schnitt, Helligkeit ~ (E0/Bezug)^0,4 (wie das Auge, zeigt auch 1/1000), dunkel → --light → hell ----
+const fieldImg = document.createElement('canvas');
+function drawField() {
+  const cv = $('lvk'), { ctx, w, h } = prep(cv), fd = J.o && J.o.field;
+  ctx.font = '11px Arial, sans-serif';
+  if (!R || !R.F || !fd) { ctx.fillStyle = css('--mut'); ctx.textAlign = 'center'; ctx.fillText(J.err ? '⚠ ' + J.err : 'rechnet …', w / 2, h / 2); ctx.textAlign = 'left'; return; }
+  const X0 = S.sym ? -fd.x1 : fd.x0, sc = Math.min(w / (fd.x1 - X0), h / (fd.z1 - fd.z0)), ox = (w - (fd.x1 - X0) * sc) / 2, oy = (h - (fd.z1 - fd.z0) * sc) / 2;
+  const T = (x, z) => [ox + (x - X0) * sc, oy + (fd.z1 - z) * sc];
+  // Bezug: 99. Perzentil statt Maximum (die Zellen an der Lampe gehen mit 1/d² gegen unendlich)
+  const v = Array.from(R.F).filter(e => e > 0).sort((a, b) => a - b), ref = v.length ? v[Math.floor(0.99 * (v.length - 1))] : 1;
+  const nx = fd.nx, nz = fd.nz, W = S.sym ? 2 * nx : nx;
+  fieldImg.width = W; fieldImg.height = nz;
+  const fc = fieldImg.getContext('2d'), img = fc.createImageData(W, nz), c0 = hex(css('--ink')), c1 = hex(css('--light')), c2 = hex(css('--bg'));
+  const col = e => { const t = e > 0 ? Math.min(1, (e / ref) ** 0.4) : 0;
+    return t < 0.85 ? c0.map((a, i) => a + (c1[i] - a) * t / 0.85) : c1.map((a, i) => a + (c2[i] - a) * Math.min(1, (t - 0.85) / 0.3)); };
+  for (let j = 0; j < nz; j++) for (let i = 0; i < nx; i++) {
+    const c = col(R.F[(nz - 1 - j) * nx + i]);
+    for (const X of S.sym ? [nx + i, nx - 1 - i] : [i]) { const k = 4 * (j * W + X); img.data[k] = c[0]; img.data[k + 1] = c[1]; img.data[k + 2] = c[2]; img.data[k + 3] = 255; }
+  }
+  fc.putImageData(img, 0, 0);
+  ctx.imageSmoothingEnabled = true; ctx.drawImage(fieldImg, ox, oy, (fd.x1 - X0) * sc, (fd.z1 - fd.z0) * sc);
+  // Schirme und Lampe darüber
+  ctx.strokeStyle = css('--bg'); ctx.lineWidth = 2.5; ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+  for (const { prof: P } of G.parts || []) for (const sg of MIR()) { ctx.beginPath(); P.forEach(([x, z], i) => { const [a, b] = T(sg * x, z); i ? ctx.lineTo(a, b) : ctx.moveTo(a, b); }); ctx.stroke(); }
+  const [lx, ly] = T(S.src.x, S.src.z); ctx.beginPath(); ctx.arc(lx, ly, 4, 0, 7); ctx.fillStyle = css('--light'); ctx.fill(); ctx.strokeStyle = css('--bg'); ctx.lineWidth = 1.5; ctx.stroke();
+  // Legende
+  const bw = Math.min(140, w * 0.35);
+  for (let k = 0; k < bw; k++) { const c = col(ref * (k / bw) ** 2.5); ctx.fillStyle = `rgb(${c.map(Math.round).join(',')})`; ctx.fillRect(8 + k, 8, 1, 8); }
+  ctx.fillStyle = css('--bg'); ctx.fillText('0', 8, 28); ctx.textAlign = 'right'; ctx.fillText(nf0.format(ref) + ' lx', 8 + bw, 28);
+  ctx.textAlign = 'left'; ctx.fillText('Raumbeleuchtungsstärke E₀', 8, 42);
+  ctx.textAlign = 'right'; ctx.fillText(nf0.format(fd.x1 - X0) + ' × ' + nf0.format(fd.z1 - fd.z0) + ' mm' + (S.sym ? '' : ' · gemittelt über die Länge'), w - 8, h - 8); ctx.textAlign = 'left';
 }
 
 // ---- Diagramm E(r) bzw. E(x) ----
@@ -757,7 +835,7 @@ function drawStats() {
   prog.style.width = (100 * R.prog).toFixed(1) + '%';
   stt.textContent = nf1.format(R.N / 1e6) + ' Mio. Lichtteilchen · LVK ±' + nf1.format(100 * st.sP) + ' % · ' +
     (J.done ? 'ruhig nach ' + nf1.format(J.calm / 1000) + ' s' : 'wird ruhiger …') + (worker ? '' : ' · ohne Worker');
-  $('lvkLeg').textContent = !S.sym ? 'gelb quer C0–C180 · gestrichelt längs C90–C270 (Sektoren ±37,5°)' : S.src.x === 0 ? 'rotationssymmetrisch' : 'gelb C0–C180 · gestrichelt C90–C270 (Sektoren ±37,5°)';
+  $('lvkLeg').textContent = S.view === 'field' ? 'hell = viel Licht, schwarz = Schatten' : !S.sym ? 'gelb quer C0–C180 · gestrichelt längs C90–C270 (Sektoren ±37,5°)' : S.src.x === 0 ? 'rotationssymmetrisch' : 'gelb C0–C180 · gestrichelt C90–C270 (Sektoren ±37,5°)';
 }
 
 function drawAll() { drawEditor(); drawLvk(); drawE(); drawStats(); }
@@ -798,9 +876,14 @@ RAW.forEach((_, i) => $('raw' + i).onchange = () => {
 $('dist').oninput = e => { S.dist = +e.target.value; restart(); };
 $('uKlm').onclick = () => { S.unit = 'klm'; $('uKlm').classList.add('on'); $('uCd').classList.remove('on'); drawLvk(); };
 $('uCd').onclick = () => { S.unit = 'cd'; $('uCd').classList.add('on'); $('uKlm').classList.remove('on'); drawLvk(); };
+function setView(v) { if (v === S.view) return; S.view = v; syncCtl(); restart(); }
+$('vLvk').onclick = () => setView('lvk');
+$('vFld').onclick = () => setView('field');
 function syncCtl() {
   $('phi').value = S.phi; $('phiP').value = PHI.some(p => p[0] === S.phi) ? S.phi : '';
   $('type').value = S.type; $('dist').value = S.dist;
+  const fv = S.view === 'field'; $('vLvk').classList.toggle('on', !fv); $('vFld').classList.toggle('on', fv);
+  $('uKlm').hidden = $('uCd').hidden = fv; $('lvkT').textContent = fv ? 'Lichtfeld (Schnitt durch die Leuchte)' : 'Lichtverteilung (LVK)';
   $('sym').classList.toggle('on', S.sym); $('sym').textContent = S.sym ? '⟲ Symmetrie an' : '⟲ Symmetrie aus';
   $('edT').textContent = S.sym ? 'Schirm (Profil, rotationssymmetrisch)' : 'Schirm (Querschnitt, Langfeldleuchte)';
   $('len').value = S.len; document.querySelectorAll('.lenRow').forEach(el => el.hidden = S.sym);
