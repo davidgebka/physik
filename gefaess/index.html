@@ -97,7 +97,7 @@
   <section class="panel wide">
     <h2>Modell &amp; Gültigkeit</h2>
     <p class="note">Rotationskörper aus der gezeichneten Innenkontur. Volumen und Kippzustand sind geometrisch exakt (numerisch, Abweichung &lt; 0,5&nbsp;%). Kippen wird quasistatisch gerechnet: Die Flüssigkeit läuft über den tiefsten Punkt, der zwischen dem Becken und dem Rand liegt. Engstellen wie eine Flaschenschulter halten Flüssigkeit also korrekt zurück. Nicht modelliert: Oberflächenspannung, Tropfnase, Glucksen und Luftschleusen, Ausflussgeschwindigkeit. Gerechnet wird mit Wasser (1&nbsp;g/ml).</p>
-    <p class="note"><b>Tülle, Henkel, Deckel</b> (Drehkörper): Tülle und Henkel liegen in der Seitenansicht, also in der Spiegelebene der Kanne; gekippt wird zur Tülle hin (+x). Die Tülle ist ein kommunizierendes Gefäß: Es läuft aus, sobald der Spiegel die höchste Stelle des Weges vom Becken über Wand und Ansatz bis zur Spitze übersteigt – das begrenzt auch das Fassungsvermögen, wenn die Spitze tiefer liegt als der Rand. Mit Deckel zählt der Rand nicht als Überlauf. Wasser in der Tülle selbst wird vernachlässigt, ebenso Luftzufuhr (Deckelloch angenommen), Strahl, Nachtropfen. Masse: Tülle als Rohr mit der Wandstärke, Henkel als Vollstab, beide aus dem Gefäßmaterial; Deckel ohne Masse. Kippwinkel nur zur Tülle hin.</p>
+    <p class="note"><b>Tülle, Henkel, Deckel</b> (Drehkörper): Tülle und Henkel liegen in der Seitenansicht, also in der Spiegelebene der Kanne; gekippt wird zur Tülle hin (+x). Die Tülle ist ein kommunizierendes Gefäß: Es läuft aus, sobald der Spiegel die höchste Stelle des Weges vom Becken über Wand und Ansatz bis zur Spitze übersteigt – das begrenzt auch das Fassungsvermögen, wenn die Spitze tiefer liegt als der Rand. Mit Deckel zählt der Rand nicht als Überlauf. Wasser in der Tülle selbst wird vernachlässigt, ebenso Luftzufuhr (Deckelloch angenommen), Strahl, Nachtropfen. Masse: Tülle als Rohr mit der Wandstärke, Henkel als Vollstab, beide aus dem Gefäßmaterial; Deckel ohne Masse. Kippwinkel zur Tülle hin und zur Gegenseite (Henkel), angezeigt wird der kleinere; zur Gegenseite läuft nur über den Rand aus. Kippansicht und Kippkurve zeigen das Kippen zur Tülle.</p>
     <p class="note"><b>Grundriss-Modus</b> (nicht rotationssymmetrisch): beliebiger geschlossener Grundriss, senkrechte Wand der Innenhöhe, flacher Boden – ein Prisma, z.&nbsp;B. Vase mit Wellenkontur oder rechteckige Dose. Gekippt wird um eine waagrechte Achse quer zur eingestellten Kipprichtung; Volumen, Überlauf am tiefsten Randpunkt, Schwerpunkt und Kippwinkel sind exakt für diese Geometrie (Streifenzerlegung, geprüft gegen Quader und Zylinder). Wand als Band der Wandstärke außen um die Kontur mit gerundeten Ecken (exakt für konvexe Grundrisse, bei Einbuchtungen genähert), Standkante = äußerster Punkt in Kipprichtung plus Wandstärke. Nicht erfasst: Gefäße, die sich nach oben verjüngen oder weiten, Seitwärtsdrehen beim Kippen über eine Ecke.</p>
     <p class="note"><b>Designklassiker</b> unter „Vorlage“: Außenmaße nach Hersteller- und Händlerangaben, Innenkontur und Wandstärken daraus nachempfunden – Annäherung, keine Werkszeichnung. Tüllen, Henkel und Deckel fehlen.</p>
     <p class="note">Gefäßgewicht als dünne Schale: Wandstärke × Mittelfläche (Innenkontur um halbe Wandstärke nach außen versetzt; exakt für Zylinder- und Kegelwände), dazu eine Bodenplatte unter dem flachen Boden. Gültig für Wandstärke deutlich kleiner als der Radius (Fehler wächst mit Wandstärke/Krümmungsradius, an Ecken genähert). Standradius auto = Bodenplatte; ein von Hand gesetzter Standradius verschiebt nur die Kippkante, seine Masse wird nicht gerechnet. Ohne flachen Boden (z.&nbsp;B. Rundboden, Standring) von Hand setzen. <b>Kippwinkel</b>: Neigung um die Standkante, ab der das Gefäß von selbst umfällt; das Wasser läuft dabei mit und läuft gegebenenfalls aus (quasistatisch, kein Rutschen, kein Henkel). <b>Umstoßkraft</b>: waagrechte Kraft am Rand, die das aufrechte, gefüllte Gefäß gerade ankippt.</p>
@@ -583,6 +583,13 @@ function stabLater() {
     G.stab = { xF: g.x, zF: g.z, mF: g.m,
       tipE: Core.tipAngleG(G.geo, 0, G.mv, G.xv, G.zv, G.rf, G.zst),
       tipF: Core.tipAngleG(G.geo, S.fill * 1000, G.mv, G.xv, G.zv, G.rf, G.zst) };
+    // Drehkörper mit Tülle/Henkel: auch zur Gegenseite (−x) kippen. Körper symmetrisch → gespiegelt rechnen:
+    // Schwerpunkt −x, Überlauf nur über den Rand (Tülle zeigt dann nach oben)
+    if (!isPlan() && (hasSpout() || Math.abs(G.xv) > 0.05)) {
+      const gb = Core.geoRot(G.sl, G.samp, G.sec, { lid: S.lid });
+      G.stab.backE = Core.tipAngleG(gb, 0, G.mv, -G.xv, G.zv, G.rf, G.zst);
+      G.stab.backF = Core.tipAngleG(gb, S.fill * 1000, G.mv, -G.xv, G.zv, G.rf, G.zst);
+    }
     drawEditor(); drawStats();
   }, 150);
 }
@@ -907,6 +914,21 @@ function capItem() {
   if (hasSpout()) return ['Fassungsvermögen', v, 'bis Rand · Tülle reicht höher'];
   return ['Fassungsvermögen', v, S.lid && !isPlan() ? 'bis Rand · Deckel zu, keine Tülle' : 'bis Rand'];
 }
+// Kippwinkel/Umstoßkraft: ungünstigere Richtung; Drehkörper mit Tülle/Henkel zur Tülle (+x) und zur Gegenseite (−x)
+const minDir = (a, b) => a == null ? [b, 1] : b == null || a <= b ? [a, 0] : [b, 1];
+function tipItem(deg) {
+  const st = G.stab; if (!st) return ['Kippwinkel', '…', ''];
+  if (!('backF' in st)) return ['Kippwinkel', deg(st.tipF), 'gefüllt · leer ' + deg(st.tipE)];
+  const [f, df] = minDir(st.tipF, st.backF), [e, de] = minDir(st.tipE, st.backE), side = d => d ? 'zur Gegenseite' : (hasSpout() ? 'zur Tülle' : 'nach +x');
+  return ['Kippwinkel', deg(f), 'gefüllt ' + side(df) + ' · leer ' + deg(e) + ' ' + side(de)];
+}
+function pushItem() {
+  if (S.foot == null && !G.flat) return ['Umstoßkraft', '–', ''];
+  const st = G.stab; if (!st) return ['Umstoßkraft', '…', ''];
+  // Drehkörper: runde Standfläche, schwächste Richtung = vom Schwerpunkt weg (Arm rf − |x|); Grundriss: in Kipprichtung
+  const a = isPlan() ? G.rf - st.xF : G.rf - Math.abs(st.xF);
+  return ['Umstoßkraft', nf1.format(Core.pushForce(st.mF, a, G.hRim)) + ' N', 'waagrecht am Rand, gefüllt' + (isPlan() ? ', in Kipprichtung' : Math.abs(st.xF) > 0.5 ? ', ungünstigste Richtung' : '')];
+}
 function drawStats() {
   if (!G.geo) return;
   const V0 = S.fill, c = G.curve, d = 180 / STEPS;
@@ -931,8 +953,8 @@ function drawStats() {
     ['Schwerpunkt', G.stab ? nf0.format(G.stab.zF - G.zst) + ' mm' : '…', 'gefüllt, über Standfläche · leer ' + nf0.format(G.zv - G.zst) + ' mm'],
     S.foot == null && !G.flat
       ? ['Kippwinkel', '⚠ –', 'kein flacher Boden: Standradius setzen', true]
-      : ['Kippwinkel', G.stab ? deg(G.stab.tipF) : '…', G.stab ? 'gefüllt · leer ' + deg(G.stab.tipE) : ''],
-    ['Umstoßkraft', S.foot == null && !G.flat ? '–' : G.stab ? nf1.format(Core.pushForce(G.stab.mF, G.rf - G.stab.xF, G.hRim)) + ' N' : '…', 'waagrecht am Rand, gefüllt']
+      : tipItem(deg),
+    pushItem()
   ];
   $('stats').innerHTML = items.map(([a, b, n, warn]) => `<div class="stat"><span>${a}</span><b${warn ? ' style="color:var(--warn)"' : ''}>${b}</b><span>${n}</span></div>`).join('');
   $('fillO').textContent = nf0.format(V0) + ' ml';
@@ -1082,6 +1104,8 @@ $('share').onclick = async () => {
   setTimeout(() => $('share').textContent = 'Link kopieren', 1500);
 };
 function fromHash() { const d = dpHashGet('g'); return !!d && apply(d, false); }
+// Link im selben Tab eingefügt (nur der Hash ändert sich): übernehmen, Rückgängig möglich
+window.addEventListener('hashchange', () => { const keep = snap(); if (fromHash()) { pushUndo(keep); S.theta = 0; $('tilt').value = 0; recompute(); fitView(); drawAll(); } });
 window.addEventListener('resize', () => { fitView(); drawAll(); });
 dpHeader('gefaess', 'Gefäß & Kippen');
 if (!fromHash()) setKind('rot', true);

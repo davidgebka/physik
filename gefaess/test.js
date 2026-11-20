@@ -128,3 +128,5 @@ check('Leer, SP außermittig x −10: Kippwinkel [°]', Core.tipAngleG(Core.geoR
 // Umstoßkraft mit außermittigem Schwerpunkt: Hebelarm = Standkante − x_SP (leer, cogG liefert x)
 { const g = Core.cogG(Core.geoRot(cyl.S, cyl.s), 0, 0, 500, -10, 40);
   check('Umstoßkraft SP x −10, Kante 42, h 100 [N]', Core.pushForce(g.m, 42 - g.x, 100), 0.5 * 9.81 * 52 / 100); }
+// Gegenrichtung beim Drehkörper = gespiegelter Schwerpunkt: SP x −10 nach −x gekippt ≡ SP +10 nach +x
+check('Gegenseite: SP x −10 zur −x-Kante [°]', Core.tipAngleG(Core.geoRot(cyl.S, cyl.s), 0, 500, 10, 40, 42, -5), Math.atan(32 / 45) / D, 2e-3);
