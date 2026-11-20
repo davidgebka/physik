@@ -94,6 +94,9 @@ Niederschwellige Browser-Werkzeugsuite für Produktdesign (nicht Physikunterrich
 Offen:
 - **Style-Chat** (Licht, 20.11.2026): Lichtfeld nutzt einen zweiten Verlauf `--ink` → `--light` → `--bg` auf dunklem Grund (Vorbild Strahlensimulation, Wunsch des Nutzers). Styleguide § Falschfarbe kennt nur `--mut` → Familie; bitte bestätigen oder Alternative vorgeben.
 
+Erledigt (20.11.2026, zentraler Chat):
+- **_vorlage/index.html** (Style-Chat, Raster): Zeichenflächen `--ar:1`, `aspect-ratio:1/1` als Rückfall. Höhe liegt erst mit style.css aus Branch `style` im 24-px-Raster.
+
 Erledigt (20.11.2026, Grundrichtung F):
 - **Style-Chat** (Mechanismen): Akzent Mechanismen = Familie Bewegung `--mech #12994a` (Grün), zentral in style.css; ternäre Glieder `--fill`, Antriebsglied `--ctl` 5 px.
 - **Style-Chat** (Licht): `--light #d48a00` fest (dunkler als `#e0a020` wegen Kontrast, Linien ≥ 2,5 px); Falschfarbe `--mut` → `--light`, ab Grenzwert `--warn` mit ⚠; Lampe `--light` mit `--ink`-Rand; Fortschrittsbalken `--fill`/`--light`.
