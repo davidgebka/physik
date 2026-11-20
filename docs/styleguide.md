@@ -22,6 +22,9 @@ Verbindlich für Startseite und alle Module. Technische Quelle der Wahrheit ist 
 - **Erlaubte Maße:** 6 · 12 · 24 · 48 · 72 px und weitere Vielfache von 24. 6 px nur innerhalb eines Elements (Symbol–Text, Zellen-Innenabstand).
 - **Seite:** Punkte Ø 2 px in `--dot` im Abstand `--u` auf `--bg`, erster Punkt in der Ecke (0, 0). Kopfzeile 72 px (3 Einheiten), Seitenrand 24 px, Spaltenabstand 24 px.
 - **Schrift im Raster:** jede Textzeile 24 px hoch (auch 11–13 px Schrift); große Kennzahl 48 px.
+- **Senkrecht nur ganze Einheiten** (seit 20.11.2026): Höhen und senkrechte Abstände sind Vielfache von 24 px, auch zwischen Elementen. 12 px nur waagerecht (zwischen Gruppen einer Zeile); 6 px nur innerhalb eines Elements. Jede Oberkante liegt auf einer Punktreihe.
+- **Linien nehmen keinen Platz ein:** Trennlinien und Zellrahmen als `box-shadow` (`inset 0 1px var(--ink)` oben), nicht als `border` – sonst wandert alles darunter je Linie 1 px aus dem Raster. `border` nur an Elementen fester Höhe (Buttons, Felder, Navigation; `box-sizing: border-box`).
+- **Zeichenflächen:** Höhe über `--ar` (Breite/Höhe) statt `aspect-ratio`, z. B. `#ed{--ar:calc(1/1.05)}`; style.css rundet die Höhe auf ein Vielfaches von 24 px ab (`round()` mit `cqw`, `.panel` ist Container). Ohne `--ar` gilt `aspect-ratio` – dann liegt alles darunter neben dem Raster.
 - **Zeichenfläche:** deckend `--bg`, eigenes Punktraster in Millimetern (§ 7). Die Seitenpunkte laufen nicht hindurch, weil Zeichenflächen zoomen.
 - Fließende Breiten (Spalten, Telefon) gehen nicht immer in ganzen Einheiten auf. Dann gilt: Höhen und senkrechte Abstände bleiben im Raster, Breiten dürfen fließen.
 
@@ -80,15 +83,15 @@ Nur diese Farben sind erlaubt. Module definieren **keine eigenen Farben** in `:r
 - Canvas: `11px Arial`, `--ink2`; Kennwert im Canvas `600 15px Arial`, `--ink`.
 
 ## 6. Layout & Komponenten
-- `header`: 72 px, Titel mit Modulquadrat links, Navigation rechts, unten 1 px `--ink`.
+- `header`: 72 px, Titel mit Modulquadrat links, Navigation rechts, unten 1 px `--ink`. Bricht sie um (Telefon), Zeilenabstand 24 px.
 - `nav`: Segmente in `--h` Höhe, 1 px `--ink`, ohne Lücke aneinander; aktiv `--ctl`. Jedes Segment mit Modulquadrat; nicht verfügbare Module `--mut`, Quadrat nur als Umriss.
 - `main`: 2 Spalten, Abstand 24 px, Rand 24 px, max. 1440 px; unter 860 px einspaltig.
-- `.panel`: **kein Kasten** – oben 1 px `--ink`, keine Seiten, kein Hintergrund (Punkte sichtbar), Inhalt im 12-px-Takt. `h2` in der ersten Zeile.
-- `.row`: Werkzeugleiste; Abstand 12 px zwischen Gruppen, Segmente einer Gruppe ohne Lücke (`.seg`). `.sep` = 12 px Leerraum.
+- `.panel`: **kein Kasten** – oben 1 px `--ink`, keine Seiten, kein Hintergrund (Punkte sichtbar), Abstand zwischen Inhalten 24 px. `h2` in der ersten Zeile.
+- `.row`: Werkzeugleiste; Abstand 12 px zwischen Gruppen, 24 px zwischen umbrochenen Zeilen, Segmente einer Gruppe ohne Lücke (`.seg`). `.sep` = 12 px Leerraum.
 - `button`, `select`, `input`: Höhe `--h`, 1 px `--ink`, Radius 0, `--bg`; aktiv `button.on` = `--ctl`/`--ctl-ink`. Kein Verschieben beim Drücken.
 - `input[type=range]`, Checkbox: `accent-color: var(--ctl)`.
 - `.ctl` (label · range · output): Zeile 24 px (Touch 48 px), output mit Einheit.
-- `.stats`/`.stat`: Zellen ohne Außenkasten, oben und unten 1 px `--ink`, zwischen Zellen 1 px `--ink`; Label 11 px, Wert 22 px auf 48 px, Notiz 11 px `--ink2`. Überschreitung: `.stat.warn` → Wert `--warn` mit ⚠.
+- `.stats`/`.stat`: Zellen ohne Außenkasten, oben und unten 1 px `--ink`, zwischen Zellen 1 px `--ink`; Label 11 px, Wert 22 px auf 48 px, Notiz 11 px `--ink2`; kein Innenabstand unten (Zelle 72, 96, 120 … px). Überschreitung: `.stat.warn` → Wert `--warn` mit ⚠.
 - `.note`: 12 px / 24 px `--ink2`.
 - Startseite: `.card` = oben 1 px `--ink`, Modulquadrat + Titel, Beschreibung `--ink2`; `.card.off` in `--mut`.
 - Keine Radien, keine Schatten, keine Verläufe (außer Falschfarbe).
