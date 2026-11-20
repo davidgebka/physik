@@ -448,7 +448,8 @@ function opts() {
   let zmin = Infinity, off = 0;
   const gp = live.map(({ pt, i }) => { const prof = subdivide(orient(pt.pts), h); prof.forEach(q => zmin = Math.min(zmin, q[1])); const o = { prof, off, i }; off += prof.length - 1; return o; });
   const n = S.sym ? 30 : 61; // Langfeld: Streifen von −rMax bis rMax, ungerade → ein Streifen mittig unter der Achse
-  G = { parts: gp, ns: off, rMax, n, e0: S.sym ? 0 : (n - 1) / 2, zmin, cut: S.src.z - S.dist >= zmin };
+  const diff = live.some(({ pt }) => { const m = matOf(pt); return m.in.rd + m.out.rd + m.td > 0; });
+  G = { parts: gp, ns: off, diff, rMax, n, e0: S.sym ? 0 : (n - 1) / 2, zmin, cut: S.src.z - S.dist >= zmin };
   return { shape: S.sym ? 'rot' : 'ext', len: S.len, parts: gp.map(q => ({ profile: q.prof, mat: matOf(S.parts[q.i]) })),
     source: { x: S.src.x, z: S.src.z, phi: S.phi, type: S.type }, dGamma: 5, nC: 24, floor: { z: S.src.z - S.dist, rMax, n } };
 }
@@ -520,7 +521,11 @@ function derive() {
   R.st = { dn: dn / Math.max(1, R.out), up: up / Math.max(1, R.out), Lm, Li, sL: rel(Ln), sE: rel(R.ring[G.e0]), sP: peak,
     sEta: Math.sqrt(R.eta * (1 - R.eta) / R.N) };
   // ruhig: LVK ±3 % (ungünstigste Stützstelle), E unter der Leuchte ±5 %, max. Leuchtdichte ±3 %
-  const q = [[0.03, R.st.sP], [0.05, R.st.sE]]; if (G.ns > 0) q.push([0.03, R.st.sL]);
+  // E-Kriterium relativ zum Maximum von E: sonst wird eine Leuchte, die nicht nach unten strahlt (E ≈ 0), nie ruhig
+  let Em = 0; for (const e of R.E) Em = Math.max(Em, e);
+  const sEq = Em > 0 && R.ring[G.e0] > 0 ? R.E[G.e0] * R.st.sE / Em : 0;
+  // Leuchtdichte entsteht nur an streuenden Flächen (Klarglas, Spiegel ohne Streuanteil: nie ruhig)
+  const q = [[0.03, R.st.sP], [0.05, sEq]]; if (G.ns > 0 && G.diff) q.push([0.03, R.st.sL]);
   R.prog = Math.min(1, Math.max(R.N / NMAX, Math.min(...q.map(([t, s]) => (t / s) ** 2))));
 }
 
@@ -572,7 +577,7 @@ function drawEditor() {
     for (const sg of MIR()) for (let i = 0; i + 1 < P.length; i++) {
       const a = { x: sg * P[i][0], z: P[i][1] }, b = { x: sg * P[i + 1][0], z: P[i + 1][1] };
       const [ax, ay] = w2s(a), [bx, by] = w2s(b), len = Math.hypot(bx - ax, by - ay) || 1;
-      let nx = (by - ay) / len, ny = -(bx - ax) / len; if (sg < 0) { nx = -nx; ny = -ny; } // Bildschirm-Außennormale
+      let nx = -(by - ay) / len, ny = (bx - ax) / len; if (sg < 0) { nx = -nx; ny = -ny; } // Bildschirm-Außennormale
       for (const side of [0, 1]) {
         const o = side ? 1.6 : -1.6, k = 2 * (off + i) + side;
         ctx.strokeStyle = R && R.leave[k] >= 30 ? lcol(R.L[k], Lsc) : css('--ink');
@@ -669,7 +674,7 @@ function endPointer() {
   if (stroke) {
     if (stroke.length > 3) {
       const p = rdp(stroke, 1.5);
-      if (S.sym && p[0].x < 6) p[0].x = 0;
+      if (S.sym) for (const q of [p[0], p[p.length - 1]]) if (q.x < 6) q.x = 0;
       pushUndo(); cur().pts = p.map(q => ({ x: Math.round(q.x) || 0, z: Math.round(q.z) }));
       setMode('edit');
     }
@@ -686,7 +691,7 @@ window.addEventListener('keydown', e => {
     pushUndo(); cur().pts.splice(S.sel, 1); S.sel = -1; changed();
   }
 });
-function undo() { if (!S.undo.length) return; Object.assign(S, JSON.parse(S.undo.pop())); S.sel = -1; syncCtl(); changed(); }
+function undo() { if (!S.undo.length) return; Object.assign(S, JSON.parse(S.undo.pop())); S.sel = -1; fitView(); changed(); }
 function changed() { syncCtl(); restart(); }
 
 // ---- LVK (Polardiagramm) ----
@@ -743,7 +748,7 @@ function drawStats() {
     ['Wirkungsgrad η', pct(R.eta), 'Leuchte gibt ' + nf0.format(R.eta * S.phi) + ' lm ab' + pm(st.sEta / Math.max(R.eta, 1e-9))],
     ['Nach unten / oben', nf0.format(100 * st.dn) + ' / ' + nf0.format(100 * st.up) + ' %', 'des austretenden Lichts'],
     [S.sym ? 'Abschirmwinkel' : 'Abschirmwinkel quer', nf1.format(sh) + '°', sh >= 90 ? 'Lampe von unten nicht sichtbar' : sh <= 0 ? 'Lampe seitlich direkt sichtbar' : 'Lampe direkt sichtbar ab ' + nf1.format(sh) + '° unter der Horizontalen' + (hidden ? '; Durchsicht/Spiegelbild nicht erfasst' : '')],
-    st.Li >= 0 ? ['Max. Leuchtdichte', (st.Lm >= LIM ? '⚠ ' : '') + nf0.format(st.Lm) + ' cd/m²', where + (st.Li % 2 ? 'außen' : 'innen') + pm(st.sL) + (st.Lm >= LIM ? ' · blendet ohne Abschirmung' : ''), st.Lm >= LIM] : ['Max. Leuchtdichte', '–', 'noch zu wenig Treffer'],
+    st.Li >= 0 ? ['Max. Leuchtdichte', (st.Lm >= LIM ? '⚠ ' : '') + nf0.format(st.Lm) + ' cd/m²', where + (st.Li % 2 ? 'außen' : 'innen') + pm(st.sL) + (st.Lm >= LIM ? ' · blendet ohne Abschirmung' : ''), st.Lm >= LIM] : ['Max. Leuchtdichte', '–', G.diff ? 'noch zu wenig Treffer' : 'keine streuende Fläche'],
     ['E unter der Leuchte', nf0.format(R.E[G.e0]) + ' lx', 'Tisch ' + nf0.format(S.dist) + ' mm tiefer' + (S.sym ? '' : ', unter der Mittelachse') + pm(st.sE)]
   ];
   if (R.lost > 1e-3 * R.N) items.push(['Nicht gerechnet', '⚠ ' + pct(R.lost / R.N), 'Licht nach 1000 Reflexionen abgebrochen', true]);
