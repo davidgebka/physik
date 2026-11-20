@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Designphysik · Gefäß & Kippen</title>
 <link rel="stylesheet" href="../shared/style.css">
-<style>:root{--water:#3d86de;--waterA:rgba(61,134,222,.28)}
+<style>
 #ed{aspect-ratio:1/1.05;cursor:crosshair}#tv{aspect-ratio:1/1}[hidden]{display:none!important}</style>
 </head>
 <body>
@@ -623,19 +623,13 @@ let stroke = null, drag = -1, lastTap = { t: 0, i: -1 };
 function drawEditor() {
   if (!V) fitView();
   const { ctx, w, h } = prep(ed);
-  // grid
-  const x0 = s2w(0, 0), x1 = s2w(w, h);
-  for (let g = Math.floor(x0.x / 10) * 10; g <= x1.x; g += 10) {
-    ctx.strokeStyle = g % 50 ? css('--grid') : css('--grid2'); ctx.lineWidth = 1;
-    const [sx] = w2s({ x: g, z: 0 }); ctx.beginPath(); ctx.moveTo(sx + .5, 0); ctx.lineTo(sx + .5, h); ctx.stroke();
-  }
-  for (let g = Math.floor(x1.z / 10) * 10; g <= x0.z; g += 10) {
-    ctx.strokeStyle = g % 50 ? css('--grid') : css('--grid2');
-    const [, sy] = w2s({ x: 0, z: g }); ctx.beginPath(); ctx.moveTo(0, sy + .5); ctx.lineTo(w, sy + .5); ctx.stroke();
-  }
+  // Punktraster (Styleguide § 7)
+  const fDot = dpDots(ctx, w, h, V.s, V.ox, V.oy);
+  ctx.font = '11px Arial, sans-serif'; ctx.fillStyle = css('--ink2'); ctx.textAlign = 'right';
+  ctx.fillText('1 Punkt = ' + nf0.format(fDot) + ' mm', w - 6, h - 6); ctx.textAlign = 'left';
   if (isPlan()) drawPlan(ctx, w, h); else drawProfile(ctx, w, h);
   if (stroke) {
-    ctx.strokeStyle = css('--acc'); ctx.lineWidth = 2.5; ctx.lineCap = 'round';
+    ctx.strokeStyle = css('--ctl'); ctx.lineWidth = 2.5; ctx.lineCap = 'round';
     polyPath(ctx, stroke, w2s); ctx.stroke();
     if (mirror()) { polyPath(ctx, stroke.map(p => ({ x: -p.x, z: p.z })), w2s); ctx.globalAlpha = .4; ctx.stroke(); ctx.globalAlpha = 1; }
   }
@@ -646,25 +640,25 @@ function drawParts(ctx, T, sc) {
   if (S.handle && S.handle.p.length >= 2) { ctx.strokeStyle = css('--ink'); ctx.lineWidth = Math.max(2, S.handle.d * sc); polyPath(ctx, S.handle.p, T); ctx.stroke(); }
   if (S.spout && S.spout.p.length >= 2) {
     ctx.strokeStyle = css('--ink'); ctx.lineWidth = Math.max(3, (S.spout.d + 2 * S.t) * sc); polyPath(ctx, S.spout.p, T); ctx.stroke();
-    ctx.strokeStyle = css('--panel'); ctx.lineWidth = Math.max(1, S.spout.d * sc); ctx.stroke();
+    ctx.strokeStyle = css('--bg'); ctx.lineWidth = Math.max(1, S.spout.d * sc); ctx.stroke();
   }
   if (S.lid && G.samp) { const r = G.samp[G.samp.length - 1].x; ctx.strokeStyle = css('--ink'); ctx.lineWidth = 3; polyPath(ctx, [{ x: -r, z: G.ztop }, { x: r, z: G.ztop }], T); ctx.stroke(); }
 }
 function drawPoints(ctx, closed) {
   if (S.mode !== 'edit') return;
   const pts = P();
-  if (isPlan() ? S.psmooth : mirror() && S.smooth) { ctx.strokeStyle = css('--grid2'); ctx.lineWidth = 1; polyPath(ctx, pts, w2s); if (closed) ctx.closePath(); ctx.stroke(); }
+  if (isPlan() ? S.psmooth : mirror() && S.smooth) { ctx.strokeStyle = css('--mut'); ctx.lineWidth = 1; polyPath(ctx, pts, w2s); if (closed) ctx.closePath(); ctx.stroke(); }
   pts.forEach((p, i) => {
     const [sx, sy] = w2s(p);
-    ctx.beginPath(); ctx.arc(sx, sy, i === S.sel ? 6.5 : 5, 0, 7);
-    ctx.fillStyle = i === S.sel ? css('--acc') : css('--panel'); ctx.fill();
-    ctx.strokeStyle = css('--ink'); ctx.lineWidth = 1.5; ctx.stroke();
+    const a = i === S.sel ? 5 : 4; ctx.beginPath(); ctx.rect(Math.round(sx) - a, Math.round(sy) - a, 2 * a, 2 * a);
+    ctx.fillStyle = i === S.sel ? css('--ctl') : css('--bg'); ctx.fill();
+    if (i !== S.sel) { ctx.strokeStyle = css('--ink'); ctx.lineWidth = 1.5; ctx.stroke(); }
   });
 }
 function drawPlan(ctx, w, h) {
   if (!G.planS || stroke) return;
   ctx.lineJoin = 'round'; ctx.lineCap = 'round';
-  polyPath(ctx, G.planS, w2s); ctx.closePath(); ctx.fillStyle = css('--waterA'); ctx.fill();
+  polyPath(ctx, G.planS, w2s); ctx.closePath(); ctx.fillStyle = css('--water-a'); ctx.fill();
   ctx.strokeStyle = css('--ink'); ctx.lineWidth = 2.5; ctx.stroke();
   drawPoints(ctx, true);
   // Kipprichtung: Pfeil von der Mitte zur Seite, die beim Kippen absinkt
@@ -675,7 +669,7 @@ function drawPlan(ctx, w, h) {
   ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(bx, by); ctx.stroke(); ctx.setLineDash([]);
   const ux = (bx - ax) / Math.hypot(bx - ax, by - ay), uy = (by - ay) / Math.hypot(bx - ax, by - ay);
   ctx.beginPath(); ctx.moveTo(bx, by); ctx.lineTo(bx - 9 * ux - 5 * uy, by - 9 * uy + 5 * ux); ctx.lineTo(bx - 9 * ux + 5 * uy, by - 9 * uy - 5 * ux); ctx.fill();
-  ctx.font = '11px system-ui'; ctx.fillText('kippt', bx + 6, by - 6);
+  ctx.font = '11px Arial, sans-serif'; ctx.fillText('kippt', bx + 6, by - 6);
   ctx.fillText(nf0.format(G.L) + ' × ' + nf0.format(G.B) + ' mm innen · H ' + nf0.format(G.H) + ' mm', 8, h - 8);
 }
 function drawProfile(ctx, w, h) {
@@ -686,11 +680,11 @@ function drawProfile(ctx, w, h) {
   // liquid at fill level
   const hf = fillHeight(S.fill);
   const liq = Core.clip(G.sec, p => p.z - hf);
-  if (liq.length > 2) { polyPath(ctx, liq, w2s); ctx.closePath(); ctx.fillStyle = css('--waterA'); ctx.fill(); }
+  if (liq.length > 2) { polyPath(ctx, liq, w2s); ctx.closePath(); ctx.fillStyle = css('--water-a'); ctx.fill(); }
   // calibration marks
   if (S.marks && G.cap > 0) {
     const step = niceStep(G.cap / 6);
-    ctx.font = '11px system-ui'; ctx.fillStyle = css('--mut'); ctx.strokeStyle = css('--ink'); ctx.lineWidth = 1;
+    ctx.font = '11px Arial, sans-serif'; ctx.fillStyle = css('--mut'); ctx.strokeStyle = css('--ink'); ctx.lineWidth = 1;
     for (let v = step; v <= G.cap + 1e-6; v += step) {
       const z = fillHeight(v), iv = Core.intervalsAt(G.poly, z);
       if (!iv.length) continue;
@@ -713,7 +707,7 @@ function drawProfile(ctx, w, h) {
   polyPath(ctx, [{ x: -G.rf, z: G.zst }, { x: G.rf, z: G.zst }], w2s); ctx.stroke(); ctx.setLineDash([]);
   if (G.stab) cross(ctx, w2s({ x: 0, z: G.stab.zF }), css('--ink'), 'S');
   // dims
-  ctx.fillStyle = css('--mut'); ctx.font = '11px system-ui';
+  ctx.fillStyle = css('--mut'); ctx.font = '11px Arial, sans-serif';
   const top = G.samp[G.samp.length - 1];
   const [, ry] = w2s({ x: top.x, z: top.z });
   ctx.fillText('Ø ' + nf0.format(2 * top.x) + ' mm', V.ox - 26, ry - 8);
@@ -724,7 +718,7 @@ function drawProfile(ctx, w, h) {
 function cross(ctx, [x, y], col, label) {
   ctx.strokeStyle = col; ctx.lineWidth = 1.5; ctx.beginPath();
   ctx.moveTo(x - 6, y); ctx.lineTo(x + 6, y); ctx.moveTo(x, y - 6); ctx.lineTo(x, y + 6); ctx.stroke();
-  ctx.fillStyle = css('--mut'); ctx.font = '11px system-ui'; ctx.fillText(label, x + 6, y - 6);
+  ctx.fillStyle = css('--mut'); ctx.font = '11px Arial, sans-serif'; ctx.fillText(label, x + 6, y - 6);
 }
 function snapP(p) {
   const g = S.snap; let x = mirror() ? Math.max(0, Math.abs(p.x)) : p.x, z = p.z;
@@ -831,7 +825,7 @@ function drawTilt() {
   const T = p => { const X = (p.x - xc) * c + (p.z - zc) * s, Y = -(p.x - xc) * s + (p.z - zc) * c; return [cx + X * sc, cy - Y * sc]; };
 
   // horizon reference
-  ctx.strokeStyle = css('--grid2'); ctx.setLineDash([4, 6]); ctx.beginPath(); ctx.moveTo(0, cy); ctx.lineTo(w, cy); ctx.stroke(); ctx.setLineDash([]);
+  ctx.strokeStyle = css('--mut'); ctx.setLineDash([4, 6]); ctx.beginPath(); ctx.moveTo(0, cy); ctx.lineTo(w, cy); ctx.stroke(); ctx.setLineDash([]);
 
   // liquid
   let L = null;
@@ -840,7 +834,7 @@ function drawTilt() {
     L = Core.solveLG(G.geo, S.cur * 1000, th, lo, hi);
     const liq = Core.clip(G.sec, p => p.z * c - p.x * s - L);
     if (liq.length > 2) {
-      polyPath(ctx, liq, T); ctx.closePath(); ctx.fillStyle = css('--waterA'); ctx.fill();
+      polyPath(ctx, liq, T); ctx.closePath(); ctx.fillStyle = css('--water-a'); ctx.fill();
       // surface line
       const surf = liq.filter(p => Math.abs(p.z * c - p.x * s - L) < 1e-6 * Math.max(1, R));
       if (surf.length >= 2) {
@@ -875,9 +869,9 @@ function drawTilt() {
     cross(ctx, [gx, gy], css('--ink'), 'S');
   }
   // labels
-  ctx.fillStyle = css('--ink'); ctx.font = '600 15px system-ui';
+  ctx.fillStyle = css('--ink'); ctx.font = '600 15px Arial, sans-serif';
   ctx.fillText(nf1.format(S.theta) + '°', 12, 22);
-  ctx.font = '12px system-ui'; ctx.fillStyle = css('--mut');
+  ctx.font = '12px Arial, sans-serif'; ctx.fillStyle = css('--mut');
   ctx.fillText(nf0.format(S.cur) + ' ml im Gefäß', 12, 40);
   ctx.fillText('↓ g', w - 30, 22);
   if (tips) { ctx.fillStyle = css('--warn'); ctx.fillText('⚠ kippt, wenn abgestellt', 12, 58); }
@@ -893,7 +887,7 @@ function drawCharts() {
   const kc = [], pc = [];
   for (let k = 0; k <= STEPS; k++) { kc.push([180 * k / STEPS, G.curve[k]]); pc.push([180 * k / STEPS, S.fill - G.curve[k]]); }
   chart($('c2'), { x0: 0, x1: 180, xs: 30, y0: 0, y1: Math.max(1, S.fill), xl: 'Neigung [°]', yl: 'Volumen [ml]',
-    series: [{ pts: kc, color: css('--water'), fill: css('--waterA') }, { pts: pc, color: css('--mut'), width: 1.5, dash: [5, 4] }],
+    series: [{ pts: kc, color: css('--water'), fill: css('--water-a') }, { pts: pc, color: css('--mut'), width: 1.5, dash: [5, 4] }],
     vlines: [{ x: S.theta, color: css('--ink') }], points: [[S.theta, S.cur, css('--ink')]] });
 }
 

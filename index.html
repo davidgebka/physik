@@ -9,13 +9,13 @@
 <body>
 <header><h1>Designphysik <small>· Physik für Produktdesign</small></h1></header>
 <div class="cards" id="cards"></div>
-<p class="note" style="text-align:center;padding:0 16px 24px">Werkzeuge für schnelle physikalische Abschätzungen im Entwurf. Jedes Modul nennt sein Modell und seine Gültigkeit.</p>
+<p class="note" style="max-width:1440px;margin:0 auto;padding:0 24px 24px">Werkzeuge für schnelle physikalische Abschätzungen im Entwurf. Jedes Modul nennt sein Modell und seine Gültigkeit.</p>
 <script src="shared/util.js"></script>
 <script>
 $('cards').innerHTML = DP_MODULES.map(m => `
   <a class="card ${m.ready ? '' : 'off'}" href="${m.key}/index.html">
     <span class="badge">${m.ready ? 'verfügbar' : 'in Arbeit'}</span>
-    <h3>${m.title}</h3><p>${m.desc}</p>
+    <h3>${dpMq(m, !m.ready)}${m.title}</h3><p>${m.desc}</p>
   </a>`).join('');
 </script>
 </body>
