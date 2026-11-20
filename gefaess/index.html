@@ -96,7 +96,7 @@
 
   <section class="panel wide">
     <h2>Modell &amp; Gültigkeit</h2>
-    <p class="note">Rotationskörper aus der gezeichneten Innenkontur. Volumen und Kippzustand sind geometrisch exakt (numerisch, Abweichung &lt; 0,5&nbsp;%). Kippen wird quasistatisch gerechnet: Die Flüssigkeit läuft über den tiefsten Punkt, der zwischen dem Becken und dem Rand liegt. Engstellen wie eine Flaschenschulter halten Flüssigkeit also korrekt zurück. Die Kontur muss eine einfache Linie vom Boden zum Rand sein: Kreuzt sie sich, wird sie nicht übernommen bzw. als ungültig markiert. Läuft die Wand zwischendurch wieder abwärts, entstehen getrennte Taschen; gerechnet wird trotzdem mit einem gemeinsamen Wasserspiegel (⚠ unter Kennwerte). Nicht modelliert: Oberflächenspannung, Tropfnase, Glucksen und Luftschleusen, Ausflussgeschwindigkeit. Gerechnet wird mit Wasser (1&nbsp;g/ml).</p>
+    <p class="note">Rotationskörper aus der gezeichneten Innenkontur. Volumen und Kippzustand sind geometrisch exakt (numerisch, Abweichung &lt; 0,5&nbsp;%). Kippen wird quasistatisch in Schritten von 0,5° gerechnet, mit <b>getrennten Wasserkörpern</b>: Jede Tasche (Ringrinne, Kammer, Schulter einer Flasche, die nach unten zeigt) hat ihren eigenen Spiegel. Bei jedem Schritt läuft das Wasser bergab in sein Becken; ist eine Tasche bis zu ihrer Engstelle voll, läuft der Rest hinüber in die nächste oder über Rand bzw. Tülle hinaus, Wasser auf gleicher Höhe vereinigt sich. Der Zustand hängt deshalb vom Verlauf ab – auch Zurückkippen verteilt das Wasser neu, es kommt aber nichts zurück ins Gefäß. Befüllt wird aufrecht durch die Öffnung entlang der Achse; die Füllkurve zeigt dann den Spiegel des Beckens, in das der Strahl fällt. Luft kann immer entweichen. Die Kontur muss eine einfache Linie vom Boden zum Rand sein: Kreuzt sie sich, wird sie nicht übernommen bzw. als ungültig markiert. Nicht modelliert: Oberflächenspannung, Tropfnase, Glucksen und Luftschleusen, Ausflussgeschwindigkeit. Gerechnet wird mit Wasser (1&nbsp;g/ml).</p>
     <p class="note"><b>Tülle, Henkel, Deckel</b> (Drehkörper): Tülle und Henkel liegen in der Seitenansicht, also in der Spiegelebene der Kanne; gekippt wird zur Tülle hin (+x). Die Tülle ist ein kommunizierendes Gefäß: Es läuft aus, sobald der Spiegel die höchste Stelle des Weges vom Becken über Wand und Ansatz bis zur Spitze übersteigt – das begrenzt auch das Fassungsvermögen, wenn die Spitze tiefer liegt als der Rand. Mit Deckel zählt der Rand nicht als Überlauf. Wasser in der Tülle selbst wird vernachlässigt, ebenso Luftzufuhr (Deckelloch angenommen), Strahl, Nachtropfen. Masse: Tülle als Rohr mit der Wandstärke, Henkel als Vollstab, beide aus dem Gefäßmaterial; Deckel ohne Masse. Kippwinkel zur Tülle hin und zur Gegenseite (Henkel), angezeigt wird der kleinere; zur Gegenseite läuft nur über den Rand aus. Kippansicht und Kippkurve zeigen das Kippen zur Tülle.</p>
     <p class="note"><b>Grundriss-Modus</b> (nicht rotationssymmetrisch): beliebiger geschlossener Grundriss, senkrechte Wand der Innenhöhe, flacher Boden – ein Prisma, z.&nbsp;B. Vase mit Wellenkontur oder rechteckige Dose. Gekippt wird um eine waagrechte Achse quer zur eingestellten Kipprichtung; Volumen, Überlauf am tiefsten Randpunkt, Schwerpunkt und Kippwinkel sind exakt für diese Geometrie (Streifenzerlegung, geprüft gegen Quader und Zylinder). Wand als Band der Wandstärke außen um die Kontur mit gerundeten Ecken (exakt für konvexe Grundrisse, bei Einbuchtungen genähert), Standkante = äußerster Punkt in Kipprichtung plus Wandstärke. Nicht erfasst: Gefäße, die sich nach oben verjüngen oder weiten, Seitwärtsdrehen beim Kippen über eine Ecke.</p>
     <p class="note"><b>Designklassiker</b> unter „Vorlage“: Außenmaße nach Hersteller- und Händlerangaben, Innenkontur und Wandstärken daraus nachempfunden – Annäherung, keine Werkszeichnung. Tüllen, Henkel und Deckel fehlen.</p>
@@ -470,12 +470,220 @@ const Core = (() => {
     }
     return false;
   }
-  // Größter Abstieg der Wand unter ihr bisheriges Maximum [mm] (Boden → Rand): > 0 = Wand läuft wieder abwärts,
-  // es entstehen getrennte Taschen, das Modell mit einem Wasserspiegel gilt dann nur genähert
-  function maxDescent(s) {
-    let top = -Infinity, d = 0;
-    for (const p of s) { top = Math.max(top, p.z); d = Math.max(d, top - p.z); }
-    return d;
+  // ---- Taschenmodell (Drehkörper): getrennte Wasserkörper, jeder mit eigenem Spiegel ----
+  // Knoten = Ringintervall [r0, r1] einer Schicht z (aus buildSlices). Der tiefste Punkt jedes Rings liegt bei φ = 0
+  // (abgesenkte Seite, x = r): Jeder Punkt des 3D-Wasserkörpers hat dort einen tieferen Partner auf demselben Ring.
+  // Zusammenhang in 3D = Zusammenhang in der Halbebene x ≥ 0. Höhe y = z·c − x·s; nasser Teil r ∈ [max(r0, d), r1]
+  // mit d = (z·c − L)/s. Wandradius an Unter-/Oberkante jeder Schicht (rb, rt) aus dem Polygon: Knoten nass ab seinem
+  // tiefsten Eckpunkt h; Nachbarschichten verbunden ab dem tiefsten gemeinsamen Punkt der Schichtgrenze
+  // (durchgehende Wand: Ecke = h, keine Treppenstufen; Absatz: Kante der engeren Schicht).
+  // Auslässe: Öffnung (Schicht unter dem Rand, tiefster Punkt = Randpunkt) und Tülle (höchster Punkt der Mittellinie).
+  function pocketGraph(S, s, opt = {}) {
+    const z = [], r0 = [], r1 = [], j0 = [], N = S.slices.length;
+    S.slices.forEach(sl => { j0.push(z.length); for (const [a, b] of sl.iv) if (b > a) { z.push(sl.z); r0.push(a); r1.push(b); } });
+    j0.push(z.length);
+    const n = z.length, nb = Array.from({ length: n }, () => []), rb = [], rt = [];
+    // äußerer Wandradius des Intervalls an der Schichtkante (bzw. r1, falls dort keine Überlappung)
+    const edge = (iv, a, b) => { let r = b, ov = 0; for (const [p, q] of iv) { const o = Math.min(q, b) - Math.max(p, a); if (o > ov) { ov = o; r = q; } } return r; };
+    for (let j = 0; j < N; j++) {
+      const lo = intervalsAt(S.poly, S.zmin + j * S.dz + 1e-9), hi = intervalsAt(S.poly, S.zmin + (j + 1) * S.dz - 1e-9);
+      for (let i = j0[j]; i < j0[j + 1]; i++) { rb.push(edge(lo, r0[i], r1[i])); rt.push(edge(hi, r0[i], r1[i])); }
+    }
+    for (let j = 0; j + 1 < N; j++)
+      for (let a = j0[j]; a < j0[j + 1]; a++) for (let b = j0[j + 1]; b < j0[j + 2]; b++)
+        if (r0[a] < r1[b] && r0[b] < r1[a]) { nb[a].push(b); nb[b].push(a); }
+    const rim = s[s.length - 1], jr = Math.max(0, Math.min(N - 1, Math.floor((rim.z - S.zmin) / S.dz - 1e-9))), out = [];
+    if (!opt.lid) for (let i = j0[jr]; i < j0[jr + 1]; i++) if (r0[i] < rim.x) out.push({ i, rr: Math.min(r1[i], rim.x) });
+    const sp = opt.spout && opt.spout.length >= 2 ? opt.spout : null;
+    if (sp) { let bi = 0, bd = Infinity; for (let i = 0; i < n; i++) { const d = Math.hypot(r1[i] - sp[0].x, z[i] - sp[0].z); if (d < bd) { bd = d; bi = i; } } out.push({ i: bi, sp }); }
+    // Befüllen: Strahl fällt von der Öffnung entlang der Achse bis zum ersten Hindernis
+    let land = 0;
+    for (let j = jr; j >= 0; j--) { let f = -1; for (let i = j0[j]; i < j0[j + 1]; i++) if (r0[i] < 1e-9) f = i; if (f < 0) break; land = f; }
+    return { n, z, r0, r1, rb, rt, nb, out, land, dz: S.dz, rim };
+  }
+  const EPS = 1e-6;
+  function pState(g, th) {
+    const c = Math.cos(th), s = Math.sin(th), h = new Float64Array(g.n), outs = new Map();
+    for (let i = 0; i < g.n; i++) h[i] = Math.min((g.z[i] - g.dz / 2) * c - g.rb[i] * s, (g.z[i] + g.dz / 2) * c - g.rt[i] * s);
+    for (const o of g.out) {
+      const lv = Math.max(h[o.i], o.sp ? Math.max(...o.sp.map(p => p.z * c - p.x * s)) : g.rim.z * c - o.rr * s);
+      if (!outs.has(o.i)) outs.set(o.i, []); outs.get(o.i).push({ lv, sp: !!o.sp });
+    }
+    return { g, c, s, h, outs, lakeOf: new Int32Array(g.n).fill(-1), lakes: [], seen: new Int32Array(g.n), stamp: 0 };
+  }
+  const pAct = (st, a, b) => { // Pegel, ab dem a und b verbunden sind
+    const g = st.g, e = g.z[a] < g.z[b] ? Math.min(g.rt[a], g.rb[b]) : Math.min(g.rt[b], g.rb[a]);
+    return Math.max(st.h[a], st.h[b], (g.z[a] + g.z[b]) / 2 * st.c - e * st.s);
+  };
+  function nodeVol(g, i, L, c, s) {
+    if (Math.abs(s) < 1e-9) return Math.PI * (g.r1[i] * g.r1[i] - g.r0[i] * g.r0[i]) * g.dz * Math.min(1, Math.max(0, (L - g.z[i] * c) / g.dz + 0.5)); // aufrecht/kopfüber: Schicht anteilig
+    const d = (g.z[i] * c - L) / s; return (segArea(g.r1[i], d) - segArea(g.r0[i], d)) * g.dz;
+  }
+  const regVol = (st, R, L) => { let V = 0; for (const i of R) V += nodeVol(st.g, i, L, st.c, st.s); return V; };
+  // Spiegel ≤ hi, an dem die Knoten R das Volumen W fassen: Newton mit Klammer, dV/dL = Spiegelfläche
+  // fits: bekannt, dass V(hi) ≥ W; guess: Startwert (z. B. alter Spiegel)
+  function regLevel(st, R, W, hi, fits, guess) {
+    const { g, c, s, h } = st, Q = R.filter(i => h[i] < hi), flat = Math.abs(s) < 1e-9;
+    const f = L => { // [V(L) − W, dV/dL]
+      let V = 0, A = 0;
+      for (const i of Q) {
+        if (flat) { const t = (L - g.z[i] * c) / g.dz + 0.5, a = Math.PI * (g.r1[i] * g.r1[i] - g.r0[i] * g.r0[i]); if (t >= 1) V += a * g.dz; else if (t > 0) { V += a * g.dz * t; A += a; } continue; }
+        const d = (g.z[i] * c - L) / s, r1 = g.r1[i], r0 = g.r0[i];
+        V += (segArea(r1, d) - segArea(r0, d)) * g.dz;
+        if (d < r1 && d > -r1) A += 2 * Math.sqrt(r1 * r1 - d * d) * g.dz / s;
+        if (d < r0 && d > -r0) A -= 2 * Math.sqrt(r0 * r0 - d * d) * g.dz / s;
+      }
+      return [V - W, A];
+    };
+    let a = Infinity; for (const i of Q) a = Math.min(a, h[i]);
+    let b = hi;
+    if (!fits && f(hi)[0] <= 0) return hi;
+    let L = guess > a && guess < b ? guess : b, [fL, dL] = f(L);
+    for (let k = 0; k < 60; k++) {
+      let m = dL > 0 ? L - fL / dL : NaN;
+      if (!(m > a && m < b)) m = (a + b) / 2;
+      const [fm, dm] = f(m);
+      if (Math.abs(fm) <= 1e-9 * W || b - a < 1e-9) return m;
+      if (fm < 0) a = m; else b = m;
+      L = m; fL = fm; dL = dm;
+    }
+    return L;
+  }
+  // ein Schritt bergab zu einem tieferen, verbundenen Nachbarn (feste Reihenfolge bei Gleichstand), sonst i selbst
+  function pStep(st, i) {
+    const { g, h } = st; let b = i;
+    for (const j of g.nb[i]) if ((h[j] < h[b] || h[j] === h[b] && j < b) && pAct(st, i, j) <= h[i] + EPS) b = j;
+    return b;
+  }
+  function descend(st, i) { for (;;) { if (st.lakeOf[i] >= 0) return i; const j = pStep(st, i); if (j === i) return i; i = j; } }
+  // Wasser W [mm³] bei Knoten start einfüllen: Fluten nach Pegel (Priority-Flood); Engstelle zu tieferem Becken → voll bis dort,
+  // Rest läuft hinüber; Auslass → Rest geht verloren; anderer See auf gleicher Höhe → vereinigen. → { lost, sp }
+  function pour(st, start, W, guess) {
+    if (W <= 1e-9) return { lost: 0, sp: false };
+    const { g, h, lakeOf, lakes, seen } = st, stamp = ++st.stamp, R = [], hk = [], hn = [], hb = [];
+    const push = (k, m, b) => {
+      let i = hk.length; hk.push(k); hn.push(m); hb.push(b);
+      while (i > 0) { const p = (i - 1) >> 1; if (hk[p] <= hk[i]) break; [hk[p], hk[i]] = [hk[i], hk[p]]; [hn[p], hn[i]] = [hn[i], hn[p]]; [hb[p], hb[i]] = [hb[i], hb[p]]; i = p; }
+    };
+    const pop = () => {
+      const r = [hk[0], hn[0], hb[0]], k = hk.pop(), m = hn.pop(), b = hb.pop();
+      if (hk.length) {
+        hk[0] = k; hn[0] = m; hb[0] = b; let i = 0;
+        for (;;) { const l = 2 * i + 1, q = l + 1; let t = i; if (l < hk.length && hk[l] < hk[t]) t = l; if (q < hk.length && hk[q] < hk[t]) t = q; if (t === i) break;
+          [hk[t], hk[i]] = [hk[i], hk[t]]; [hn[t], hn[i]] = [hn[i], hn[t]]; [hb[t], hb[i]] = [hb[i], hb[t]]; i = t; }
+      }
+      return r;
+    };
+    const lv = i => lakeOf[i] >= 0 ? lakes[lakeOf[i]].L : h[i];
+    let total = W;
+    const add = (i, F) => {
+      let ids = [i];
+      if (lakeOf[i] >= 0) { const id = lakeOf[i], lk = lakes[id]; lakes[id] = null; total += lk.W; ids = lk.nodes; }
+      for (const k of ids) { lakeOf[k] = -1; seen[k] = stamp; R.push(k); }
+      for (const k of ids) {
+        for (const m of g.nb[k]) if (seen[m] !== stamp) { const b = Math.max(F, pAct(st, k, m)); push(Math.max(b, lv(m)), m, b); }
+        const os = st.outs.get(k); if (os) for (const o of os) { const b = Math.max(F, o.lv); push(b, o.sp ? -2 : -1, b); }
+      }
+    };
+    const finish = (L, V) => {
+      if (V <= 1e-9) return;
+      const nodes = R.filter(i => h[i] <= L + EPS || nodeVol(g, i, L, st.c, st.s) > 0), id = lakes.length;
+      lakes.push({ L, W: V, nodes }); for (const i of nodes) lakeOf[i] = id;
+    };
+    add(start, lv(start));
+    for (;;) {
+      if (!hk.length) { // geschlossen (Deckel ohne Tülle): alles Erreichbare voll
+        let hi = -Infinity; for (const i of R) hi = Math.max(hi, g.z[i] * st.c + g.r1[i] * Math.abs(st.s) + g.dz);
+        const L = regLevel(st, R, total, hi, false, guess), V = Math.min(total, regVol(st, R, L));
+        finish(L, V); return { lost: total - V, sp: false };
+      }
+      const [key, m, base] = pop();
+      if (m >= 0 && seen[m] === stamp) continue;
+      const out = m < 0, spill = out || lv(m) < base - EPS, merge = !out && lakeOf[m] >= 0;
+      if (spill || merge) {
+        const Vr = regVol(st, R.filter(i => h[i] < key), key);
+        if (Vr >= total) { finish(regLevel(st, R, total, key, true, guess), total); return { lost: 0, sp: false }; }
+        if (spill) {
+          finish(key, Vr);
+          if (out) return { lost: total - Vr, sp: m === -2 };
+          return pour(st, descend(st, m), total - Vr);
+        }
+      }
+      add(m, key);
+    }
+  }
+  const lakeSum = lakes => lakes.reduce((a, l) => a + l.W, 0);
+  // Gefäß um kleinen Schritt thPrev → th weiterdrehen: Wasser jedes Knotens läuft bergab in sein neues Becken, dort neu einfüllen
+  function settle(g, th, lakes, thPrev) {
+    const st = pState(g, th), cp = Math.cos(thPrev), sp = Math.sin(thPrev), drops = new Map(), memo = new Int32Array(g.n).fill(-1);
+    const root = i => { const path = []; let r;
+      for (;;) { if (memo[i] >= 0) { r = memo[i]; break; } path.push(i); const j = pStep(st, i); if (j === i) { r = i; break; } i = j; }
+      for (const p of path) memo[p] = r; return r; };
+    const guess = new Map();
+    for (const lk of lakes) {
+      const t0 = root(lk.nodes[0]);
+      if (lk.nodes.every(i => root(i) === t0)) { drops.set(t0, (drops.get(t0) || 0) + lk.W); guess.set(t0, lk.L); continue; } // ganz in einem Becken
+      const part = []; let sum = 0;
+      for (const i of lk.nodes) { const v = nodeVol(g, i, lk.L, cp, sp); if (v > 0) { part.push([root(i), v]); sum += v; } }
+      if (!sum) part.push([t0, sum = 1]);
+      for (const [t, v] of part) drops.set(t, (drops.get(t) || 0) + v * lk.W / sum);
+    }
+    let lost = 0, spo = false;
+    for (const [t, v] of [...drops].sort((a, b) => st.h[a[0]] - st.h[b[0]])) { const r = pour(st, t, v, guess.get(t)); lost += r.lost; if (r.lost > 1e-6 && r.sp) spo = true; }
+    // Kleinstseen (< 0,5 mm³, Tropfen in Rillen) zählen als abgetropft
+    const out = st.lakes.filter(Boolean), keep = out.filter(l => l.W >= 0.5);
+    for (const l of out) if (l.W < 0.5) lost += l.W;
+    return { lakes: keep, lost, sp: spo };
+  }
+  // Anzahl getrennter Becken (lokaler Tiefpunkte) bei Neigung th
+  function basins(g, th) { const st = pState(g, th); let n = 0; for (let i = 0; i < g.n; i++) if (pStep(st, i) === i) n++; return n; }
+  // aufrecht von oben befüllen
+  function fillLakes(g, V) { const st = pState(g, 0), r = pour(st, descend(st, g.land), V); return { lakes: st.lakes.filter(Boolean), lost: r.lost }; }
+  // Füllkurve: Spiegel des Sees, in den der Strahl fällt, nach n gleichen Portionen bis Vmax; multi = zeitweise mehrere Seen
+  function fillCurve(g, Vmax, n = 120) {
+    const st = pState(g, 0), L = new Float64Array(n + 1); let multi = false;
+    L[0] = st.h[descend(st, g.land)];
+    for (let k = 1; k <= n; k++) {
+      pour(st, descend(st, g.land), Vmax / n);
+      const t = descend(st, g.land); L[k] = st.lakeOf[t] >= 0 ? st.lakes[st.lakeOf[t]].L : st.h[t];
+      if (st.lakes.filter(Boolean).length > 1) multi = true;
+    }
+    return { L, multi };
+  }
+  // Kippkurve mit Verlauf: Inhalt [mm³] und Seen je Schritt (0…180°)
+  function tiltRun(g, V0, steps = 360) {
+    let lakes = fillLakes(g, V0).lakes; const ret = new Float64Array(steps + 1), all = [lakes];
+    ret[0] = lakeSum(lakes);
+    for (let k = 1; k <= steps; k++) { lakes = settle(g, Math.PI * k / steps, lakes, Math.PI * (k - 1) / steps).lakes; ret[k] = lakeSum(lakes); all.push(lakes); }
+    return { ret, lakes: all };
+  }
+  // Volumen und erste Momente aller Seen (Gefäßkoordinaten)
+  function lakeMoments(g, lakes, th) {
+    const c = Math.cos(th), s = Math.sin(th); let V = 0, Mx = 0, Mz = 0;
+    for (const lk of lakes) for (const i of lk.nodes) {
+      let a, m = 0;
+      if (Math.abs(s) < 1e-9) a = nodeVol(g, i, lk.L, c, s);
+      else { const d = (g.z[i] * c - lk.L) / s; a = (segArea(g.r1[i], d) - segArea(g.r0[i], d)) * g.dz; m = (segMx(g.r1[i], d) - segMx(g.r0[i], d)) * g.dz; }
+      V += a; Mx += m; Mz += a * g.z[i];
+    }
+    return { V, Mx, Mz };
+  }
+  function cogLakes(g, lakes, th, mv, xv, zv) {
+    const M = lakeMoments(g, lakes, th), mL = M.V / 1000, m = mv + mL;
+    return { m, x: m ? (mv * xv + (M.V ? mL * M.Mx / M.V : 0)) / m : xv, z: m ? (mv * zv + (M.V ? mL * M.Mz / M.V : 0)) / m : zv };
+  }
+  // Kippwinkel mit Taschenmodell: Wasser läuft mit, verteilt sich auf Taschen, läuft ggf. aus. Grad oder null.
+  function tipAngleP(g, V0, mv, xv, zv, rf, zst, step = 1) {
+    let lakes = V0 > 0 ? fillLakes(g, V0).lakes : [], prev = 0, thp = 0;
+    for (let deg = 0; deg <= 90; deg += step) {
+      const th = deg * Math.PI / 180;
+      if (deg && lakes.length) lakes = settle(g, th, lakes, thp).lakes;
+      thp = th;
+      const m = tipMargin(cogLakes(g, lakes, th, mv, xv, zv), th, rf, zst);
+      if (m >= 0) return deg ? deg - step * m / (m - prev) : 0;
+      prev = m;
+    }
+    return null;
   }
   // Horizontal force at height h above the stand plane that starts tipping (upright): F·h = m·g·a,
   // a = horizontal distance centre of gravity → stand edge. m in g → N
@@ -483,7 +691,8 @@ const Core = (() => {
 
   return { sampled, trimLip, interiorPolygon, sectionPolygon, intervalsAt, buildSlices, segArea, volBelow, barrier, yRange, solveL, tiltCurve, cumTable, heightForVolume, clip, distSeg, rdp,
     momentsBelow, shell, cog, tipMargin, tipAngle, pushForce,
-    geoRot, spoutLevel, tube, solveLG, tiltCurveG, cogG, tipAngleG, prism, prismShell, closedSmooth, selfCross, maxDescent };
+    geoRot, spoutLevel, tube, solveLG, tiltCurveG, cogG, tipAngleG, prism, prismShell, closedSmooth, selfCross,
+    pocketGraph, settle, fillLakes, basins, fillCurve, tiltRun, lakeMoments, lakeSum, cogLakes, tipAngleP };
 })();
 if (typeof module !== 'undefined') module.exports = Core;
 // === CORE END
@@ -541,11 +750,12 @@ const num = (v, def, lo, hi) => Number.isFinite(+v) && v !== null && v !== '' ? 
 // ---------- derived geometry ----------
 function recompute() {
   if (P().length < minPts()) return;
+  const old = G;
   if (isPlan()) recomputePlan(); else recomputeRot();
+  G.curve = old.curve; // bis zum neuen Kipplauf die alte Kurve zeigen
   if (S.fill == null) S.fill = Math.round(G.cap * 0.8);
   S.fill = Math.min(S.fill, Math.floor(G.cap));
   updateCurve();
-  S.cur = curveMinUpTo(S.theta);
   const f = $('fill'); f.max = Math.max(1, Math.floor(G.cap)); f.value = S.fill;
   $('foot').max = Math.ceil(Math.max(G.maxR + S.t, G.rf) + 20);
 }
@@ -559,13 +769,19 @@ function recomputeRot() {
   const geo = Core.geoRot(sl, samp, sec, { spout: sp, lid: S.lid });
   const cum = Core.cumTable(sl);
   let maxR = 0; samp.forEach(p => maxR = Math.max(maxR, p.x));
-  const bad = Core.selfCross(samp, false) ? 'Kontur kreuzt sich selbst: Innenraum nicht eindeutig, Werte ungültig'
-    : Core.maxDescent(samp) > Math.max(2, 0.02 * (sl.zmax - sl.zmin)) ? 'Wand läuft abwärts: getrennte Taschen, gerechnet mit einem Wasserspiegel – Kippwerte nur genähert' : '';
-  G = { bad, wall, samp, poly, sl, cum, sec, geo, cap: geo.vol(geo.spill(0), 0) / 1000, capRim: Core.volBelow(sl, Core.barrier(samp, 0).L, 0) / 1000, maxR,
+  // Taschenmodell auf 250 Schichten: mit Tülle/Deckel (Rechnung), nur Rand (Fassungsvermögen offen), Gegenseite (ohne Tülle)
+  const slP = Core.buildSlices(poly, 250), pg = Core.pocketGraph(slP, samp, { spout: sp, lid: S.lid });
+  const capOf = g => Core.lakeSum(Core.fillLakes(g, 1e15).lakes) / 1000, cap = capOf(pg);
+  const multi0 = Core.basins(pg, 0) > 1, fc = multi0 ? Core.fillCurve(pg, cap * 1000, 120).L : null;
+  G = { bad: Core.selfCross(samp, false) ? 'Kontur kreuzt sich selbst: Innenraum nicht eindeutig, Werte ungültig' : '',
+        wall, samp, poly, sl, cum, sec, geo, pg, pgBack: Core.pocketGraph(slP, samp, { lid: S.lid }), multi0,
+        cap, capRim: sp || S.lid ? capOf(Core.pocketGraph(slP, samp, {})) : cap, maxR,
         rimR: samp[samp.length - 1].x, H: sl.zmax - sl.zmin, z0: sl.zmin, xc: 0,
         walls: [wall, wall.map(p => ({ x: -p.x, z: p.z }))],
-        lipAt: th => sp && (S.lid || Core.spoutLevel(samp, sp, th) <= Core.barrier(samp, th).L) ? sp[sp.length - 1] : samp[Core.barrier(samp, th).idx],
-        fillH: ml => Core.heightForVolume(sl, cum, ml * 1000) };
+        lipAt: () => sp && G.lastSp ? sp[sp.length - 1] : samp[samp.length - 1],
+        // Füllkurve: mehrere Becken → Spiegel des Sees, in den der Strahl fällt (Portionen), sonst exakt aus den Schichten
+        fillH: ml => { if (!fc) return Core.heightForVolume(sl, cum, ml * 1000);
+          const u = Math.max(0, Math.min(1, ml / Math.max(cap, 1e-9))) * 120, i = Math.min(119, Math.floor(u)); return fc[i] + (fc[i + 1] - fc[i]) * (u - i); } };
   const sh = Core.shell(wall, S.t, S.tb);
   let ztop = -Infinity; wall.forEach(p => ztop = Math.max(ztop, p.z));
   // Anbauteile aus demselben Material: Tülle als Rohr (Wandstärke t), Henkel als Vollstab
@@ -589,31 +805,50 @@ function recomputePlan() {
   const sh = Core.prismShell(rp, H, S.t, S.tb);
   Object.assign(G, { mv: MATS[S.mat][1] * sh.vol / 1000, xv: sh.x, zv: sh.z, zst: sh.zst, rf: sh.rf, flat: true, hRim: H + S.tb });
 }
+const sumMl = l => Core.lakeSum(l) / 1000;
 function updateCurve() {
-  G.curve = Core.tiltCurveG(G.geo, S.fill * 1000, STEPS);
-  for (let i = 0; i < G.curve.length; i++) G.curve[i] /= 1000;
-  G.stab = null; stabLater();
+  G.stab = null;
+  if (isPlan()) {
+    G.curve = Core.tiltCurveG(G.geo, S.fill * 1000, STEPS);
+    for (let i = 0; i < G.curve.length; i++) G.curve[i] /= 1000;
+    S.cur = curveMinUpTo(S.theta); stabLater(); return;
+  }
+  // Drehkörper: Füllung sofort, Kipplauf 0…180° (~100 ms) nach kurzer Ruhe; bis dahin ohne Wasser in der Kippansicht
+  G.lakes0 = Core.fillLakes(G.pg, S.fill * 1000).lakes;
+  if (S.theta === 0) { S.lakes = G.lakes0; S.cur = sumMl(S.lakes); } else S.lakes = null;
+  runLater(!G.curve);
+}
+let runT = 0;
+function runLater(now) {
+  clearTimeout(runT);
+  const job = () => {
+    if (isPlan()) return;
+    const r = Core.tiltRun(G.pg, S.fill * 1000, STEPS);
+    G.curve = Array.from(r.ret, v => v / 1000); G.runLakes = r.lakes;
+    if (!S.lakes || S.theta > 0) { S.lakes = r.lakes[Math.round(S.theta / 180 * STEPS)]; S.cur = sumMl(S.lakes); }
+    drawAll(); stabLater();
+  };
+  if (now) job(); else runT = setTimeout(job, 120);
 }
 // Kippwinkel: ~12 ms je Fall in Desktop-Chrome, auf Telefonen ein Mehrfaches → erst nach kurzer Ruhe rechnen
 let stabT = 0;
 function stabLater() {
   clearTimeout(stabT);
   stabT = setTimeout(() => {
-    const g = Core.cogG(G.geo, S.fill * 1000, 0, G.mv, G.xv, G.zv);
-    G.stab = { xF: g.x, zF: g.z, mF: g.m,
-      tipE: Core.tipAngleG(G.geo, 0, G.mv, G.xv, G.zv, G.rf, G.zst),
-      tipF: Core.tipAngleG(G.geo, S.fill * 1000, G.mv, G.xv, G.zv, G.rf, G.zst) };
+    const V = S.fill * 1000, tip = isPlan() ? (v, xv) => Core.tipAngleG(G.geo, v, G.mv, xv, G.zv, G.rf, G.zst)
+      : (v, xv, g = G.pg) => Core.tipAngleP(g, v, G.mv, xv, G.zv, G.rf, G.zst);
+    const g = isPlan() ? Core.cogG(G.geo, V, 0, G.mv, G.xv, G.zv) : Core.cogLakes(G.pg, G.lakes0, 0, G.mv, G.xv, G.zv);
+    G.stab = { xF: g.x, zF: g.z, mF: g.m, tipE: tip(0, G.xv), tipF: tip(V, G.xv) };
     // Drehkörper mit Tülle/Henkel: auch zur Gegenseite (−x) kippen. Körper symmetrisch → gespiegelt rechnen:
     // Schwerpunkt −x, Überlauf nur über den Rand (Tülle zeigt dann nach oben)
     if (!isPlan() && (hasSpout() || Math.abs(G.xv) > 0.05)) {
-      const gb = Core.geoRot(G.sl, G.samp, G.sec, { lid: S.lid });
-      G.stab.backE = Core.tipAngleG(gb, 0, G.mv, -G.xv, G.zv, G.rf, G.zst);
-      G.stab.backF = Core.tipAngleG(gb, S.fill * 1000, G.mv, -G.xv, G.zv, G.rf, G.zst);
+      G.stab.backE = tip(0, -G.xv, G.pgBack);
+      G.stab.backF = tip(V, -G.xv, G.pgBack);
     }
     drawEditor(); drawStats();
   }, 150);
 }
-function retainedAt(deg) { // capacity at angle (ml), exact
+function retainedAt(deg) { // Grundriss: Fassungsvermögen bei Neigung (ml), exakt
   const th = deg * DEG;
   return G.geo.vol(G.geo.spill(th), th) / 1000;
 }
@@ -623,6 +858,29 @@ function curveMinUpTo(deg) {
   return Math.min(m, retainedAt(deg));
 }
 const fillHeight = ml => G.fillH(ml);
+
+// Seen zeichnen: je See Knotenstreifen beider Seiten als Maske, darin die Halbebene y ≤ L und die Spiegellinie.
+// T: Gefäßkoordinaten → Bildschirm, th: Neigung
+function drawLakes(ctx, T, th, lakes) {
+  const g = G.pg, c = Math.cos(th), s = Math.sin(th), B = 1e4;
+  for (const lk of lakes || []) {
+    ctx.save(); ctx.beginPath();
+    for (const i of lk.nodes) {
+      const z0 = g.z[i] - g.dz / 2, z1 = g.z[i] + g.dz / 2;
+      for (const [a, b] of [[g.r0[i], g.r1[i]], [-g.r1[i], -g.r0[i]]]) {
+        const q = [{ x: a, z: z0 }, { x: b, z: z0 }, { x: b, z: z1 }, { x: a, z: z1 }].map(T);
+        ctx.moveTo(q[0][0], q[0][1]); for (let k = 1; k < 4; k++) ctx.lineTo(q[k][0], q[k][1]); ctx.closePath();
+      }
+    }
+    ctx.clip();
+    // Spiegellinie durch p0 in Richtung (c, s); v > 0 = unter dem Spiegel
+    const p0 = { x: -lk.L * s, z: lk.L * c }, at = (u, v) => ({ x: p0.x + u * c + v * s, z: p0.z + u * s - v * c });
+    polyPath(ctx, [at(-B, 0), at(B, 0), at(B, B), at(-B, B)], T); ctx.closePath();
+    ctx.fillStyle = css('--water-a'); ctx.fill();
+    polyPath(ctx, [at(-B, 0), at(B, 0)], T); ctx.strokeStyle = css('--water'); ctx.lineWidth = 2; ctx.stroke();
+    ctx.restore();
+  }
+}
 
 // ---------- editor ----------
 const ed = $('ed');
@@ -705,18 +963,18 @@ function drawProfile(ctx, w, h) {
   ctx.setLineDash([3, 4]); ctx.strokeStyle = css('--mut'); ctx.lineWidth = 1; ctx.beginPath();
   ctx.moveTo(V.ox + .5, 0); ctx.lineTo(V.ox + .5, h); ctx.stroke(); ctx.setLineDash([]);
   if (!G.samp || stroke) return;
-  // liquid at fill level
-  const hf = fillHeight(S.fill);
-  const liq = Core.clip(G.sec, p => p.z - hf);
-  if (liq.length > 2) { polyPath(ctx, liq, w2s); ctx.closePath(); ctx.fillStyle = css('--water-a'); ctx.fill(); }
+  drawLakes(ctx, w2s, 0, G.lakes0); // Füllung aufrecht
   // calibration marks
   if (S.marks && G.cap > 0) {
     const step = niceStep(G.cap / 6);
     ctx.font = '11px Arial, sans-serif'; ctx.fillStyle = css('--mut'); ctx.strokeStyle = css('--ink'); ctx.lineWidth = 1;
+    let yLast = Infinity;
     for (let v = step; v <= G.cap + 1e-6; v += step) {
       const z = fillHeight(v), iv = Core.intervalsAt(G.poly, z);
+      if (Math.abs(w2s({ x: 0, z })[1] - yLast) < 12) continue; // Spiegel steht still, während eine Nachbartasche vollläuft
+      yLast = w2s({ x: 0, z })[1];
       if (!iv.length) continue;
-      const r = iv[iv.length - 1][1];
+      const r = iv[G.multi0 ? 0 : iv.length - 1][1]; // mehrere Becken: Strich am Becken unter der Öffnung
       const [sx, sy] = w2s({ x: r, z });
       ctx.beginPath(); ctx.moveTo(sx - 10, sy + .5); ctx.lineTo(sx, sy + .5); ctx.stroke();
       ctx.fillText(nf0.format(v) + ' ml', sx + 7, sy + 4);
@@ -867,7 +1125,8 @@ function drawTilt() {
 
   // liquid
   let L = null;
-  if (S.cur > 0.05) {
+  if (!isPlan()) drawLakes(ctx, T, th, S.lakes);
+  else if (S.cur > 0.05) {
     const [lo, hi] = G.geo.yr(th);
     L = Core.solveLG(G.geo, S.cur * 1000, th, lo, hi);
     const liq = Core.clip(G.sec, p => p.z * c - p.x * s - L);
@@ -900,8 +1159,8 @@ function drawTilt() {
   if (!isPlan()) drawParts(ctx, T, sc);
   // centre of gravity with plumb line; beyond the stand edge (+x side) the vessel would tip
   let tips = false;
-  if (S.theta <= 90 && (S.foot != null || G.flat)) {
-    const g = Core.cogG(G.geo, S.cur * 1000, th, G.mv, G.xv, G.zv);
+  if (S.theta <= 90 && (S.foot != null || G.flat) && (isPlan() || S.lakes)) {
+    const g = isPlan() ? Core.cogG(G.geo, S.cur * 1000, th, G.mv, G.xv, G.zv) : Core.cogLakes(G.pg, S.lakes, th, G.mv, G.xv, G.zv);
     tips = Core.tipMargin(g, th, G.rf, G.zst) >= 0;
     const [gx, gy] = T(g), [ex, ey] = T({ x: G.rf, z: G.zst });
     ctx.strokeStyle = css(tips ? '--warn' : '--mut'); ctx.lineWidth = 1; ctx.setLineDash([3, 4]);
@@ -913,7 +1172,7 @@ function drawTilt() {
   ctx.fillStyle = css('--ink'); ctx.font = '600 15px Arial, sans-serif';
   ctx.fillText(nf1.format(S.theta) + '°', 12, 22);
   ctx.font = '12px Arial, sans-serif'; ctx.fillStyle = css('--mut');
-  ctx.fillText(nf0.format(S.cur) + ' ml im Gefäß', 12, 40);
+  ctx.fillText(isPlan() || S.lakes ? nf0.format(S.cur) + ' ml im Gefäß' + (S.lakes && S.lakes.length > 1 ? ' · ' + S.lakes.length + ' Wasserkörper' : '') : 'rechnet …', 12, 40);
   ctx.fillText('↓ g', w - 30, 22);
   ctx.fillStyle = css('--warn');
   if (tips) ctx.fillText('⚠ kippt, wenn abgestellt', 12, 58);
@@ -922,7 +1181,7 @@ function drawTilt() {
 
 // ---------- charts ----------
 function drawCharts() {
-  if (!G.geo) return;
+  if (!G.geo || !G.curve) return;
   const N = 120, fc = [];
   for (let i = 0; i <= N; i++) { const v = G.cap * i / N; fc.push([v, fillHeight(v) - G.z0]); }
   chart($('c1'), { x0: 0, x1: Math.max(1, G.cap), y0: 0, y1: Math.max(1, G.H), xl: 'Volumen [ml]', yl: 'Füllhöhe [mm]',
@@ -960,7 +1219,7 @@ function pushItem() {
   return ['Umstoßkraft', nf1.format(Core.pushForce(st.mF, a, G.hRim)) + ' N', 'waagrecht am Rand, gefüllt' + (isPlan() ? ', in Kipprichtung' : Math.abs(st.xF) > 0.5 ? ', ungünstigste Richtung' : '')];
 }
 function drawStats() {
-  if (!G.geo) return;
+  if (!G.geo || !G.curve) return;
   const V0 = S.fill, c = G.curve, d = 180 / STEPS;
   const first = pred => { for (let k = 0; k <= STEPS; k++) if (pred(c[k])) return k * d; return null; };
   const start = V0 > 0 ? first(v => v < V0 - Math.max(0.5, 0.003 * V0)) : null;
@@ -1068,12 +1327,20 @@ $('wt').oninput = e => { S.t = +e.target.value; changed(); };
 $('bt').oninput = e => { S.tb = +e.target.value; changed(); };
 $('foot').oninput = e => { S.foot = +e.target.value; changed(); };
 $('footAuto').onchange = e => { S.foot = e.target.checked ? null : Math.round(G.rf); changed(); };
-$('fill').oninput = e => { S.fill = +e.target.value; S.lastPour = 0; updateCurve(); S.cur = curveMinUpTo(S.theta); drawAll(); };
+$('fill').oninput = e => { S.fill = +e.target.value; S.lastPour = 0; updateCurve(); drawAll(); };
 
 function setTheta(t) {
   const prev = S.theta; S.theta = t;
   if (t < prev) S.lastPour = 0; // zurückkippen: Strahl reißt ab
-  if (t > prev) {
+  if (!isPlan()) { // Drehkörper: Zustand in Schritten ≤ 0,5° weiterdrehen (vor und zurück), Wasser verteilt sich auf die Taschen
+    if (S.lakes) {
+      for (let a = prev; a !== t;) {
+        const b = t > a ? Math.min(t, a + 0.5) : Math.max(t, a - 0.5), r = Core.settle(G.pg, b * DEG, S.lakes, a * DEG);
+        S.lakes = r.lakes; if (r.lost > 1 && t > prev) { S.lastPour = performance.now(); G.lastSp = r.sp; } a = b;
+      }
+      S.cur = sumMl(S.lakes);
+    }
+  } else if (t > prev) {
     const k0 = Math.round(prev / 180 * STEPS), k1 = Math.round(t / 180 * STEPS);
     let m = S.cur; for (let k = k0; k <= k1; k++) m = Math.min(m, G.curve[k]);
     m = Math.min(m, retainedAt(t));
@@ -1085,12 +1352,13 @@ function setTheta(t) {
   setTimeout(drawTilt, 480);
 }
 $('tilt').oninput = e => setTheta(+e.target.value);
-$('refill').onclick = () => { stopPlay(); S.lastPour = 0; S.theta = 0; S.cur = S.fill; $('tilt').value = 0; drawAll(); };
+function refill() { S.lastPour = 0; S.theta = 0; $('tilt').value = 0; if (isPlan()) S.cur = S.fill; else { S.lakes = G.lakes0; S.cur = sumMl(S.lakes); } }
+$('refill').onclick = () => { stopPlay(); refill(); drawAll(); };
 let playId = 0;
 function stopPlay() { cancelAnimationFrame(playId); playId = 0; $('play').textContent = '▶ Durchkippen'; }
 $('play').onclick = () => {
   if (playId) return stopPlay();
-  S.theta = 0; S.cur = S.fill; $('play').textContent = '■ Stopp';
+  refill(); $('play').textContent = '■ Stopp';
   const t0 = performance.now(), dur = 7000;
   const step = now => { const t = Math.min(1, (now - t0) / dur); setTheta(180 * t); if (t < 1) playId = requestAnimationFrame(step); else stopPlay(); };
   playId = requestAnimationFrame(step);
