@@ -6,10 +6,11 @@
 <title>Designphysik · Lampenschirm</title>
 <link rel="stylesheet" href="../shared/style.css">
 <style>
-#ed{aspect-ratio:1/1.05;cursor:crosshair}#lvk{aspect-ratio:1/1}
-.bar{height:6px;background:var(--fill);overflow:hidden}.bar i{display:block;height:100%;width:0;background:var(--light)}
+#ed{aspect-ratio:1/1.05;--ar:calc(1/1.05);cursor:crosshair}#lvk{aspect-ratio:1/1;--ar:1}
+.bar{height:var(--u);padding:9px 0;box-sizing:border-box;background:var(--fill) content-box;overflow:hidden}.bar i{display:block;height:100%;width:0;background:var(--light)}
 .ctl input[type=number],.raw input{font:inherit;font-size:13px;width:84px;padding:4px 6px;border:1px solid var(--ink);}
-.raw{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:6px;margin-top:6px}
+.ctl output>*{vertical-align:top}
+.raw{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:0 12px}
 .raw label{font-size:12px;color:var(--mut);display:flex;justify-content:space-between;align-items:center;gap:6px}
 details summary{font-size:12.5px;cursor:pointer}
 .ctl select{min-width:0;width:100%}</style>
