@@ -23,6 +23,7 @@ details summary{font-size:12.5px;cursor:pointer}
     <div class="row">
       <button id="mDraw">✎ Freihand</button>
       <button id="mEdit" class="on">● Punkte</button>
+      <button id="addP" title="Weiteren, getrennten Schirm anlegen und gleich freihand zeichnen">+ Schirm</button>
       <button id="sym" class="on" title="An: Profil wird um die Achse gedreht. Aus: Querschnitt frei zeichnen, entlang der Länge gezogen (Langfeldleuchte).">⟲ Symmetrie an</button>
       <span class="sep"></span>
       <select id="preset" aria-label="Vorlage"></select>
@@ -33,7 +34,7 @@ details summary{font-size:12.5px;cursor:pointer}
     <div class="ctl">
       <label for="part">Schirm</label>
       <select id="part" aria-label="Schirm auswählen"></select>
-      <output><button id="addP" title="Weiteren, getrennten Schirm anlegen; danach zeichnen">+</button> <button id="delP" title="Ausgewählten Schirm löschen">−</button></output>
+      <output><button id="delP" title="Ausgewählten Schirm löschen">−</button></output>
       <label for="mat">Material</label>
       <select id="mat"></select>
       <span></span>
@@ -57,7 +58,7 @@ details summary{font-size:12.5px;cursor:pointer}
       <button id="share">Link kopieren</button>
       <input type="file" id="file" accept=".json,application/json" hidden>
     </div>
-    <p class="note">Freihand: Schirmprofil ziehen; bei Symmetrie an egal auf welcher Seite, es wird gespiegelt. Symmetrie aus: Querschnitt frei zeichnen, er wird entlang der Länge gezogen (Langfeldleuchte, Enden offen, Lampe als Leuchtstab über die ganze Länge). Mehrere Schirme: „+“ legt einen neuen an, dann zeichnen; Tippen auf einen Schirm wählt ihn, Material gilt für den gewählten. Punkte: ziehen zum Verschieben, auf die Linie tippen zum Einfügen, in freie Fläche tippen zum Anhängen, Doppeltipp zum Löschen. Gelben Punkt (Lampe) ziehen; nahe der Achse rastet er ein. Innenseite: symmetrisch die der Achse zugewandte Seite (waagrecht: die der Lampe zugewandte), Langfeld die der Lampe zugewandte Seite. Raster 10 mm.</p>
+    <p class="note">Freihand: Schirmprofil ziehen; bei Symmetrie an egal auf welcher Seite, es wird gespiegelt. Symmetrie aus: Querschnitt frei zeichnen, er wird entlang der Länge gezogen (Langfeldleuchte, Enden offen, Lampe als Leuchtstab über die ganze Länge). Mehrere Schirme: „+ Schirm“ legt einen neuen an und schaltet auf Freihand (beliebig viele, Freihand ohne „+ Schirm“ ersetzt den gewählten); Tippen auf einen Schirm wählt ihn, Material gilt für den gewählten. Punkte: ziehen zum Verschieben, auf die Linie tippen zum Einfügen, in freie Fläche tippen zum Anhängen, Doppeltipp zum Löschen. Gelben Punkt (Lampe) ziehen; nahe der Achse rastet er ein. Innenseite: symmetrisch die der Achse zugewandte Seite (waagrecht: die der Lampe zugewandte), Langfeld die der Lampe zugewandte Seite. Raster 10 mm.</p>
   </section>
 
   <section class="panel">
@@ -777,7 +778,9 @@ $('preset').onchange = e => {
 $('undo').onclick = undo;
 $('fitB').onclick = () => { fitView(); drawEditor(); };
 $('part').onchange = e => { S.cur = +e.target.value; S.sel = -1; syncCtl(); drawEditor(); };
-$('addP').onclick = () => { pushUndo(); S.parts.push(part([], cur().mat, cur().raw)); S.cur = S.parts.length - 1; S.sel = -1; syncCtl(); drawEditor(); };
+$('addP').onclick = () => { // neuer leerer Schirm (ein noch leerer wird wiederverwendet), danach gleich Freihand
+  if (cur().pts.length >= 2) { pushUndo(); S.parts.push(part([], cur().mat, cur().raw)); S.cur = S.parts.length - 1; }
+  S.sel = -1; syncCtl(); setMode('draw'); };
 $('delP').onclick = () => { if (S.parts.length < 2) return; pushUndo(); S.parts.splice(S.cur, 1); S.cur = Math.min(S.cur, S.parts.length - 1); S.sel = -1; syncCtl(); restart(); };
 $('len').onchange = e => { S.len = num(e.target.value, S.len, 100, 5000); syncCtl(); restart(); };
 $('phiP').innerHTML = PHI.map(([v, t]) => `<option value="${v}">${t}</option>`).join('') + '<option value="">eigener Wert</option>';
