@@ -41,6 +41,7 @@ Niederschwellige Browser-Werkzeugsuite für Produktdesign (nicht Physikunterrich
 ## Integration
 - **19.11.2026, Stand 1** (zentraler Chat): Gefäß v1.3.3, Licht v1, Mechanismen v1.1 zusammengeführt. Registry: Licht und Mechanismen `ready: true`. Tests mit neuem load-core: Gefäß 29/29, Licht 61/61 (8,6 s statt ~12 s), Mechanismen 40/40. Browser (Chrome headless, file://, 1280 px und 390 px): Startseite → jedes Modul → Kopfzeile zurück, Navigation zwischen Modulen, Licht „ruhig nach 1,0 s“, Konsole fehlerfrei.
 - **20.11.2026, Grundrichtung F „Punktraster“** (auf Wunsch des Nutzers in einer Sitzung, Definition zuerst): Styleguide neu (vollständige Token-Liste mit Kontrasten, Physik-Familien statt Modulfarben, Migrationstabelle D → F), style.css neu, `util.js` (`DP_MODULES[].color`, Modulquadrat `dpMq`, `dpDots`), `chart.js` (Punkte statt Gitterlinien, Achsen schwarz), Startseite. Module nur Darstellung: lokale Farbdefinitionen entfernt, Token-Migration, Canvas-Raster als Punkte mit Maßstabsangabe, Griffe als Quadrate (Gefäß, Licht), Licht-Linien 2,5 px, Antriebsglied 5 px. CORE unverändert, alle Tests grün. Browser (Chrome headless, file://, 1280 und 390 px): Startseite, drei Module, kein Überlaufen, Konsole fehlerfrei.
+- **20.11.2026, Raster-Ausrichtung** (Style-Chat, Branch `style`): Linien als `box-shadow` statt `border`, senkrechte Abstände 24 statt 12 px (`.panel`, `.row`, Kopfzeile beim Umbruch), `.stat` ohne Innenabstand unten, `.card` oben bündig, Canvas-Höhe über `--ar` auf 24 px abgerundet (`.ch` bereits umgestellt). Vermessen (Chrome headless, 390 px Touch und 1280 px): Startseite und alles vor den Modul-Zeichenflächen auf Vielfachen von 24 px; darunter erst nach Umstellung der Module auf `--ar` (siehe Wünsche).
 - **19.11.2026, Umzug nach GitHub**: Stand 1 als erster Commit in `davidgebka/physik`; Dokumente aus dem claude.ai-Projekt nach `docs/`; Projektanweisungen → `CLAUDE.md`; CI ergänzt. Das claude.ai-Projekt ist ab jetzt nicht mehr Quelle für Code.
 
 ## Module
@@ -92,6 +93,8 @@ Niederschwellige Browser-Werkzeugsuite für Produktdesign (nicht Physikunterrich
 (Modul-Chats tragen hier ein; der zentrale Chat bzw. der Style-Chat arbeitet sie ab.)
 
 Offen:
+- **Licht, Gefäß, Mechanismen** (Style-Chat, 20.11.2026, Raster): Zeichenflächen im Modul-CSS von `aspect-ratio` auf `--ar` umstellen, damit ihre Höhe im 24-px-Raster liegt (Styleguide § 2): Licht `#ed{--ar:calc(1/1.05)}#lvk{--ar:1}`, Gefäß `#ed{--ar:calc(1/1.05)}#tv{--ar:1}`, Mechanismen `#ed{--ar:calc(4/3)}`; `aspect-ratio` als Rückfall stehen lassen. Licht zusätzlich: `.bar` (6 px) und `.raw` (6-px-Abstände, `margin-top`) in ganze 24-px-Höhen bringen, z. B. `.bar` in eine 24-px-Zeile setzen. Gemessen: mit `--ar` liegen Gefäß und Mechanismen bei 390 und 1280 px vollständig im Raster.
+- **Zentraler Chat** (Style-Chat, 20.11.2026): `_vorlage/index.html` Inline-`aspect-ratio:1/1` → `--ar:1`.
 - **Style-Chat** (Licht, 20.11.2026): Lichtfeld nutzt einen zweiten Verlauf `--ink` → `--light` → `--bg` auf dunklem Grund (Vorbild Strahlensimulation, Wunsch des Nutzers). Styleguide § Falschfarbe kennt nur `--mut` → Familie; bitte bestätigen oder Alternative vorgeben.
 
 Erledigt (20.11.2026, Grundrichtung F):
