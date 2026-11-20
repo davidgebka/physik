@@ -278,7 +278,7 @@ const Core = (() => {
   }
 
   // first moment ∫x dA of the disk part x ≥ d
-  function segMx(R, d) { return R <= 0 || d >= R || d <= -R ? 0 : 2 / 3 * Math.pow(R * R - d * d, 1.5); }
+  function segMx(R, d) { if (R <= 0 || d >= R || d <= -R) return 0; const q = R * R - d * d; return 2 / 3 * q * Math.sqrt(q); }
 
   // Liquid below level L at tilt th: volume (mm³) and first moments Mx, Mz (mm⁴), vessel coords
   function momentsBelow(S, L, th) {
@@ -507,17 +507,19 @@ const Core = (() => {
     // Befüllen: Strahl fällt von der Öffnung entlang der Achse bis zum ersten Hindernis
     let land = 0;
     for (let j = jr; j >= 0; j--) { let f = -1; for (let i = j0[j]; i < j0[j + 1]; i++) if (r0[i] < 1e-9) f = i; if (f < 0) break; land = f; }
-    const dz = S.dz, area = i => Math.PI * (r1[i] * r1[i] - r0[i] * r0[i]), chord = (R, d) => d < R && d > -R ? 2 * Math.sqrt(R * R - d * d) : 0;
+    const dz = S.dz, ar = Float64Array.from(z, (_, i) => Math.PI * (r1[i] * r1[i] - r0[i] * r0[i])), chord = (R, d) => d < R && d > -R ? 2 * Math.sqrt(R * R - d * d) : 0;
     return { n, nb, out, land, z, r0, r1, dz,
       hFill: (h, c, s) => { for (let i = 0; i < n; i++) h[i] = Math.min((z[i] - dz / 2) * c - rb[i] * s, (z[i] + dz / 2) * c - rt[i] * s); },
       act: (h, c, s, a, b) => { const e = z[a] < z[b] ? Math.min(rt[a], rb[b]) : Math.min(rt[b], rb[a]); return Math.max(h[a], h[b], (z[a] + z[b]) / 2 * c - e * s); },
       outLv: (o, h, c, s) => Math.max(h[o.i], o.sp ? Math.max(...o.sp.map(p => p.z * c - p.x * s)) : rim.z * c - o.rr * s),
-      // o = [V, dV/dL, Mx, Mz]; aufrecht/kopfüber (s ≈ 0): Schicht anteilig
-      vol: (i, L, c, s, o) => {
-        if (Math.abs(s) < 1e-9) { const t = (L - z[i] * c) / dz + 0.5, a = area(i); o[0] = a * dz * Math.min(1, Math.max(0, t)); o[1] = t > 0 && t < 1 ? a : 0; o[2] = 0; o[3] = o[0] * z[i]; return; }
+      // o = [V, dV/dL, Mx, Mz], Mx nur mit mom; aufrecht/kopfüber (s ≈ 0): Schicht anteilig
+      vol: (i, L, c, s, o, mom) => {
+        if (Math.abs(s) < 1e-9) { const t = (L - z[i] * c) / dz + 0.5, a = ar[i]; o[0] = a * dz * Math.min(1, Math.max(0, t)); o[1] = t > 0 && t < 1 ? a : 0; o[2] = 0; o[3] = o[0] * z[i]; return; }
         const d = (z[i] * c - L) / s;
+        if (d >= r1[i]) { o[0] = o[1] = o[2] = o[3] = 0; return; } // trocken
+        if (d <= -r1[i]) { o[0] = ar[i] * dz; o[1] = o[2] = 0; o[3] = o[0] * z[i]; return; } // ganz unter dem Spiegel
         o[0] = (segArea(r1[i], d) - segArea(r0[i], d)) * dz; o[1] = (chord(r1[i], d) - chord(r0[i], d)) * dz / s;
-        o[2] = (segMx(r1[i], d) - segMx(r0[i], d)) * dz; o[3] = o[0] * z[i];
+        o[2] = mom ? (segMx(r1[i], d) - segMx(r0[i], d)) * dz : 0; o[3] = o[0] * z[i];
       },
       poly: i => [[{ x: r0[i], z: z[i] - dz / 2 }, { x: r1[i], z: z[i] - dz / 2 }, { x: r1[i], z: z[i] + dz / 2 }, { x: r0[i], z: z[i] + dz / 2 }],
                   [{ x: -r1[i], z: z[i] - dz / 2 }, { x: -r0[i], z: z[i] - dz / 2 }, { x: -r0[i], z: z[i] + dz / 2 }, { x: -r1[i], z: z[i] + dz / 2 }]] };
@@ -551,17 +553,17 @@ const Core = (() => {
       hFill: (h, c, s) => { for (let i = 0; i < n; i++) h[i] = Math.min(H(A[i], c, s), H(A[i + 1], c, s), H(B[i], c, s), H(B[i + 1], c, s)); },
       act: (h, c, s, a, b) => { const f = Math.max(a, b); return Math.max(h[a], h[b], Math.min(H(A[f], c, s), H(B[f], c, s))); },
       outLv: (o, h, c, s) => Math.max(h[o.i], Math.min(H(A[n], c, s), H(B[n], c, s))),
-      vol: (i, L, c, s, o) => {
+      vol: (i, L, c, s, o, mom) => {
         const q = N[i], R = q.R, hm = q.mz * c - q.mx * s, hu = q.uz * c - q.ux * s, hn = q.nz * c - q.nx * s;
         if (Math.abs(hu) * R < 0.5 * Math.abs(hn) * q.wM) { // Querschnitt fast waagrecht: Höhe ändert sich über die Dicke
           const t = (L - hm) / (Math.abs(hn) * q.wM) + 0.5, a = Math.PI * R * R;
           o[0] = a * q.wM * Math.min(1, Math.max(0, t)); o[1] = t > 0 && t < 1 ? a / Math.abs(hn) : 0; o[2] = o[0] * q.mx; o[3] = o[0] * q.mz; return;
         }
         const d = (L - hm) / hu, sg = hu < 0 ? 1 : -1, e = sg * d; // nass: sg·t ≥ e
-        const A0 = segArea(R, e), T1 = sg * segMx(R, e), T2 = segMxx(R, e), Mt = q.wM * T1 + q.ks * T2;
+        const A0 = segArea(R, e), T1 = sg * segMx(R, e), Mt = mom ? q.wM * T1 + q.ks * segMxx(R, e) : 0;
         o[0] = q.wM * A0 + q.ks * T1;
         o[1] = d < R && d > -R ? (q.wM + q.ks * d) * 2 * Math.sqrt(R * R - d * d) / Math.abs(hu) : 0;
-        o[2] = o[0] * q.mx + Mt * q.ux; o[3] = o[0] * q.mz + Mt * q.uz;
+        o[2] = o[0] * q.mx + Mt * q.ux; o[3] = o[0] * q.mz + Mt * q.uz; // ohne mom: o[2], o[3] unvollständig
       },
       poly: i => [[A[i], A[i + 1], B[i + 1], B[i]]] };
   }
@@ -731,7 +733,7 @@ const Core = (() => {
   // Volumen und erste Momente aller Seen (Gefäßkoordinaten)
   function lakeMoments(g, lakes, th) {
     const c = Math.cos(th), s = Math.sin(th); let V = 0, Mx = 0, Mz = 0;
-    for (const lk of lakes) for (const i of lk.nodes) { g.vol(i, lk.L, c, s, tmp); V += tmp[0]; Mx += tmp[2]; Mz += tmp[3]; }
+    for (const lk of lakes) for (const i of lk.nodes) { g.vol(i, lk.L, c, s, tmp, true); V += tmp[0]; Mx += tmp[2]; Mz += tmp[3]; }
     return { V, Mx, Mz };
   }
   function cogLakes(g, lakes, th, mv, xv, zv) {
@@ -841,12 +843,14 @@ function recomputeRot() {
   const cum = Core.cumTable(sl);
   let maxR = 0; samp.forEach(p => maxR = Math.max(maxR, p.x));
   // Taschenmodell auf 250 Schichten: mit Tülle/Deckel (Rechnung), nur Rand (Fassungsvermögen offen), Gegenseite (ohne Tülle)
-  const slP = Core.buildSlices(poly, 250), pg = Core.pocketGraph(slP, samp, { spout: sp, lid: S.lid });
+  // gleiche Optionen → gleicher Graph: Gegenseite ohne Tülle = pg, Rand ohne Deckel = Gegenseite
+  const slP = Core.buildSlices(poly, 250), pgOf = o => Core.pocketGraph(slP, samp, o), pg = pgOf({ spout: sp, lid: S.lid });
+  const pgBack = sp ? pgOf({ lid: S.lid }) : pg, pgRim = !S.lid ? pgBack : pgOf({});
   const capOf = g => Core.lakeSum(Core.fillLakes(g, 1e15).lakes) / 1000, cap = capOf(pg);
   const multi0 = Core.basins(pg, 0) > 1, fc = multi0 ? Core.fillCurve(pg, cap * 1000, 120).L : null;
   G = { bad: Core.selfCross(samp, false) ? 'Kontur kreuzt sich selbst: Innenraum nicht eindeutig, Werte ungültig' : '',
-        wall, samp, poly, sl, cum, sec, geo, pg, pgBack: Core.pocketGraph(slP, samp, { lid: S.lid }), multi0,
-        cap, capRim: sp || S.lid ? capOf(Core.pocketGraph(slP, samp, {})) : cap, maxR,
+        wall, samp, poly, sl, cum, sec, geo, pg, pgBack, multi0,
+        cap, capRim: pgRim === pg ? cap : capOf(pgRim), maxR,
         rimR: samp[samp.length - 1].x, H: sl.zmax - sl.zmin, z0: sl.zmin, xc: 0,
         walls: [wall, wall.map(p => ({ x: -p.x, z: p.z }))],
         lipAt: () => sp && G.lastSp ? sp[sp.length - 1] : samp[samp.length - 1],
@@ -1178,7 +1182,7 @@ ed.addEventListener('pointermove', e => {
   } else if (drag >= 0) {
     const q = snapP(wp), o = P()[drag]; if (q.x === o.x && q.z === o.z) return;
     if (pend) { pushUndo(pend); pend = null; }
-    P()[drag] = q; changed();
+    P()[drag] = q; changed(true);
   }
 });
 function endPointer() {
@@ -1206,7 +1210,7 @@ function endPointer() {
     }
     stroke = null; changed(); fitView(); drawAll();
   }
-  if (drag >= 0) { drag = -1; pend = null; const r = ed.getBoundingClientRect();
+  if (drag >= 0) { drag = -1; pend = null; if (dirty) changed(); const r = ed.getBoundingClientRect();
     if (P().some(p => { const [x, y] = w2s(p); return x < 10 || x > r.width - 10 || y < 10 || y > r.height - 10; })) { fitView(); drawAll(); } }
 }
 ed.addEventListener('pointerup', endPointer);
@@ -1230,8 +1234,12 @@ function undo() {
 let flashT = 0, noteTxt = '';
 function flash(t) { clearTimeout(flashT); $('edNote').textContent = t; $('edNote').style.color = 'var(--warn)';
   flashT = setTimeout(() => { $('edNote').textContent = noteTxt; $('edNote').style.color = ''; }, 4000); }
-let raf = 0;
-function changed() { recompute(); if (!raf) raf = requestAnimationFrame(() => { raf = 0; drawAll(); }); }
+// later: Ziehen/Regler – höchstens eine Neuberechnung je Bild (bei mehreren Becken bzw. zwei Konturen 10–80 ms)
+let raf = 0, dirty = false;
+function changed(later) {
+  if (later) dirty = true; else { dirty = false; recompute(); }
+  if (!raf) raf = requestAnimationFrame(() => { raf = 0; if (dirty) { dirty = false; recompute(); } drawAll(); });
+}
 
 // ---------- tilt view ----------
 const tv = $('tv');
@@ -1441,16 +1449,16 @@ function setPart(part) {
 ['body', 'spout', 'handle'].forEach(q => $('p_' + q).onclick = () => setPart(q));
 $('pDel').onclick = () => { pushUndo(); if (S.part === 'spout') S.spout = null; else S.handle = null; setPart('body'); changed(); };
 $('lid').onchange = e => { S.lid = e.target.checked; changed(); };
-$('sd').oninput = e => { S.spout.d = +e.target.value; changed(); };
-$('hd').oninput = e => { S.handle.d = +e.target.value; changed(); };
+$('sd').oninput = e => { S.spout.d = +e.target.value; changed(true); };
+$('hd').oninput = e => { S.handle.d = +e.target.value; changed(true); };
 $('kRot').onclick = () => { if (!isRot()) setKind('rot'); };
 $('kPlan').onclick = () => { if (!isPlan()) setKind('plan'); };
 $('kTube').onclick = () => { if (!isTube()) setKind('tube'); };
 // Zwei Konturen: welche Kontur bearbeitet wird
 function setTPart(t) { S.tPart = t; S.sel = -1; $('t_A').classList.toggle('on', t === 'A'); $('t_B').classList.toggle('on', t === 'B'); drawEditor(); }
 $('t_A').onclick = () => setTPart('A'); $('t_B').onclick = () => setTPart('B');
-$('hP').oninput = e => { S.H = +e.target.value; changed(); };
-$('psi').oninput = e => { S.psi = +e.target.value; changed(); };
+$('hP').oninput = e => { S.H = +e.target.value; changed(true); };
+$('psi').oninput = e => { S.psi = +e.target.value; changed(true); };
 $('undo').onclick = undo;
 $('fitB').onclick = () => { fitView(); drawEditor(); };
 $('smooth').onchange = e => { if (isPlan()) S.psmooth = e.target.checked; else if (isTube()) S.tsmooth = e.target.checked; else S.smooth = e.target.checked; changed(); };
@@ -1458,9 +1466,9 @@ $('snap').onchange = e => { S.snap = +e.target.value; };
 $('marks').onchange = e => { S.marks = e.target.checked; drawEditor(); };
 $('mat').innerHTML = Object.entries(MATS).map(([k, [n]]) => `<option value="${k}">${n}</option>`).join('');
 $('mat').onchange = e => { S.mat = e.target.value; changed(); };
-$('wt').oninput = e => { S.t = +e.target.value; changed(); };
-$('bt').oninput = e => { S.tb = +e.target.value; changed(); };
-$('foot').oninput = e => { S.foot = +e.target.value; changed(); };
+$('wt').oninput = e => { S.t = +e.target.value; changed(true); };
+$('bt').oninput = e => { S.tb = +e.target.value; changed(true); };
+$('foot').oninput = e => { S.foot = +e.target.value; changed(true); };
 $('footAuto').onchange = e => { S.foot = e.target.checked ? null : Math.round(G.rf); changed(); };
 $('fill').oninput = e => { S.fill = +e.target.value; S.lastPour = 0; updateCurve(); drawAll(); };
 
@@ -1484,8 +1492,9 @@ function setTheta(t) {
   }
   $('tilt').value = t;
   drawTilt(); drawCharts(); drawStats();
-  setTimeout(drawTilt, 480);
+  clearTimeout(tiltT); tiltT = setTimeout(drawTilt, 480); // Strahl nach dem Ausgießen ausblenden
 }
+let tiltT = 0;
 $('tilt').oninput = e => setTheta(+e.target.value);
 function refill() { S.lastPour = 0; S.theta = 0; $('tilt').value = 0; if (isPlan()) S.cur = S.fill; else { S.lakes = G.lakes0; S.cur = sumMl(S.lakes); } }
 $('refill').onclick = () => { stopPlay(); refill(); drawAll(); };

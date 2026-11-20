@@ -24,7 +24,9 @@ function dpHeader(activeKey, subtitle) {
 const $ = id => document.getElementById(id);
 const nf0 = new Intl.NumberFormat('de-DE', { maximumFractionDigits: 0 });
 const nf1 = new Intl.NumberFormat('de-DE', { maximumFractionDigits: 1, minimumFractionDigits: 1 });
-const css = v => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+// Tokens ändern sich zur Laufzeit nicht (kein Dunkelmodus): einmal lesen, dann aus dem Speicher (Zeichnen ruft css() tausendfach)
+const dpCss = new Map();
+const css = v => { let c = dpCss.get(v); if (!c) { c = getComputedStyle(document.documentElement).getPropertyValue(v).trim(); if (c) dpCss.set(v, c); } return c; };
 
 // ---- Canvas ----
 // Passt Canvas an CSS-Größe × devicePixelRatio an, liefert {ctx, w, h} in CSS-Pixeln
@@ -39,13 +41,16 @@ function prep(cv) {
 // Feine Stufe verfünffacht sich, bis die Punkte ≥ 8 px auseinander liegen. Liefert die feine Stufe in mm.
 function dpDots(ctx, w, h, k, ox, oy) {
   let f = 10; while (f * k < 8) f *= 5;
-  const fine = css('--dot'), coarse = css('--mut');
   const i0 = Math.ceil(-ox / (f * k)), i1 = Math.floor((w - ox) / (f * k));
   const j0 = Math.ceil((oy - h) / (f * k)), j1 = Math.floor(oy / (f * k));
-  for (let i = i0; i <= i1; i++) for (let j = j0; j <= j1; j++) {
-    const big = i % 5 === 0 && j % 5 === 0;
-    ctx.fillStyle = big ? coarse : fine;
-    ctx.beginPath(); ctx.arc(Math.round(ox + i * f * k) + .5, Math.round(oy - j * f * k) + .5, big ? 1.5 : 1, 0, 7); ctx.fill();
+  for (const big of [false, true]) { // je Stufe ein Pfad: ein fill() statt eines je Punkt
+    ctx.beginPath();
+    for (let i = i0; i <= i1; i++) for (let j = j0; j <= j1; j++) {
+      if ((i % 5 === 0 && j % 5 === 0) !== big) continue;
+      const x = Math.round(ox + i * f * k) + .5, y = Math.round(oy - j * f * k) + .5, r = big ? 1.5 : 1;
+      ctx.moveTo(x + r, y); ctx.arc(x, y, r, 0, 7);
+    }
+    ctx.fillStyle = css(big ? '--mut' : '--dot'); ctx.fill();
   }
   return f;
 }
@@ -55,7 +60,7 @@ function polyPath(ctx, pts, T) { ctx.beginPath(); pts.forEach((p, i) => { const 
 // ---- Datei & Teilen (Konvention: {type:"designphysik/<modul>", version, ...}) ----
 function dpDownload(obj, filename) {
   const blob = new Blob([JSON.stringify(obj, null, 1)], { type: 'application/json' });
-  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = filename; a.click(); URL.revokeObjectURL(a.href);
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = filename; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 1000); // sofortiges Freigeben bricht den Download in manchen Browsern ab
 }
 function dpHashGet(key) {
   const m = location.hash.match(new RegExp('^#' + key + '=(.+)$')); if (!m) return null;
