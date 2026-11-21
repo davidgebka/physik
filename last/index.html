@@ -402,12 +402,16 @@ const TPL = {
   glas: () => base({ L: 600, sec: { type: 'rect', b: 300, h: 8 }, mat: 'glas', sup: [{ x: 30, t: 'pin' }, { x: 570, t: 'pin' }], ql: [{ a: 0, b: 600, q: 196, perm: true }] }),
   alu: () => base({ L: 2400, sec: { type: 'rhs', b: 30, h: 50, t: 2 }, mat: 'al6060', sup: [{ x: 200, t: 'pin' }, { x: 1200, t: 'pin' }, { x: 2200, t: 'pin' }], ql: [{ a: 0, b: 2400, q: 300, perm: true }] }),
   bank: () => base({ L: 1600, sec: { type: 'rect', b: 350, h: 40 }, mat: 'd30', sup: [{ x: 150, t: 'pin' }, { x: 1450, t: 'pin' }], pl: [{ x: 800, F: 981, perm: false, h: 50, c: 25 }] }),
+  // Bierbank Buchbach: Bretter 21 mm, Sitzbrett 250 mm, Zargen außen 120 mm hoch → T mit Gurt 292 × 21, Steg 2 × 21;
+  // Beine 10° ausgestellt, Fuß unter dem Brettende, Sitzhöhe ≈ 450 mm angenommen → Lager ≈ 85 mm vom Ende;
+  // besetzt mit 100 kg je 60 cm Sitzbreite, mittig setzt sich eine Person (50 mm, Gesäß als Polster 25 mm wie „bank“; doppelt gezählt = sichere Seite)
+  bierbank: () => base({ L: 2000, sec: { type: 'T', b: 292, h: 120, tw: 42, tf: 21 }, sup: [{ x: 85, t: 'pin' }, { x: 1915, t: 'pin' }], pl: [{ x: 1000, F: 981, perm: false, h: 50, c: 25 }], ql: [{ a: 0, b: 2000, q: 1635, perm: false }] }),
   tisch: () => base({ L: 1800, sec: { type: 'rect', b: 800, h: 25 }, mat: 'bsp', sup: [{ x: 350, t: 'pin' }, { x: 1450, t: 'pin' }], pl: [{ x: 0, F: 600, perm: false, h: 0 }] }),
   konsole: () => base({ L: 300, sec: { type: 'rhs', b: 20, h: 40, t: 2 }, mat: 's235', lim: 200, sup: [{ x: 0, t: 'fix' }], pl: [{ x: 300, F: 500, perm: false, h: 0 }] }),
   stuetze: () => base({ L: 720, orient: 'v', sec: { type: 'tube', d: 25, t: 1.5 }, mat: 'al6060', N: 2000, sup: [{ x: 0, t: 'pin' }, { x: 720, t: 'pin' }], pl: [{ x: 360, F: 50, perm: false, h: 0 }] })
 };
 const TPLS = [['Regal', [['regal', 'Regalbrett auf Konsolen'], ['regalF', 'Regalbrett auf nachgiebigen Konsolen'], ['mdf', 'Regalboden MDF zwischen Seiten'], ['glas', 'Glasboden'], ['alu', 'Wandregal Alu, drei Konsolen']]],
-  ['Sitzen & Tisch', [['bank', 'Sitzbank Eiche (Person setzt sich)'], ['tisch', 'Tischplatte, Abstützen am Überstand']]],
+  ['Sitzen & Tisch', [['bank', 'Sitzbank Eiche (Person setzt sich)'], ['bierbank', 'Bierbank Buchbach (besetzt, eine Person setzt sich)'], ['tisch', 'Tischplatte, Abstützen am Überstand']]],
   ['Konstruktion', [['konsole', 'Wandkonsole (Kragarm Stahl)'], ['stuetze', 'Stütze / Tischbein (stehend)']]]];
 const HINT = {
   drag: 'Lager und Lasten entlang des Balkens ziehen; antippen zum Bearbeiten. Streckenlast an den Enden ziehen ändert die Länge.',
