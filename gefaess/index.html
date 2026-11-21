@@ -132,7 +132,7 @@
     <p class="note"><b>Tülle, Henkel, Deckel</b> (Drehkörper): Tülle und Henkel liegen in der Seitenansicht, also in der Spiegelebene der Kanne; gekippt wird zur Tülle hin (+x). Die Tülle ist ein kommunizierendes Gefäß: Es läuft aus, sobald der Spiegel die höchste Stelle des Weges vom Becken über Wand und Ansatz bis zur Spitze übersteigt – das begrenzt auch das Fassungsvermögen, wenn die Spitze tiefer liegt als der Rand. Mit Deckel zählt der Rand nicht als Überlauf. Wasser in der Tülle selbst wird vernachlässigt, ebenso Luftzufuhr (Deckelloch angenommen), Strahl, Nachtropfen. Masse: Tülle als Rohr mit der Wandstärke, Henkel als Vollstab, beide aus dem Gefäßmaterial; Deckel ohne Masse. Kippwinkel zur Tülle hin und zur Gegenseite (Henkel), angezeigt wird der kleinere; zur Gegenseite läuft nur über den Rand aus. Kippansicht und Kippkurve zeigen das Kippen zur Tülle.</p>
     <p class="note"><b>Grundriss-Modus</b> (nicht rotationssymmetrisch): beliebiger geschlossener Grundriss, senkrechte Wand der Innenhöhe, flacher Boden – ein Prisma, z.&nbsp;B. Vase mit Wellenkontur oder rechteckige Dose. Gekippt wird um eine waagrechte Achse quer zur eingestellten Kipprichtung; Volumen, Überlauf am tiefsten Randpunkt, Schwerpunkt und Kippwinkel sind exakt für diese Geometrie (Streifenzerlegung, geprüft gegen Quader und Zylinder). Wand als Band der Wandstärke außen um die Kontur mit gerundeten Ecken (exakt für konvexe Grundrisse, bei Einbuchtungen genähert), Standkante = äußerster Punkt in Kipprichtung plus Wandstärke. Nicht erfasst: Gefäße, die sich nach oben verjüngen oder weiten, Seitwärtsdrehen beim Kippen über eine Ecke.</p>
     <p class="note"><b>Zwei Konturen</b>: Kontur hinten und vorne in der Seitenansicht, jeweils vom Boden zur Mündung. Dazwischen liegen Kreisquerschnitte, deren Durchmesser je einen Punkt hinten mit dem Punkt vorne verbindet, der beim gleichen Anteil der Bogenlänge liegt; der Kreis steht senkrecht zur Zeichenebene (dünne Linien im Editor). So entstehen geneigte Hälse, schiefe und gebogene Formen; der Drehkörper ist der Sonderfall gespiegelter Konturen. Die Form ist spiegelsymmetrisch zur Zeichenebene. Gekippt wird in der Zeichenebene nach vorne (Kippansicht, Kurven) und für den Kippwinkel auch nach hinten; seitliches Kippen wird nicht gerechnet. Weil der tiefste Punkt jedes Querschnitts auf einer der beiden Konturen liegt, gilt das Taschenmodell exakt bis auf die Unterteilung (250 Abschnitte, geprüft gegen Zylinder, schiefen und geneigten Zylinder, Torusabschnitt). Mündung = letzter Querschnitt (auch schräg), Boden = erster Querschnitt; nur ein waagrechter Boden ist Standfläche. Biegt die Form enger als ihr Radius, durchdringen sich Querschnitte (⚠). Masse: Schale der Wandstärke um die Kreisquerschnitte plus Bodenplatte.</p>
-    <p class="note"><b>Schwappen</b> (Schalter „≈ Schwappen“): Jeder Wasserkörper schwingt in seiner ersten Eigenschwingung in der Kippebene – ein linearer Oszillator je Tasche, angeregt durch waagrechte Bewegung und Drehen des Gefäßes (Drehpunkt = Bildmitte der Kippansicht). Eigenfrequenz f₁ = √(g·k·tanh(k·h))/2π mit mittlerer Tiefe h = Volumen/Spiegelfläche; die Wellenzahl k folgt aus Fläche und zweitem Moment der tatsächlichen Spiegelfläche (Rayleigh-Quotient, kalibriert auf Kreis bzw. beim Grundriss auf Rechteck: Zylinder und Quader exakt, Kreis-Grundriss −1,5&nbsp;%, andere Formen geschätzt ±10&nbsp;%). Die Kopplung an die Bewegung folgt der Potentialtheorie (Ersatzpendel im Abstand (2/k)·tanh(kh/2) unter dem Spiegel). Dämpfung: Grenzschicht an glatter Wand für Wasser (Mikishev/Dorozhkin), etwa 0,5–2&nbsp;%; echte Gefäße sind durch Kontaktlinie, Schaum, Einbauten meist stärker gedämpft, die Ausschläge daher eher zu groß. Überschwappen: Der Wellenberg am Rand wird durch eine geneigte Ebene mit gleichem Randhub ersetzt; was dann über eine Engstelle steht, läuft sofort in die Nachbartasche oder hinaus (obere Abschätzung). Teilen und Vereinigen von Taschen übertragen den Schwingzustand massengewichtet. <b>Freibord</b> = Randhub, ab dem Wasser über Rand, Tülle oder in eine andere Tasche läuft (aufrecht). <b>Gehen</b>: reine Sinusbewegung in Kipprichtung, eingeschwungene Amplitude; reale Schritte haben Oberschwingungen – liegt f₁ nahe dem Doppelten der Schrittfrequenz, die Frequenz dort testen. <b>Anhalten</b>: gleichmäßiges Bremsen aus dem Tempo, größter Ausschlag. Grenzen: nur die erste Schwingung, nur in der Kippebene (kein Drehschwappen, das nahe der Resonanz im Zylinder auftritt), Wellen klein gegen die Spiegelbreite (⚠ ab Randhub &gt; 25&nbsp;% der halben Breite: nur qualitativ), kein Brechen und Spritzen, keine Kopplung über unter Wasser verbundene Spiegel (U-Rohr). Senkrechte Beschleunigung wird nicht gerechnet.</p>
+    <p class="note"><b>Schwappen</b> (Schalter „≈ Schwappen“): Jeder Wasserkörper schwingt in seiner ersten Eigenschwingung in der Kippebene – ein linearer Oszillator je Tasche, angeregt durch waagrechte Bewegung und Drehen des Gefäßes (Drehpunkt = Bildmitte der Kippansicht). Eigenfrequenz f₁ = √(g·k·tanh(k·h))/2π mit mittlerer Tiefe h = Volumen/Spiegelfläche; die Wellenzahl k folgt aus Fläche und zweitem Moment der tatsächlichen Spiegelfläche (Rayleigh-Quotient, kalibriert auf Kreis bzw. beim Grundriss auf Rechteck: Zylinder und Quader exakt, Kreis-Grundriss −1,5&nbsp;%, andere Formen geschätzt ±10&nbsp;%). Die Kopplung an die Bewegung folgt der Potentialtheorie (Ersatzpendel im Abstand (2/k)·tanh(kh/2) unter dem Spiegel). Dämpfung: Grenzschicht an glatter Wand für Wasser (Mikishev/Dorozhkin), etwa 0,5–2&nbsp;%; echte Gefäße sind durch Kontaktlinie, Schaum, Einbauten meist stärker gedämpft, die Ausschläge daher eher zu groß. Überschwappen: Der Wellenberg am Rand wird durch eine geneigte Ebene mit gleichem Randhub ersetzt; was dann über einer Engstelle steht, läuft wie über ein Wehr (Q = 0,4·√(2g)·b·H^1,5, Breite b = Sehne am Rand bzw. Tüllen-Ø) in die Nachbartasche oder hinaus; die Welle verliert dabei keine Energie (obere Abschätzung). Brechen: steiler als Randhub = halbe Spiegelbreite wird die Welle nicht, darüber geht ihre Bewegung verloren. Teilen und Vereinigen von Taschen übertragen den Schwingzustand massengewichtet. <b>Freibord</b> = Randhub, ab dem Wasser über Rand, Tülle oder in eine andere Tasche läuft (aufrecht). <b>Gehen</b>: reine Sinusbewegung in Kipprichtung, eingeschwungene Amplitude; reale Schritte haben Oberschwingungen – liegt f₁ nahe dem Doppelten der Schrittfrequenz, die Frequenz dort testen. <b>Anhalten</b>: gleichmäßiges Bremsen aus dem Tempo, größter Ausschlag. Grenzen: nur die erste Schwingung, nur in der Kippebene (kein Drehschwappen, das nahe der Resonanz im Zylinder auftritt), Wellen klein gegen die Spiegelbreite (⚠ ab Randhub &gt; 25&nbsp;% der halben Breite: nur qualitativ), Brechen nur als Grenze, kein Spritzen, keine Kopplung über unter Wasser verbundene Spiegel (U-Rohr). Senkrechte Beschleunigung wird nicht gerechnet.</p>
     <p class="note"><b>Foto als Vorlage</b>: „Foto …“ legt ein Bild halbdurchsichtig unter den Editor, darauf die Kontur von Hand nachzeichnen (Freihand oder Punkte). Maßstab: Fotobreite so einstellen, dass ein bekanntes Maß stimmt (H und Ø stehen im Editor, 1 Punkt des Rasters ist angegeben); mit „Foto ↔“ die Gefäßmitte auf die gestrichelte Achse legen. Am genauesten ist eine Aufnahme genau von der Seite aus größerem Abstand (Tele), sonst verzerrt die Perspektive. Gezeichnet wird die Innenkontur – auf dem Foto sieht man die Außenkontur, also um die Wandstärke nach innen versetzen. Das Foto bleibt auf dem Gerät und wird weder exportiert noch im Link gespeichert.</p>
     <p class="note"><b>Designklassiker</b> unter „Vorlage“: Außenmaße nach Hersteller- und Händlerangaben, Innenkontur und Wandstärken daraus nachempfunden – Annäherung, keine Werkszeichnung. Tüllen, Henkel und Deckel fehlen.</p>
     <p class="note">Gefäßgewicht als dünne Schale: Wandstärke × Mittelfläche (Innenkontur um halbe Wandstärke nach außen versetzt; exakt für Zylinder- und Kegelwände), dazu eine Bodenplatte unter dem flachen Boden. Gültig für Wandstärke deutlich kleiner als der Radius (Fehler wächst mit Wandstärke/Krümmungsradius, an Ecken genähert). Standradius auto = Bodenplatte; ein von Hand gesetzter Standradius verschiebt nur die Kippkante, seine Masse wird nicht gerechnet. Ohne flachen Boden (z.&nbsp;B. Rundboden, Standring) von Hand setzen. <b>Kippwinkel</b>: Neigung um die Standkante, ab der das Gefäß von selbst umfällt; das Wasser läuft dabei mit und läuft gegebenenfalls aus (quasistatisch, kein Rutschen, kein Henkel). <b>Umstoßkraft</b>: waagrechte Kraft am Rand, die das aufrechte, gefüllte Gefäß gerade ankippt.</p>
@@ -847,8 +847,9 @@ const Core = (() => {
   }
   // Ersatzpendelpunkt P in Gefäßkoordinaten: Spiegelmitte (Pegel L, Neigung th), dP senkrecht darunter
   const sloshP = (cf, L, th) => { const c = Math.cos(th), s = Math.sin(th); return { x: -L * s + cf.uc * c + cf.dP * s, z: L * c + cf.uc * s - cf.dP * c }; };
-  // Ein Zeitschritt dt [s], exakt für θ und x_P linear im Schritt (th0→th1 [rad], xw0→xw1 [mm]); d = [s, w] wird überschrieben
-  function sloshStep(d, om, ze, th0, th1, xw0, xw1, dt) {
+  // Ein Zeitschritt dt [s], exakt für θ und x_P linear im Schritt (th0→th1 [rad], xw0→xw1 [mm]); d = [s, w] wird überschrieben.
+  // smax: Brechen – steiler wird die Welle nicht; dort s begrenzt und ṡ = 0 (Energie geht verloren)
+  function sloshStep(d, om, ze, th0, th1, xw0, xw1, dt, smax = Infinity) {
     if (!(dt > 0)) return d;
     const k2 = om * om, kg = k2 / GMM, B = (k2 * (th1 - th0) + k2 * kg * (xw1 - xw0)) / dt;
     const A0 = k2 * th0 + k2 * kg * xw0 + 2 * ze * om * kg * (xw1 - xw0) / dt; // Anregung f(t) = A0 + B·t
@@ -856,7 +857,9 @@ const Core = (() => {
     const e0 = d[0] + th0 + kg * xw0 - qp(0), v0 = d[1] - B / k2, wd = om * Math.sqrt(1 - ze * ze);
     const E = Math.exp(-ze * om * dt), C = Math.cos(wd * dt), S = Math.sin(wd * dt);
     const e1 = E * (e0 * C + (v0 + ze * om * e0) / wd * S), v1 = E * (v0 * C - (ze * om * v0 + k2 * e0) / wd * S);
-    d[0] = qp(dt) + e1 - th1 - kg * xw1; d[1] = B / k2 + v1; return d;
+    d[0] = qp(dt) + e1 - th1 - kg * xw1; d[1] = B / k2 + v1;
+    if (Math.abs(d[0]) > smax) { d[0] = Math.sign(d[0]) * smax; d[1] = (th1 - th0 + kg * (xw1 - xw0)) / dt; }
+    return d;
   }
   // eingeschwungene Amplitude von s bei waagrechter Sinusbewegung (Amplitude A [mm], Kreisfrequenz W [1/s])
   const sloshSteady = (om, ze, A, W) => om * om / GMM * A * W * W / Math.hypot(om * om - W * W, 2 * ze * om * W);
@@ -885,13 +888,17 @@ const Core = (() => {
   // Engstelle, wandert Wasser darüber weiter (Nachbartasche) oder geht verloren – mit dt [s] und Halbbreiten as[i] begrenzt wie am Wehr
   // (weirOut, Tülle: Breite dsp), ohne dt sofort der ganze Keil (statische Obergrenze).
   const spilled = (r, lk, tol) => r.lost > tol || r.lakes.length !== 1 || r.lakes[0].W < lk.W - tol;
+  // je See (Objekt gehört zu einer Neigung) die größte schon geprüfte Auslenkung ohne Überlauf, je Richtung: spart settle
+  // bei gleichmäßigem Schwappen (Überlauf wächst mit |s|)
+  const safeS = new WeakMap();
   function sloshSpill(g, th, lakes, sts, kap, dt, as, dsp = Infinity) {
     let lost = 0, sp = false; const keep = [], kst = [], mv = [], mst = [];
     lakes.forEach((lk, i) => {
-      const e = th + Math.atan(kap * sts[i][0]);
-      if (Math.abs(e - th) > 1e-7) {
+      const s0 = sts[i][0], e = th + Math.atan(kap * s0), sf = safeS.get(lk) || [0, 0], k = s0 > 0 ? 0 : 1;
+      if (Math.abs(e - th) > 1e-7 && Math.abs(s0) > sf[k]) {
         let r = settle(g, e, [lk], th);
-        if (spilled(r, lk, 1e-3)) {
+        if (!spilled(r, lk, 1e-3)) { sf[k] = Math.abs(s0); safeS.set(lk, sf); }
+        else {
           if (dt !== undefined) { // nur der Anteil f des Überlaufs fließt in dt; der Rest bleibt im eigenen Becken
             const own = new Set(lk.nodes), ov = l => l.nodes.reduce((n, j) => n + own.has(j), 0);
             let o = null; for (const l of r.lakes) if (ov(l) > 0 && (!o || ov(l) > ov(o))) o = l;
@@ -1789,7 +1796,7 @@ function sloshTick(now) {
   if (isPlan()) {
     const V = S.cur * 1000, c = V > 1 ? coefPlan(th1, V) : null;
     if (c) {
-      Core.sloshStep(D.pl, c.om, c.ze, th0, th1, xwOf(c.P, th0, X0), xwOf(c.P, th1, X1), dt);
+      Core.sloshStep(D.pl, c.om, c.ze, th0, th1, xwOf(c.P, th0, X0), xwOf(c.P, th1, X1), dt, 1 / c.kap);
       const e = th1 + Math.atan(c.kap * D.pl[0]), cap = G.geo.vol(G.geo.spill(e), e) / 1000;
       if (cap < S.cur - 1e-3) { lost = Core.weirOut((S.cur - cap) * 1000, Math.abs(c.kap * D.pl[0]), c.a, dt) / 1000; S.cur -= lost; D.side = Math.sign(D.pl[0]); }
       act = Math.abs(D.pl[0]) > 1e-4 || Math.abs(D.pl[1]) > 1e-3; rise = c.kap * c.a * D.pl[0]; D.a = c.a;
@@ -1798,7 +1805,7 @@ function sloshTick(now) {
     syncSts(); let big = -1;
     S.lakes.forEach((lk, i) => {
       const c = coefOf(lk, th1), d = D.sts[i]; if (!c) { d[0] = d[1] = 0; return; }
-      Core.sloshStep(d, c.om, c.ze, th0, th1, xwOf(c.P, th0, X0), xwOf(c.P, th1, X1), dt);
+      Core.sloshStep(d, c.om, c.ze, th0, th1, xwOf(c.P, th0, X0), xwOf(c.P, th1, X1), dt, 1 / c.kap); // Brechen: Randhub ≤ halbe Spiegelbreite
       if (Math.abs(d[0]) > 1e-4 || Math.abs(d[1]) > 1e-3) act = true;
       if (big < 0 || lk.W > S.lakes[big].W) { big = i; rise = c.kap * c.a * d[0]; D.a = c.a; }
     });
@@ -1837,7 +1844,7 @@ function sloshStats(keep) {
   }
   for (const q of L) {
     const c = q.c, ss = Core.sloshSteady(c.om, c.ze, S.wa, 2 * Math.PI * S.wf), pk = Core.sloshPeak(c.om, c.ze, t => stopX(stop, t), S.sb + 3, stop.v);
-    Object.assign(q, { walk: c.kap * c.a * ss, stop: c.kap * c.a * pk, nlW: c.kap * ss > 0.25, nlS: c.kap * pk > 0.25 });
+    Object.assign(q, { walk: Math.min(c.a, c.kap * c.a * ss), stop: Math.min(c.a, c.kap * c.a * pk), nlW: c.kap * ss > 0.25, nlS: c.kap * pk > 0.25 }); // ≤ a: Brechen
   }
   const main = L.reduce((a, b) => !a || b.W > a.W ? b : a, null);
   // kritischster Wasserkörper je Fall: größtes Verhältnis Randhub/Freibord

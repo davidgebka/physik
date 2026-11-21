@@ -277,3 +277,8 @@ check('Schwappen Quader halbvoll: Freibord 50 mm (Ebene bis Rand) [mm]', 8 / Mat
   const r = Core.sloshSpill(gC, 0, [lk], [[s, 0]], kp, 0.01, [40]), out = Math.PI * 1600 * 90 - Core.lakeSum(r.lakes);
   check('Schwappen mit Wehr: Bilanz gehalten + übergeschwappt [ml]', (Core.lakeSum(r.lakes) + r.lost) / 1000, Math.PI * 1600 * 90 / 1000, 1e-6);
   check('Schwappen mit Wehr: in 10 ms weniger als der ganze Keil', +(out > 0 && out < Math.PI * 1600 * 15 * 0.5), 1, 0); }
+// Brechen: Resonanz ohne Grenze wächst über alle Maßen, mit smax bleibt |s| ≤ smax und ṡ = 0 an der Grenze
+{ const om = 20, d = [0, 0], e = [0, 0]; let m = 0;
+  for (let t = 0; t < 10; t += 1e-3) { const x0 = 10 * Math.sin(om * t), x1 = 10 * Math.sin(om * (t + 1e-3)); Core.sloshStep(d, om, 0.005, 0, 0, x0, x1, 1e-3); Core.sloshStep(e, om, 0.005, 0, 0, x0, x1, 1e-3, 0.5); m = Math.max(m, Math.abs(e[0])); }
+  check('Brechen: ohne Grenze bei Resonanz |s| > 5', +(Math.abs(d[0]) > 5 || Math.abs(d[1]) > 100), 1, 0);
+  check('Brechen: mit Grenze |s| ≤ 0,5', m, 0.5, 1e-12); }
