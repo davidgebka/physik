@@ -29,6 +29,13 @@ const tp = Core.section({ type: 'T', b: 100, h: 100, tw: 10, tf: 10 }), yc = (90
 check('T: Schwerpunkt ab Unterkante', tp.yc, yc);
 check('T: I (Steiner)', tp.I, 10 * 90 ** 3 / 12 + 900 * (45 - yc) ** 2 + 100 * 1000 / 12 + 1000 * (95 - yc) ** 2);
 check('T: eT + eB = h', tp.eT + tp.eB, 100);
+// umgedrehtes U 292×120, Bretter 21: Zargen 2 × 21 × 120 + Brett 250 × 21 dazwischen, I geschlossen über Steiner
+const un = Core.section({ type: 'Un', b: 292, h: 120, t: 21 }), ycU = (2 * 21 * 120 * 60 + 250 * 21 * 109.5) / (2 * 21 * 120 + 250 * 21);
+check('U umgedreht: A', un.A, 2 * 21 * 120 + 250 * 21);
+check('U umgedreht: Schwerpunkt', un.yc, ycU);
+check('U umgedreht: I (Steiner)', un.I, 2 * (21 * 120 ** 3 / 12 + 21 * 120 * (60 - ycU) ** 2) + 250 * 21 ** 3 / 12 + 250 * 21 * (109.5 - ycU) ** 2);
+check('U umgedreht = T mit Steg 2t', un.I, Core.section({ type: 'T', b: 292, h: 120, tw: 42, tf: 21 }).I);
+check('U umgedreht: Brett zu dick ungültig', Core.section({ type: 'Un', b: 40, h: 120, t: 21 }).err ? 1 : 0, 1, 0);
 check('Ungültig: Wand zu dick', Core.section({ type: 'rhs', b: 20, h: 40, t: 10 }).err ? 1 : 0, 1, 0);
 
 // ---- Statik ----
