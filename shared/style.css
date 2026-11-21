@@ -9,9 +9,9 @@
   --warn:#d32f2f;--warn-a:rgba(211,47,47,.12);
   --water:#1f6fe0;--water-a:rgba(31,111,224,.28);
   --light:#d48a00;--light-a:rgba(212,138,0,.28);
-  --mech:#12994a;--mech-a:rgba(18,153,74,.25);
-  --load:#7b3fbf;--load-a:rgba(123,63,191,.22);
-  --elec:#c0189a;--elec-a:rgba(192,24,154,.22);
+  --mech:#0a7e3a;--mech-a:rgba(10,126,58,.25);
+  --load:#712a94;--load-a:rgba(113,42,148,.22);
+  --elec:#03919d;--elec-a:rgba(3,145,157,.22);
   --font:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif
 }
 @media(pointer:coarse){:root{--h:48px}}
