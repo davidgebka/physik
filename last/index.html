@@ -650,7 +650,7 @@ function renderStats() {
   if (R.imp.length) { const nmax = Math.max(...R.imp.map(o => o.n)), rg = R.imp.some(o => o.rigid); put({ l: 'Stoßfaktor', v: rg ? '⚠ ∞' : '× ' + nf2.format(nmax), w: rg, t: TERM.n, n: rg ? 'Stoß auf starres Lager' : 'fallende Last' }, true); }
   put({ l: 'Gewicht', v: fv(R.mass) + ' kg', n: mt.name + (RF ? ' · ' + vs(R.mass, RF.mass, v => fv(v) + ' kg') : '') }, true);
   put({ l: 'Verhältnis Durchbiegung', v: lx, t: TERM.lx, n: `Grenze l/${S.lim}, l = ${nf0.format(R.lim.ref)} mm, bei x = ${nf0.format(R.max.wFin.x)} mm` });
-  put({ l: 'Sicherheit Schub', v: w(Sv < mt.S, fS(Sv)), w: Sv < mt.S, t: TERM.S, n: `Schubfestigkeit / Schubspannung, Ziel ≥ ${nf1.format(mt.S)}` + (RF ? ' · ' + vs(Sv, rmt.fv / RF.max.tau.v, fS) : '') });
+  put({ l: 'Sicherheit Schub', v: w(Sv < mt.S, fS(Sv)), w: Sv < mt.S, t: TERM.S, n: `Ziel ≥ ${nf1.format(mt.S)}` + (RF ? ' · ' + vs(Sv, rmt.fv / RF.max.tau.v, fS) : '') });
   if (creep) put({ l: 'Durchbiegung sofort', v: mm(R.max.wInst.v), n: `ohne Kriechen (Dauerlast ×${nf2.format(1 + mt.kdef)} im Endzustand)` });
   if (R.imp.length) put({ l: 'Durchbiegung beim Stoß', v: mm(R.max.wPeak.v) });
   put({ l: 'Spannung max.', t: TERM.sig, v: fv(Math.abs(sg.v)) + ' N/mm²', n: `bei x = ${nf0.format(sg.x)} mm, Festigkeit f = ${fv(mt.f)} N/mm²` });

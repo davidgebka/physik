@@ -9,9 +9,9 @@
   --warn:#d32f2f;--warn-a:rgba(211,47,47,.12);
   --water:#1f6fe0;--water-a:rgba(31,111,224,.28);
   --light:#d48a00;--light-a:rgba(212,138,0,.28);
-  --mech:#12994a;--mech-a:rgba(18,153,74,.25);
-  --load:#7b3fbf;--load-a:rgba(123,63,191,.22);
-  --elec:#c0189a;--elec-a:rgba(192,24,154,.22);
+  --mech:#0a7e3a;--mech-a:rgba(10,126,58,.25);
+  --load:#712a94;--load-a:rgba(113,42,148,.22);
+  --elec:#03919d;--elec-a:rgba(3,145,157,.22);
   --font:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif
 }
 @media(pointer:coarse){:root{--h:48px}}
@@ -71,15 +71,16 @@ details>summary{font-size:14px;cursor:pointer;line-height:24px}
 .term{text-decoration:underline dotted;text-underline-offset:3px;cursor:help}
 
 /* Urteil (dpVerdict): Stufe als Marke, Satz als Hauptaussage */
-.verdict{grid-column:1/-1;display:flex;flex-wrap:wrap;align-items:center;gap:0 12px;padding:12px 0 24px}
+.verdict{display:flex;flex-wrap:wrap;align-items:flex-start;gap:0 12px;padding:0 0 24px} /* Marke an der ersten Zeile; ohne Innenabstand oben, sonst liegen die Kennwerte 12 px neben dem Raster */
 .verdict .lv{display:inline-flex;align-items:center;height:24px;padding:0 6px;font-size:14px;font-weight:700;border:1px solid var(--ink);white-space:nowrap}
 .verdict.l1 .lv{background:var(--warn-a);color:var(--warn);border-color:var(--warn)}
 .verdict.l2 .lv{background:var(--warn);color:#fff;border-color:var(--warn)}
-.verdict .vt{font-size:18px;line-height:24px;font-weight:700;flex:1 1 320px}
+.verdict .vt{font-size:18px;line-height:24px;font-weight:700;flex:1 1 320px;max-width:60ch}
 .verdict .vx{flex-basis:100%;font-size:12px;color:var(--ink2)}
 
 /* Kennwerte: Label (eine Zeile) – Wert – Notiz; Zeilen per subgrid, damit Werte einer Reihe auf einer Linie stehen */
-.stats{display:grid;grid-template-columns:repeat(auto-fill,minmax(168px,1fr));box-shadow:inset 0 -1px var(--ink);overflow:hidden}
+.stats{box-shadow:inset 0 -1px var(--ink)}
+.sts{display:grid;grid-template-columns:repeat(auto-fit,minmax(168px,1fr));overflow:hidden} /* auto-fit: Kennwerte füllen die Breite */
 .stat{box-shadow:inset 0 1px var(--ink),1px 0 var(--ink);padding:0 6px;min-width:0;display:grid;grid-row:span 3;grid-template-rows:subgrid;align-content:start}
 .stat>span:first-child{font-size:12px;line-height:24px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .stat b{display:block;font-size:28px;line-height:48px;font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -88,7 +89,7 @@ details>summary{font-size:14px;cursor:pointer;line-height:24px}
 .stat>span+b+span,.stat>b+span{font-size:12px;line-height:24px;color:var(--ink2)}
 .stat.warn b{color:var(--warn)}
 /* Alle Werte (dpStats): kompakte Tabelle, aufklappbar */
-details.more{grid-column:1/-1;box-shadow:inset 0 1px var(--ink)}
+details.more{box-shadow:inset 0 1px var(--ink)}
 details.more>summary{font-size:14px}
 table.kv{border-collapse:collapse;width:100%;font-size:14px;line-height:24px}
 table.kv td{padding:0 6px;box-shadow:inset 0 1px var(--dot);vertical-align:top}
@@ -133,16 +134,16 @@ table.kv tr.warn td:nth-child(2){color:var(--warn)}
 .intro h2{font-size:28px;line-height:48px;margin:0;font-weight:700}
 .intro h2 a{color:inherit;text-decoration:none;box-shadow:inset 0 -2px var(--c,var(--ink))}
 .intro p{margin:0;color:var(--ink2);max-width:68ch}
-.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(264px,1fr));gap:24px;padding:24px;max-width:1440px;margin:0 auto}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(216px,1fr));gap:24px;padding:24px;max-width:1440px;margin:0 auto}
 .card{box-shadow:inset 0 1px var(--ink);padding:0 0 24px;color:var(--ink);text-decoration:none;display:flex;flex-direction:column;gap:0}
 .card:hover canvas,.card:focus-visible canvas{background:var(--fill)}
 .card canvas{height:168px;background:transparent}
 .card h3{margin:0;font-size:18px;line-height:24px;display:flex;align-items:center;gap:12px;padding-top:12px}
-.card .q{font-size:14px;font-weight:700}
+.card .q{font-size:14px;font-weight:400;color:var(--ink2)}
 .card p{margin:0;color:var(--ink2);font-size:14px}
 .card.off{color:var(--ink2);pointer-events:none}
 .badge{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink2)}
-@media(max-width:860px){.intro{padding:24px 12px 0}.cards{padding:24px 12px}.intro h2{font-size:22px;line-height:24px;padding:12px 0}}
+@media(max-width:860px){.intro{padding:24px 12px 0}.cards{padding:24px 12px}}
 
 /* Vorlagen-Galerie (dpGallery): Dialog über der Seite, Karten im 24-px-Raster, Skizze 96 px */
 dialog.gal{width:min(1008px,calc(100vw - 24px));max-height:calc(100vh - 48px);padding:0 24px 24px;border:1px solid var(--ink);border-radius:0;background:var(--bg);color:var(--ink)}

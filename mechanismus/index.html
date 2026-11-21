@@ -594,7 +594,13 @@ function drawEd() {
   if (UI.mode === 'build' && UI.sel && UI.sel.t === 'l') { const L = S.links[UI.sel.i]; if (L) { const a = pos(L[0]), b = pos(L[1]), m = T([(a[0] + b[0]) / 2, (a[1] + b[1]) / 2]);
     ctx.fillText(nf1.format(Math.hypot(b[0] - a[0], b[1] - a[1])) + ' mm', m[0] + 8, m[1] + 14); } }
 }
-function blank(c, txt) { const { ctx, w, h } = prep(c); ctx.font = DP_CFONT; ctx.fillStyle = css('--ink2'); ctx.textAlign = 'center'; ctx.fillText(txt, w / 2, h / 2); }
+function blank(c, txt) { // Hinweis im leeren Diagramm, auf schmalen Schirmen umbrochen (Zeile 24 px)
+  const { ctx, w, h } = prep(c); ctx.font = DP_CFONT; ctx.fillStyle = css('--ink2'); ctx.textAlign = 'center';
+  const lines = []; let ln = '';
+  for (const wd of String(txt).split(' ')) { const t = ln ? ln + ' ' + wd : wd; if (ln && ctx.measureText(t).width > w - 24) { lines.push(ln); ln = wd; } else ln = t; }
+  if (ln) lines.push(ln);
+  lines.forEach((l, i) => ctx.fillText(l, w / 2, h / 2 + (i - (lines.length - 1) / 2) * 24));
+}
 function drawCharts() {
   if (!ok()) { ['c1', 'c2', 'c3', 'c4'].forEach(id => blank($(id), A ? A.err : '')); return; }
   const d = A.disp, x0 = d[0].v, x1 = Math.max(d[d.length - 1].v, x0 + 1e-6), M = css('--mech'), I = css('--ink'), W = css('--warn');

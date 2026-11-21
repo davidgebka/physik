@@ -49,19 +49,17 @@ Nur diese Farben sind erlaubt. Module definieren **keine eigenen Farben** in `:r
 | `--warn-a` | `rgba(211,47,47,.12)` | Fläche eines Grenzbereichs (z. B. μ < 40°) | – |
 
 **Physik-Familien** – je Familie genau zwei Tokens: `--<familie>` (Linie, Punkt, Text nie) und `--<familie>-a` (Fläche).
-| Familie | Linie | Fläche | Module (★ = Idee aus konzept.md) | Kontrast Linie |
-|---|---|---|---|---|
-| Fluid | `--water` `#1f6fe0` | `--water-a` `rgba(31,111,224,.28)` | Gefäß; ★ Nachtropfen, Schwimmen, Resonator | 4,8:1 |
-| Licht & Strahlung | `--light` `#d48a00` | `--light-a` `rgba(212,138,0,.28)` | Lampenschirm; ★ Sonnenstand, Lichtleiter | 2,8:1 → Linien ≥ 2,5 px |
-| Bewegung | `--mech` `#12994a` | `--mech-a` `rgba(18,153,74,.25)` | Mechanismen; ★ Tasten-Haptik, Federn | 3,7:1 |
-| Kraft & Festigkeit | `--load` `#7b3fbf` | `--load-a` `rgba(123,63,191,.22)` | Last; ★ Schnapphaken, Festkörpergelenk, Holz | 6,4:1 |
-| Elektrik | `--elec` `#c0189a` | `--elec-a` `rgba(192,24,154,.22)` | Elektronik; ★ Energiebudget | 5,5:1 |
+| Familie | Linie | Fläche | Module (★ = Idee aus konzept.md) | Bezug | Kontrast Linie |
+|---|---|---|---|---|---|
+| Fluid | `--water` `#1f6fe0` | `--water-a` `rgba(31,111,224,.28)` | Gefäß; ★ Nachtropfen, Schwimmen, Resonator | Wasser | 4,8:1 |
+| Licht & Strahlung | `--light` `#d48a00` | `--light-a` `rgba(212,138,0,.28)` | Lampenschirm; ★ Sonnenstand, Lichtleiter | warmweißes Glühlicht; hellste Familie | 2,8:1 → Linien ≥ 2,5 px |
+| Bewegung | `--mech` `#0a7e3a` | `--mech-a` `rgba(10,126,58,.25)` | Mechanismen; ★ Tasten-Haptik, Federn | Grün = „läuft frei“, Gegenpol zu „klemmt“ | 5,2:1 |
+| Kraft & Festigkeit | `--load` `#712a94` | `--load-a` `rgba(113,42,148,.22)` | Last; ★ Schnapphaken, Festkörpergelenk, Holz | Purpur der Spannungsoptik; dunkelste Familie (Last ist schwer) | 8,5:1 |
+| Elektrik | `--elec` `#03919d` | `--elec-a` `rgba(3,145,157,.22)` | Elektronik; ★ Energiebudget | Elektroblau: Funke, Lichtbogen, Statusanzeige | 3,8:1 |
 
-`--load` wurde am 21.11.2026 von `#5b55c9` (Farbton ~244°) nach `#7b3fbf` (~268°) verschoben: Abstand zu `--water` (~215°) vorher knapp 30°, die Modulquadrate in der Navigation waren kaum zu unterscheiden.
+**Farbschema vom 21.11.2026** (Entscheidung des Nutzers nach Vorschlag des Style-Chats): Farbtöne gemessen in OKLCH (wahrnehmungsgleich) – Licht 72°, Bewegung 150°, Elektrik 205°, Fluid 258°, Kraft 312°, Warnung 26°; Abstände 53–78°. Die Helligkeit trägt Bedeutung (Licht hell, Kraft dunkel) und trennt die Farben bei Farbfehlsichtigkeit: kleinster Abstand bei Protanopie/Deuteranopie ΔE 9/8 (OKLab ×100, Simulation Machado 2009), vorher 4 (Licht/Bewegung, Bewegung/Warnung). Geändert: `--mech` von `#12994a` (dunkler), `--load` von `#7b3fbf` (dunkler), `--elec` von `#c0189a` (Magenta lag 39° neben Kraft und 46° neben Warnung; Cyan füllt die Lücke zwischen Grün und Blau). Schwachstelle: Tritanopie (~0,01 %) Fluid/Elektrik ΔE 5 – vertretbar, weil Bedeutung nie nur über Farbe läuft. Frühere Verschiebung: `--load` 21.11.2026 von `#5b55c9` nach `#7b3fbf` (zu nah an `--water`).
 
-`--elec` (21.11.2026, Wunsch Elektronik): Magenta ~314°, je 46° Abstand zu `--load` (268°) und `--warn` (0°); Türkis (~180°) verworfen, nur 35° zu `--water` und `--mech` und dort leicht verwechselbar. Nähe zu Rot ist vertretbar, weil Warnungen nie nur über Farbe laufen (⚠ + Text). Damit fünf von höchstens sechs Familien belegt.
-
-**Warum Familien statt Modulfarben:** Neue Module bekommen die Farbe ihrer Physik, nicht eine neue. So reichen wenige Farben für viele Module. Eine **neue Familie** nur per Styleguide-Eintrag durch den Style-Chat und nur wenn: Farbton ≥ 30° Abstand zu allen Familien und zu `--warn`, Linienkontrast ≥ 2,5:1, höchstens sechs Familien insgesamt.
+**Warum Familien statt Modulfarben:** Neue Module bekommen die Farbe ihrer Physik, nicht eine neue. So reichen wenige Farben für viele Module. Eine **neue Familie** nur per Styleguide-Eintrag durch den Style-Chat und nur wenn: Farbton ≥ 30° Abstand in OKLCH zu allen Familien und zu `--warn`, bei Farbfehlsichtigkeit (Protan/Deutan) ΔE ≥ 8 zu allen, Linienkontrast ≥ 2,5:1, höchstens sechs Familien insgesamt.
 
 **Migration von D (ab 20.11.2026 nicht mehr verwenden)**
 | alt | neu |
@@ -112,8 +110,8 @@ Nur diese Farben sind erlaubt. Module definieren **keine eigenen Farben** in `:r
 - `input[type=range]`, Checkbox: `accent-color: var(--ctl)`.
 - `.ctl` (label · range · output): Zeile 24 px (Touch 48 px), output mit Einheit.
 - **Ergebnisse in drei Ebenen** (`dpStats(dpVerdict(…), haupt, weitere, key)`):
-  - **Urteil** `.verdict`: Marke (✓ passt = Rahmen `--ink`; ⚠ knapp = Fläche `--warn-a`, Schrift und Rahmen `--warn`; ⚠ kritisch = `--warn` gefüllt, Schrift weiß) und Satz 18 px/700; gemerkter Stand 12 px `--ink2` darunter. Stufen damit auch ohne Farbsehen unterscheidbar (Fläche, Füllung, Wort).
-  - **Hauptkennwerte** `.stat` (3–5, Überschreitungen immer dazu): Label 12 px **einzeilig** (Stelle, Bedingungen in die Notiz), Wert 28 px auf 48 px, Notiz 12 px `--ink2`. Zeilen per `subgrid`, damit Werte einer Reihe auf einer Linie stehen. Reiner Text als Wert 18 px.
+  - **Urteil** `.verdict`: Marke (✓ passt = Rahmen `--ink`; ⚠ knapp = Fläche `--warn-a`, Schrift und Rahmen `--warn`; ⚠ kritisch = `--warn` gefüllt, Schrift weiß) und Satz 18 px/700, höchstens 60 Zeichen breit; Marke steht an der ersten Zeile, Urteil ohne Abstand oben (sonst liegen die Kennwerte 12 px neben dem Raster); gemerkter Stand 12 px `--ink2` darunter. Stufen damit auch ohne Farbsehen unterscheidbar (Fläche, Füllung, Wort).
+  - **Hauptkennwerte** `.stat` in eigenem Raster `.sts` (3–5, Überschreitungen immer dazu; die Reihe füllt die Breite): Label 12 px **einzeilig** (Stelle, Bedingungen in die Notiz), Wert 28 px auf 48 px, Notiz 12 px `--ink2`. Zeilen per `subgrid`, damit Werte einer Reihe auf einer Linie stehen. Reiner Text als Wert 18 px.
   - **Alle Werte** `details.more` mit `table.kv` (14 px, Wert rechtsbündig fett, Notiz 12 px); Auf/zu bleibt beim Neuzeichnen erhalten.
 - **Fachbegriff** `dpTerm(wort, erklärung)` bzw. `t` im Kennwert: gepunktet unterstrichen, Erklärung als `title`.
 - **Modell & Gültigkeit** `.model`: aufklappbar, Unterpunkte als `h3` 14 px/700, Text 14 px `--ink` mit höchstens 68 Zeichen je Zeile, ab ~60em zweispaltig. Bedienhinweise unter den Editoren nur ein Satz je Werkzeug; Ausführliches unter „Bedienung“ im Modelltext.
@@ -123,7 +121,7 @@ Nur diese Farben sind erlaubt. Module definieren **keine eigenen Farben** in `:r
 - Fokus: `:focus-visible` 2 px `--ink`, Abstand 2 px (auch auf schwarzen Knöpfen sichtbar).
 - `.note`: 12 px / 24 px `--ink2`.
 - **Vorlagen-Galerie** (`dpGallery`, seit 21.11.2026): Knopf „▦ Vorlage …“ öffnet einen Dialog (1 px `--ink`, Hintergrund abgedunkelt), Kopfzeile bleibt stehen. Gruppen als Abschnitt (11 px Versalien, `--ink2`), Karten wie `.card` (oben 1 px `--ink`, ab 144 px Breite): Skizze 96 px, Name 13 px/700, Entwurf · Jahr bzw. Prinzip 11 px `--ink2`; Hover/Fokus `--fill`. Skizzen über `dpSketch`: Kontur `--ink`, Medium in der Familie (`-a`-Fläche bzw. Linie), Gestell `--mut`; jede Skizze einzeln eingepasst (kein gemeinsamer Maßstab).
-- Startseite: oben die Entwurfsfragen 28 px als Links, unterstrichen in der Familienfarbe (`DP_MODULES[].q`), darunter ein Satz. `.card` = oben 1 px `--ink`, Skizze 168 px (`dpSketch`, Medium in der Familienfarbe), Modulquadrat + Name 18 px + Frage, Beschreibung `--ink2`; `.card.off` in `--ink2` mit „in Arbeit“.
+- Startseite: oben die Entwurfsfragen 28 px/48 px als Links (auch auf dem Telefon, umbrechen statt kleiner), unterstrichen in der Familienfarbe (`DP_MODULES[].q`), darunter ein Satz. `.card` = oben 1 px `--ink`, ab 216 px breit (fünf Module in einer Reihe ab ~1200 px), Skizze 168 px (`dpSketch`, Medium in der Familienfarbe), Modulquadrat + Name 18 px/700 + Frage 14 px `--ink2` (normal, die Fragen stehen schon groß oben), Beschreibung `--ink2`; `.card.off` in `--ink2` mit „in Arbeit“.
 - Keine Radien, keine Schatten, keine Verläufe (außer Falschfarbe und Feldbild).
 
 ## 7. Zeichenfläche (Editor-Canvas)
