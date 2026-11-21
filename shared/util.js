@@ -185,10 +185,6 @@ function dpDelta(v, r) {
   if (!isFinite(v) || !isFinite(r) || r === 0) return '';
   const p = (v / r - 1) * 100; return Math.abs(p) < 0.5 ? '±0 %' : (p > 0 ? '+' : '−') + nf0.format(Math.abs(p)) + ' %';
 }
-// Auswahlliste mit Gruppen (Vorlagen): groups = [[Gruppe, [[key, Name], …]], …]
-function dpOptions(groups, first = 'Vorlage …') {
-  return (first ? `<option value="">${first}</option>` : '') + groups.map(([g, a]) => `<optgroup label="${g}">${a.map(([k, n]) => `<option value="${k}">${n}</option>`).join('')}</optgroup>`).join('');
-}
 // Vorlagen-Galerie (ersetzt die Textliste): groups = [[Gruppe, [{k, n, s?, d}, …]], …] – k Schlüssel, n Name, s Zusatz (Entwurf · Jahr bzw. Prinzip),
 // d() liefert die Skizze für dpSketch (erst beim ersten Öffnen gerufen). Wahl → onPick(k). Der Knopf öffnet die Galerie.
 function dpGallery(btn, groups, onPick, title = 'Vorlage wählen') {
