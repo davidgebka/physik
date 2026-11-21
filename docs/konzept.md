@@ -57,7 +57,7 @@ Bei Zielkonflikten entscheidet A.
 | Licht / Lampenschirm | `licht` | v2.6 | Wie verteilt der Schirm das Licht, wird der Tisch hell genug, blendet es? |
 | Last / Statik | `last` | v1.6 | Hält das Brett/der Balken, wie stark hängt es durch, schwingt es? |
 | Mechanismen | `mechanismus` | v1.5 | Wie bewegt sich das Getriebe, wo klemmt es, welche Kraft braucht es? |
-| Elektronik | `elektronik` | Konzept | Hält der Akku lange genug, reicht der Strom, wird etwas zu heiß? |
+| Elektronik | `elektronik` | v1 | Hält der Akku lange genug, reicht der Strom, wird etwas zu heiß? |
 
 ## Roadmap (21.11.2026, nach Persona A)
 **Moratorium auf Tiefe:** In Gefäß und Licht keine neuen Physik-Verfeinerungen, bis die Punkte „Jetzt“ erledigt sind. Fehlerbehebungen und Bedienung gehen immer.
@@ -70,7 +70,7 @@ Bei Zielkonflikten entscheidet A.
 5. ~~**Startseite nach Fragen**~~ – erledigt 21.11.2026: „Kippt es? Wie hell? Klemmt es? Hält es?“ als Einstieg, Karten mit Skizze.
 
 **Danach – Breite statt Tiefe** (Reihenfolge = Priorität)
-0. **Neues Modul Elektronik** (21.11.2026): v1 nach `docs/elektronik.md` auf Branch `modul/elektronik`; in der Registry `ready: false`, bis v1 steht.
+0. ~~**Neues Modul Elektronik**~~ – v1 integriert 21.11.2026; v2/v3 nach `docs/elektronik.md`.
 1. Mechanismen: **Federn/Gasdruckfedern** (Klappen, Deckel; baut auf v1.1 auf)
 2. **Kippsicherheit allgemeiner Körper/Möbel** (hohe Regale, Leuchten auf Fuß; sicherheitsrelevant)
 3. **Berührtemperatur** (Wärmeeindringkoeffizient; wenig Aufwand, typisch Design)
@@ -88,5 +88,4 @@ Bei Zielkonflikten entscheidet A.
 (Modul-Chats tragen hier ein; der zentrale Chat bzw. der Style-Chat arbeitet sie ab. Erledigtes wandert nach `docs/historie.md`.)
 
 Offen:
-- **Elektronik** – Style-Chat: neue Physik-Familie **Elektrik** `--elec`/`--elec-a` (Farbton mit genug Abstand zu `--water`, `--light`, `--mech`, `--load`, `--warn`; Kontrast wie die übrigen Familien) im Styleguide § Farben und in style.css. Bis dahin nutzt das Modul `--ink`.
-- **Navigation mit fünf Modulen** (21.11.2026, zentraler Chat) – Style-Chat: Kopfzeile auf 390 px für fünf Segmente auslegen (heute 387 px Inhalt in 366 px, Seite scrollt quer). Bis dahin zeigt `dpHeader` nur Module mit `ready: true`; nötig, sobald Elektronik fertig ist.
+- (keine)

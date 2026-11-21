@@ -16,6 +16,11 @@ Vom zentralen Chat gepflegt. Neueste Einträge oben einfügen.
 - **19.11.2026, Umzug nach GitHub**: Stand 1 als erster Commit in `davidgebka/physik`; Dokumente aus dem claude.ai-Projekt nach `docs/`; Projektanweisungen → `CLAUDE.md`; CI ergänzt. Das claude.ai-Projekt ist ab jetzt nicht mehr Quelle für Code.
 
 ## Erledigte Wünsche an shared
+Erledigt (21.11.2026, zentraler Chat, Integration Elektronik v1):
+- **Style-Chat** (Elektronik, PR #28): Familie Elektrik `--elec #c0189a`/`--elec-a`; Navigation für fünf Segmente auf Telefon.
+- **shared/util.js** (Elektronik): `ready: true`, `color: '--elec'`; `dpHeader` zeigt nicht fertige Module wieder ausgegraut (Styleguide § 6).
+- **index.html**: Elektronik-Skizze in `--elec`/`--elec-a`. **README.md**: `elektronik/` in Struktur und Tests.
+
 Erledigt (21.11.2026, zentraler Chat, Elektronik):
 - **shared/util.js** (Elektronik): `elektronik` in `DP_MODULES` mit `ready: false`; Farbe vorerst `--ink`, bis `--elec` in style.css steht.
 - **index.html** (Elektronik): Startseiten-Karte mit Skizze (Batterie, LED), ausgegraut „in Arbeit“.
