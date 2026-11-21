@@ -71,11 +71,11 @@ details>summary{font-size:14px;cursor:pointer;line-height:24px}
 .term{text-decoration:underline dotted;text-underline-offset:3px;cursor:help}
 
 /* Urteil (dpVerdict): Stufe als Marke, Satz als Hauptaussage */
-.verdict{grid-column:1/-1;display:flex;flex-wrap:wrap;align-items:center;gap:0 12px;padding:12px 0 24px}
+.verdict{grid-column:1/-1;display:flex;flex-wrap:wrap;align-items:flex-start;gap:0 12px;padding:0 0 24px} /* Marke an der ersten Zeile; ohne Innenabstand oben, sonst liegen die Kennwerte 12 px neben dem Raster */
 .verdict .lv{display:inline-flex;align-items:center;height:24px;padding:0 6px;font-size:14px;font-weight:700;border:1px solid var(--ink);white-space:nowrap}
 .verdict.l1 .lv{background:var(--warn-a);color:var(--warn);border-color:var(--warn)}
 .verdict.l2 .lv{background:var(--warn);color:#fff;border-color:var(--warn)}
-.verdict .vt{font-size:18px;line-height:24px;font-weight:700;flex:1 1 320px}
+.verdict .vt{font-size:18px;line-height:24px;font-weight:700;flex:1 1 320px;max-width:60ch}
 .verdict .vx{flex-basis:100%;font-size:12px;color:var(--ink2)}
 
 /* Kennwerte: Label (eine Zeile) – Wert – Notiz; Zeilen per subgrid, damit Werte einer Reihe auf einer Linie stehen */
@@ -138,11 +138,11 @@ table.kv tr.warn td:nth-child(2){color:var(--warn)}
 .card:hover canvas,.card:focus-visible canvas{background:var(--fill)}
 .card canvas{height:168px;background:transparent}
 .card h3{margin:0;font-size:18px;line-height:24px;display:flex;align-items:center;gap:12px;padding-top:12px}
-.card .q{font-size:14px;font-weight:700}
+.card .q{font-size:14px;font-weight:400;color:var(--ink2)}
 .card p{margin:0;color:var(--ink2);font-size:14px}
 .card.off{color:var(--ink2);pointer-events:none}
 .badge{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink2)}
-@media(max-width:860px){.intro{padding:24px 12px 0}.cards{padding:24px 12px}.intro h2{font-size:22px;line-height:24px;padding:12px 0}}
+@media(max-width:860px){.intro{padding:24px 12px 0}.cards{padding:24px 12px}}
 
 /* Vorlagen-Galerie (dpGallery): Dialog über der Seite, Karten im 24-px-Raster, Skizze 96 px */
 dialog.gal{width:min(1008px,calc(100vw - 24px));max-height:calc(100vh - 48px);padding:0 24px 24px;border:1px solid var(--ink);border-radius:0;background:var(--bg);color:var(--ink)}

@@ -112,7 +112,7 @@ Nur diese Farben sind erlaubt. Module definieren **keine eigenen Farben** in `:r
 - `input[type=range]`, Checkbox: `accent-color: var(--ctl)`.
 - `.ctl` (label · range · output): Zeile 24 px (Touch 48 px), output mit Einheit.
 - **Ergebnisse in drei Ebenen** (`dpStats(dpVerdict(…), haupt, weitere, key)`):
-  - **Urteil** `.verdict`: Marke (✓ passt = Rahmen `--ink`; ⚠ knapp = Fläche `--warn-a`, Schrift und Rahmen `--warn`; ⚠ kritisch = `--warn` gefüllt, Schrift weiß) und Satz 18 px/700; gemerkter Stand 12 px `--ink2` darunter. Stufen damit auch ohne Farbsehen unterscheidbar (Fläche, Füllung, Wort).
+  - **Urteil** `.verdict`: Marke (✓ passt = Rahmen `--ink`; ⚠ knapp = Fläche `--warn-a`, Schrift und Rahmen `--warn`; ⚠ kritisch = `--warn` gefüllt, Schrift weiß) und Satz 18 px/700, höchstens 60 Zeichen breit; Marke steht an der ersten Zeile, Urteil ohne Abstand oben (sonst liegen die Kennwerte 12 px neben dem Raster); gemerkter Stand 12 px `--ink2` darunter. Stufen damit auch ohne Farbsehen unterscheidbar (Fläche, Füllung, Wort).
   - **Hauptkennwerte** `.stat` (3–5, Überschreitungen immer dazu): Label 12 px **einzeilig** (Stelle, Bedingungen in die Notiz), Wert 28 px auf 48 px, Notiz 12 px `--ink2`. Zeilen per `subgrid`, damit Werte einer Reihe auf einer Linie stehen. Reiner Text als Wert 18 px.
   - **Alle Werte** `details.more` mit `table.kv` (14 px, Wert rechtsbündig fett, Notiz 12 px); Auf/zu bleibt beim Neuzeichnen erhalten.
 - **Fachbegriff** `dpTerm(wort, erklärung)` bzw. `t` im Kennwert: gepunktet unterstrichen, Erklärung als `title`.
@@ -123,7 +123,7 @@ Nur diese Farben sind erlaubt. Module definieren **keine eigenen Farben** in `:r
 - Fokus: `:focus-visible` 2 px `--ink`, Abstand 2 px (auch auf schwarzen Knöpfen sichtbar).
 - `.note`: 12 px / 24 px `--ink2`.
 - **Vorlagen-Galerie** (`dpGallery`, seit 21.11.2026): Knopf „▦ Vorlage …“ öffnet einen Dialog (1 px `--ink`, Hintergrund abgedunkelt), Kopfzeile bleibt stehen. Gruppen als Abschnitt (11 px Versalien, `--ink2`), Karten wie `.card` (oben 1 px `--ink`, ab 144 px Breite): Skizze 96 px, Name 13 px/700, Entwurf · Jahr bzw. Prinzip 11 px `--ink2`; Hover/Fokus `--fill`. Skizzen über `dpSketch`: Kontur `--ink`, Medium in der Familie (`-a`-Fläche bzw. Linie), Gestell `--mut`; jede Skizze einzeln eingepasst (kein gemeinsamer Maßstab).
-- Startseite: oben die Entwurfsfragen 28 px als Links, unterstrichen in der Familienfarbe (`DP_MODULES[].q`), darunter ein Satz. `.card` = oben 1 px `--ink`, Skizze 168 px (`dpSketch`, Medium in der Familienfarbe), Modulquadrat + Name 18 px + Frage, Beschreibung `--ink2`; `.card.off` in `--ink2` mit „in Arbeit“.
+- Startseite: oben die Entwurfsfragen 28 px/48 px als Links (auch auf dem Telefon, umbrechen statt kleiner), unterstrichen in der Familienfarbe (`DP_MODULES[].q`), darunter ein Satz. `.card` = oben 1 px `--ink`, Skizze 168 px (`dpSketch`, Medium in der Familienfarbe), Modulquadrat + Name 18 px/700 + Frage 14 px `--ink2` (normal, die Fragen stehen schon groß oben), Beschreibung `--ink2`; `.card.off` in `--ink2` mit „in Arbeit“.
 - Keine Radien, keine Schatten, keine Verläufe (außer Falschfarbe und Feldbild).
 
 ## 7. Zeichenfläche (Editor-Canvas)
