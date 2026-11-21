@@ -90,3 +90,56 @@ check('300 Zufallsnetze: alle konvergiert', nconv, 0); check('300 Zufallsnetze: 
   ok('T-Abzweig teilt die Leitung', T.some(w => w + '' === '0,0,2,0') && T.some(w => w + '' === '2,0,4,0'));
   ok('Diagonale durch den Abzweigpunkt wird ebenfalls geteilt', T.some(w => w + '' === '0,2,2,0')); }
 { const T = Core.tidy({ parts: [], wires: [[0, 1, 4, 1], [2, 0, 2, 3]] }); ok('Kreuzung ohne Endpunkt bleibt getrennt', T.length === 2); }
+
+// ---- v2: Mehrpole ----
+const B = Core.BOARDS, RG = Core.REGS, TR = Core.TRANS;
+const nl = (f, n) => ({ k: 'nl', n, f });
+// Mikrocontroller: Aufnahme I0, Pin high an 1 kΩ: (Vio)/(1 kΩ + Ri), Pinstrom kommt aus der Versorgung
+{ const u = B.uno, r = S(3, [{ k: 'src', a: 1, b: 0, U: 9, Ri: 1e-6 }, nl(Core.mcuF(u, true), [1, 0, 2]), { k: 'g', a: 2, b: 0, g: 1e-3 }]);
+  const Ip = u.Vio / (1000 + u.Ri); check('Uno: Pinstrom high an 1 kΩ', -r.I[1][2], Ip, 1e-5); check('Uno: Versorgung = I0 + Pinstrom', r.I[1][0], u.I0 + Ip, 1e-5); }
+{ const u = B.esp32, r = S(4, [{ k: 'src', a: 1, b: 0, U: 5, Ri: 1e-6 }, nl(Core.mcuF(u, false), [1, 0, 2]), { k: 'g', a: 1, b: 2, g: 1e-3 }]);
+  check('ESP32: Pin low zieht Pull-up 1 kΩ nach Masse', r.I[1][2], 5 / (1000 + u.Ri), 1e-6); }
+// Linearregler 7805: 9 V → 50 Ω; Ausgang 5 V (0,05 Ω), Eingang = Ausgang + Iq, Verlust (Uein − Uaus)·I
+{ const R = RG.l7805, r = S(3, [{ k: 'src', a: 1, b: 0, U: 9, Ri: 1e-6 }, nl(Core.regF(R), [1, 2, 0]), { k: 'g', a: 2, b: 0, g: 1 / 50 }]);
+  const Vo = r.V[2] - r.V[0], Io = -r.I[1][1]; check('7805: Ausgang ≈ 5 V', Vo, 5 * 50 / 50.05, 1e-3); check('7805: Eingangsstrom = Io + Iq', r.I[1][0], Io + R.Iq, 1e-4); }
+{ const R = RG.l7805, r = S(3, [{ k: 'src', a: 1, b: 0, U: 6, Ri: 1e-6 }, nl(Core.regF(R), [1, 2, 0]), { k: 'g', a: 2, b: 0, g: 1 / 50 }]);
+  check('7805 an 6 V: Ausgang ≈ 6 − 2 V (Dropout)', r.V[2] - r.V[0], 4 * 50 / 50.05, 2e-3); }
+// Step-down: Leistungsbilanz Uein·Iein = Uaus·Iaus/η + Uein·Iq
+{ const R = RG.buck5, r = S(3, [{ k: 'src', a: 1, b: 0, U: 12, Ri: 1e-6 }, nl(Core.regF(R), [1, 2, 0]), { k: 'g', a: 2, b: 0, g: 0.1 }]);
+  const Vo = r.V[2] - r.V[0], Io = -r.I[1][1]; check('Step-down: 5 V an 10 Ω (Ausgang 0,05 Ω)', Io, 5 / 10.05, 1e-4); check('Step-down: Leistungsbilanz', 12 * r.I[1][0], Vo * Io / R.eta + 12 * R.Iq, 1e-3); }
+// Step-up an 1 × AA (Ri 0,15 Ω): Uein·Iein = P/η + Uein·Iq mit Uein = 1,5 − 0,15·Iein (quadratisch)
+{ const R = RG.boost5, r = S(3, [{ k: 'src', a: 1, b: 0, U: 1.5, Ri: 0.15 }, nl(Core.regF(R), [1, 2, 0]), { k: 'g', a: 2, b: 0, g: 1 / 50 }]);
+  const Vo = r.V[2] - r.V[0], Io = -r.I[1][1], Pq = Vo * Io / R.eta, Vi = r.V[1] - r.V[0];
+  check('Step-up: Ausgang ≈ 5 V', Vo, 5 * 50 / 50.05, 1e-3); check('Step-up: Eingangsstrom aus Bilanz', r.I[1][0], (Pq + Vi * R.Iq * Math.tanh(Vi / 0.3)) / Vi, 1e-4); check('Step-up: Klemmenspannung', Vi, 1.5 - 0.15 * r.I[1][0], 1e-6); }
+// MOSFET: Id = Vds·sig((Vgs − Vm)/w)/Ron; Logik-Pegel an 5 V schaltet durch, Standard an 3,3 V kaum
+for (const [k, Vg] of [['irlz', 5], ['irf', 3.3], ['irf', 10]]) { const T = TR[k], r = S(4, [{ k: 'src', a: 1, b: 0, U: 12, Ri: 1e-6 }, { k: 'g', a: 1, b: 2, g: 1 / 12 }, { k: 'src', a: 3, b: 0, U: Vg, Ri: 1e-6 }, nl(Core.trF(T), [3, 2, 0])]);
+  const Ron = T.Ron / (1 / (1 + Math.exp(-(Vg - T.Vm) / T.w))); check(`${T.n} an ${Vg} V: Strom 12 V/(12 Ω + Ron)`, r.I[3][1], 12 / (12 + Ron), 1e-6); }
+// NPN gesättigt (Basis 1 kΩ, Last 100 Ω) und linear (Basis 100 kΩ: Ic = β·Ib)
+{ const T = TR.bc547, r = S(4, [{ k: 'src', a: 1, b: 0, U: 5, Ri: 1e-6 }, { k: 'g', a: 1, b: 2, g: 1e-3 }, { k: 'g', a: 1, b: 3, g: 0.01 }, nl(Core.trF(T), [2, 3, 0])]);
+  ok('NPN gesättigt: Uce < 0,1 V, Ic ≈ 49 mA', r.V[3] - r.V[0] < 0.1 && Math.abs(r.I[3][1] - 0.0495) < 1e-3); }
+{ const T = TR.bc547, r = S(4, [{ k: 'src', a: 1, b: 0, U: 5, Ri: 1e-6 }, { k: 'g', a: 1, b: 2, g: 1e-5 }, { k: 'g', a: 1, b: 3, g: 0.01 }, nl(Core.trF(T), [2, 3, 0])]);
+  check('NPN linear: Ic = β·Ib', r.I[3][1] / r.I[3][0], T.beta, 1e-6); check('NPN: Ube bei Ib', r.V[2] - r.V[0], 0.65 - 0.026 * Math.log(1e-3 / r.I[3][0]) + 10 * (r.I[3][0] - 1e-3), 5e-3); }
+
+// Urteile v2 über das Modell (Raster): Board + an Batterie (0,2)/(0,4), Board bei (3,2): VIN (3,2), GND (3,4), Pin (7,3)
+const mcuM = (cell, board, load) => ({ parts: [{ t: 'bat', x: 0, y: 2, r: 1, cell, n: 1 }, { t: 'mcu', x: 3, y: 2, r: 0, board, hi: true }, ...load], wires: [[0, 2, 3, 2], [0, 4, 3, 4], [9, 3, 9, 6], [9, 6, 3, 6], [3, 6, 3, 4]] });
+{ const a = Core.analyze(mcuM('e9v', 'uno', [{ t: 'r', x: 7, y: 3, r: 0, R: 220, Pn: 0.25 }])); ok('Uno an 9-V-Block, 220 Ω am Pin: passt (≈ 20 mA)', a.issues.length === 0 || a.issues[0][0] === 0); check('Uno: Laufzeit 9-V-Block', a.h, 0.55 / a.parts[0].I, 1e-9); }
+{ const a = Core.analyze(mcuM('psu12', 'uno', [{ t: 'mot', x: 7, y: 3, r: 0, Un: 3, In: 0.25, Ia: 1.5 }])); ok('Motor direkt am Pin: kritisch „Pin überlastet“', a.issues[0][0] === 2 && /Pin überlastet/.test(a.issues[0][1])); }
+{ const a = Core.analyze(mcuM('usb', 'uno', [{ t: 'r', x: 7, y: 3, r: 0, R: 1000, Pn: 0.25 }])); ok('Uno mit 5 V am VIN: startet nicht', /startet nicht/.test(a.issues[0][1])); }
+{ const a = Core.analyze(mcuM('psu12', 'pi4', [])); ok('Pi 4 an 12 V: zu viel Spannung (kritisch)', a.issues[0][0] === 2 && /zu viel/.test(a.issues[0][1])); }
+// Linearregler 12 V → 5 V für Pi 4: wird heiß; Step-down passt
+const regM = rt => (m => (m.wires = Core.tidy(m), m))({ parts: [{ t: 'bat', x: 0, y: 2, r: 1, cell: 'psu12', n: 1 }, { t: 'reg', x: 2, y: 0, r: 0, rt }, { t: 'mcu', x: 8, y: 2, r: 0, board: 'pi4', hi: false }],
+  wires: [[0, 2, 0, 0], [0, 0, 2, 0], [6, 0, 8, 0], [8, 0, 8, 2], [8, 4, 8, 6], [8, 6, 0, 6], [0, 6, 0, 4], [4, 2, 4, 6]] }); // Masse des Reglers als T-Abzweig auf der unteren Leitung
+{ const a = Core.analyze(regM('l7805')); ok('7805 für Pi 4: Linearregler wird heiß', a.issues[0][0] === 2 && /Linearregler wird heiß/.test(a.issues[0][1])); check('7805: Verlust ≈ (12 − 5)·0,6 A', a.parts[1].P, 7 * 0.6 + 12 * 0.005, 0.02); }
+{ const a = Core.analyze(regM('buck5')); ok('Step-down für Pi 4: passt', a.issues.length === 0); check('Step-down: Wirkungsgrad ≈ 90 %', a.parts[1].eta, 0.9, 0.02); }
+// Zufallsnetze mit Mehrpolen: Knotenregel
+{ let worst = 0, bad = 0; const rnd = (s => () => (s = (s * 16807) % 2147483647) / 2147483647)(11);
+  for (let t = 0; t < 300; t++) {
+    const n = 3 + Math.floor(rnd() * 4), pick = () => Math.floor(rnd() * n), el = [{ k: 'src', a: 1, b: 0, U: 1 + rnd() * 15, Ri: 0.05 + rnd() * 2 }];
+    for (let j = 0; j < n + 2; j++) { const u = rnd(), a = pick(); let b = pick(), c = pick(); while (b === a) b = pick(); while (c === a || c === b) c = pick(); // Mehrpole mit getrennten Anschlüssen
+      el.push(u < 0.4 ? { k: 'g', a, b, g: 1 / (1 + rnd() * 1000) } : u < 0.55 ? { k: 'led', a, b, L: Core.LEDS.rot }
+        : u < 0.7 ? nl(Core.mcuF(Object.values(B)[Math.floor(rnd() * 8)], rnd() < 0.5), [a, b, c]) : u < 0.85 ? nl(Core.regF(Object.values(RG)[Math.floor(rnd() * 5)]), [a, b, c]) : nl(Core.trF(Object.values(TR)[Math.floor(rnd() * 4)]), [a, b, c])); }
+    const r = S(n, el); if (r.err) { bad++; continue; }
+    const out = new Array(n).fill(0); el.forEach((e, i) => { if (e.k === 'nl') e.n.forEach((j, k) => out[j] += r.I[i][k]); else { const sg = e.k === 'src' ? -1 : 1; out[e.a] += sg * r.I[i]; out[e.b] -= sg * r.I[i]; } });
+    out.forEach((x, i) => { if (r.V[i] !== 0) worst = Math.max(worst, Math.abs(x + 1e-12 * r.V[i])); });
+  }
+  ok(`300 Zufallsnetze mit Mehrpolen: ≥ 98 % konvergiert (${300 - bad})`, bad <= 6); /* Rest: widersinnige Verdrahtungen (Wandlerausgang an der Quelle o. Ä.) → Meldung „konvergiert nicht“ */ check('… max |Σ I| je Knoten', worst, 0, 1e-6); }
