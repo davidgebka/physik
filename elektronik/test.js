@@ -76,3 +76,17 @@ for (let t = 0; t < 300; t++) {
   sum.forEach((s, i) => { if (r.V[i] !== 0) worst = Math.max(worst, Math.abs(s - 1e-12 * r.V[i])); });
 }
 check('300 Zufallsnetze: alle konvergiert', nconv, 0); check('300 Zufallsnetze: max |Σ I| je Knoten', worst, 0, 1e-9);
+
+// Aufräumen der Leitungen: Bauteil auf einer Leitung wird eingefügt, T-Abzweig verbindet, Kreuzung nicht
+{ const m = { parts: [{ t: 'bat', x: 0, y: 2, r: 1, cell: 'e9v', n: 1 }, { t: 'r', x: 2, y: 0, r: 0, R: 330, Pn: 0.25 }, { t: 'led', x: 6, y: 2, r: 1, col: 'rot' }, { t: 'sw', x: 2, y: 6, r: 0, on: false }],
+    wires: [[0, 2, 0, 0], [0, 0, 2, 0], [4, 0, 6, 0], [6, 0, 6, 2], [0, 4, 0, 6], [0, 6, 6, 6], [6, 6, 6, 4]] }; // Schalter mitten auf der unteren Leitung
+  let a = Core.analyze(m); ok('Schalter auf Leitung, ohne Aufräumen: überbrückt (Strom fließt)', a.parts[2].I > 0.01);
+  m.wires = Core.tidy(m); a = Core.analyze(m);
+  ok('Aufräumen: Leitung unter dem Schalter entfernt, Rest geteilt', JSON.stringify(m.wires.filter(w => w[1] === 6 && w[3] === 6)) === '[[0,6,2,6],[4,6,6,6]]');
+  ok('Schalter offen trennt nach dem Aufräumen', Math.abs(a.parts[2].I) < 1e-9 && !a.net.open[3][0] && !a.net.open[3][1]);
+  m.parts[3].on = true; ok('Schalter zu: LED an', Core.analyze(m).parts[2].I > 0.01);
+  ok('Aufräumen ist idempotent', JSON.stringify(Core.tidy(m)) === JSON.stringify(m.wires)); }
+{ const T = Core.tidy({ parts: [], wires: [[0, 0, 4, 0], [2, 0, 2, 3], [0, 2, 4, -2]] }); // T-Abzweig bei (2,0); Diagonale kreuzt (2,0)? Nein: läuft durch (2,0) → wird geteilt, (2,0) ist Punkt der Diagonale
+  ok('T-Abzweig teilt die Leitung', T.some(w => w + '' === '0,0,2,0') && T.some(w => w + '' === '2,0,4,0'));
+  ok('Diagonale durch den Abzweigpunkt wird ebenfalls geteilt', T.some(w => w + '' === '0,2,2,0')); }
+{ const T = Core.tidy({ parts: [], wires: [[0, 1, 4, 1], [2, 0, 2, 3]] }); ok('Kreuzung ohne Endpunkt bleibt getrennt', T.length === 2); }
