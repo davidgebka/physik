@@ -96,7 +96,7 @@ details summary{font-size:12.5px;cursor:pointer}
     <p class="note"><b>Modell.</b> Symmetrie an: Der gezeichnete Schirm wird um die Achse gedreht. Symmetrie aus (Langfeldleuchte): Der Querschnitt wird entlang der Länge gezogen, die Enden sind offen, die Lampe ist ein gleichmäßig leuchtender Stab über die ganze Länge. Alle Schirme sind dünne Schalen ohne Wandstärke, jeder mit eigenem Material; getrennte Schirme werfen Licht aufeinander. Von der Lampe (Punktquelle) aus werden Lichtteilchen in 3D verfolgt (Monte-Carlo-Photonenverfolgung): Bei jedem Auftreffen werden sie je nach Material diffus oder spiegelnd reflektiert, diffus oder klar durchgelassen oder absorbiert, bis sie den Schirm verlassen. Daraus folgen Lichtverteilungskurve (LVK), Wirkungsgrad η, Beleuchtungsstärke und Leuchtdichte. <b>Lichtfeld:</b> Raumbeleuchtungsstärke E₀ [lx] im Schnitt durch die Leuchte – das Licht, das aus allen Richtungen an einem Punkt im Raum ankommt (Summe der Weglängen der Lichtteilchen je Rasterzelle). Symmetrisch: Mittel über Ringe um die Achse; Langfeld: Mittel über die Länge. Helligkeit ∝ (E₀/Bezug)^0,4, Bezug = 99. Perzentil (direkt an der Lampe wächst E₀ mit 1/Abstand² unbegrenzt); wird nur gerechnet, solange die Ansicht offen ist, und braucht mindestens 1 Mio. Lichtteilchen. Das Bild wird mit jedem Rechenpaket ruhiger; angegeben ist die statistische Unsicherheit ±σ. Grundlage und Prüffälle: <code>docs/licht-grundlagen.md</code>, <code>licht/test.js</code>.</p>
     <p class="note"><b>Begriffe.</b> LVK: Lichtstärke [cd] je Richtung; γ = 0° zeigt nach unten, C0–C180 und C90–C270 sind zwei senkrechte Schnittebenen (gleich, solange die Lampe auf der Achse sitzt). Bei der Langfeldleuchte ist C0–C180 quer, C90–C270 längs zur Leuchte. cd/klm = Lichtstärke je 1000 lm Lampenlichtstrom. Leuchtdichte [cd/m²]: wie hell eine Fläche wirkt. Abschirmwinkel: Winkel unter der Horizontalen, ab dem die Lampe direkt sichtbar wird.</p>
     <p class="note"><b>Materialwerte</b> sind Richtwerte und meist die größte Fehlerquelle. Opalglas τ 30–65 % (Überfangopal), weiß lackiert ρ 75–90 %, Aluminium gebürstet ρ 55–58 %, Spiegel (eloxiertes, beschichtetes Aluminium) ρ 75–95 % – Klarglas τ 80–90 % – Wertebereiche nach der IES-Materialtabelle (UNCG eLight, „Material Properties“). Die Aufteilung von gebürstetem Aluminium in diffus/gespiegelt ist geschätzt. <b>Papier, Stoff, Filz, Acryl satiniert und Kunststoff halbopak sind Schätzwerte</b>, für sie wurde keine belastbare Messquelle gefunden; echte Werte schwanken stark mit Dicke, Webart und Farbe. Eigene Messwerte unter „Erweitert“ eintragen.</p>
-    <p class="note"><b>Designklassiker</b> unter „Vorlage“: Außenmaße nach Hersteller- und Händlerangaben, Profil nachempfunden – Annäherung, keine Werkszeichnung. Gerechnet wird nur der Schirm (Fuß, Bogen, Fassung fehlen), Lampe als Punkt; Messing (Golden Bell) als gebürstetes Aluminium, gelochte Scheitel (Arco, Golden Bell) als offene Kreisöffnung. Mehrschalige Leuchten wie PH 5 lassen sich mit einem einzigen Profil nicht abbilden.</p>
+    <p class="note"><b>Designklassiker</b> unter „Vorlage“: Außenmaße nach Hersteller- und Händlerangaben, Profil nachempfunden – Annäherung, keine Werkszeichnung. Gerechnet wird nur der Schirm (Fuß, Bogen, Fassung fehlen), Lampe als Punkt; Messing (Golden Bell) als gebürstetes Aluminium, gelochte Scheitel (Arco, Golden Bell) als offene Kreisöffnung. Mehrschalige Leuchten (PH 5, Artichoke) als mehrere Schirme; bei der Artichoke ist jede Blattreihe ein geschlossener Ring – die Lücken zwischen den sechs Blättern einer Reihe fehlen, real tritt dort etwas mehr Licht seitlich aus.</p>
     <p class="note"><b>Blendhinweis.</b> ⚠ ab 20 000 cd/m²: Ab dieser Lampenleuchtdichte verlangt EN 12464-1 einen Mindestabschirmwinkel (20–50 kcd/m² → 15°, 50–500 kcd/m² → 20°, ab 500 kcd/m² → 30°). Hier auf die Leuchtdichte des Schirms übertragen – Richtwert, keine Normprüfung (UGR braucht den Raum). Der Abschirmwinkel ist rein geometrisch (Langfeld: nur quer, Lampe in Leuchtenmitte): Schirm undurchsichtig, Lampe als Punkt; Spiegelbilder und Durchsicht durch klare Materialien zählen nicht, eine reale Lampe ist etwas größer.</p>
     <p class="note"><b>Gültig für</b> dünne rotationssymmetrische oder gerade gezogene Schirme, photometrisch (keine Farbe), Umgebung schwarz: Beleuchtungsstärke ist nur das direkte Licht der Leuchte auf einer unendlichen Tischebene, ohne Licht von Wänden und Decke; bei der Langfeldleuchte gemittelt über die Leuchtenlänge. Liegt die Lampe neben der Achse, ist die Leuchtdichte rundum gemittelt dargestellt, und die LVK-Ebenen C0–C180 und C90–C270 sind Mittel über Sektoren von ±37,5°. <b>Nicht erfasst:</b> Wandstärke und Brechung, winkelabhängige Reflexion (Fresnel), Streukeulen halbglänzender Oberflächen, Endkappen der Langfeldleuchte, Farbe/Spektrum, Wärme, Raumreflexionen, LDT-Export.</p>
   </section>
@@ -390,6 +390,16 @@ const arcP = (R, rTop, n, z0) => { const t1 = Math.acos(1 - rTop / R), p = [];
 // Halbellipse (Kuppel): Rand r = a bei z0, Scheitel z0 + b, Scheitelöffnung rTop
 const ellipseP = (a, b, rTop, n, z0) => { const t1 = Math.asin(rTop / a), p = [];
   for (let i = 0; i <= n; i++) { const t = Math.PI / 2 - (Math.PI / 2 - t1) * i / n; p.push([+(a * Math.sin(t)).toFixed(1), +(z0 + b * Math.cos(t)).toFixed(1)]); } return p; };
+// Artichoke: Blattreihen auf einer Ellipse (Halbachsen a quer, b hoch), Spitze auf der Ellipse; Blatt der Länge L läuft
+// schuppenartig nach oben, Richtung = Tangente der Ellipse um β nach innen gedreht (überdeckt die nächste Reihe). Lampe im Mittelpunkt
+const artiP = (a, b, n, L, wb) => {
+  const c = Math.cos(wb * Math.PI / 180), s = Math.sin(wb * Math.PI / 180), r1 = v => +v.toFixed(1);
+  const rows = Array.from({ length: n }, (_, k) => { const f = (15 + 140 * k / (n - 1)) * Math.PI / 180;
+    const ro = a * Math.sin(f), zo = -b * Math.cos(f); let tx = a * Math.cos(f), tz = b * Math.sin(f); const tl = Math.hypot(tx, tz); tx /= tl; tz /= tl;
+    return [[[r1(Math.max(0, ro + L * (c * tx - s * tz))), r1(zo + L * (c * tz + s * tx))], [r1(ro), r1(zo)]], 'weiss']; });
+  const [xt, zt] = rows[n - 1][0][0]; // Aufhängung: geschlossene Kappe über dem Innenende der obersten Reihe
+  return rows.concat([[[[0, zt], [r1(xt + 15), zt]], 'weiss']]);
+};
 const PRESETS = { // Profile rotationssymmetrisch (r ≥ 0); bei Symmetrie aus wird gespiegelt (toExt)
   kegel:    ['Kegelschirm', [[150, -110], [80, 70]], [0, 0], 'stoff'],
   zylinder: ['Zylinder', [[100, -120], [100, 120]], [0, 0], 'papier'],
@@ -406,7 +416,15 @@ const PRESETS = { // Profile rotationssymmetrisch (r ≥ 0); bei Symmetrie aus w
   // Arco (Achille Castiglioni, 1962): Reflektor Ø ≈ 320, Aluminium poliert; gelochter Scheitel als Öffnung genähert
   arco:     ['Arco-Reflektor · Castiglioni 1962', ellipseP(160, 170, 30, 12, -110), [0, -50], 'spiegel', 1],
   // WG 24 (Wilhelm Wagenfeld, 1924): Opalglaskuppel Ø 180, unten offen auf dem Fuß, oben geschlossen
-  wg24:     ['WG 24 · Wagenfeld 1924', sphereOpen(90, 50, 0, 14), [0, 0], 'opal', 1]
+  wg24:     ['WG 24 · Wagenfeld 1924', sphereOpen(90, 50, 0, 14), [0, 0], 'opal', 1],
+  // Mehrschalig (2. Feld = Liste [Profil, Material]): PH 5 (Poul Henningsen 1958): Ø 500, H 267; drei Schalen nach dem
+  // PH-Prinzip – jede Schale verdeckt die Lücke zur nächsten, die Lampe ist von keiner Richtung direkt sichtbar.
+  // Profil nachempfunden; Fassung als geschlossene Kappe oben, die kleinen farbigen Innenreflektoren fehlen.
+  ph5:      ['PH 5 · Henningsen 1958', [[[[0, 150], [45, 150], [70, 140], [110, 115], [150, 90], [175, 70]], 'weiss'],
+    [[[115, 55], [150, 40], [200, 10], [250, -40]], 'weiss'], [[[0, -117], [70, -117], [100, -95], [113, -60], [120, -15]], 'weiss']], [0, 0], 'weiss', 1],
+  // PH Artichoke Ø 480 (Henningsen 1958): Ø 480, H 465, 72 Blätter in 12 Reihen zu je 6 (Reihenzahl angenommen).
+  // Jede Reihe als geschlossener Lamellenring (die Lücken zwischen den 6 Blättern einer Reihe fehlen)
+  artichoke: ['PH Artichoke Ø 480 · Henningsen 1958', artiP(240, 248, 12, 90, 50), [0, 0], 'weiss', 1]
 };
 const M = (rd, rs, td, ts) => ({ in: { rd, rs }, out: { rd, rs }, td, ts });
 const MATS = {
@@ -868,8 +886,8 @@ $('preset').innerHTML = '<option value="">Vorlage …</option>' + [['Grundformen
   Object.entries(PRESETS).filter(([, v]) => (v[4] || 0) === g).map(([k, v]) => `<option value="${k}">${v[0]}</option>`).join('') + '</optgroup>').join('');
 $('preset').onchange = e => {
   const v = PRESETS[e.target.value]; if (!v) return;
-  pushUndo(); const p = part(toPts(v[1]), v[3]);
-  S.parts = S.sym ? [p] : toExt(p); S.cur = 0; S.src = { x: v[2][0], z: v[2][1] }; S.sel = -1;
+  pushUndo(); const ps = (Array.isArray(v[1][0][0]) ? v[1] : [[v[1], v[3]]]).map(([p, m]) => part(toPts(p), m)); // ein Profil oder Liste [Profil, Material]
+  S.parts = S.sym ? ps : ps.flatMap(toExt); S.cur = 0; S.src = { x: v[2][0], z: v[2][1] }; S.sel = -1;
   syncCtl(); fitView(); restart(); e.target.value = '';
 };
 $('undo').onclick = undo;
