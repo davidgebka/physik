@@ -173,3 +173,34 @@ r = Core.analyze(base({ L: 413, sup: [pin(367)], pl: [{ x: 164, F: 26 }] }));
 check('Ein Gelenklager, L = 413 (vorher als stabil gerechnet)', r.err ? 1 : 0, 1, 0);
 r = Core.analyze(base({ sup: [pin(0), pin(L)], pl: [{ x: L, F, h: 50 }] }));
 check('Stoß über dem Lager ohne Polster: als starr gemeldet', r.imp[0].rigid ? 1 : 0, 1, 0);
+// ---- Runde 3: Schubverformung (Timoshenko) und federnde Lager ----
+{ const G = 500, As = sec.As, GA = G * As; // weiches Holz quer, kurzer Balken L = 200, h = 20
+  check('Schubfläche Rechteck = 5/6·A', As, 5 / 6 * sec.A);
+  const Ls = 200, sh = o => Core.analyze(base(Object.assign({ L: Ls, G }, o)));
+  r = sh({ sup: [pin(0), pin(Ls)], pl: [{ x: Ls / 2, F }] });
+  check('Timoshenko Einzellast mittig: w = FL³/48EI + FL/4GAs', -wmin(r), F * Ls ** 3 / (48 * EI) + F * Ls / (4 * GA));
+  check('… M unverändert FL/4', Mmax(r), F * Ls / 4);
+  r = sh({ sup: [pin(0), pin(Ls)], ql: [{ a: 0, b: Ls, q }] });
+  check('Timoshenko Gleichlast: w = 5qL⁴/384EI + qL²/8GAs', -wmin(r), 5 * q * Ls ** 4 / (384 * EI) + q * Ls * Ls / (8 * GA));
+  check('… w bei L/4 zwischen Knoten', -at(r, r.wInst, 50), q * 50 * (Ls ** 3 - 2 * Ls * 2500 + 125000) / (24 * EI) + q * 50 * 150 / (2 * GA));
+  r = sh({ sup: [fix(0)], pl: [{ x: Ls, F }] });
+  check('Timoshenko Kragarm: w = FL³/3EI + FL/GAs', -wmin(r), F * Ls ** 3 / (3 * EI) + F * Ls / GA);
+  // statisch unbestimmt: eingespannt–gelenkig, Einzellast am Ende des Kragteils? → Kraft am gelenkigen Lager bei Gleichlast
+  // B = 3qL/8 · (1 + 4φ/3)/(1 + φ)… über Arbeitssatz: δ_B(q) = δ_B(B) → B = q·L·(L³/8EI + L/2GA)/(L³/3EI + L/GA)
+  r = sh({ sup: [fix(0), pin(Ls)], ql: [{ a: 0, b: Ls, q }] });
+  check('Timoshenko eingespannt–gelenkig: Auflager B (Arbeitssatz)', r.R[1].F, q * Ls * (Ls ** 3 / (8 * EI) + Ls / (2 * GA)) / (Ls ** 3 / (3 * EI) + Ls / GA));
+  const fE = Core.analyze(base({ L: Ls, sup: [pin(0), pin(Ls)], rhoA, modes: true })).f, fT = Core.analyze(base({ L: Ls, G, sup: [pin(0), pin(Ls)], rhoA, modes: true })).f;
+  [0, 1].forEach(i => check(`Timoshenko Eigenfrequenz f${i + 1}: f_EB/√(1 + (nπ/L)²·EI/GAs)`, fT[i], fE[i] / Math.sqrt(1 + ((i + 1) * PI / Ls) ** 2 * EI / GA), 2e-3));
+  check('Ohne G: Euler-Bernoulli unverändert', -wmin(Core.analyze(base({ sup: [pin(0), pin(L)], pl: [{ x: L / 2, F }] }))), F * L ** 3 / (48 * EI)); }
+{ const k = 50; // N/mm
+  r = Core.analyze(base({ sup: [{ x: 0, t: 'spring', k }, { x: L, t: 'spring', k }], pl: [{ x: L / 2, F }] }));
+  check('Federlager beidseitig: w = FL³/48EI + F/2k', -wmin(r), F * L ** 3 / (48 * EI) + F / (2 * k));
+  check('… Federkraft = F/2', r.R[0].F, F / 2);
+  r = Core.analyze(base({ sup: [pin(0), pin(L), { x: L / 2, t: 'spring', k }], pl: [{ x: L / 2, F }] }));
+  check('Feder in Feldmitte: Federkraft = F·k/(k + 48EI/L³)', r.R.find(x => x.t === 'spring').F, F * k / (k + 48 * EI / L ** 3));
+  check('Eine Feder allein: beweglich', Core.analyze(base({ sup: [{ x: 500, t: 'spring', k }] })).err ? 1 : 0, 1, 0);
+  check('Feder ohne Steifigkeit trägt nicht', Core.analyze(base({ sup: [pin(0), { x: L, t: 'spring', k: 0 }] })).err ? 1 : 0, 1, 0);
+  const mm = 2 / 9810; r = Core.analyze(base({ sup: [fix(0), { x: L, t: 'spring', k }], rhoA: 1e-9 * rhoA, modes: true, pl: [{ x: L, F: 2, perm: true }] }));
+  check('Masse auf Kragarm mit Feder: f = √((3EI/L³ + k)/m)/2π', r.f[0], Math.sqrt((3 * EI / L ** 3 + k) / mm) / (2 * PI), 1e-5); }
+{ const Ls = 200, G = 500, PE = PI * PI * EI / (Ls * Ls), GA = G * sec.As;
+  check('Knicken mit Schub ≈ Engesser N_E/(1 + N_E/GAs) (N_E/GAs = 0,2)', Core.analyze(base({ L: Ls, G, N: 100, sup: [pin(0), pin(Ls)] })).lam * 100, PE / (1 + PE / GA), 1e-2); }
