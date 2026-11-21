@@ -16,6 +16,12 @@ Vom zentralen Chat gepflegt. Neueste Einträge oben einfügen.
 - **19.11.2026, Umzug nach GitHub**: Stand 1 als erster Commit in `davidgebka/physik`; Dokumente aus dem claude.ai-Projekt nach `docs/`; Projektanweisungen → `CLAUDE.md`; CI ergänzt. Das claude.ai-Projekt ist ab jetzt nicht mehr Quelle für Code.
 
 ## Erledigte Wünsche an shared
+Erledigt (21.11.2026, zentraler Chat, Elektronik):
+- **shared/util.js** (Elektronik): `elektronik` in `DP_MODULES` mit `ready: false`; Farbe vorerst `--ink`, bis `--elec` in style.css steht.
+- **index.html** (Elektronik): Startseiten-Karte mit Skizze (Batterie, LED), ausgegraut „in Arbeit“.
+- **shared/util.js** (`dpHeader`): Navigation zeigt nur fertige Module (fünf Segmente passen nicht auf 390 px).
+- **docs/konzept.md** (Elektronik): Zeile in „Module“, Eintrag in der Roadmap.
+
 Erledigt (21.11.2026, mit PR Last auf Wunsch des Nutzers):
 - **shared/util.js** (Last): `last` auf `ready: true`, neue `desc`.
 - **README.md** (Last): `last/` in Struktur und Tests.

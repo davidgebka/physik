@@ -40,7 +40,10 @@ const SK = {
     return [{ p: cc, z: true, c: '--mech', w: 2 }, { p: [A0, A], w: 2.5 }, { p: [A, B, C], z: true, f: '--fill', w: 2.5 }, { p: [B, B0], w: 2.5 }, { p: [A0, B0], c: '--mut', w: 1, dash: [3, 4] }, { p: [A0, B0], r: 4, f: '--bg', c: '--ink' }]; },
   last: () => { const L = 800, w = x => -40 * Math.sin(Math.PI * (x - 120) / 560), xs = Array.from({ length: 41 }, (_, i) => 20 * i);
     return [{ p: [[0, 30], [L, 30], [L, 60], [0, 60]], z: true, f: '--load-a', c: '--load', w: 1 }, { p: [[0, 0], [L, 0], [L, 18], [0, 18]], z: true, f: '--fill', w: 1.5 },
-      { p: xs.map(x => [x, 9 + w(x)]), c: '--load', w: 2.5 }, { p: [[120, 0], [100, -32], [140, -32]], z: true, w: 1.5 }, { p: [[680, 0], [660, -32], [700, -32]], z: true, w: 1.5 }]; }
+      { p: xs.map(x => [x, 9 + w(x)]), c: '--load', w: 2.5 }, { p: [[120, 0], [100, -32], [140, -32]], z: true, w: 1.5 }, { p: [[680, 0], [660, -32], [700, -32]], z: true, w: 1.5 }]; },
+  elektronik: () => [{ p: [[0, 70], [0, 0], [300, 0], [300, 60]] }, { p: [[0, 90], [0, 160], [300, 160], [300, 100]] }, // Batterie links, LED rechts
+    { p: [[-30, 70], [30, 70]], w: 2.5 }, { p: [[-15, 90], [15, 90]], w: 2.5 }, { p: [[280, 100], [320, 100], [300, 60]], z: true, f: '--fill', w: 2 }, { p: [[280, 60], [320, 60]], w: 2 },
+    { p: [[330, 70], [360, 50]], c: '--mut', w: 1 }, { p: [[330, 90], [360, 110]], c: '--mut', w: 1 }]
 };
 const draw = () => document.querySelectorAll('.card canvas').forEach(c => SK[c.dataset.k] && dpSketch(c, SK[c.dataset.k]()));
 draw(); window.addEventListener('resize', draw);
