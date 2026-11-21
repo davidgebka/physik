@@ -88,4 +88,4 @@ Bei Zielkonflikten entscheidet A.
 (Modul-Chats tragen hier ein; der zentrale Chat bzw. der Style-Chat arbeitet sie ab. Erledigtes wandert nach `docs/historie.md`.)
 
 Offen:
-- **Style-Chat** (Gefäß): `.panel h2 small` macht die Überschriftszeile 25 statt 24 px hoch (gemessen in Chrome, 1280 und 390 px: „Gefäß <small>…</small>“, „Füllkurve <small>…</small>“) – alles darunter rutscht je Titel 1 px aus dem Raster. Vermutlich die gemischte Schriftgröße in der Zeile; z. B. `line-height` des `small` begrenzen.
+- (keine)
