@@ -94,6 +94,20 @@
       <label class="chk" id="footAutoL"><input type="checkbox" id="footAuto"> Standradius auto</label>
       <span class="note" id="state"></span>
     </div>
+    <div class="row">
+      <button id="slosh" title="Flüssigkeit bewegt sich: Schwappen nach Bewegung und Kippen (lineares Modell je Wasserkörper)">≈ Schwappen</button>
+      <span class="sep"></span>
+      <button id="walkB" hidden>▶ Gehen</button>
+      <button id="stopB" hidden>▶ Anhalten</button>
+    </div>
+    <div class="ctl" id="sloshCtl" hidden>
+      <label for="wf">Schrittfrequenz</label><input type="range" id="wf" min="1" max="4" step="0.05"><output id="wfO"></output>
+      <label for="wa">Hub beim Gehen</label><input type="range" id="wa" min="0" max="40" step="1"><output id="waO"></output>
+      <label for="sv">Tempo vor dem Anhalten</label><input type="range" id="sv" min="0.2" max="2.5" step="0.1"><output id="svO"></output>
+      <label for="sb">Bremszeit</label><input type="range" id="sb" min="0.1" max="1.5" step="0.05"><output id="sbO"></output>
+    </div>
+    <p class="note" id="sloshNote" hidden>Gefäß in der Kippansicht waagrecht ziehen, Neigung ändern, „Gehen“ (Sinusbewegung in Kipprichtung) oder „Anhalten“ (aus dem Tempo gleichmäßig bremsen). Diagramm: Randhub des größten Wasserkörpers über die letzten 6 s, gestrichelt der Freibord (aufrecht).</p>
+    <canvas id="c3" class="ch" hidden></canvas>
   </section>
 
   <section class="panel wide">
@@ -118,6 +132,7 @@
     <p class="note"><b>Tülle, Henkel, Deckel</b> (Drehkörper): Tülle und Henkel liegen in der Seitenansicht, also in der Spiegelebene der Kanne; gekippt wird zur Tülle hin (+x). Die Tülle ist ein kommunizierendes Gefäß: Es läuft aus, sobald der Spiegel die höchste Stelle des Weges vom Becken über Wand und Ansatz bis zur Spitze übersteigt – das begrenzt auch das Fassungsvermögen, wenn die Spitze tiefer liegt als der Rand. Mit Deckel zählt der Rand nicht als Überlauf. Wasser in der Tülle selbst wird vernachlässigt, ebenso Luftzufuhr (Deckelloch angenommen), Strahl, Nachtropfen. Masse: Tülle als Rohr mit der Wandstärke, Henkel als Vollstab, beide aus dem Gefäßmaterial; Deckel ohne Masse. Kippwinkel zur Tülle hin und zur Gegenseite (Henkel), angezeigt wird der kleinere; zur Gegenseite läuft nur über den Rand aus. Kippansicht und Kippkurve zeigen das Kippen zur Tülle.</p>
     <p class="note"><b>Grundriss-Modus</b> (nicht rotationssymmetrisch): beliebiger geschlossener Grundriss, senkrechte Wand der Innenhöhe, flacher Boden – ein Prisma, z.&nbsp;B. Vase mit Wellenkontur oder rechteckige Dose. Gekippt wird um eine waagrechte Achse quer zur eingestellten Kipprichtung; Volumen, Überlauf am tiefsten Randpunkt, Schwerpunkt und Kippwinkel sind exakt für diese Geometrie (Streifenzerlegung, geprüft gegen Quader und Zylinder). Wand als Band der Wandstärke außen um die Kontur mit gerundeten Ecken (exakt für konvexe Grundrisse, bei Einbuchtungen genähert), Standkante = äußerster Punkt in Kipprichtung plus Wandstärke. Nicht erfasst: Gefäße, die sich nach oben verjüngen oder weiten, Seitwärtsdrehen beim Kippen über eine Ecke.</p>
     <p class="note"><b>Zwei Konturen</b>: Kontur hinten und vorne in der Seitenansicht, jeweils vom Boden zur Mündung. Dazwischen liegen Kreisquerschnitte, deren Durchmesser je einen Punkt hinten mit dem Punkt vorne verbindet, der beim gleichen Anteil der Bogenlänge liegt; der Kreis steht senkrecht zur Zeichenebene (dünne Linien im Editor). So entstehen geneigte Hälse, schiefe und gebogene Formen; der Drehkörper ist der Sonderfall gespiegelter Konturen. Die Form ist spiegelsymmetrisch zur Zeichenebene. Gekippt wird in der Zeichenebene nach vorne (Kippansicht, Kurven) und für den Kippwinkel auch nach hinten; seitliches Kippen wird nicht gerechnet. Weil der tiefste Punkt jedes Querschnitts auf einer der beiden Konturen liegt, gilt das Taschenmodell exakt bis auf die Unterteilung (250 Abschnitte, geprüft gegen Zylinder, schiefen und geneigten Zylinder, Torusabschnitt). Mündung = letzter Querschnitt (auch schräg), Boden = erster Querschnitt; nur ein waagrechter Boden ist Standfläche. Biegt die Form enger als ihr Radius, durchdringen sich Querschnitte (⚠). Masse: Schale der Wandstärke um die Kreisquerschnitte plus Bodenplatte.</p>
+    <p class="note"><b>Schwappen</b> (Schalter „≈ Schwappen“): Jeder Wasserkörper schwingt in seiner ersten Eigenschwingung in der Kippebene – ein linearer Oszillator je Tasche, angeregt durch waagrechte Bewegung und Drehen des Gefäßes (Drehpunkt = Bildmitte der Kippansicht). Eigenfrequenz f₁ = √(g·k·tanh(k·h))/2π mit mittlerer Tiefe h = Volumen/Spiegelfläche; die Wellenzahl k folgt aus Fläche und zweitem Moment der tatsächlichen Spiegelfläche (Rayleigh-Quotient, kalibriert auf Kreis bzw. beim Grundriss auf Rechteck: Zylinder und Quader exakt, Kreis-Grundriss −1,5&nbsp;%, andere Formen geschätzt ±10&nbsp;%). Die Kopplung an die Bewegung folgt der Potentialtheorie (Ersatzpendel im Abstand (2/k)·tanh(kh/2) unter dem Spiegel). Dämpfung: Grenzschicht an glatter Wand für Wasser (Mikishev/Dorozhkin), etwa 0,5–2&nbsp;%; echte Gefäße sind durch Kontaktlinie, Schaum, Einbauten meist stärker gedämpft, die Ausschläge daher eher zu groß. Überschwappen: Der Wellenberg am Rand wird durch eine geneigte Ebene mit gleichem Randhub ersetzt; was dann über eine Engstelle steht, läuft sofort in die Nachbartasche oder hinaus (obere Abschätzung). Teilen und Vereinigen von Taschen übertragen den Schwingzustand massengewichtet. <b>Freibord</b> = Randhub, ab dem Wasser über Rand, Tülle oder in eine andere Tasche läuft (aufrecht). <b>Gehen</b>: reine Sinusbewegung in Kipprichtung, eingeschwungene Amplitude; reale Schritte haben Oberschwingungen – liegt f₁ nahe dem Doppelten der Schrittfrequenz, die Frequenz dort testen. <b>Anhalten</b>: gleichmäßiges Bremsen aus dem Tempo, größter Ausschlag. Grenzen: nur die erste Schwingung, nur in der Kippebene (kein Drehschwappen, das nahe der Resonanz im Zylinder auftritt), Wellen klein gegen die Spiegelbreite (⚠ ab Randhub &gt; 25&nbsp;% der halben Breite: nur qualitativ), kein Brechen und Spritzen, keine Kopplung über unter Wasser verbundene Spiegel (U-Rohr). Senkrechte Beschleunigung wird nicht gerechnet.</p>
     <p class="note"><b>Foto als Vorlage</b>: „Foto …“ legt ein Bild halbdurchsichtig unter den Editor, darauf die Kontur von Hand nachzeichnen (Freihand oder Punkte). Maßstab: Fotobreite so einstellen, dass ein bekanntes Maß stimmt (H und Ø stehen im Editor, 1 Punkt des Rasters ist angegeben); mit „Foto ↔“ die Gefäßmitte auf die gestrichelte Achse legen. Am genauesten ist eine Aufnahme genau von der Seite aus größerem Abstand (Tele), sonst verzerrt die Perspektive. Gezeichnet wird die Innenkontur – auf dem Foto sieht man die Außenkontur, also um die Wandstärke nach innen versetzen. Das Foto bleibt auf dem Gerät und wird weder exportiert noch im Link gespeichert.</p>
     <p class="note"><b>Designklassiker</b> unter „Vorlage“: Außenmaße nach Hersteller- und Händlerangaben, Innenkontur und Wandstärken daraus nachempfunden – Annäherung, keine Werkszeichnung. Tüllen, Henkel und Deckel fehlen.</p>
     <p class="note">Gefäßgewicht als dünne Schale: Wandstärke × Mittelfläche (Innenkontur um halbe Wandstärke nach außen versetzt; exakt für Zylinder- und Kegelwände), dazu eine Bodenplatte unter dem flachen Boden. Gültig für Wandstärke deutlich kleiner als der Radius (Fehler wächst mit Wandstärke/Krümmungsradius, an Ecken genähert). Standradius auto = Bodenplatte; ein von Hand gesetzter Standradius verschiebt nur die Kippkante, seine Masse wird nicht gerechnet. Ohne flachen Boden (z.&nbsp;B. Rundboden, Standring) von Hand setzen. <b>Kippwinkel</b>: Neigung um die Standkante, ab der das Gefäß von selbst umfällt; das Wasser läuft dabei mit und läuft gegebenenfalls aus (quasistatisch, kein Rutschen, kein Henkel). <b>Umstoßkraft</b>: waagrechte Kraft am Rand, die das aufrechte, gefüllte Gefäß gerade ankippt.</p>
@@ -449,11 +464,22 @@ const Core = (() => {
       cols(L, th, (i, z0, z1) => { const a = w[i] * (z1 - z0); V += a; Mx += a * xs[i]; Mz += w[i] * (z1 * z1 - z0 * z0) / 2; });
       return { V: V * dx, Mx: Mx * dx, Mz: Mz * dx };
     };
-    // tiefster Randpunkt liegt bei x = xmax; dort läuft es über (auch jenseits 90°, dann ist der Rand selbst das Becken)
-    const spill = th => H * Math.cos(th) - xmax * Math.sin(th);
+    // tiefster Randpunkt liegt bei x = xmax (θ < 0: xmin); dort läuft es über (auch jenseits 90°, dann ist der Rand selbst das Becken)
+    const spill = th => H * Math.cos(th) - Math.max(xmax * Math.sin(th), xmin * Math.sin(th));
+    // Spiegelfläche beim Pegel L: Fläche, Mittelpunkt uc und zweites Moment I entlang u = x·cosθ + z·sinθ (waagrecht in Kipprichtung)
+    const surf = (L, th) => {
+      const c = Math.cos(th), s = Math.sin(th); if (Math.abs(c) < 1e-6) return null;
+      let A = 0, Au = 0, Auu = 0, ua = Infinity, ub = -Infinity;
+      for (let i = 0; i < N; i++) {
+        const z = (L + xs[i] * s) / c; if (z <= 0 || z >= H) continue;
+        const u = xs[i] * c + z * s; A += w[i]; Au += w[i] * u; Auu += w[i] * u * u; ua = Math.min(ua, u); ub = Math.max(ub, u);
+      }
+      if (!A) return null;
+      const k = dx / Math.abs(c), uc = Au / A; return { A: A * k, I: (Auu - Au * uc) * k, uc, ua: ua - k / 2, ub: ub + k / 2 };
+    };
     const yr = th => { const c = Math.cos(th), s = Math.sin(th), y = [0, H].flatMap(z => [xmin, xmax].map(x => z * c - x * s));
       return [Math.min(...y), Math.max(...y)]; };
-    return { vol, mom, spill, yr, A: Math.abs(A2) / 2, H, xmin, xmax };
+    return { vol, mom, spill, yr, surf, A: Math.abs(A2) / 2, H, xmin, xmax };
   }
   // Wand als Band der Stärke t außen um den Grundriss (Ecken gerundet): Fläche P·t + π·t², exakt für konvexe Grundrisse.
   // Bodenplatte = Grundriss + Band, Dicke tb. Liefert Materialvolumen [mm³], Schwerpunkt x/z, Standkante rf (+x), Standebene.
@@ -522,18 +548,22 @@ const Core = (() => {
     for (let j = jr; j >= 0; j--) { let f = -1; for (let i = j0[j]; i < j0[j + 1]; i++) if (r0[i] < 1e-9) f = i; if (f < 0) break; land = f; }
     const dz = S.dz, ar = Float64Array.from(z, (_, i) => Math.PI * (r1[i] * r1[i] - r0[i] * r0[i])), chord = (R, d) => d < R && d > -R ? 2 * Math.sqrt(R * R - d * d) : 0;
     return { n, nb, out, land, z, r0, r1, dz,
-      hFill: (h, c, s) => { for (let i = 0; i < n; i++) h[i] = Math.min((z[i] - dz / 2) * c - rb[i] * s, (z[i] + dz / 2) * c - rt[i] * s); },
-      act: (h, c, s, a, b) => { const e = z[a] < z[b] ? Math.min(rt[a], rb[b]) : Math.min(rt[b], rb[a]); return Math.max(h[a], h[b], (z[a] + z[b]) / 2 * c - e * s); },
-      outLv: (o, h, c, s) => Math.max(h[o.i], o.sp ? Math.max(...o.sp.map(p => p.z * c - p.x * s)) : rim.z * c - o.rr * s),
+      // Kippen nach −x (s < 0) = Spiegelbild: Ring tiefster Punkt bei x = −r, deshalb |s|; nur die Tülle ist nicht symmetrisch
+      hFill: (h, c, s) => { const a = Math.abs(s); for (let i = 0; i < n; i++) h[i] = Math.min((z[i] - dz / 2) * c - rb[i] * a, (z[i] + dz / 2) * c - rt[i] * a); },
+      act: (h, c, s, a, b) => { const e = z[a] < z[b] ? Math.min(rt[a], rb[b]) : Math.min(rt[b], rb[a]); return Math.max(h[a], h[b], (z[a] + z[b]) / 2 * c - e * Math.abs(s)); },
+      outLv: (o, h, c, s) => Math.max(h[o.i], o.sp ? Math.max(...o.sp.map(p => p.z * c - p.x * s)) : rim.z * c - o.rr * Math.abs(s)),
       // o = [V, dV/dL, Mx, Mz], Mx nur mit mom; aufrecht/kopfüber (s ≈ 0): Schicht anteilig
       vol: (i, L, c, s, o, mom) => {
         if (Math.abs(s) < 1e-9) { const t = (L - z[i] * c) / dz + 0.5, a = ar[i]; o[0] = a * dz * Math.min(1, Math.max(0, t)); o[1] = t > 0 && t < 1 ? a : 0; o[2] = 0; o[3] = o[0] * z[i]; return; }
-        const d = (z[i] * c - L) / s;
+        const as = Math.abs(s), d = (z[i] * c - L) / as;
         if (d >= r1[i]) { o[0] = o[1] = o[2] = o[3] = 0; return; } // trocken
         if (d <= -r1[i]) { o[0] = ar[i] * dz; o[1] = o[2] = 0; o[3] = o[0] * z[i]; return; } // ganz unter dem Spiegel
-        o[0] = (segArea(r1[i], d) - segArea(r0[i], d)) * dz; o[1] = (chord(r1[i], d) - chord(r0[i], d)) * dz / s;
-        o[2] = mom ? (segMx(r1[i], d) - segMx(r0[i], d)) * dz : 0; o[3] = o[0] * z[i];
+        o[0] = (segArea(r1[i], d) - segArea(r0[i], d)) * dz; o[1] = (chord(r1[i], d) - chord(r0[i], d)) * dz / as;
+        o[2] = mom ? Math.sign(s) * (segMx(r1[i], d) - segMx(r0[i], d)) * dz : 0; o[3] = o[0] * z[i];
       },
+      // Breite quer zur Zeichenebene am Schnittpunkt (x, z), falls er in der Schicht des Knotens liegt (Spiegelfläche)
+      wAt: (i, x, zz) => { if (zz < z[i] - dz / 2 || zz >= z[i] + dz / 2) return 0; const a = r1[i] * r1[i] - x * x, b = r0[i] * r0[i] - x * x;
+        return a > 0 ? 2 * (Math.sqrt(a) - (b > 0 ? Math.sqrt(b) : 0)) : 0; },
       poly: i => [[{ x: r0[i], z: z[i] - dz / 2 }, { x: r1[i], z: z[i] - dz / 2 }, { x: r1[i], z: z[i] + dz / 2 }, { x: r0[i], z: z[i] + dz / 2 }],
                   [{ x: -r1[i], z: z[i] - dz / 2 }, { x: -r0[i], z: z[i] - dz / 2 }, { x: -r0[i], z: z[i] + dz / 2 }, { x: -r1[i], z: z[i] + dz / 2 }]] };
   }
@@ -578,7 +608,14 @@ const Core = (() => {
         o[1] = d < R && d > -R ? (q.wM + q.ks * d) * 2 * Math.sqrt(R * R - d * d) / Math.abs(hu) : 0;
         o[2] = o[0] * q.mx + Mt * q.ux; o[3] = o[0] * q.mz + Mt * q.uz; // ohne mom: o[2], o[3] unvollständig
       },
-      poly: i => [[A[i], A[i + 1], B[i + 1], B[i]]] };
+      poly: i => [[A[i], A[i + 1], B[i + 1], B[i]]],
+      // Breite quer zur Zeichenebene am Punkt (x, z) im Abschnitt i: Sehne des Kreisquerschnitts (Spiegelfläche)
+      wAt: (i, x, zz) => {
+        const P4 = [A[i], A[i + 1], B[i + 1], B[i]]; let sg = 0;
+        for (let k = 0; k < 4; k++) { const a = P4[k], b = P4[(k + 1) % 4], o = (b.x - a.x) * (zz - a.z) - (b.z - a.z) * (x - a.x);
+          if (o > 0) { if (sg < 0) return 0; sg = 1; } else if (o < 0) { if (sg > 0) return 0; sg = -1; } }
+        const q = N[i], t = (x - q.mx) * q.ux + (zz - q.mz) * q.uz, r = q.R * q.R - t * t; return r > 0 ? 2 * Math.sqrt(r) : 0;
+      } };
   }
   // Polylinie auf m + 1 Punkte gleicher Bogenlänge
   function resample(p, m) {
@@ -768,6 +805,124 @@ const Core = (() => {
     }
     return null;
   }
+  // ---- Schwappen: lineares Modalmodell, erste Eigenschwingung je Wasserkörper (Tasche) in der Kippebene ----
+  // Zustand je See d = [s, w]: s = Neigung des Spiegels gegen die Waagrechte (gleicher Sinn wie θ, +: steigt zur +u-Seite),
+  // w = q̇ mit q = s + θ + (ω²/g)·x_P. Bewegungsgleichung (Potentialtheorie, Ersatzpendel nach Abramson):
+  //   s̈ + 2ζω(ṡ + θ̇) + ω²s = −θ̈ − (ω²/g)·ẍ_P,  x_P = waagrechte Weltlage des Punktes P (Tiefe dP unter der Spiegelmitte).
+  // In q bleibt nur θ, x_P und ẋ_P: q̈ + 2ζωq̇ + ω²q = ω²θ + (ω⁴/g)x_P + 2ζ(ω³/g)ẋ_P – exakt lösbar bei linearer Anregung im Schritt.
+  const GMM = 9810, XI = 1.8411837813; // g [mm/s²], erste Nullstelle von J1'
+  function J1(x) { let t = x / 2, r = 0; for (let m = 0; m < 12; m++) { r += t; t *= -(x * x / 4) / ((m + 1) * (m + 2)); } return r; }
+  // Form der Eigenschwingung über der Spiegelbreite, x = (u − uc)/a ∈ [−1, 1], am Rand ±1: rund J1 (Zylinder), sonst Sinus (Quader)
+  const modeShape = (round, x) => { x = Math.max(-1, Math.min(1, x)); return round ? J1(XI * x) / J1(XI) : Math.sin(Math.PI / 2 * x); };
+  // Spiegelfläche eines Sees (Taschengraph mit wAt): Punkte der Ebene y = L in den Knoten des Sees, Breite quer zur Zeichenebene
+  // → Fläche A, Mittelpunkt uc, zweites Moment I um die Querachse, Ausdehnung ua…ub (u = x·cosθ + z·sinθ)
+  function lakeSurf(g, lk, th, M = 200) {
+    const c = Math.cos(th), s = Math.sin(th), L = lk.L, Q = [];
+    let u0 = Infinity, u1 = -Infinity;
+    for (const i of lk.nodes) {
+      let y0 = Infinity, y1 = -Infinity, a = Infinity, b = -Infinity;
+      for (const pl of g.poly(i)) for (const p of pl) { const y = p.z * c - p.x * s, u = p.x * c + p.z * s; y0 = Math.min(y0, y); y1 = Math.max(y1, y); a = Math.min(a, u); b = Math.max(b, u); }
+      if (y0 <= L + 1e-9 && y1 >= L - 1e-9) { Q.push(i); u0 = Math.min(u0, a); u1 = Math.max(u1, b); }
+    }
+    if (!Q.length) return null;
+    const du = (u1 - u0) / M; let A = 0, Au = 0, Auu = 0, ua = Infinity, ub = -Infinity;
+    for (let k = 0; k < M; k++) {
+      const u = u0 + (k + 0.5) * du, x = -L * s + u * c + 1e-7 * s, z = L * c + u * s - 1e-7 * c; // knapp unter dem Spiegel: Schichtgrenze eindeutig
+      let w = 0; for (const i of Q) w += g.wAt(i, x, z);
+      if (w > 0) { A += w; Au += w * u; Auu += w * u * u; ua = Math.min(ua, u); ub = Math.max(ub, u); }
+    }
+    if (!A) return null;
+    const uc = Au / A; return { A: A * du, I: (Auu - Au * uc) * du, uc, ua: ua - du / 2, ub: ub + du / 2 };
+  }
+  // Kennwerte aus Spiegelfläche sf und Volumen V [mm³]: Wellenzahl k aus dem Rayleigh-Quotienten mit Probefunktion u,
+  // kalibriert auf Kreis (round, exakt ξ/R) bzw. Rechteck (exakt π/L); ω² = g·k·tanh(k·h) mit mittlerer Tiefe h = V/A;
+  // dP = (2/k)·tanh(kh/2) Tiefe des Ersatzpendels; ζ Grenzschichtdämpfung glatter Wand (Mikishev/Dorozhkin, Ersatzzylinder R = ξ/k);
+  // kap = Randhub der Eigenform / Randhub einer ebenen Neigung; a = halbe Spiegelbreite. nu [mm²/s], Wasser 1.
+  function sloshCoef(sf, V, round, nu = 1) {
+    const k = (round ? XI / 2 : Math.PI / Math.sqrt(12)) * Math.sqrt(sf.A / sf.I), h = V / sf.A, om = Math.sqrt(GMM * k * Math.tanh(k * h));
+    const R = XI / k, q = 1.84 * h / R;
+    const dl = 4.98 * Math.sqrt(nu) * R ** -0.75 * GMM ** -0.25 * (1 + 0.318 / Math.sinh(q) * (1 + (1 - h / R) / Math.cosh(q)));
+    return { k, h, om, f: om / (2 * Math.PI), ze: Math.min(0.9, dl / (2 * Math.PI)), dP: 2 / k * Math.tanh(k * h / 2),
+      kap: round ? 2 / (XI * XI - 1) : 8 / (Math.PI * Math.PI), a: (sf.ub - sf.ua) / 2, uc: sf.uc };
+  }
+  // Ersatzpendelpunkt P in Gefäßkoordinaten: Spiegelmitte (Pegel L, Neigung th), dP senkrecht darunter
+  const sloshP = (cf, L, th) => { const c = Math.cos(th), s = Math.sin(th); return { x: -L * s + cf.uc * c + cf.dP * s, z: L * c + cf.uc * s - cf.dP * c }; };
+  // Ein Zeitschritt dt [s], exakt für θ und x_P linear im Schritt (th0→th1 [rad], xw0→xw1 [mm]); d = [s, w] wird überschrieben
+  function sloshStep(d, om, ze, th0, th1, xw0, xw1, dt) {
+    if (!(dt > 0)) return d;
+    const k2 = om * om, kg = k2 / GMM, B = (k2 * (th1 - th0) + k2 * kg * (xw1 - xw0)) / dt;
+    const A0 = k2 * th0 + k2 * kg * xw0 + 2 * ze * om * kg * (xw1 - xw0) / dt; // Anregung f(t) = A0 + B·t
+    const qp = t => (A0 + B * t) / k2 - 2 * ze * B / (om * k2);
+    const e0 = d[0] + th0 + kg * xw0 - qp(0), v0 = d[1] - B / k2, wd = om * Math.sqrt(1 - ze * ze);
+    const E = Math.exp(-ze * om * dt), C = Math.cos(wd * dt), S = Math.sin(wd * dt);
+    const e1 = E * (e0 * C + (v0 + ze * om * e0) / wd * S), v1 = E * (v0 * C - (ze * om * v0 + k2 * e0) / wd * S);
+    d[0] = qp(dt) + e1 - th1 - kg * xw1; d[1] = B / k2 + v1; return d;
+  }
+  // eingeschwungene Amplitude von s bei waagrechter Sinusbewegung (Amplitude A [mm], Kreisfrequenz W [1/s])
+  const sloshSteady = (om, ze, A, W) => om * om / GMM * A * W * W / Math.hypot(om * om - W * W, 2 * ze * om * W);
+  // größtes |s| bei waagrechter Bewegung xw(t) [mm] (Gefäß aufrecht, v0 = Anfangsgeschwindigkeit, Flüssigkeit dabei in Ruhe)
+  function sloshPeak(om, ze, xw, tEnd, v0 = 0, dt = 0.002) {
+    const d = [0, om * om / GMM * v0]; let m = 0;
+    for (let t = 0; t < tEnd; t += dt) { sloshStep(d, om, ze, 0, 0, xw(t), xw(t + dt), dt); m = Math.max(m, Math.abs(d[0])); }
+    return m;
+  }
+  // Zustände auf neue Seen übertragen (Knotenüberdeckung): Vereinigen → massengewichtetes Mittel, Teilen → beide erben
+  function sloshInherit(n, old, sts, lakes) {
+    const own = new Int32Array(n).fill(-1); old.forEach((l, k) => { for (const i of l.nodes) own[i] = k; });
+    return lakes.map(l => { const seen = new Set(); let W = 0, s = 0, w = 0;
+      for (const i of l.nodes) { const k = own[i]; if (k >= 0 && !seen.has(k)) { seen.add(k); const m = old[k].W; W += m; s += m * sts[k][0]; w += m * sts[k][1]; } }
+      return W > 0 ? [s / W, w / W] : [0, 0]; });
+  }
+  // Überlauf über eine Schwelle wie an einem Wehr: Keil über der Schwelle Vex [mm³] bei Spiegelneigung m über einem Kreisrand
+  // (Halbbreite a): Vex ≈ (8√2/15)·m·√a·δ^(5/2), Kopfhöhe H = m·δ, Überlaufbreite b = Sehne 2√(2aδ − δ²) (höchstens bmax, z. B. Tülle);
+  // Abfluss Q = (2/3)·0,6·√(2g)·b·H^(3/2). → Volumen, das in dt hinüberläuft (höchstens Vex)
+  function weirOut(Vex, m, a, dt, bmax = Infinity) {
+    if (!(Vex > 0) || !(m > 0) || !(a > 0)) return Vex > 0 ? Vex : 0;
+    const d = Math.min(a, (15 * Vex / (8 * Math.SQRT2 * m * Math.sqrt(a))) ** 0.4), b = Math.min(bmax, 2 * Math.sqrt(Math.max(0, 2 * a * d - d * d)));
+    return Math.min(Vex, 0.4 * Math.sqrt(2 * GMM) * b * (m * d) ** 1.5 * dt);
+  }
+  // Überschwappen: Wellenberg am Rand = Ebene im wirksamen Winkel th + atan(kap·s) (gleicher Randhub a·kap·s). Läuft der See dort über eine
+  // Engstelle, wandert Wasser darüber weiter (Nachbartasche) oder geht verloren – mit dt [s] und Halbbreiten as[i] begrenzt wie am Wehr
+  // (weirOut, Tülle: Breite dsp), ohne dt sofort der ganze Keil (statische Obergrenze).
+  const spilled = (r, lk, tol) => r.lost > tol || r.lakes.length !== 1 || r.lakes[0].W < lk.W - tol;
+  function sloshSpill(g, th, lakes, sts, kap, dt, as, dsp = Infinity) {
+    let lost = 0, sp = false; const keep = [], kst = [], mv = [], mst = [];
+    lakes.forEach((lk, i) => {
+      const e = th + Math.atan(kap * sts[i][0]);
+      if (Math.abs(e - th) > 1e-7) {
+        let r = settle(g, e, [lk], th);
+        if (spilled(r, lk, 1e-3)) {
+          if (dt !== undefined) { // nur der Anteil f des Überlaufs fließt in dt; der Rest bleibt im eigenen Becken
+            const own = new Set(lk.nodes), ov = l => l.nodes.reduce((n, j) => n + own.has(j), 0);
+            let o = null; for (const l of r.lakes) if (ov(l) > 0 && (!o || ov(l) > ov(o))) o = l;
+            const Vex = lk.W - (o ? o.W : 0), f = Vex > 0 ? weirOut(Vex, Math.abs(kap * sts[i][0]), as[i], dt, r.sp ? dsp : Infinity) / Vex : 1;
+            const rest = (o ? o.W : 0) + (1 - f) * Vex;
+            r = { lakes: r.lakes.filter(l => l !== o).map(l => ({ L: l.L, W: l.W * f, nodes: l.nodes })).concat(rest > 1e-9 ? [{ L: o ? o.L : lk.L, W: rest, nodes: o ? o.nodes : lk.nodes }] : []),
+                  lost: r.lost * f, sp: r.sp };
+          }
+          const b = settle(g, th, r.lakes, e); lost += r.lost + b.lost; if (r.sp && r.lost > 1e-3) sp = true;
+          for (const l of b.lakes) { mv.push(l); mst.push(sts[i]); }
+          return;
+        }
+      }
+      keep.push(lk); kst.push(sts[i]);
+    });
+    if (keep.length === lakes.length) return { lakes, sts, lost: 0, sp: false };
+    const all = keep.concat(mv), ast = kst.concat(mst), r = settle(g, th, all, th); // gleiche Becken vereinigen
+    return { lakes: r.lakes, sts: sloshInherit(g.n, all, ast, r.lakes), lost: lost + r.lost, sp };
+  }
+  // kleinstes s ∈ (0, smax], für das over(e) gilt (Bisektion), sonst Infinity; e = th + sg·atan(kap·s)
+  function firstOver(over, th, kap, sg, smax = 3) {
+    const f = s => over(th + sg * Math.atan(kap * s));
+    if (!f(smax)) return Infinity;
+    let lo = 0, hi = smax; for (let k = 0; k < 22; k++) { const m = (lo + hi) / 2; if (f(m)) hi = m; else lo = m; }
+    return hi;
+  }
+  // kleinstes s > 0 in Richtung sg = ±1, ab dem der See überschwappt (Rand, Tülle oder Engstelle zur Nachbartasche)
+  const sloshLimit = (g, lk, th, kap, sg) => firstOver(e => spilled(settle(g, e, [lk], th), lk, Math.max(1e-3, 1e-7 * lk.W)), th, kap, sg);
+  // dasselbe für Kipp-Geometrien ohne Taschen (Grundriss): Fassungsvermögen im wirksamen Winkel < V
+  const sloshLimitG = (geo, V, th, kap, sg) => firstOver(e => geo.vol(geo.spill(e), e) < V - Math.max(1e-3, 1e-7 * V), th, kap, sg);
+
   // Horizontal force at height h above the stand plane that starts tipping (upright): F·h = m·g·a,
   // a = horizontal distance centre of gravity → stand edge. m in g → N
   const pushForce = (m, a, h) => m / 1000 * 9.81 * a / h;
@@ -775,7 +930,8 @@ const Core = (() => {
   return { sampled, trimLip, interiorPolygon, sectionPolygon, intervalsAt, buildSlices, segArea, volBelow, barrier, yRange, solveL, tiltCurve, cumTable, heightForVolume, clip, distSeg, rdp,
     momentsBelow, shell, cog, tipMargin, tipAngle, pushForce,
     geoRot, spoutLevel, tube, solveLG, tiltCurveG, cogG, tipAngleG, prism, prismShell, closedSmooth, selfCross,
-    pocketGraph, tubeGraph, resample, tubeShell, smoothOpen, segMxx, settle, fillLakes, basins, fillCurve, tiltRun, lakeMoments, lakeSum, cogLakes, tipAngleP };
+    pocketGraph, tubeGraph, resample, tubeShell, smoothOpen, segMxx, settle, fillLakes, basins, fillCurve, tiltRun, lakeMoments, lakeSum, cogLakes, tipAngleP,
+    GMM, XI, J1, modeShape, lakeSurf, sloshCoef, sloshP, sloshStep, sloshSteady, sloshPeak, sloshInherit, weirOut, sloshSpill, sloshLimit, sloshLimitG };
 })();
 if (typeof module !== 'undefined') module.exports = Core;
 // === CORE END
@@ -820,7 +976,8 @@ const S = { kind: 'rot', pts: toPts(PRESETS.karaffe.p), smooth: true, plan: toPt
   snap: 1, marks: true, mode: 'edit', fill: null, theta: 0, cur: 0, sel: -1, undo: [], lastPour: 0,
   t: 3, tb: 6, mat: 'glas', foot: null, // foot null = Standradius aus Geometrie
   spout: null, handle: null, lid: false, part: 'body', // Anbauteile (nur Drehkörper): {p: Mittellinie, d: Ø innen bzw. Stab-Ø}
-  tA: toPts(PRESETS.kopf.back), tB: toPts(PRESETS.kopf.front), tsmooth: true, tPart: 'B' }; // Zwei Konturen: hinten, vorne
+  tA: toPts(PRESETS.kopf.back), tB: toPts(PRESETS.kopf.front), tsmooth: true, tPart: 'B', // Zwei Konturen: hinten, vorne
+  slosh: false, wf: 1.8, wa: 10, sv: 1.4, sb: 0.3 }; // Schwappen: Schrittfrequenz [Hz], Hub [mm], Tempo [m/s], Bremszeit [s] (Schätzwerte)
 const MATS = { glas: ['Glas', 2.5], porzellan: ['Porzellan', 2.4], steinzeug: ['Steinzeug', 2.3], pp: ['PP', 0.9], edelstahl: ['Edelstahl', 7.9] };
 let G = {};
 const isPlan = () => S.kind === 'plan', isRot = () => S.kind === 'rot', isTube = () => S.kind === 'tube';
@@ -916,12 +1073,13 @@ const sumMl = l => Core.lakeSum(l) / 1000;
 function updateCurve() {
   G.stab = null;
   if (isPlan()) {
+    D.lim = null;
     G.curve = Core.tiltCurveG(G.geo, S.fill * 1000, STEPS);
     for (let i = 0; i < G.curve.length; i++) G.curve[i] /= 1000;
     S.cur = curveMinUpTo(S.theta); stabLater(); return;
   }
   // Drehkörper: Füllung sofort, Kipplauf 0…180° (~100 ms) nach kurzer Ruhe; bis dahin ohne Wasser in der Kippansicht
-  G.lakes0 = Core.fillLakes(G.pg, S.fill * 1000).lakes;
+  G.lakes0 = Core.fillLakes(G.pg, S.fill * 1000).lakes; D.pl = [0, 0]; D.lim = null; // Kennwerte bis zur Neuberechnung „…“
   if (S.theta === 0) { S.lakes = G.lakes0; S.cur = sumMl(S.lakes); } else S.lakes = null;
   runLater(!G.curve);
 }
@@ -953,6 +1111,7 @@ function stabLater() {
       G.stab.backE = tip(0, -G.xv, G.pgBack, rfB);
       G.stab.backF = tip(V, -G.xv, G.pgBack, rfB);
     }
+    if (S.slosh) sloshStats();
     drawEditor(); drawStats();
   }, 150);
 }
@@ -969,21 +1128,40 @@ const fillHeight = ml => G.fillH(ml);
 
 // Seen zeichnen: je See Knotenstreifen beider Seiten als Maske, darin die Halbebene y ≤ L und die Spiegellinie.
 // T: Gefäßkoordinaten → Bildschirm, th: Neigung
-function drawLakes(ctx, T, th, lakes) {
-  const g = G.pg, c = Math.cos(th), s = Math.sin(th), B = 1e4;
-  for (const lk of lakes || []) {
+// waves[k] = {s, c} (Schwappen): Spiegel zusätzlich um die Eigenform ausgelenkt
+function drawLakes(ctx, T, th, lakes, waves) {
+  const g = G.pg, c = Math.cos(th), s = Math.sin(th), wet = new Uint8Array(g.n);
+  if (waves) for (const lk of lakes || []) for (const i of lk.nodes) wet[i] = 1;
+  (lakes || []).forEach((lk, k) => {
+    // Maske: Knoten des Sees; beim Schwappen zusätzlich trockene Knoten im Band des Wellenbergs (sonst oben abgeschnitten)
+    let nodes = lk.nodes; const wv = waves && waves[k];
+    if (wv && wv.c && Math.abs(wv.s) > 1e-6) {
+      const hi = lk.L + Math.abs(wv.s) * wv.c.kap * wv.c.a, u0 = wv.c.uc - wv.c.a, u1 = wv.c.uc + wv.c.a; nodes = lk.nodes.slice();
+      for (let i = 0; i < g.n; i++) if (!wet[i]) {
+        let y0 = Infinity, y1 = -Infinity, a = Infinity, b = -Infinity;
+        for (const pl of g.poly(i)) for (const p of pl) { const y = p.z * c - p.x * s, u = p.x * c + p.z * s; y0 = Math.min(y0, y); y1 = Math.max(y1, y); a = Math.min(a, u); b = Math.max(b, u); }
+        if (y0 <= hi && y1 >= lk.L && b >= u0 && a <= u1) nodes.push(i);
+      }
+    }
     ctx.save(); ctx.beginPath();
-    for (const i of lk.nodes) for (const pl of g.poly(i)) {
+    for (const i of nodes) for (const pl of g.poly(i)) {
       const q = pl.map(T); ctx.moveTo(q[0][0], q[0][1]); for (let k = 1; k < q.length; k++) ctx.lineTo(q[k][0], q[k][1]); ctx.closePath();
     }
-    ctx.clip();
-    // Spiegellinie durch p0 in Richtung (c, s); v > 0 = unter dem Spiegel
-    const p0 = { x: -lk.L * s, z: lk.L * c }, at = (u, v) => ({ x: p0.x + u * c + v * s, z: p0.z + u * s - v * c });
-    polyPath(ctx, [at(-B, 0), at(B, 0), at(B, B), at(-B, B)], T); ctx.closePath();
-    ctx.fillStyle = css('--water-a'); ctx.fill();
-    polyPath(ctx, [at(-B, 0), at(B, 0)], T); ctx.strokeStyle = css('--water'); ctx.lineWidth = 2; ctx.stroke();
-    ctx.restore();
+    ctx.clip(); surfFill(ctx, T, th, lk.L, wv); ctx.restore();
+  });
+}
+// Wasser unter dem Spiegel (Pegel L) in der aktuellen Maske; wv = {s, c}: Auslenkung s·κ·a·Form((u − uc)/a)
+function surfFill(ctx, T, th, L, wv) {
+  const c = Math.cos(th), s = Math.sin(th), B = 1e4;
+  // u entlang des Spiegels (waagrecht), v > 0 = unter dem Spiegel
+  const p0 = { x: -L * s, z: L * c }, at = (u, v) => ({ x: p0.x + u * c + v * s, z: p0.z + u * s - v * c });
+  let line = [at(-B, 0), at(B, 0)];
+  if (wv && wv.c && Math.abs(wv.s) > 1e-6) {
+    const { a, uc, kap } = wv.c, r = isPlan() ? false : true, eta = u => wv.s * kap * a * Core.modeShape(r, (u - uc) / a);
+    line = [at(-B, -eta(uc - a))]; for (let k = 0; k <= 48; k++) { const u = uc - a + 2 * a * k / 48; line.push(at(u, -eta(u))); } line.push(at(B, -eta(uc + a)));
   }
+  polyPath(ctx, [...line, at(B, B), at(-B, B)], T); ctx.closePath(); ctx.fillStyle = css('--water-a'); ctx.fill();
+  polyPath(ctx, line, T); ctx.strokeStyle = css('--water'); ctx.lineWidth = 2; ctx.stroke();
 }
 
 // ---------- editor ----------
@@ -1276,7 +1454,8 @@ function drawTilt() {
   const th = S.theta * DEG, c = Math.cos(th), s = Math.sin(th);
   const zc = G.z0 + G.H / 2, xc = G.xc;
   let R = 1; G.walls.flat().concat(!isRot() ? [] : [...(S.spout ? S.spout.p : []), ...(S.handle ? S.handle.p : [])]).forEach(p => R = Math.max(R, Math.hypot(p.x - xc, p.z - zc)));
-  const sc = 0.40 * Math.min(w, h) / R, cx = w / 2, cy = h * 0.46;
+  const sc = 0.40 * Math.min(w, h) / R, cy = h * 0.46;
+  D.sc = sc; D.w = w; const cx = w / 2 + (S.slosh ? (D.stop ? D.Xd : D.X) : 0) * sc; // Schwappen: Gefäß waagrecht verschoben (beim Anhalten folgt die Ansicht)
   const T = p => { const X = (p.x - xc) * c + (p.z - zc) * s, Y = -(p.x - xc) * s + (p.z - zc) * c; return [cx + X * sc, cy - Y * sc]; };
 
   // horizon reference
@@ -1284,8 +1463,11 @@ function drawTilt() {
 
   // liquid
   let L = null;
-  if (!isPlan()) drawLakes(ctx, T, th, S.lakes);
-  else if (S.cur > 0.05) {
+  if (!isPlan()) drawLakes(ctx, T, th, S.lakes, S.slosh && D.lk === S.lakes ? S.lakes.map((lk, k) => ({ s: D.sts[k][0], c: coefOf(lk, th) })) : null);
+  else if (S.slosh && S.cur > 0.05) {
+    const cf = coefPlan(th, S.cur * 1000);
+    if (cf) { ctx.save(); polyPath(ctx, G.sec, T); ctx.closePath(); ctx.clip(); surfFill(ctx, T, th, cf.L, { s: D.pl[0], c: cf }); ctx.restore(); }
+  } else if (S.cur > 0.05) {
     const [lo, hi] = G.geo.yr(th);
     L = Core.solveLG(G.geo, S.cur * 1000, th, lo, hi);
     const liq = Core.clip(G.sec, p => p.z * c - p.x * s - L);
@@ -1301,15 +1483,17 @@ function drawTilt() {
     }
   }
   // pour stream
-  const pouring = S.theta > 0 && performance.now() - S.lastPour < 450 && S.cur > 0.05;
+  const pouring = (S.theta > 0 || S.slosh) && performance.now() - S.lastPour < 450 && S.cur > 0.05;
   if (pouring) {
-    const [x0, y0] = T(G.lipAt(th));
+    // Schwappen zur −u-Seite: Strahl an der Gegenseite (Drehkörper gespiegelte Lippe, Grundriss xmin, Schlauch tiefere Mündung)
+    const sd = S.slosh && D.side < 0 ? -1 : 1, lp = G.lipAt(th + (sd < 0 ? -0.5 : 0));
+    const [x0, y0] = T(sd > 0 || isTube() ? lp : isPlan() ? { x: G.geo.xmin, z: lp.z } : { x: -lp.x, z: lp.z });
     // seitlich mindestens bis außerhalb der Kontur unterhalb der Ausgussstelle, dann fallen
     let xr = x0; G.walls.flat().concat(!isRot() ? [] : [...(S.spout ? S.spout.p : []), ...(S.handle ? S.handle.p : [])])
-      .forEach(p => { const [x, y] = T(p); if (y > y0 + 1) xr = Math.max(xr, x); });
-    const dx = Math.max(15 + 45 * Math.sqrt(Math.max(0, Math.sin(th))), xr - x0 + 8);
+      .forEach(p => { const [x, y] = T(p); if (y > y0 + 1) xr = sd > 0 ? Math.max(xr, x) : Math.min(xr, x); });
+    const dx = Math.max(15 + 45 * Math.sqrt(Math.max(0, Math.sin(Math.abs(th)))), sd * (xr - x0) + 8);
     ctx.strokeStyle = css('--water'); ctx.lineWidth = 4; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(x0, y0);
-    for (let u = 0; u <= 1.0001; u += 0.025) ctx.lineTo(x0 + dx * Math.sqrt(u), y0 + (h - y0) * u * u);
+    for (let u = 0; u <= 1.0001; u += 0.025) ctx.lineTo(x0 + sd * dx * Math.sqrt(u), y0 + (h - y0) * u * u);
     ctx.stroke();
   }
   // walls
@@ -1333,9 +1517,11 @@ function drawTilt() {
   ctx.font = '12px Arial, sans-serif'; ctx.fillStyle = css('--mut');
   ctx.fillText(isPlan() || S.lakes ? nf0.format(S.cur) + ' ml im Gefäß' + (S.lakes && S.lakes.length > 1 ? ' · ' + S.lakes.length + ' Wasserkörper' : '') : 'rechnet …', 12, 40);
   ctx.fillText('↓ g', w - 30, 22);
+  if (S.slosh && (D.walk || D.stop)) { ctx.textAlign = 'right'; ctx.fillText(D.walk ? 'Gehen ' + nf1.format(S.wf) + ' Hz' : 'Anhalten', w - 12, 40); ctx.textAlign = 'left'; }
   ctx.fillStyle = css('--warn');
   if (tips) ctx.fillText('⚠ kippt, wenn abgestellt', 12, 58);
   if (G.bad) ctx.fillText('⚠ ' + G.bad.split(':')[0], 12, tips ? 76 : 58);
+  if (S.slosh && D.big) ctx.fillText('⚠ große Wellen: nur qualitativ', 12, 58 + (tips ? 18 : 0) + (G.bad ? 18 : 0));
 }
 
 // ---------- charts ----------
@@ -1409,6 +1595,7 @@ function drawStats() {
       : tipItem(deg),
     pushItem()
   ];
+  if (S.slosh) items.push(...sloshItems());
   if (G.bad) items.unshift(['Geometrie', '⚠ prüfen', G.bad, true]);
   $('stats').innerHTML = items.map(([a, b, n, warn]) => `<div class="stat"><span>${a}</span><b${warn ? ' style="color:var(--warn)"' : ''}>${b}</b><span>${n}</span></div>`).join('');
   $('fillO').textContent = nf0.format(V0) + ' ml';
@@ -1533,7 +1720,8 @@ function setTheta(t) {
     if (S.lakes) {
       for (let a = prev; a !== t;) {
         const b = t > a ? Math.min(t, a + 0.5) : Math.max(t, a - 0.5), r = Core.settle(G.pg, b * DEG, S.lakes, a * DEG);
-        S.lakes = r.lakes; if (r.lost > 1 && t > prev) { S.lastPour = performance.now(); G.lastSp = r.sp; } a = b;
+        if (S.slosh && D.lk === S.lakes) { D.sts = Core.sloshInherit(G.pg.n, S.lakes, D.sts, r.lakes); D.lk = r.lakes; } // Schwingzustand mitnehmen
+        S.lakes = r.lakes; if (r.lost > 1 && t > prev) { S.lastPour = performance.now(); G.lastSp = r.sp; D.side = 1; } a = b;
       }
       S.cur = sumMl(S.lakes);
     }
@@ -1541,16 +1729,16 @@ function setTheta(t) {
     const k0 = Math.round(prev / 180 * STEPS), k1 = Math.round(t / 180 * STEPS);
     let m = S.cur; for (let k = k0; k <= k1; k++) m = Math.min(m, G.curve[k]);
     m = Math.min(m, retainedAt(t));
-    if (m < S.cur - 1e-6) S.lastPour = performance.now();
+    if (m < S.cur - 1e-6) { S.lastPour = performance.now(); D.side = 1; }
     S.cur = m;
   }
-  $('tilt').value = t;
+  $('tilt').value = t; if (S.slosh) sloshKick();
   drawTilt(); drawCharts(); drawStats();
   clearTimeout(tiltT); tiltT = setTimeout(drawTilt, 480); // Strahl nach dem Ausgießen ausblenden
 }
 let tiltT = 0;
 $('tilt').oninput = e => setTheta(+e.target.value);
-function refill() { S.lastPour = 0; S.theta = 0; $('tilt').value = 0; if (isPlan()) S.cur = S.fill; else { S.lakes = G.lakes0; S.cur = sumMl(S.lakes); } }
+function refill() { S.lastPour = 0; S.theta = 0; $('tilt').value = 0; if (isPlan()) S.cur = S.fill; else { S.lakes = G.lakes0; S.cur = sumMl(S.lakes); } sloshReset(); }
 $('refill').onclick = () => { stopPlay(); refill(); drawAll(); };
 let playId = 0;
 function stopPlay() { cancelAnimationFrame(playId); playId = 0; $('play').textContent = '▶ Durchkippen'; }
@@ -1561,6 +1749,146 @@ $('play').onclick = () => {
   const step = now => { const t = Math.min(1, (now - t0) / dur); setTheta(180 * t); if (t < 1) playId = requestAnimationFrame(step); else stopPlay(); };
   playId = requestAnimationFrame(step);
 };
+
+// ---------- Schwappen ----------
+// Zustand je Wasserkörper [s, w] parallel zu S.lakes (D.sts gehört zu D.lk), Grundriss ein Zustand D.pl.
+// X = waagrechte Lage des Gefäßes [mm] = Ziehen (Xd) + Gehen bzw. Anhalten; th = Neigung [°] beim letzten Schritt.
+const D = { raf: 0, last: 0, t: 0, th: 0, X: 0, Xd: 0, drag: null, walk: false, wt: 0, env: 0, stop: null, lk: null, sts: [], pl: [0, 0],
+  hist: [], quiet: 0, side: 1, lim: null, sc: 1, w: 300, pc: null };
+const coefC = new WeakMap(); // See → {th, c}
+function coefOf(lk, th) {
+  const e = coefC.get(lk); if (e && e.th === th) return e.c;
+  const sf = Core.lakeSurf(G.pg, lk, th), c = sf && sf.I > 0 ? Core.sloshCoef(sf, lk.W, true) : null;
+  if (c) c.P = Core.sloshP(c, lk.L, th);
+  coefC.set(lk, { th, c }); return c;
+}
+function coefPlan(th, V) {
+  if (D.pc && D.pc.th === th && D.pc.V === V && D.pc.geo === G.geo) return D.pc.c;
+  const [lo, hi] = G.geo.yr(th), L = Core.solveLG(G.geo, V, th, lo, hi), sf = G.geo.surf(L, th), c = sf && sf.I > 0 ? Core.sloshCoef(sf, V, false) : null;
+  if (c) { c.L = L; c.P = Core.sloshP(c, L, th); }
+  D.pc = { th, V, geo: G.geo, c }; return c;
+}
+// waagrechte Weltlage [mm] des Gefäßpunkts P bei Neigung th [rad] und Verschiebung X; Drehpunkt = Mitte der Kippansicht
+const xwOf = (P, th, X) => (P.x - G.xc) * Math.cos(th) + (P.z - G.z0 - G.H / 2) * Math.sin(th) + X;
+const KAPR = 2 / (Core.XI ** 2 - 1);
+function sloshReset() { D.sts = S.lakes ? S.lakes.map(() => [0, 0]) : []; D.lk = S.lakes; D.pl = [0, 0]; D.X = D.Xd = 0; D.walk = false; D.env = 0; D.stop = null; D.hist = []; D.th = S.theta; sloshButtons(); }
+// Zustände gehören zu S.lakes (nach Neuberechnung/Füllen: neue Seen ruhen)
+function syncSts() { if (S.lakes && D.lk !== S.lakes) { D.sts = S.lakes.map(() => [0, 0]); D.lk = S.lakes; } }
+function sloshKick() { D.quiet = 0; if (!D.raf && S.slosh) { D.last = performance.now(); D.raf = requestAnimationFrame(sloshTick); } }
+// Anhalten: Tempo v [mm/s] bis t = 0, dann gleichmäßig bremsen über T
+const stopX = (st, t) => st.x0 + (t < st.T ? st.v * (t - t * t / (2 * st.T)) : st.v * st.T / 2);
+function sloshTick(now) {
+  D.raf = 0; if (!S.slosh || !G.geo) return;
+  const dt = Math.min(0.05, Math.max(0, (now - D.last) / 1000)); D.last = now; D.t += dt;
+  let X1 = D.Xd;
+  // Gehen über 1 s ein- und ausblenden: kein Geschwindigkeitssprung (Ruck) beim Losgehen und Stehenbleiben
+  if (D.walk || D.env > 0) { D.wt += dt; D.env = Math.max(0, Math.min(1, D.env + (D.walk ? dt : -dt))); X1 = D.Xd + D.env * S.wa * Math.sin(2 * Math.PI * S.wf * D.wt); }
+  else if (D.stop) { D.stop.t += dt; if (D.stop.t > D.stop.T + 4) { D.stop = null; D.X = D.Xd; sloshButtons(); } else X1 = stopX(D.stop, D.stop.t); } // danach Lage neu bezogen (ändert nichts an der Physik)
+  const th0 = D.th * DEG, th1 = S.theta * DEG, X0 = D.X;
+  let lost = 0, act = false, rise = 0;
+  if (isPlan()) {
+    const V = S.cur * 1000, c = V > 1 ? coefPlan(th1, V) : null;
+    if (c) {
+      Core.sloshStep(D.pl, c.om, c.ze, th0, th1, xwOf(c.P, th0, X0), xwOf(c.P, th1, X1), dt);
+      const e = th1 + Math.atan(c.kap * D.pl[0]), cap = G.geo.vol(G.geo.spill(e), e) / 1000;
+      if (cap < S.cur - 1e-3) { lost = Core.weirOut((S.cur - cap) * 1000, Math.abs(c.kap * D.pl[0]), c.a, dt) / 1000; S.cur -= lost; D.side = Math.sign(D.pl[0]); }
+      act = Math.abs(D.pl[0]) > 1e-4 || Math.abs(D.pl[1]) > 1e-3; rise = c.kap * c.a * D.pl[0]; D.a = c.a;
+    } else D.pl = [0, 0];
+  } else if (S.lakes) {
+    syncSts(); let big = -1;
+    S.lakes.forEach((lk, i) => {
+      const c = coefOf(lk, th1), d = D.sts[i]; if (!c) { d[0] = d[1] = 0; return; }
+      Core.sloshStep(d, c.om, c.ze, th0, th1, xwOf(c.P, th0, X0), xwOf(c.P, th1, X1), dt);
+      if (Math.abs(d[0]) > 1e-4 || Math.abs(d[1]) > 1e-3) act = true;
+      if (big < 0 || lk.W > S.lakes[big].W) { big = i; rise = c.kap * c.a * d[0]; D.a = c.a; }
+    });
+    const r = Core.sloshSpill(G.pg, th1, S.lakes, D.sts, KAPR, dt, S.lakes.map(lk => { const c = coefOf(lk, th1); return c ? c.a : 1; }), hasSpout() ? S.spout.d : Infinity);
+    if (r.lakes !== S.lakes) {
+      lost = r.lost / 1000; let m = 0; S.lakes.forEach((_, i) => { if (Math.abs(D.sts[i][0]) > Math.abs(m)) m = D.sts[i][0]; });
+      if (lost > 1e-3) { D.side = Math.sign(m); G.lastSp = r.sp; }
+      S.lakes = r.lakes; D.sts = r.sts; D.lk = r.lakes; S.cur = sumMl(S.lakes);
+    }
+  }
+  D.th = S.theta; D.X = X1;
+  D.hist.push([D.t, rise]); while (D.hist.length && D.hist[0][0] < D.t - 6) D.hist.shift();
+  if (lost > 1e-3) { S.lastPour = now; drawCharts(); drawStats(); }
+  drawTilt(); drawSloshChart();
+  D.big = Math.abs(rise) > 0.25 * (D.a || Infinity); // Randhub > 25 % der halben Spiegelbreite: außerhalb des linearen Bereichs
+  if (D.walk || D.env > 0 || D.stop || D.drag || playId || act) D.quiet = 0; else D.quiet++;
+  if (D.quiet < 20) D.raf = requestAnimationFrame(sloshTick);
+}
+function drawSloshChart() {
+  if (!S.slosh) return;
+  const fb = S.theta === 0 && D.lim && D.lim.main && Number.isFinite(D.lim.main.free) ? D.lim.main.free : null;
+  let m = 2; D.hist.forEach(([, r]) => m = Math.max(m, Math.abs(r))); if (fb && fb < 4 * m) m = Math.max(m, fb); // ferner Freibord staucht sonst die Kurve
+  const t0 = D.t - 6, pts = D.hist.map(([t, r]) => [t - t0, r]), series = [{ pts, color: css('--water') }];
+  if (fb && fb <= m) series.push({ pts: [[0, fb], [6, fb]], color: css('--ink'), width: 1, dash: [4, 4] }, { pts: [[0, -fb], [6, -fb]], color: css('--ink'), width: 1, dash: [4, 4] });
+  chart($('c3'), { x0: 0, x1: 6, xs: 1, y0: -1.15 * m, y1: 1.15 * m, xl: 'Zeit [s]', yl: 'Randhub [mm]', series });
+}
+// Kennwerte aufrecht (θ = 0, Füllung frisch): je Wasserkörper f₁, ζ, Freibord, Randhub beim Gehen und Anhalten
+// Freibord je Wasserkörper hängt nur von Geometrie und Füllung ab (Bisektion, einige ms); Gehen/Anhalten bei jedem Regler neu
+function sloshStats(keep) {
+  const V0 = S.fill * 1000, stop = { x0: 0, v: S.sv * 1000, T: S.sb };
+  let L = keep && D.lim ? D.lim.L : null;
+  if (!L) {
+    L = [];
+    if (isPlan()) { const c = V0 > 1 ? coefPlan(0, V0) : null; if (c) L.push({ c, W: V0, free: c.kap * c.a * Math.min(Core.sloshLimitG(G.geo, V0, 0, c.kap, 1), Core.sloshLimitG(G.geo, V0, 0, c.kap, -1)) }); }
+    else for (const lk of G.lakes0 || []) { const c = coefOf(lk, 0); if (c) L.push({ c, W: lk.W, free: c.kap * c.a * Math.min(Core.sloshLimit(G.pg, lk, 0, c.kap, 1), Core.sloshLimit(G.pg, lk, 0, c.kap, -1)) }); }
+  }
+  for (const q of L) {
+    const c = q.c, ss = Core.sloshSteady(c.om, c.ze, S.wa, 2 * Math.PI * S.wf), pk = Core.sloshPeak(c.om, c.ze, t => stopX(stop, t), S.sb + 3, stop.v);
+    Object.assign(q, { walk: c.kap * c.a * ss, stop: c.kap * c.a * pk, nlW: c.kap * ss > 0.25, nlS: c.kap * pk > 0.25 });
+  }
+  const main = L.reduce((a, b) => !a || b.W > a.W ? b : a, null);
+  // kritischster Wasserkörper je Fall: größtes Verhältnis Randhub/Freibord
+  const worst = k => L.reduce((a, b) => !a || b[k] / b.free > a[k] / a.free ? b : a, null);
+  D.lim = { L, main, walk: worst('walk'), stop: worst('stop') };
+}
+function sloshItems() {
+  const Q = D.lim; if (!Q) return [['Eigenfrequenz', '…', '']];
+  if (!Q.main) return [['Eigenfrequenz', '–', 'kein Wasser mit freiem Spiegel']];
+  const mm = v => nf1.format(v) + ' mm', m = Q.main, more = Q.L.length > 1 ? ' · weitere: ' + Q.L.filter(q => q !== m).map(q => nf1.format(q.c.f)).join(' / ') + ' Hz' : '';
+  // rot nur mit ⚠ am Wert: Überschwappen oder außerhalb des linearen Bereichs; Resonanzhinweis nur in der Notiz
+  const verdict = (q, k, nl) => {
+    const over = q[k] >= q.free, which = Q.L.length > 1 ? ' (Wasserkörper ' + nf1.format(q.c.f) + ' Hz)' : '';
+    return [(over || nl ? '⚠ ' : '') + '±' + mm(q[k]), (over ? 'schwappt über' : Number.isFinite(q.free) ? 'Freibord ' + mm(q.free) : 'läuft nicht über') + which + (nl ? ' · ⚠ große Wellen, nur qualitativ' : ''), over || nl];
+  };
+  const fw = Q.walk.c.f, res = Math.abs(S.wf / fw - 1) < 0.15 ? ' · ⚠ nahe Resonanz' : Math.abs(2 * S.wf / fw - 1) < 0.15 ? ' · ⚠ f₁ ≈ 2 × Schrittfrequenz (Oberschwingung)' : '';
+  const [wv, wn, ww] = verdict(Q.walk, 'walk', Q.walk.nlW), [sv, sn, sw] = verdict(Q.stop, 'stop', Q.stop.nlS);
+  return [
+    ['Eigenfrequenz', nf1.format(m.c.f) + ' Hz', 'Periode ' + nf0.format(1000 / m.c.f) + ' ms · Dämpfung ' + nf1.format(m.c.ze * 100) + ' %' + more],
+    ['Freibord Schwappen', Number.isFinite(m.free) ? mm(m.free) : '–', Number.isFinite(m.free) ? 'aufrecht: Randhub, ab dem Wasser hinaus oder in eine andere Tasche läuft' : 'läuft auch bei großen Wellen nicht über'],
+    ['Gehen ' + nf1.format(S.wf) + ' Hz, Hub ±' + nf0.format(S.wa) + ' mm', wv, 'Randhub eingeschwungen · ' + wn + res, ww],
+    ['Anhalten ' + nf1.format(S.sv) + ' m/s in ' + nf1.format(S.sb) + ' s', sv, 'größter Randhub · ' + sn, sw]
+  ];
+}
+function sloshButtons() {
+  const on = S.slosh;
+  $('slosh').classList.toggle('on', on); ['walkB', 'stopB', 'sloshCtl', 'sloshNote', 'c3'].forEach(id => $(id).hidden = !on);
+  $('walkB').classList.toggle('on', D.walk); $('walkB').textContent = D.walk ? '■ Gehen' : '▶ Gehen';
+  $('stopB').classList.toggle('on', !!D.stop);
+  [['wf', nf1.format(S.wf) + ' Hz'], ['wa', nf0.format(S.wa) + ' mm'], ['sv', nf1.format(S.sv) + ' m/s'], ['sb', S.sb.toFixed(2).replace('.', ',') + ' s']].forEach(([id, t]) => {
+    $(id).value = S[id]; $(id + 'O').textContent = t; });
+}
+$('slosh').onclick = () => {
+  S.slosh = !S.slosh; cancelAnimationFrame(D.raf); D.raf = 0; sloshReset();
+  D.lim = null; if (S.slosh) { if (G.curve && (isPlan() || G.lakes0)) sloshStats(); sloshKick(); requestAnimationFrame(drawSloshChart); }
+  drawStats();
+  drawTilt();
+};
+$('walkB').onclick = () => { D.stop = null; if (D.walk) D.walk = false; else { if (D.env === 0) D.wt = 0; D.walk = true; } sloshButtons(); sloshKick(); };
+$('stopB').onclick = () => {
+  D.walk = false; D.env = 0; D.Xd = D.X; syncSts(); const v = S.sv * 1000;
+  // vorher gleichmäßig unterwegs: Flüssigkeit ruht relativ zum Gefäß (w = ṡ + (ω²/g)·v)
+  const kick = c => c ? c.om * c.om / Core.GMM * v : 0;
+  if (isPlan()) D.pl[1] += kick(coefPlan(S.theta * DEG, S.cur * 1000)); else if (S.lakes && D.lk === S.lakes) S.lakes.forEach((lk, i) => D.sts[i][1] += kick(coefOf(lk, S.theta * DEG)));
+  D.stop = { t: 0, x0: D.X, v, T: S.sb }; sloshButtons(); sloshKick();
+};
+['wf', 'wa', 'sv', 'sb'].forEach(k => $(k).oninput = e => { S[k] = +e.target.value; sloshButtons(); if (D.lim) { sloshStats(true); drawStats(); } });
+// Gefäß in der Kippansicht waagrecht ziehen (nur im Schwapp-Modus)
+tv.addEventListener('pointerdown', e => { if (!S.slosh) return; tv.setPointerCapture(e.pointerId); D.drag = { x: e.clientX, X0: D.Xd }; sloshKick(); });
+tv.addEventListener('pointermove', e => { if (!D.drag) return; const lim = 0.4 * D.w / D.sc; D.Xd = Math.max(-lim, Math.min(lim, D.drag.X0 + (e.clientX - D.drag.x) / D.sc)); sloshKick(); });
+['pointerup', 'pointercancel'].forEach(t => tv.addEventListener(t, () => { D.drag = null; }));
 
 // export / import / share (Grundriss-Felder optional, version bleibt 1)
 $('exp').onclick = () => dpDownload({ type: 'designphysik/gefaess', version: 1, kind: S.kind, smooth: S.smooth, fill: S.fill, wall: S.t, bottom: S.tb, material: S.mat, foot: S.foot,
@@ -1611,7 +1939,7 @@ window.addEventListener('hashchange', () => { const keep = snap(); if (fromHash(
 window.addEventListener('resize', () => { fitView(); drawAll(); });
 dpHeader('gefaess', 'Gefäß & Kippen');
 if (!fromHash()) setKind('rot', true);
-recompute();
+recompute(); sloshButtons();
 requestAnimationFrame(() => { fitView(); drawAll(); });
 </script>
 </body>
