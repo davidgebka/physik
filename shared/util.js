@@ -3,12 +3,12 @@
 
 // ---- Modul-Registry: einzige Stelle, an der Module angemeldet werden ----
 const DP_MODULES = [
-// name = einziger Modulname (Navigation, Titel, Startseite); q = Entwurfsfrage (Startseite); title = Untertitel nur auf der Startseite
-  { key: 'gefaess', name: 'Gefäß',  q: 'Kippt es?',       title: 'Gefäß & Kippen', desc: 'Volumen, Eichstriche, Ausgießen, Kippen und Schwappen', ready: true, color: '--water' },
-  { key: 'licht',   name: 'Licht',  q: 'Wie hell?',       title: 'Lampenschirm',   desc: 'Schirm zeichnen: Lichtverteilung, Helligkeit auf dem Tisch, Blendung', ready: true, color: '--light' },
-  { key: 'mechanismus', name: 'Mechanik', q: 'Klemmt es?', title: 'Gelenkgetriebe', desc: 'Getriebe skizzieren und bewegen: Bahnkurve, Totlagen, Kraft am Antrieb', ready: true, color: '--mech' },
-  { key: 'last',    name: 'Last',   q: 'Hält es?',        title: 'Balken & Bretter', desc: 'Durchbiegung, Sicherheit, Knicken, Schwingen', ready: true, color: '--load' },
-  { key: 'elektronik', name: 'Elektronik', q: 'Hält der Akku?', title: 'Einfache Schaltungen', desc: 'Batterie, Schalter, LED, Motor, Mikrocontroller: Laufzeit, Strom, Wärme', ready: true, color: '--elec' }
+// name = einziger Modulname (Navigation, Titel, Startseite); title = Untertitel nur auf der Startseite
+  { key: 'gefaess', name: 'Gefäß', title: 'Gefäße & Flüssigkeit', desc: 'Volumen, Eichstriche, Ausgießen, Kippen und Schwappen', ready: true, color: '--water' },
+  { key: 'licht',   name: 'Licht', title: 'Lampenschirm',   desc: 'Schirm zeichnen: Lichtverteilung, Helligkeit auf dem Tisch, Blendung', ready: true, color: '--light' },
+  { key: 'mechanismus', name: 'Mechanik', title: 'Gelenkgetriebe', desc: 'Getriebe skizzieren und bewegen: Bahnkurve, Totlagen, Kraft am Antrieb', ready: true, color: '--mech' },
+  { key: 'last',    name: 'Statik', title: 'Balken & Bretter', desc: 'Durchbiegung, Sicherheit, Knicken, Schwingen', ready: true, color: '--load' },
+  { key: 'elektronik', name: 'Elektronik', title: 'Einfache Schaltungen', desc: 'Batterie, Schalter, LED, Motor, Mikrocontroller: Laufzeit, Strom, Wärme', ready: true, color: '--elec' }
 ];
 
 // Kopfzeile mit Modulnavigation in <header id="dp-header"> rendern; Modulquadrat in der Familienfarbe (Styleguide § 4)

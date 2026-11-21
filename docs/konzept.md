@@ -34,7 +34,7 @@ Bei Zielkonflikten entscheidet A.
 
 ## Konventionen (verbindlich)
 - **Struktur:** `index.html` (Startseite) · `shared/` (style.css, util.js, chart.js) · `tools/` (load-core.js, check.js) · `_vorlage/` · `<modul>/index.html` (Rechenkern; Oberfläche bei Bedarf in weiteren Skripten im Modulordner, z. B. `gefaess/app.js`) + `<modul>/test.js` · `docs/` (konzept, styleguide, historie, `<modul>.md`)
-- **Modul-Registry:** `DP_MODULES` in `shared/util.js` – einzige Stelle (`name` = einziger Modulname überall, `q` = Entwurfsfrage, `title` nur Startseite); Kopfzeile per `dpHeader(key)`
+- **Modul-Registry:** `DP_MODULES` in `shared/util.js` – einzige Stelle (`name` = einziger Modulname überall, `title` nur Startseite; keine Entwurfsfragen als Namen); Kopfzeile per `dpHeader(key)`
 - **Shared-Globale:** `dpEditing`/`dpUndoKey` (Tastatur: Strg+Z nicht beim Tippen), `$`, `nf0`, `nf1`, `css` (Token-Werte gecacht in `dpCss`), `prep`, `polyPath`, `dpDots`, `dpMq`, `dpDownload`, `dpHashGet/Set`, `niceStep`, `chart`; Entwurfshilfen `dpVerdict` (Urteil), `dpHistory` (Rückgängig, Strg+Z), `dpCompare` + `dpDelta` (Variantenvergleich), `dpGallery` + `dpSketch` (Vorlagen-Galerie mit Skizze, Name, Entwurf/Prinzip; alle vier Module); Darstellung (Design-Audit 21.11.2026): `dpStats` + `dpStat` (Urteil, Hauptkennwerte, „Alle Werte“), `dpTerm` (Fachbegriff mit Erklärung), `dpIco`/`dpBtn`/`dpIcons` (SVG-Symbole), `dpMenu` (Telefon „⋯“), `DP_LV`; `legend` in `chart()`, `DP_CFONT`
 - **Links** immer explizit auf `…/index.html` (damit file:// funktioniert)
 - **Technik:** Vanilla JS, Canvas 2D (WebGL/WebGPU nur, wo nötig), keine CDNs
@@ -50,13 +50,13 @@ Bei Zielkonflikten entscheidet A.
 - **Look:** Grundrichtung F „Punktraster“ (20.11.2026), verbindlich nach `docs/styleguide.md`. Farbe nur je **Physik-Familie** (`--water` Fluid, `--light` Licht, `--mech` Bewegung, reserviert `--load` Kraft & Festigkeit; jeweils `-a` für Flächen) und `--warn`. Alle Farben in style.css, Module definieren keine eigenen; Modulfarbe in `DP_MODULES[].color`. Canvas-Raster über `dpDots()`.
 - **Modulgröße:** wächst ein `index.html` über ~1500 Zeilen, vor der nächsten Erweiterung Aufteilen oder eigenes Modul prüfen.
 
-## Module (Stand 21.11.2026; Details in `docs/<modul>.md`)
+## Module (Stand 21.11.2026; Details in `docs/<modul>.md`; Spalte Modul = `name` in `DP_MODULES`)
 | Modul | Key | Stand | Entwurfsfrage |
 |---|---|---|---|
-| Gefäß & Kippen | `gefaess` | v1.14 | Wie viel passt rein, wo sind Eichstriche, wann gießt es aus, kippt es um, schwappt es beim Tragen über? |
-| Licht / Lampenschirm | `licht` | v2.6 | Wie verteilt der Schirm das Licht, wird der Tisch hell genug, blendet es? |
-| Last / Statik | `last` | v1.8 | Hält das Brett/der Balken, wie stark hängt es durch, schwingt es? |
-| Mechanismen | `mechanismus` | v1.5 | Wie bewegt sich das Getriebe, wo klemmt es, welche Kraft braucht es? |
+| Gefäß | `gefaess` | v1.14 | Wie viel passt rein, wo sind Eichstriche, wann gießt es aus, kippt es um, schwappt es beim Tragen über? |
+| Licht | `licht` | v2.6 | Wie verteilt der Schirm das Licht, wird der Tisch hell genug, blendet es? |
+| Statik | `last` | v1.8 | Hält das Brett/der Balken, wie stark hängt es durch, schwingt es? |
+| Mechanik | `mechanismus` | v1.5 | Wie bewegt sich das Getriebe, wo klemmt es, welche Kraft braucht es? |
 | Elektronik | `elektronik` | v3 | Hält der Akku lange genug, reicht der Strom, wird etwas zu heiß? |
 
 ## Roadmap (21.11.2026, nach Persona A)
@@ -67,7 +67,7 @@ Bei Zielkonflikten entscheidet A.
 2. ~~**Variantenvergleich**~~ – erledigt 21.11.2026 in allen vier Modulen (`dpCompare`/`dpDelta`): Last und Mechanismen rechnen den gemerkten Stand neu, Licht und Gefäß frieren Kennwerte und Kurven ein (Gefäß: globale Geometrie, Licht: Monte-Carlo-Lauf). Geist in den Diagrammen; offen: Geist im Editor.
 3. **Rückgängig** und **Vorlagen-Menü** – `dpHistory` in Last und Mechanismen (neu dort: Rückgängig). Gefäß und Licht behalten ihre eigene, geprüfte Umsetzung (Schnappschuss vor der Änderung, Ziehen als ein Schritt); Umstellen nur, wenn dort ohnehin umgebaut wird. **Vorlagen-Galerie** (21.11.2026) statt Textliste in allen Modulen: je 20 Vorlagen in „Prinzipien“ und „Designklassiker“, Skizze aus den Vorlagendaten (Modul liefert `d()` → `dpSketch`); Last seit v1.8 ebenso (zwei Gruppen, Biegelinie in der Skizze); `dpOptions` entfernt.
 4. ~~**Glossar/Tooltips**~~ – erledigt 21.11.2026: `dpTerm` bzw. `t` im Kennwert, Erklärungen an den Hauptbegriffen aller Module; weitere Begriffe nach Bedarf im Modul ergänzen.
-5. ~~**Startseite nach Fragen**~~ – erledigt 21.11.2026: „Kippt es? Wie hell? Klemmt es? Hält es?“ als Einstieg, Karten mit Skizze.
+5. ~~**Startseite nach Fragen**~~ – zurückgenommen 21.11.2026 (Fragen wirkten bemüht, „Kippt es?“ traf Gefäß nicht); Startseite zeigt Name, Untertitel, Beschreibung und Skizze.
 
 **Danach – Breite statt Tiefe** (Reihenfolge = Priorität)
 0. ~~**Neues Modul Elektronik**~~ – v1 bis v3 integriert 21.11.2026 (Mikrocontroller, Transistor, Wandler, Betriebsprofil, Erwärmung).
