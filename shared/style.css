@@ -41,7 +41,7 @@ nav span{color:var(--ink2)}
 main{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:24px;padding:24px;max-width:1440px;margin:0 auto}
 .panel{box-shadow:inset 0 1px var(--ink);display:flex;flex-direction:column;gap:var(--u);min-width:0;container-type:inline-size}
 .panel h2{font-size:13px;line-height:24px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink);margin:0;font-weight:700}
-.panel h2 small{font-size:12px;font-weight:400;text-transform:none;letter-spacing:0;color:var(--ink2);margin-left:12px}
+.panel h2 small{font-size:12px;line-height:1;font-weight:400;text-transform:none;letter-spacing:0;color:var(--ink2);margin-left:12px} /* line-height:1, sonst wird die Zeile 25 px hoch (gemischte Schriftgrößen) */
 canvas{width:100%;display:block;touch-action:none;background:var(--bg);
   height:round(down,calc(100cqw / var(--ar)),var(--u))} /* mit --ar (Breite/Höhe): Höhe auf --u abgerundet; ohne --ar gilt aspect-ratio */
 .ch{aspect-ratio:16/8;--ar:2}
@@ -131,15 +131,12 @@ table.kv tr.warn td:nth-child(2){color:var(--warn)}
 
 /* Startseite */
 .intro{max-width:1440px;margin:0 auto;padding:24px 24px 0}
-.intro h2{font-size:28px;line-height:48px;margin:0;font-weight:700}
-.intro h2 a{color:inherit;text-decoration:none;box-shadow:inset 0 -2px var(--c,var(--ink))}
 .intro p{margin:0;color:var(--ink2);max-width:68ch}
 .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(216px,1fr));gap:24px;padding:24px;max-width:1440px;margin:0 auto}
 .card{box-shadow:inset 0 1px var(--ink);padding:0 0 24px;color:var(--ink);text-decoration:none;display:flex;flex-direction:column;gap:0}
 .card:hover canvas,.card:focus-visible canvas{background:var(--fill)}
 .card canvas{height:168px;background:transparent}
 .card h3{margin:0;font-size:18px;line-height:24px;display:flex;align-items:center;gap:12px;padding-top:12px}
-.card .q{font-size:14px;font-weight:400;color:var(--ink2)}
 .card p{margin:0;color:var(--ink2);font-size:14px}
 .card.off{color:var(--ink2);pointer-events:none}
 .badge{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink2)}

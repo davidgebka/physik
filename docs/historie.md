@@ -19,6 +19,8 @@ Vom zentralen Chat gepflegt. Neueste Einträge oben einfügen.
 - **19.11.2026, Umzug nach GitHub**: Stand 1 als erster Commit in `davidgebka/physik`; Dokumente aus dem claude.ai-Projekt nach `docs/`; Projektanweisungen → `CLAUDE.md`; CI ergänzt. Das claude.ai-Projekt ist ab jetzt nicht mehr Quelle für Code.
 
 ## Erledigte Wünsche an shared
+Erledigt (21.11.2026, Style-Chat):
+- **Style-Chat** (Gefäß, PR #33): `.panel h2 small` machte die Titelzeile 25 statt 24 px hoch → `line-height:1`; alle Titel in allen Modulen wieder 24 px (gemessen 1280/390 px). Dabei verwaiste Regeln der Entwurfsfragen entfernt (`.intro h2`, `.card .q`, seit PR #35 ungenutzt).
 Erledigt (21.11.2026, zentraler Chat, Integration Elektronik v1):
 - **Style-Chat** (Elektronik, PR #28): Familie Elektrik `--elec #c0189a`/`--elec-a`; Navigation für fünf Segmente auf Telefon.
 - **shared/util.js** (Elektronik): `ready: true`, `color: '--elec'`; `dpHeader` zeigt nicht fertige Module wieder ausgegraut (Styleguide § 6).

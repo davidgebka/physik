@@ -96,13 +96,13 @@ Nur diese Farben sind erlaubt. Module definieren **keine eigenen Farben** in `:r
   | Aussage | 18 px / 24 px, 700 | Urteilssatz, Textwerte in Kennwerten, Modulname auf der Startseite |
   | Kennzahl | 28 px / 48 px, 700 | Hauptkennwert; Einheit dahinter 60 %, 400 |
 - Wortmarke „Designphysik“: 14 px/700 Versalien, Sperrung .12em.
-- Abschnittstitel höchstens zwei Wörter; Zusatz als `<small>` (12 px, normal, `--ink2`) daneben.
+- Abschnittstitel höchstens zwei Wörter; Zusatz als `<small>` (12 px, normal, `--ink2`, `line-height:1` – sonst wird die Zeile 25 px hoch) daneben.
 - Zahlen immer `font-variant-numeric: tabular-nums`.
 - Canvas: `DP_CFONT` aus `chart.js` (12 px Systemschrift), `--ink2`; Kennwert im Canvas 700 18 px `--ink`.
 
 ## 6. Layout & Komponenten
 - `header`: 72 px, Wortmarke links, Navigation rechts, unten 1 px `--ink`. Das Modul steht nur einmal: als aktives Segment (`dpHeader(key)`). Telefon: Navigation volle Breite, Segmente teilen die Breite nach Namenslänge; ab fünf Segmenten unter 480 px Namen 12 px und ohne Modulquadrat (passt bis 320 px).
-- `nav`: Segmente in `--h` Höhe, 1 px `--ink`, ohne Lücke aneinander; aktiv `--ctl`. Jedes Segment mit Modulquadrat und dem einen Modulnamen aus `DP_MODULES[].name` (Gefäß · Licht · Mechanik · Last · Elektronik); nicht verfügbare Module `--ink2`, Quadrat nur als Umriss.
+- `nav`: Segmente in `--h` Höhe, 1 px `--ink`, ohne Lücke aneinander; aktiv `--ctl`. Jedes Segment mit Modulquadrat und dem einen Modulnamen aus `DP_MODULES[].name` (Gefäß · Licht · Mechanik · Statik · Elektronik); nicht verfügbare Module `--ink2`, Quadrat nur als Umriss.
 - `main`: 2 Spalten, Abstand 24 px, Rand 24 px, max. 1440 px; unter 860 px einspaltig.
 - `.panel`: **kein Kasten** – oben 1 px `--ink`, keine Seiten, kein Hintergrund (Punkte sichtbar), Abstand zwischen Inhalten 24 px. `h2` in der ersten Zeile.
 - `.row`: Werkzeugleiste; Abstand 12 px zwischen Gruppen, 24 px zwischen umbrochenen Zeilen, Segmente einer Gruppe ohne Lücke (`.seg`). `.sep` = 12 px Leerraum.
@@ -121,7 +121,7 @@ Nur diese Farben sind erlaubt. Module definieren **keine eigenen Farben** in `:r
 - Fokus: `:focus-visible` 2 px `--ink`, Abstand 2 px (auch auf schwarzen Knöpfen sichtbar).
 - `.note`: 12 px / 24 px `--ink2`.
 - **Vorlagen-Galerie** (`dpGallery`, seit 21.11.2026): Knopf „▦ Vorlage …“ öffnet einen Dialog (1 px `--ink`, Hintergrund abgedunkelt), Kopfzeile bleibt stehen. Gruppen als Abschnitt (11 px Versalien, `--ink2`), Karten wie `.card` (oben 1 px `--ink`, ab 144 px Breite): Skizze 96 px, Name 13 px/700, Entwurf · Jahr bzw. Prinzip 11 px `--ink2`; Hover/Fokus `--fill`. Skizzen über `dpSketch`: Kontur `--ink`, Medium in der Familie (`-a`-Fläche bzw. Linie), Gestell `--mut`; jede Skizze einzeln eingepasst (kein gemeinsamer Maßstab).
-- Startseite: oben die Entwurfsfragen 28 px/48 px als Links (auch auf dem Telefon, umbrechen statt kleiner), unterstrichen in der Familienfarbe (`DP_MODULES[].q`), darunter ein Satz. `.card` = oben 1 px `--ink`, ab 216 px breit (fünf Module in einer Reihe ab ~1200 px), Skizze 168 px (`dpSketch`, Medium in der Familienfarbe), Modulquadrat + Name 18 px/700 + Frage 14 px `--ink2` (normal, die Fragen stehen schon groß oben), Beschreibung `--ink2`; `.card.off` in `--ink2` mit „in Arbeit“.
+- Startseite (Nomenklatur 21.11.2026, PR #35: keine Entwurfsfragen mehr): oben ein Satz (`.intro p`, `--ink2`). `.card` = oben 1 px `--ink`, ab 216 px breit (fünf Module in einer Reihe ab ~1200 px), Skizze 168 px (`dpSketch`, Medium in der Familienfarbe), Modulquadrat + Name 18 px/700, darunter ein Satz `DP_MODULES[].desc` in `--ink2`; `.card.off` in `--ink2` mit „in Arbeit“.
 - Keine Radien, keine Schatten, keine Verläufe (außer Falschfarbe und Feldbild).
 
 ## 7. Zeichenfläche (Editor-Canvas)
