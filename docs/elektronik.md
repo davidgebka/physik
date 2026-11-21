@@ -73,3 +73,4 @@ Spannungsteiler · Reihen-/Parallelschaltung · Innenwiderstand (Klemmenspannung
   - test.js 93 Prüfungen (+9): Ruhestrom ESP32, Laufzeitformel mit Profil, Hinweis Ruhestrom, Taschenlampe 1 h/Tag = 24 × Dauer, Pi ohne Schlafmodus, ΔT Widerstand und 7805, wärmste Stelle.
   - Browser (1280/390 px): alle 22 Vorlagen ohne Konsolenfehler, Profil per Feld, Vergleich, Link-Rundreise und Rückgängig mit `hday`.
   - Offen: Selbstentladung bei Monaten Laufzeit, mehrere Pins und Board-Ausgänge 3,3/5 V, Taster/Relais, Werte gegen Datenblätter prüfen.
+- **v3.1** (21.11.2026, Style-Chat): Zeile „Laufzeit soll · Betrieb“ als zwei zusammenhängende Paare (Label, Feld, Einheit), „leer: dauernd“ als Platzhalter im Feld – passt bei 390 px in eine Zeile, Kennwerte wieder im Raster.

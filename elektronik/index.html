@@ -10,6 +10,7 @@
 #ed{aspect-ratio:4/3;--ar:calc(4/3);touch-action:none}
 .sel input[type=number]{width:80px}
 .sel b{font-size:14px}
+.pair{display:inline-flex;align-items:center;gap:6px;white-space:nowrap}.pair input{width:84px}
 </style>
 </head>
 <body>
@@ -31,7 +32,7 @@
   </section>
   <section class="panel kpi">
     <h2>Kennwerte</h2>
-    <div class="row"><label for="soll" class="note">Laufzeit soll</label><input type="number" id="soll" min="0" step="1" style="width:80px"><span class="note">h</span><span class="sep"></span><label for="hday" class="note">Betrieb</label><input type="number" id="hday" min="0" max="24" step="0.5" style="width:80px"><span class="note">h/Tag – leer: dauernd</span></div>
+    <div class="row"><label class="note pair">Laufzeit soll <input type="number" id="soll" min="0" step="1" placeholder="–"> h</label><label class="note pair">Betrieb <input type="number" id="hday" min="0" max="24" step="0.5" placeholder="dauernd"> h/Tag</label></div>
     <div class="stats" id="stats"></div>
   </section>
   <section class="panel wide">
