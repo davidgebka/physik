@@ -687,7 +687,7 @@ function drawStats() {
     isTube() ? ['Abmessungen', nf0.format(G.H) + ' mm', 'Ø max ' + nf0.format(G.maxD) + ' mm · Mündung Ø ' + nf0.format(G.mouthD) + ' mm']
     : isPlan() ? ['Abmessungen', nf0.format(G.H) + ' mm', 'innen ' + nf0.format(G.L) + ' × ' + nf0.format(G.B) + ' mm · Kipprichtung ' + nf0.format(S.psi) + '°']
       : ['Abmessungen', nf0.format(G.H) + ' mm', 'Ø max ' + nf0.format(2 * G.maxR) + ' mm · Öffnung ' + nf0.format(2 * G.rimR) + ' mm'],
-    ['Ausgießbeginn', deg(start), 'erster Tropfen (quasistatisch)' + (hasSpout() ? ', über die Tülle' : '')],
+    ['Ausgießbeginn', deg(start), 'erster Tropfen bei langsamem Neigen' + (hasSpout() ? ', über die Tülle' : '')],
     ['50 % ausgegossen', deg(half), ''],
     ['Leer (≤ 1 %)', deg(empty), empty == null ? 'Rest bei 180°: ' + nf0.format(c[STEPS]) + ' ml' : ''],
     ['Max. Dosierrate', nf1.format(rate) + ' ml/°', rate > 0 ? 'bei ' + deg(rateAt) : ''],

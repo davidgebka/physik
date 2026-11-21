@@ -9,19 +9,16 @@
 <body>
 <header><h1>Designphysik <small>Physik für Produktdesign</small></h1></header>
 <section class="intro">
-  <h2 id="qs"></h2>
-  <p>Werkzeuge für schnelle physikalische Abschätzungen im Entwurf – zeichnen, Varianten vergleichen, Urteil in Minuten. Jedes Modul nennt sein Modell und sagt, ab wann Fachplanung nötig ist.</p>
+  <p>Werkzeuge, mit denen sich im Entwurf schnell abschätzen lässt, ob etwas physikalisch funktioniert: Form zeichnen, Varianten vergleichen, nach wenigen Minuten ein Urteil. Jedes Modul erklärt, wie es rechnet, wo seine Grenzen liegen und welche Profiwerkzeuge danach weiterhelfen.</p>
 </section>
 <div class="cards" id="cards"></div>
 <script src="shared/util.js"></script>
 <script>
-// Entwurfsfragen als Einstieg (konzept.md Roadmap „Startseite nach Fragen“), unterstrichen in der Familienfarbe
-$('qs').innerHTML = DP_MODULES.filter(m => m.ready).map(m => `<a href="${m.key}/index.html" style="--c:var(${m.color})">${m.q}</a>`).join(' ');
 $('cards').innerHTML = DP_MODULES.map(m => `
   <a class="card ${m.ready ? '' : 'off'}" href="${m.key}/index.html">
     <canvas data-k="${m.key}" aria-hidden="true"></canvas>
-    <h3>${dpMq(m, !m.ready)}${m.name} <span class="q">${m.q}</span></h3>
-    <p>${m.title}: ${m.desc}</p>${m.ready ? '' : '<span class="badge">in Arbeit</span>'}
+    <h3>${dpMq(m, !m.ready)}${m.name}</h3>
+    <p>${m.desc}</p>${m.ready ? '' : '<span class="badge">in Arbeit</span>'}
   </a>`).join('');
 // Skizzen in mm (dpSketch): Medium in der Familienfarbe
 const mir = p => p.map(([x, z]) => [-x, z]).reverse().concat(p);

@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Designphysik · Last</title>
+<title>Designphysik · Statik</title>
 <link rel="stylesheet" href="../shared/style.css">
 <style>
 #ed{--ar:3;aspect-ratio:3/1}
@@ -49,9 +49,9 @@ select{max-width:100%}
     <details id="matD"><summary>Werkstoffwerte</summary><p class="note" id="matV"></p></details>
     <div class="fl">
       <label class="chk"><input type="checkbox" id="sw"> Eigengewicht</label>
-      <label class="chk"><input type="checkbox" id="shr"> Schubverformung</label>
-      <label>Längsdruck [N] <input type="number" id="nax" step="10" min="0"></label>
-      <label>Durchbiegung max. <select id="lim"><option value="150">l/150</option><option value="200">l/200</option><option value="300">l/300</option><option value="500">l/500</option></select></label>
+      <label class="chk" title="Zusätzliches Nachgeben kurzer, dicker Balken und weicher Kerne (Sandwich). Bei schlanken Brettern kaum Unterschied."><input type="checkbox" id="shr"> Schubverformung</label>
+      <label title="Kraft von oben bzw. in Längsrichtung, z. B. auf ein Tischbein – prüft, ob es ausknickt.">Längsdruck [N] <input type="number" id="nax" step="10" min="0"></label>
+      <label title="Erlaubte Durchbiegung: Länge geteilt durch die Zahl, l/200 = 4 mm auf 80 cm.">Durchbiegung max. <select id="lim"><option value="150">l/150</option><option value="200">l/200</option><option value="300">l/300</option><option value="500">l/500</option></select></label>
     </div>
   </section>
   <section class="panel wide kpi">
@@ -62,17 +62,17 @@ select{max-width:100%}
   <section class="panel">
     <h2>Durchbiegung</h2>
     <canvas id="c1" class="ch"></canvas>
-    <h2>Biegemoment</h2>
+    <h2>Biegemoment <small>wie stark es an jeder Stelle gebogen wird</small></h2>
     <canvas id="c2" class="ch"></canvas>
   </section>
   <section class="panel">
-    <h2>Querkraft</h2>
+    <h2>Querkraft <small>wie stark es quer abgeschert wird</small></h2>
     <canvas id="c3" class="ch"></canvas>
-    <h2>Spannung <small>Randfaser</small></h2>
+    <h2>Spannung <small>an Ober- bzw. Unterkante</small></h2>
     <canvas id="c4" class="ch"></canvas>
   </section>
   <section class="panel">
-    <h2>Schwingung <small>Eigenformen</small></h2>
+    <h2>Schwingung <small>so schwingt es nach einem Stoß</small></h2>
     <canvas id="c5" class="ch"></canvas>
     <p class="note" id="modeN"></p>
   </section>
@@ -86,15 +86,16 @@ select{max-width:100%}
   </section>
   <section class="panel wide model">
     <h2>Modell &amp; Gültigkeit</h2>
-    <details data-k="model"><summary>Modell, Rechnung und Grenzen lesen</summary><div class="txt">
-    <h3>Modell</h3><p>Gerader, ebener Biegebalken nach Timoshenko (Biegung + Schubverformung; ohne Häkchen „Schubverformung“ Euler-Bernoulli), linear-elastisch, kleine Verformungen. Lasten wirken quer zur Balkenachse in der Zeichenebene; Querschnitt symmetrisch zur Lastebene, gerade Biegung um die waagrechte Schwerachse. Gelenkiges Lager hält die Querverschiebung, Einspannung zusätzlich die Verdrehung, federndes Lager gibt mit k [N/mm] nach (Konsole, Dübel, Gleiter, Wandanschluss; k ≈ Kraft / Einfederung aus Versuch oder Datenblatt). Längskräfte trägt ein beliebiges Lager.</p>
-    <h3>Rechnung</h3><p>Finite Elemente mit verknüpften Ansätzen (Timoshenko, Φ = 12EI/(G·A<sub>s</sub>·h²); Schubfläche A<sub>s</sub>: Rechteck 5/6·A, Rundstab 0,9·A, Rohr A/2, Profile Steg bzw. Wände), Schubmodul G je Material (Holz G ≈ E/16 nach EN 338; Platten Querschub-Schätzwerte), Knoten an jedem Lager, Lastpunkt und Streckenlast-Ende, dazwischen 80 Elemente über die Länge. So sind Verschiebungen an den Knoten exakt, dazwischen ergänzt um die exakte Lösung der Streckenlast (Biegung und Schub). Biegemoment und Querkraft folgen aus dem Gleichgewicht von Auflagerkräften und Lasten. Geprüft gegen die Formeln der Baustatik (Einfeld-, Krag-, Zwei-Feld- und eingespannte Träger, Überstand, Teilstreckenlast; siehe <code>last/test.js</code>).</p>
-    <h3>Spannung</h3><p>σ = N/A ± M·e/I an Ober- und Unterkante, τ = V·S/(I·b) in der Schwerachse. <i>Sicherheit</i> = Festigkeit f / größte Spannung; f ist der charakteristische Wert (Holz: Biegefestigkeit, Metall: Streckgrenze, Glas/Kunststoff: Biege- bzw. Zugfestigkeit). Die <i>Zielsicherheit</i> je Material ist ein Richtwert, der Lastfaktoren, Materialstreuung, Dauerlast und Feuchte pauschal abdeckt (Holz ≈ γ<sub>F</sub>·γ<sub>M</sub>/k<sub>mod</sub>) – kein Ersatz für einen Nachweis nach Eurocode. Werte aus EN 338, EN 10025, EN 755-2, EN 572; Platten und Kunststoffe Schätzwerte nach Norm-Mindestwerten bzw. Datenblättern (bei „Material“ angegeben).</p>
-    <h3>Durchbiegung</h3><p><i>sofort</i> unter allen Lasten; <i>Endzustand</i> mit Kriechen: Anteil aus Dauerlasten (Eigengewicht, „dauerhaft“) × (1 + k<sub>def</sub>), k<sub>def</sub> nach EN 1995 für Nutzungsklasse 1 (trocken innen), Kunststoffe geschätzt aus dem Kriechmodul nach 1000 h. Federnde Lager kriechen dabei mit (sichere Seite), ihre Einfederung zählt zur Durchbiegung. Grenze l/x bezogen auf die Stützweite des Feldes, bei Überständen auf die doppelte Kraglänge (EN 1995). Übliche Richtwerte: Regalboden l/200–l/300, Tisch und Bank l/300.</p>
-    <h3>Knicken</h3><p>„Längsdruck“ wirkt am Ende x = L in Balkenachse (stehend: oben, plus Eigengewicht darüber). Knicksicherheit = kleinster Lastfaktor λ mit (K − λ·K<sub>G</sub>)·φ = 0 (Euler, geometrische Steifigkeit); geprüft an den vier Eulerfällen und der Kragstütze unter Eigengewicht; mit Schubverformung ≈ Engesser N<sub>E</sub>/(1 + N<sub>E</sub>/GA<sub>s</sub>) (auf 1 % bei N<sub>E</sub>/GA<sub>s</sub> ≤ 0,2, bei extrem schubweichen Querschnitten etwas zu niedrig). Biegemoment, Querkraft und Durchbiegung aus Querlasten werden mit α = 1/(1 − 1/λ) verstärkt (Theorie II. Ordnung genähert); Lagerkräfte bleiben statisch. Längszug (negativer Wert, nur per Datei/Link) wirkt in der Spannung, seine versteifende Wirkung wird nicht gerechnet (sichere Seite). Ohne Vorkrümmung und ohne Fließen: reale Stützen versagen deutlich vor λ = 1, daher Ziel λ ≥ 3.</p>
-    <h3>Dynamik</h3><p>Eigenfrequenzen aus K·φ = ω²·M·φ mit konsistenter Massenmatrix (Drehträgheit vernachlässigt) (Balkenmasse, Dauerlasten liegend als mitschwingende Masse, Längsdruck senkt die Steifigkeit). Richtwert: unter ~8 Hz federt eine Sitz- oder Lauffläche spürbar (EN 1995 für Decken). <i>Stoß:</i> Last mit Fallhöhe h wirkt wie F·n mit n = 1 + √(1 + 2h/δ<sub>st</sub>) (Energieansatz, Balkenmasse und Dämpfung vernachlässigt → sicher). h = 0 heißt „plötzlich aufgesetzt“ und ist nur statisch gerechnet; für „plötzlich“ n = 2 eine kleine Fallhöhe setzen. <i>Polster</i> = Einfederung zwischen Last und Balken unter F (Sitzpolster, Gesäß und Beine einer Person ≈ 20–40 mm, Schätzung): wirkt als Feder in Reihe, δ<sub>st</sub> = Balken + Polster – ohne Polster ist ein Mensch als starre Masse stark übertrieben. Mehrere Stöße werden gleichzeitig angenommen. Prüfnormen für Möbel (EN 1728, EN 16139) arbeiten mit eigenen Prüflasten und Stoßkörpern.</p>
-    <h3>Designklassiker</h3><p>unter „Vorlage“: Maße nach Hersteller- und Händlerangaben, gerundet; geschätzt sind die Dicke des String-Bodens, die Wand des USM-Rohrs, die Plattendicken von Eiermann- und Tulip-Tisch, die Auflage des Tulip-Fußes und der Beindurchmesser des Stuhls Nr. 14 (gebogenes Bein gerade genähert). Lasten sind typische Nutzung, keine Herstellerangaben – Annäherung, keine Werksstatik.</p>
-    <h3>Nicht enthalten</h3><p>Kippen/Biegedrillknicken hochkant stehender Bretter und schlanker Profile, örtliches Beulen dünner Wände, Lochleibung und Verbindungen (Dübel, Schrauben, Konsolen), Querdruck am Auflager, Drehfedern (teilweise Einspannung), Holz quer zur Faser, Ermüdung, Temperatur und Feuchte über Nutzungsklasse 1, schiefe Biegung (L-Winkel), nichtlineares Material.</p>
+    <details data-k="model"><summary>Wie gerechnet wird, Begriffe, Grenzen und weiterführende Werkzeuge</summary><div class="txt">
+    <h3>Was gerechnet wird</h3><p>Ein gerader Balken – Brett, Rohr, Profil – in der Seitenansicht, quer belastet (<a href="https://de.wikipedia.org/wiki/Balkentheorie" target="_blank" rel="noopener">Balkentheorie</a>). Er verformt sich elastisch, federt also nach dem Entlasten zurück, und die Verformungen sind klein gegenüber der Länge. Lager: <i>gelenkig</i> hält den Balken fest, er kann sich aber drehen (aufgelegt auf eine Konsole); <i>eingespannt</i> hält ihn auch gegen Verdrehen (fest in der Wand); <i>federnd</i> gibt mit k [N/mm] nach (Konsole, Dübel, Gleiter; k = Kraft / Einfederung, aus Versuch oder Datenblatt). „Schubverformung“ berücksichtigt, dass kurze, dicke Balken und weiche Kerne (Sandwichplatten) zusätzlich nachgeben; bei schlanken Brettern macht das kaum etwas aus.</p>
+    <h3>Rechenweg</h3><p>Der Balken wird in viele kurze Stücke zerlegt, deren Verhalten bekannt ist, und diese werden zusammengesetzt (<a href="https://de.wikipedia.org/wiki/Finite-Elemente-Methode" target="_blank" rel="noopener">Finite-Elemente-Methode</a>). <a href="https://de.wikipedia.org/wiki/Biegemoment" target="_blank" rel="noopener">Biegemoment</a> und <a href="https://de.wikipedia.org/wiki/Querkraft" target="_blank" rel="noopener">Querkraft</a> – wie stark der Balken an jeder Stelle gebogen bzw. quer abgeschert wird – folgen aus dem Gleichgewicht der Kräfte. Geprüft gegen die Formeln aus dem Lehrbuch (beidseitig aufgelegt, Kragarm, über mehrere Lager, eingespannt, Überstand; siehe <code>last/test.js</code>). Für Fachleute: Timoshenko-Elemente, Schubfläche 5/6·A (Rechteck), 0,9·A (Rundstab), A/2 (Rohr), Holz G ≈ E/16 (EN 338), 80 Elemente plus Knoten an Lagern und Lasten.</p>
+    <h3>Spannung und Sicherheit</h3><p>Beim Biegen wird die eine Seite gedehnt und die andere gestaucht, am stärksten an Ober- und Unterkante. Wie groß diese Spannung ist, hängt vom Biegemoment und von der Form des Querschnitts ab: Ein hochkant gestelltes Brett ist viel steifer und fester als ein liegendes (<a href="https://de.wikipedia.org/wiki/Flächenträgheitsmoment" target="_blank" rel="noopener">Flächenträgheitsmoment</a>); wie steif das Material selbst ist, sagt der <a href="https://de.wikipedia.org/wiki/Elastizitätsmodul" target="_blank" rel="noopener">Elastizitätsmodul</a>. <i>Sicherheit</i> = Festigkeit des Materials / größte Spannung; 2 heißt: Es bricht erst bei doppelter Last. Die <i>Zielsicherheit</i> je Material ist ein Richtwert, der Streuung im Material, Dauerlast und Feuchte pauschal abdeckt – kein Ersatz für einen Nachweis nach <a href="https://de.wikipedia.org/wiki/Eurocode_5" target="_blank" rel="noopener">Eurocode</a>. Werte aus Normen (EN 338 Holz, EN 10025 Stahl, EN 755-2 Aluminium, EN 572 Glas), Platten und Kunststoffe geschätzt (bei „Material“ angegeben).</p>
+    <h3>Durchbiegung</h3><p><i>sofort</i>: unter allen Lasten. <i>Endzustand</i>: Holz und Kunststoff geben unter Dauerlast mit der Zeit weiter nach (<a href="https://de.wikipedia.org/wiki/Kriechen_(Werkstoff)" target="_blank" rel="noopener">Kriechen</a>) – ein volles Bücherregal hängt nach Monaten mehr durch als am ersten Tag. Gerechnet für trockene Innenräume (Holz nach EN 1995, Kunststoffe geschätzt aus Werten nach 1000 Stunden). Federnde Lager geben dabei mit nach. Die Grenze l/x heißt: Durchbiegung höchstens Länge geteilt durch x – bei l/200 also 4&nbsp;mm auf 80&nbsp;cm. Bei Überständen gilt die doppelte Überstandslänge. Übliche Richtwerte: Regalboden l/200–l/300, Tisch und Bank l/300.</p>
+    <h3>Knicken</h3><p>Drückt man von oben auf einen schlanken Stab (Tischbein, Stütze), weicht er ab einer bestimmten Last plötzlich zur Seite aus (<a href="https://de.wikipedia.org/wiki/Knicken" target="_blank" rel="noopener">Knicken</a>, <a href="https://de.wikipedia.org/wiki/Eulersche_Knickfälle" target="_blank" rel="noopener">Eulersche Knickfälle</a>). „Längsdruck“ wirkt am Ende x = L in Längsrichtung (stehend: von oben, plus Eigengewicht darüber). <i>Knicksicherheit λ</i> = wie oft die Last steigen darf, bis der Stab ausknickt. Echte Stützen sind nie ganz gerade und knicken deutlich früher, daher Ziel λ ≥ 3. Der Längsdruck verstärkt außerdem die Biegung durch Querlasten (genähert). Zug (negativer Wert, nur per Datei oder Link) zählt in der Spannung; dass Zug den Balken auch versteift, wird nicht gerechnet (sichere Seite).</p>
+    <h3>Schwingen und Stoß</h3><p><i><a href="https://de.wikipedia.org/wiki/Eigenfrequenz" target="_blank" rel="noopener">Eigenfrequenz</a></i> = wie oft pro Sekunde der Balken nachschwingt, wenn man ihn anstößt. Liegt sie unter etwa 8&nbsp;Hz, federt eine Sitz- oder Lauffläche spürbar (Richtwert aus EN 1995 für Decken). Dauerlasten schwingen als Masse mit. <i>Stoß</i>: Eine Last, die aus der Höhe h fällt, wirkt kurz wie ein Vielfaches ihres Gewichts (Energieansatz, sichere Seite). h = 0 heißt „ruhig aufgelegt“; für „plötzlich hingesetzt“ (doppelte Wirkung) eine kleine Fallhöhe setzen. <i>Polster</i> = wie weit Polster oder Körper unter der Last nachgeben (Sitzpolster, Gesäß und Beine ≈ 20–40&nbsp;mm, geschätzt); ohne Polster wird ein Mensch wie ein harter Klotz gerechnet und die Wirkung stark überschätzt. Mehrere Stöße gelten als gleichzeitig. Prüfnormen für Möbel (EN 1728, EN 16139) arbeiten mit eigenen Prüflasten.</p>
+    <h3>Designklassiker</h3><p>Unter „Vorlage“: Maße nach Angaben von Herstellern und Händlern, gerundet. Geschätzt sind die Dicke des String-Bodens, die Wand des USM-Rohrs, die Plattendicken von Eiermann- und Tulip-Tisch, die Auflage des Tulip-Fußes und der Beindurchmesser des Stuhls Nr. 14 (gebogenes Bein gerade genähert). Die Lasten sind typische Nutzung, keine Herstellerangaben – eine Annäherung, keine Werksstatik.</p>
+    <h3>Nicht enthalten</h3><p>Seitliches Wegkippen hochkant stehender Bretter und schlanker Profile, Einbeulen dünner Wände, Verbindungen (Dübel, Schrauben, Konsolen) und Eindrücken am Auflager, teilweise Einspannung, Holz quer zur Faser, Ermüdung durch viele Lastwechsel, Feuchte über Innenraumbedingungen, schräge Biegung (L-Winkel), Verformung über die Elastizitätsgrenze hinaus. Für tragende Bauteile, sicherheitsrelevante Möbel (Kinder, öffentlicher Raum) oder Rahmen aus mehreren Stäben: Tragwerksplanung bzw. die Werkzeuge unten.</p>
+    <h3></h3><p><h3>Weiterführende Werkzeuge</h3><p><a href="https://www.woodbin.com/calcs/sagulator/" target="_blank" rel="noopener">Sagulator</a> – englisch, sehr einfach: Durchbiegung von Regalböden aus Holz<br><a href="https://skyciv.com/free-beam-calculator/" target="_blank" rel="noopener">SkyCiv Balkenrechner</a> – englisch, im Browser: Balken mit Lasten, auch Stahlprofile<br><a href="https://www.ftool.com.br/" target="_blank" rel="noopener">Ftool</a> – kostenlos: ebene Rahmen und Fachwerke aus mehreren Stäben<br><a href="https://www.freecad.org/" target="_blank" rel="noopener">FreeCAD</a> – kostenlos: 3D-Bauteile mit der Finite-Elemente-Methode (Arbeitsbereich FEM)<br><a href="https://www.dlubal.com/" target="_blank" rel="noopener">Dlubal RFEM</a> – Profiwerkzeug der Tragwerksplanung, Nachweise nach Eurocode</p></p>
     </div></details>
   </section>
 </main>
@@ -396,7 +397,7 @@ const SECS = {
   U: ['U-Profil', ['b', 'h', 'tw', 'tf'], { b: 30, h: 60, tw: 3, tf: 4 }], Un: ['U-Profil umgedreht (Brett mit Zargen)', ['b', 'h', 't'], { b: 292, h: 120, t: 21 }]
 };
 const FLAB = { b: 'Breite b', h: 'Höhe h', t: 'Wand t', d: 'Durchmesser d', tw: 'Steg tw', tf: 'Gurt tf' };
-const MATF = [['E', 'E-Modul [N/mm²]'], ['G', 'Schubmodul G [N/mm²]'], ['rho', 'Dichte [kg/m³]'], ['f', 'Festigkeit f [N/mm²]'], ['fv', 'Schub fv [N/mm²]'], ['kdef', 'Kriechzahl kdef'], ['S', 'Zielsicherheit']];
+const MATF = [['E', 'Steifigkeit E [N/mm²]'], ['G', 'Schubsteifigkeit G [N/mm²]'], ['rho', 'Dichte [kg/m³]'], ['f', 'Festigkeit f [N/mm²]'], ['fv', 'Schubfestigkeit fv [N/mm²]'], ['kdef', 'Kriechen kdef'], ['S', 'Zielsicherheit']];
 const base = o => Object.assign({ orient: 'h', mat: 'c24', cm: null, sw: true, shear: true, N: 0, lim: 300, sup: [], pl: [], ql: [] }, o);
 const TPL = {
   regal: () => base({ L: 800, sec: { type: 'rect', b: 250, h: 18 }, sup: [{ x: 120, t: 'pin' }, { x: 680, t: 'pin' }], ql: [{ a: 0, b: 800, q: 245, perm: true }] }),
@@ -622,7 +623,11 @@ const TERM = {
   S: 'Sicherheit = Festigkeit des Werkstoffs geteilt durch die größte Spannung. 2 heißt: hält die doppelte Last.',
   f1: 'Eigenfrequenz: so oft je Sekunde schwingt das Brett nach einem Stoß. Unter ~8 Hz federt es spürbar.',
   lam: 'Knicksicherheit: so viel mal mehr Längsdruck, bis der Balken seitlich ausknickt.',
-  n: 'Stoßfaktor: so viel mal größer wirkt eine fallende Last als dieselbe ruhende Last.'
+  n: 'Stoßfaktor: so viel mal größer wirkt eine fallende Last als dieselbe ruhende Last.',
+  I: 'Flächenträgheitsmoment: wie gut die Form des Querschnitts gegen Biegen hilft. Doppelte Höhe = achtfacher Wert.',
+  sig: 'Spannung: Kraft je Fläche im Material (1 N/mm² = 1 MPa). Erreicht sie die Festigkeit, bricht oder verbiegt es bleibend.',
+  tau: 'Schubspannung: Spannung, die das Material quer abschert – vor allem bei kurzen, dicken Balken nahe den Lagern wichtig.',
+  M: 'Biegemoment: wie stark der Balken an der Stelle gebogen wird (Kraft × Hebelarm).'
 };
 function renderStats() {
   const mt = matOf(), notes = [], V = verdict(R, mt, S.lim, MOD && MOD.f.length ? MOD.f[0] : null);
@@ -645,21 +650,21 @@ function renderStats() {
   if (R.imp.length) { const nmax = Math.max(...R.imp.map(o => o.n)), rg = R.imp.some(o => o.rigid); put({ l: 'Stoßfaktor', v: rg ? '⚠ ∞' : '× ' + nf2.format(nmax), w: rg, t: TERM.n, n: rg ? 'Stoß auf starres Lager' : 'fallende Last' }, true); }
   put({ l: 'Gewicht', v: fv(R.mass) + ' kg', n: mt.name + (RF ? ' · ' + vs(R.mass, RF.mass, v => fv(v) + ' kg') : '') }, true);
   put({ l: 'Verhältnis Durchbiegung', v: lx, t: TERM.lx, n: `Grenze l/${S.lim}, l = ${nf0.format(R.lim.ref)} mm, bei x = ${nf0.format(R.max.wFin.x)} mm` });
-  put({ l: 'Sicherheit Schub', v: w(Sv < mt.S, fS(Sv)), w: Sv < mt.S, t: TERM.S, n: `fv/τ, Ziel ≥ ${nf1.format(mt.S)}` + (RF ? ' · ' + vs(Sv, rmt.fv / RF.max.tau.v, fS) : '') });
+  put({ l: 'Sicherheit Schub', v: w(Sv < mt.S, fS(Sv)), w: Sv < mt.S, t: TERM.S, n: `Ziel ≥ ${nf1.format(mt.S)}` + (RF ? ' · ' + vs(Sv, rmt.fv / RF.max.tau.v, fS) : '') });
   if (creep) put({ l: 'Durchbiegung sofort', v: mm(R.max.wInst.v), n: `ohne Kriechen (Dauerlast ×${nf2.format(1 + mt.kdef)} im Endzustand)` });
   if (R.imp.length) put({ l: 'Durchbiegung beim Stoß', v: mm(R.max.wPeak.v) });
-  put({ l: 'Spannung max.', v: fv(Math.abs(sg.v)) + ' N/mm²', n: `bei x = ${nf0.format(sg.x)} mm, Festigkeit f = ${fv(mt.f)} N/mm²` });
-  put({ l: 'Schubspannung max.', v: fv(t.v) + ' N/mm²', n: `fv = ${fv(mt.fv)} N/mm²` });
-  put({ l: 'Biegemoment max.', v: fv(Math.abs(R.max.M.v) / 1000) + ' N·m', n: `bei x = ${nf0.format(R.max.M.x)} mm` });
+  put({ l: 'Spannung max.', t: TERM.sig, v: fv(Math.abs(sg.v)) + ' N/mm²', n: `bei x = ${nf0.format(sg.x)} mm, Festigkeit f = ${fv(mt.f)} N/mm²` });
+  put({ l: 'Schubspannung max.', t: TERM.tau, v: fv(t.v) + ' N/mm²', n: `fv = ${fv(mt.fv)} N/mm²` });
+  put({ l: 'Biegemoment max.', t: TERM.M, v: fv(Math.abs(R.max.M.v) / 1000) + ' N·m', n: `bei x = ${nf0.format(R.max.M.x)} mm` });
   R.R.forEach((r, i) => { const up = r.F < -1e-9;
     put({ l: 'Lager ' + letter(i), v: w(up, fv(r.F) + ' N'), w: up, n: [r.t === 'fix' ? `Moment ${fv(r.M / 1000)} N·m` : '', r.t === 'spring' ? `federt ${fv(Math.abs(r.w))} mm` : '', up ? 'zieht – muss abhebend halten' : ''].filter(Boolean).join(' · ') }); });
-  put({ l: 'Flächenmoment I', v: nf0.format(SP.I) + ' mm⁴', n: `W = ${nf0.format(SP.I / Math.max(SP.eT, SP.eB))} mm³ · A = ${nf0.format(SP.A)} mm²` });
+  put({ l: 'Flächenträgheitsmoment I', t: TERM.I, v: nf0.format(SP.I) + ' mm⁴', n: `W = ${nf0.format(SP.I / Math.max(SP.eT, SP.eB))} mm³ · A = ${nf0.format(SP.A)} mm²` });
   $('stats').innerHTML = dpStats(vh, main, more, 'last');
   if (REF && !RF) notes.push('Gemerkter Stand nicht berechenbar – nur sein Urteil wird gezeigt.');
-  if (R.alpha > 1.0005) notes.push(`Längsdruck verstärkt Biegung, Querkraft und Durchbiegung um α = ${nf2.format(R.alpha)} (Theorie II. Ordnung genähert).`);
+  if (R.alpha > 1.0005) notes.push(`Längsdruck verstärkt Biegung, Querkraft und Durchbiegung um α = ${nf2.format(R.alpha)} (genähert).`);
   if (S.N < 0) notes.push('Längszug: in der Spannung enthalten, versteifende Wirkung nicht gerechnet (sichere Seite).');
   if (R.imp.some(o => o.rigid)) notes.push('⚠ Stoß direkt über einem Lager ohne Polster: Stoßkraft unbegrenzt, nur statisch gerechnet – Polster eintragen.');
-  if (R.imp.length) notes.push('Stoß: ' + R.imp.map(o => `${fv(o.F)} N aus ${nf0.format(o.h)} mm → × ${nf2.format(o.n)} (δ_st = ${fv(o.d)} mm${o.c ? ', davon Polster ' + fv(o.c) + ' mm' : ''})`).join(' · ') + '. Spannung, Moment, Querkraft und Lagerkräfte enthalten den Stoß; Grenze l/x gilt für die statische Last.');
+  if (R.imp.length) notes.push('Stoß: ' + R.imp.map(o => `${fv(o.F)} N aus ${nf0.format(o.h)} mm → × ${nf2.format(o.n)} (Einfederung ${fv(o.d)} mm${o.c ? ', davon Polster ' + fv(o.c) + ' mm' : ''})`).join(' · ') + '. Spannung, Moment, Querkraft und Lagerkräfte enthalten den Stoß; Grenze l/x gilt für die statische Last.');
   if (R.imp.length) notes.push('Lagerkräfte statisch; beim Stoß: ' + R.R.map((r, i) => `${letter(i)} ${fv(r.Fpk)} N`).join(' · ') + '.');
   if (!S.shear && (S.sec.h / S.L > 0.1 || (S.sec.d || 0) / S.L > 0.1)) notes.push('⚠ Kurzer, hoher Balken (h/L > 1/10) ohne Schubverformung: Durchbiegung zu klein.');
   $('statN').textContent = notes.join(' ');
@@ -678,22 +683,22 @@ function drawCharts() {
   const sw = [...ghost(i => RF.wFin[i]), { pts: xy(R.wFin), color: Ld }]; if (creep) sw.push({ pts: xy(R.wInst), color: I, dash: [4, 4] }); if (R.imp.length) sw.push({ pts: xy(R.wPeak), color: Mu, dash: [3, 4] });
   let [y0, y1] = rng(sw.map(s => s.pts.map(p => p[1])));
   const lg1 = [{ t: creep ? 'Endzustand' : 'Durchbiegung', color: Ld }].concat(creep ? [{ t: 'sofort', color: I, dash: [4, 4] }] : [], R.imp.length ? [{ t: 'Stoß', color: Mu, dash: [3, 4] }] : [], gl);
-  chart($('c1'), { x0: 0, x1: LX, y0, y1, xl: 'x [mm]', yl: 'w [mm]', series: sw, vlines: vl, points: [[R.max.wFin.x, R.max.wFin.v, Ld]], legend: lg1 });
+  chart($('c1'), { x0: 0, x1: LX, y0, y1, xl: 'Position x [mm]', yl: 'Durchbiegung [mm]', series: sw, vlines: vl, points: [[R.max.wFin.x, R.max.wFin.v, Ld]], legend: lg1 });
   const Mn = R.M.map(v => v / 1000), gM = ghost(i => RF.M[i] / 1000); [y0, y1] = rng([Mn, ...gM.map(g => g.pts.map(p => p[1]))]);
-  chart($('c2'), { x0: 0, x1: LX, y0, y1, xl: 'x [mm]', legend: gl, yl: 'M [N·m]', series: [...gM, { pts: xy(Mn), color: Ld }, { pts: [[0, 0], [LX, 0]], color: Mu, width: 1, dash: [3, 4] }], vlines: vl, points: [[R.max.M.x, R.max.M.v / 1000, Ld]] });
+  chart($('c2'), { x0: 0, x1: LX, y0, y1, xl: 'Position x [mm]', legend: gl, yl: 'Biegemoment [N·m]', series: [...gM, { pts: xy(Mn), color: Ld }, { pts: [[0, 0], [LX, 0]], color: Mu, width: 1, dash: [3, 4] }], vlines: vl, points: [[R.max.M.x, R.max.M.v / 1000, Ld]] });
   const gV = ghost(i => RF.V[i]); [y0, y1] = rng([R.V, ...gV.map(g => g.pts.map(p => p[1]))]);
-  chart($('c3'), { x0: 0, x1: LX, y0, y1, xl: 'x [mm]', legend: gl, yl: 'V [N]', series: [...gV, { pts: xy(R.V), color: Ld }, { pts: [[0, 0], [LX, 0]], color: Mu, width: 1, dash: [3, 4] }], vlines: vl });
+  chart($('c3'), { x0: 0, x1: LX, y0, y1, xl: 'Position x [mm]', legend: gl, yl: 'Querkraft [N]', series: [...gV, { pts: xy(R.V), color: Ld }, { pts: [[0, 0], [LX, 0]], color: Mu, width: 1, dash: [3, 4] }], vlines: vl });
   const mt = matOf(), zul = mt.f / mt.S;
   const gS = ghost(i => RF.sig[i]); [y0, y1] = rng([R.sig, [zul], ...gS.map(g => g.pts.map(p => p[1]))], 0); y0 = 0;
   const over = R.max.sig.v > zul, zc = over ? css('--warn') : I; // Grenzlinie rot nur bei Überschreitung
-  chart($('c4'), { x0: 0, x1: LX, y0, y1, xl: 'x [mm]', yl: '|σ| [N/mm²]', series: [...gS, { pts: xy(R.sig), color: Ld }, { pts: [[0, zul], [LX, zul]], color: zc, width: 1, dash: [4, 4] }], vlines: vl, points: [[R.max.sig.x, R.max.sig.v, over ? css('--warn') : Ld]],
-    legend: [{ t: 'Spannung', color: Ld }, { t: (over ? '⚠ ' : '') + 'zulässig (f / Ziel)', color: zc, width: 1, dash: [4, 4] }, ...gl] });
+  chart($('c4'), { x0: 0, x1: LX, y0, y1, xl: 'Position x [mm]', yl: 'Spannung [N/mm²]', series: [...gS, { pts: xy(R.sig), color: Ld }, { pts: [[0, zul], [LX, zul]], color: zc, width: 1, dash: [4, 4] }], vlines: vl, points: [[R.max.sig.x, R.max.sig.v, over ? css('--warn') : Ld]],
+    legend: [{ t: 'Spannung', color: Ld }, { t: (over ? '⚠ ' : '') + 'zulässig (Festigkeit / Zielsicherheit)', color: zc, width: 1, dash: [4, 4] }, ...gl] });
   if (MOD && MOD.modes.length) {
     const st = [{ color: Ld }, { color: I, dash: [4, 4] }, { color: Mu, dash: [3, 4] }];
-    chart($('c5'), { x0: 0, x1: L, y0: -1.15, y1: 1.15, xl: 'x [mm]', yl: 'Auslenkung (normiert)', series: MOD.modes.map((m, i) => ({ pts: MOD.x.map((v, j) => [v, m[j]]), ...st[i] })), vlines: vl,
+    chart($('c5'), { x0: 0, x1: L, y0: -1.15, y1: 1.15, xl: 'Position x [mm]', yl: 'Ausschlag (relativ)', series: MOD.modes.map((m, i) => ({ pts: MOD.x.map((v, j) => [v, m[j]]), ...st[i] })), vlines: vl,
       legend: MOD.f.map((f, i) => ({ t: `f${'₁₂₃'[i]} ${nf1.format(f)} Hz`, ...st[i] })) });
     $('modeN').textContent = S.orient === 'h' ? 'Mitschwingend: Balken und Dauerlasten.' : 'Mitschwingend: nur der Balken; Längsdruck senkt die Frequenzen.';
-  } else { blank($('c5'), 'keine Eigenformen'); $('modeN').textContent = ''; }
+  } else { blank($('c5'), 'keine Schwingung berechenbar'); $('modeN').textContent = ''; }
 }
 
 // ---- Auswahl ----
@@ -803,14 +808,14 @@ function renderMatIn() {
     $('matIn').innerHTML = MATF.map(([k, l]) => `<label>${l} <input type="number" data-k="${k}" step="any" min="0" value="${m[k]}"></label>`).join('');
     const cm = S.cm;
     $('matIn').querySelectorAll('input').forEach(i => i.onchange = () => { const v = +i.value; if (cm === S.cm && S.mat === 'eigen' && v >= 0 && (v > 0 || i.dataset.k === 'kdef')) { cm[i.dataset.k] = v; recompute(); } });
-    $('matN').textContent = 'Eigene Werte: f charakteristisch (Biegefestigkeit bzw. Streckgrenze), Zielsicherheit nach Materialstreuung und Dauerlast.';
+    $('matN').textContent = 'Eigene Werte: E = Elastizitätsmodul (Steifigkeit), f = Festigkeit (Holz: Biegefestigkeit, Metall: Streckgrenze), kdef = Zuwachs der Durchbiegung durch Kriechen unter Dauerlast (Holz trocken 0,6), Zielsicherheit je nach Streuung des Materials.';
     $('matD').hidden = true;
   } else {
     $('matIn').innerHTML = ''; $('matD').hidden = false;
     // oben nur eine Einordnung in Alltagssprache, die Zahlen unter „Werkstoffwerte“
     const steif = m.E < 5000 ? 'biegeweich' : m.E < 30000 ? 'mittelsteif' : 'sehr steif', schwer = m.rho < 900 ? 'leicht' : m.rho < 3000 ? 'mittelschwer' : 'schwer';
     $('matN').textContent = `${m.grp} · ${steif} · ${schwer}` + (m.kdef >= 1 ? ' · kriecht unter Dauerlast' : '');
-    $('matV').textContent = `E ${nf0.format(m.E)} N/mm² · G ${nf0.format(m.G)} N/mm² · ρ ${nf0.format(m.rho)} kg/m³ · f ${nf0.format(m.f)} N/mm² · fv ${fv(m.fv)} N/mm² · kdef ${nf2.format(m.kdef)} · Ziel S ≥ ${nf1.format(m.S)} · Quelle: ${m.src}`;
+    $('matV').textContent = `Steifigkeit E ${nf0.format(m.E)} N/mm² · Schubsteifigkeit G ${nf0.format(m.G)} N/mm² · Dichte ${nf0.format(m.rho)} kg/m³ · Festigkeit ${nf0.format(m.f)} N/mm² · Schubfestigkeit ${fv(m.fv)} N/mm² · Kriechen +${nf0.format(100 * m.kdef)} % unter Dauerlast · Zielsicherheit ≥ ${nf1.format(m.S)} · Quelle: ${m.src}`;
   }
 }
 function syncInputs() {
