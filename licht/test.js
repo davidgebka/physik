@@ -232,6 +232,9 @@ check('T15 Scheibe unter der Quelle: 0° (seitlich sichtbar)', sh(disc, iso), 0,
   const shx = x => Core.shield({ shape: 'ext', len: 1000, parts: walls, source: { ...iso, x } }).alpha;
   check('T19 Quelle mittig: atan(50/30)', shx(0), Math.atan(50 / 30) / D, 1e-4);
   check('T19 Quelle bei x = 10: ungünstige Seite C180, atan(50/40)', shx(10), Math.atan(50 / 40) / D, 1e-4);
+  // geschlossener Kasten ±100 mit schmalem Schlitz rechts (γ 60,05…60,45°, schmaler als die frühere 0,5°-Abtastung): α = 90° − 60,45°
+  const zs = g => -100 / Math.tan(g * D), box = [{ profile: [[100, zs(60.45)], [100, 100], [-100, 100], [-100, -100], [100, -100], [100, zs(60.05)]] }];
+  check('T19 schmaler Schlitz wird gefunden: α = 29,55°', Core.shield({ shape: 'ext', len: 1000, parts: box, source: iso }).alpha, 90 - 60.45, 1e-6);
   const thr = (name, o) => { let t = 0; try { Core.trace(Object.assign({ N: 10, source: iso, parts: [] }, o)); } catch (e) { t = 1; } check('T19 wirft: ' + name, t, 1, 0); };
   thr('ext ohne Länge', { shape: 'ext' });
   thr('unbekannte Form', { shape: 'kugel', len: 100 });

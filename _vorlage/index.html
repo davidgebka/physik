@@ -12,19 +12,25 @@
 <main>
   <section class="panel">
     <h2>Eingabe / Editor</h2>
-    <canvas id="ed" style="--ar:1;aspect-ratio:1/1"></canvas>
+    <canvas id="ed" role="img" style="--ar:1;aspect-ratio:1/1"></canvas>
   </section>
   <section class="panel">
     <h2>Ergebnis</h2>
     <canvas id="view" style="--ar:1;aspect-ratio:1/1"></canvas>
   </section>
-  <section class="panel wide">
+  <section class="panel wide kpi">
     <h2>Kennwerte</h2>
     <div class="stats" id="stats"></div>
   </section>
   <section class="panel wide">
+    <h2>Datei</h2>
+    <div class="row"><button id="exp" class="q" data-i="down">Export</button><button id="imp" class="q" data-i="up">Import</button><button id="share" class="q" data-i="link">Link kopieren</button></div>
+  </section>
+  <section class="panel wide model">
     <h2>Modell &amp; Gültigkeit</h2>
-    <p class="note">Pflicht: Welches Modell? Wie genau? Was ist nicht modelliert?</p>
+    <details data-k="model"><summary>Modell und Grenzen lesen</summary><div class="txt">
+      <h3>Modell</h3><p>Pflicht: Welches Modell? Wie genau? Was ist nicht modelliert? Ab wann Fachplanung?</p>
+    </div></details>
   </section>
 </main>
 
@@ -44,9 +50,9 @@ if (typeof module !== 'undefined') module.exports = Core;
 const S = {};           // Zustand (Eingaben)
 let G = {};             // abgeleitete Größen
 function recompute() { /* Core aufrufen, G füllen */ }
-function drawAll() { /* Canvas zeichnen mit prep(), chart() */ }
+function drawAll() { /* Canvas zeichnen mit prep(), chart(); Kennwerte: $('stats').innerHTML = dpStats(dpVerdict(0, 'Satz in Designsprache'), [{ l, v, n, t }], [...]) */ }
 
-dpHeader('MODULKEY', 'MODULTITEL');
+dpHeader('MODULKEY'); dpIcons();
 recompute(); drawAll();
 window.addEventListener('resize', drawAll);
 </script>

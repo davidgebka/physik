@@ -3,34 +3,32 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Designphysik · Mechanismen</title>
+<title>Designphysik · Mechanik</title>
 <link rel="stylesheet" href="../shared/style.css">
 <style>
 #ed{aspect-ratio:4/3;--ar:calc(4/3)}
-.sel input[type=number]{width:80px;font:inherit;font-size:13px;padding:4px 6px;border:1px solid var(--ink);font-variant-numeric:tabular-nums}
-.sel b{font-size:12px}
+.sel input[type=number]{width:80px}
+.sel b{font-size:14px}
 </style>
 </head>
 <body>
 <header id="dp-header"></header>
 <main>
   <section class="panel">
-    <h2>Getriebe · Seitenansicht [mm]</h2>
+    <h2>Getriebe <small>Seitenansicht, mm</small></h2>
     <div class="row">
-      <button id="mBuild" class="on">Konstruieren</button><button id="mMove">Bewegen</button>
-      <span class="sep"></span>
-      <button id="tpl"></button><button id="undo" disabled>↶ Rückgängig</button><button id="cmp"></button>
+      <span class="seg"><button id="mBuild" class="on">Konstruieren</button><button id="mMove">Bewegen</button></span>
+      <button id="tpl"></button><button id="cmp"></button><button id="undo" class="q ico" data-i="undo" disabled>Rückgängig</button>
     </div>
-    <div class="row" id="tools">
-      <button data-t="drag" class="on">Ziehen</button><button data-t="point">Punkt</button><button data-t="fix">Gestell</button>
-      <button data-t="link">Glied</button><button data-t="slider">Schub</button><button data-t="del">Löschen</button>
-    </div>
-    <canvas id="ed"></canvas>
+    <div class="row"><span class="seg" id="tools">
+      <button data-t="drag" class="on">Ziehen</button><button data-t="point">Punkt</button><button data-t="fix">Gestell</button><button data-t="link">Glied</button><button data-t="slider">Schub</button><button data-t="del">Löschen</button>
+    </span></div>
+    <canvas id="ed" role="img"></canvas>
     <div class="ctl"><label for="drv">Antrieb</label><input type="range" id="drv" step="0.1"><output id="drvO"></output></div>
     <div class="row sel" id="selp"></div>
     <p class="note" id="hint"></p>
   </section>
-  <section class="panel">
+  <section class="panel kpi">
     <h2>Kennwerte</h2>
     <div class="stats" id="stats"></div>
     <h2>Abtrieb über Antrieb</h2>
@@ -45,18 +43,20 @@
   <section class="panel wide">
     <h2>Datei</h2>
     <div class="row">
-      <button id="exp">Export JSON</button><button id="imp">Import JSON</button><input type="file" id="impF" accept=".json,application/json" hidden>
-      <button id="share">Link kopieren</button><span class="note" id="fileN"></span>
+      <button id="exp" class="q" data-i="down">Export</button><button id="imp" class="q" data-i="up">Import</button><input type="file" id="impF" accept=".json,application/json" hidden>
+      <button id="share" class="q" data-i="link">Link kopieren</button><span class="note" id="fileN"></span>
     </div>
   </section>
-  <section class="panel wide">
+  <section class="panel wide model">
     <h2>Modell &amp; Gültigkeit</h2>
-    <p class="note"><b>Modell:</b> ebenes Getriebe aus starren Gliedern, ideale Dreh- und Schubgelenke ohne Spiel und Reibung, quasistatisch (keine Massen, keine Trägheit). Ein Glied ist eine starre Punktmenge; Zusatzpunkte (Koppelpunkt, Lehne, Fuß) bewegen sich mit.</p>
-    <p class="note"><b>Lage:</b> Newton-Raphson auf den Schließbedingungen (Toleranz 1e-9 mm), Startwert = letzte Lage. Ein Schritt zählt nur, wenn er mit zwei Halbschritten auf 1e-6 mm übereinstimmt – so bleibt der Zweig (die Einbaulage) erhalten. Die Konstruktionslage ist immer zusammengebaut; Längen ergeben sich aus ihr.</p>
-    <p class="note"><b>Begriffe:</b> <i>Umkehrlage</i> – der Abtrieb kehrt um (Übersetzung 0); fluchten dabei Antriebsglied und Koppel, heißt sie Streck- bzw. Decklage. <i>Totlage</i> – der Antrieb kommt nicht weiter, jenseits gibt es keine Lage (Bewegungsgrenze, „klemmt“). <i>Übertragungswinkel μ</i> – Winkel zwischen Koppel und gestellnahem Abtriebsglied (0–90°); unter 40° drohen bei Reibung Klemmen und hohe Gelenkkräfte (Richtwert). <i>Übersetzung</i> – Abtriebs- je Antriebsbewegung, exakt aus der Geschwindigkeitsanalyse; an Totlagen unbeschränkt.</p>
-    <p class="note"><b>Gültigkeit:</b> Getriebetyp (Grashof), μ und Streck-/Decklage nur für erkannte Viergelenke und Schubkurbeln. Im Grenzfall (Durchschlag, z. B. Parallelogramm) ist der Zweig in der Verzweigungslage nicht eindeutig; das Werkzeug folgt der Tangente. Freiheitsgrad durch Abzählen (2 je beweglichem Punkt − Bedingungen): überbestimmte, aber bewegliche Getriebe (Parallelogramm mit drittem parallelem Glied) werden als blockiert gemeldet. Ein Schubgelenk, Führung fest am Gestell.</p>
-    <p class="note"><b>Kräfte (v1.1):</b> Punktlasten Fx/Fy [N] an beliebigen Punkten, z. B. Gewicht Fy = −m·9,81 N/kg am Schwerpunkt eines Glieds. Haltemoment [N·m] bzw. Haltekraft [N] am Antrieb aus virtueller Arbeit (Q = −Σ F·∂p/∂Antrieb): reibungsfrei, quasistatisch, ohne Eigengewicht der Glieder (nur, was als Last eingetragen ist). Positiv = in Richtung wachsender Antriebswerte. An Totlagen geht der Wert gegen ∞ (Diagramm begrenzt).</p>
-    <p class="note"><b>Nicht enthalten:</b> Gelenkkräfte, Reibung, Dynamik, Federn und Gasdruckfedern, Dynamik, Kollision der Glieder, Synthese aus Wunschlagen, mehrere Antriebe, bewegte Führungen.</p>
+    <details data-k="model"><summary>Modell, Begriffe und Grenzen lesen</summary><div class="txt">
+    <h3>Modell</h3><p>Ebenes Getriebe aus starren Gliedern, ideale Dreh- und Schubgelenke ohne Spiel und Reibung, quasistatisch (keine Massen, keine Trägheit). Ein Glied ist eine starre Punktmenge; Zusatzpunkte (Koppelpunkt, Lehne, Fuß) bewegen sich mit.</p>
+    <h3>Lage</h3><p>Newton-Raphson auf den Schließbedingungen (Toleranz 1e-9 mm), Startwert = letzte Lage. Ein Schritt zählt nur, wenn er mit zwei Halbschritten auf 1e-6 mm übereinstimmt – so bleibt der Zweig (die Einbaulage) erhalten. Die Konstruktionslage ist immer zusammengebaut; Längen ergeben sich aus ihr.</p>
+    <h3>Begriffe</h3><p><i>Umkehrlage</i> – der Abtrieb kehrt um (Übersetzung 0); fluchten dabei Antriebsglied und Koppel, heißt sie Streck- bzw. Decklage. <i>Totlage</i> – der Antrieb kommt nicht weiter, jenseits gibt es keine Lage (Bewegungsgrenze, „klemmt“). <i>Übertragungswinkel μ</i> – Winkel zwischen Koppel und gestellnahem Abtriebsglied (0–90°); unter 40° drohen bei Reibung Klemmen und hohe Gelenkkräfte (Richtwert). <i>Übersetzung</i> – Abtriebs- je Antriebsbewegung, exakt aus der Geschwindigkeitsanalyse; an Totlagen unbeschränkt.</p>
+    <h3>Gültigkeit</h3><p>Getriebetyp (Grashof), μ und Streck-/Decklage nur für erkannte Viergelenke und Schubkurbeln. Im Grenzfall (Durchschlag, z. B. Parallelogramm) ist der Zweig in der Verzweigungslage nicht eindeutig; das Werkzeug folgt der Tangente. Freiheitsgrad durch Abzählen (2 je beweglichem Punkt − Bedingungen): überbestimmte, aber bewegliche Getriebe (Parallelogramm mit drittem parallelem Glied) werden als blockiert gemeldet. Ein Schubgelenk, Führung fest am Gestell.</p>
+    <h3>Kräfte</h3><p>Punktlasten Fx/Fy [N] an beliebigen Punkten, z. B. Gewicht Fy = −m·9,81 N/kg am Schwerpunkt eines Glieds. Haltemoment [N·m] bzw. Haltekraft [N] am Antrieb aus virtueller Arbeit (Q = −Σ F·∂p/∂Antrieb): reibungsfrei, quasistatisch, ohne Eigengewicht der Glieder (nur, was als Last eingetragen ist). Positiv = in Richtung wachsender Antriebswerte. An Totlagen geht der Wert gegen ∞ (Diagramm begrenzt).</p>
+    <h3>Nicht enthalten</h3><p>Gelenkkräfte, Reibung, Dynamik, Federn und Gasdruckfedern, Kollision der Glieder, Synthese aus Wunschlagen, mehrere Antriebe, bewegte Führungen.</p>
+    </div></details>
   </section>
 </main>
 
@@ -348,7 +348,10 @@ const Core = (() => {
       const X = advance(S, Xa, va, (va + vb) / 2).X;
       rev.push({ v: (va + vb) / 2, X, kind: revKind(T, m, S, X) });
     }
-    const cur = advance(S, S.X0, v0, m.at == null ? v0 : m.at);
+    // Ist-Lage: bei Umlauf auf demselben Zweig (Lage nach 360° = Ausgangslage) nur den Rest modulo 360° fahren –
+    // sonst wächst der Weg mit jeder Umdrehung (Antriebswert bleibt stetig, z. B. 3630°)
+    const at = m.at == null ? v0 : m.at, per = full && maxDiff(f.out[f.out.length - 1].X, S.X0) < 1e-6;
+    const cur = per ? { ...advance(S, S.X0, v0, v0 + (((at - v0) % 360) + 360) % 360), v: at } : advance(S, S.X0, v0, at);
     return { S, T, info: T && topoInfo(m, T), smp, full, lim: [b.lim, f.lim], rev, cur };
   }
   // Umkehrlage als Streck-/Decklage Antrieb–Koppel benennen (nur bei erkannter Topologie, Kurbelantrieb)
@@ -541,12 +544,15 @@ function drawEd() {
   const { ctx, w, h } = prep(cv), TT = makeT(w, h), T = TT.f; UI.T = TT;
   // Punktraster (Styleguide § 7)
   const f = dpDots(ctx, w, h, TT.k, TT.ox, TT.oy);
-  ctx.font = '11px Arial, sans-serif'; ctx.fillStyle = css('--ink2'); ctx.fillText(`1 Punkt = ${nf0.format(f)} mm`, 6, h - 6);
-  const Xa = curX();
+  ctx.font = DP_CFONT; ctx.fillStyle = css('--ink2'); ctx.fillText(`1 Punkt = ${nf0.format(f)} mm`, 6, h - 6);
+  const Xa = curX(), tags = [];
   if (ok()) {
-    A.rev.forEach(r => drawLinks(ctx, T, r.X, { c: css('--mut'), dash: [3, 4] }));
-    if (A.lim[0] != null) drawLinks(ctx, T, A.smp[0].X, { c: css('--warn'), dash: [3, 4] });
-    if (A.lim[1] != null) drawLinks(ctx, T, A.smp[A.smp.length - 1].X, { c: css('--warn'), dash: [3, 4] });
+    // Geisterlagen mit Namen am äußersten beweglichen Punkt (sonst rätselhafte gestrichelte Linien)
+    const ghostTag = (Xg, txt, col) => { let b = null; S.pts.forEach((p, i) => { if (p.fix) return; const q = T(pos(i, Xg)); if (!b || q[1] < b[1]) b = q; });
+      if (b) tags.push([txt, b[0] + 8, b[1] - 6, col]); }; // erst nach den Gliedern zeichnen, sonst verdeckt
+    A.rev.forEach(r => { drawLinks(ctx, T, r.X, { c: css('--mut'), dash: [3, 4] }); if (UI.mode === 'build') ghostTag(r.X, r.kind, css('--ink2')); });
+    if (A.lim[0] != null) { drawLinks(ctx, T, A.smp[0].X, { c: css('--warn'), dash: [3, 4] }); ghostTag(A.smp[0].X, '⚠ Totlage', css('--warn')); }
+    if (A.lim[1] != null) { drawLinks(ctx, T, A.smp[A.smp.length - 1].X, { c: css('--warn'), dash: [3, 4] }); ghostTag(A.smp[A.smp.length - 1].X, '⚠ Totlage', css('--warn')); }
     if (S.trace != null && S.trace < S.pts.length) {
       ctx.strokeStyle = css('--mech'); ctx.lineWidth = 2; polyPath(ctx, A.smp.map(s => pos(S.trace, s.X)), T); if (A.full) ctx.closePath(); ctx.stroke();
     }
@@ -577,16 +583,17 @@ function drawEd() {
     const ux = l.fx / F, uy = -l.fy / F, L = 42, tx = x + ux * L, ty = y + uy * L, hx = -uy * 5, hy = ux * 5;
     ctx.strokeStyle = ctx.fillStyle = css('--ink'); ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(tx, ty); ctx.stroke();
     ctx.beginPath(); ctx.moveTo(tx, ty); ctx.lineTo(tx - ux * 9 + hx, ty - uy * 9 + hy); ctx.lineTo(tx - ux * 9 - hx, ty - uy * 9 - hy); ctx.closePath(); ctx.fill();
-    ctx.font = '11px Arial, sans-serif'; ctx.fillText(nf1.format(F) + ' N', tx + 6, ty + 4); }
+    ctx.font = DP_CFONT; ctx.fillText(nf1.format(F) + ' N', tx + 6, ty + 4); }
+  ctx.font = DP_CFONT; for (const [t, x, y, c] of tags) { ctx.fillStyle = c; ctx.fillText(t, x, y); }
   // Beschriftung: Antrieb / Abtrieb / Länge des gewählten Glieds
-  ctx.fillStyle = css('--mut'); ctx.font = '11px Arial, sans-serif';
+  ctx.fillStyle = css('--ink2'); ctx.font = DP_CFONT;
   const tag = (L, txt) => { if (!L) return; const c = L.map(i => T(pos(i, Xa))).reduce((s, q) => [s[0] + q[0] / L.length, s[1] + q[1] / L.length], [0, 0]); ctx.fillText(txt, c[0] + 8, c[1] - 8); };
   if (S.drive && S.drive.link != null) tag(S.links[S.drive.link], 'Antrieb');
   if (S.out && S.out.link != null) tag(S.links[S.out.link], 'Abtrieb');
   if (UI.mode === 'build' && UI.sel && UI.sel.t === 'l') { const L = S.links[UI.sel.i]; if (L) { const a = pos(L[0]), b = pos(L[1]), m = T([(a[0] + b[0]) / 2, (a[1] + b[1]) / 2]);
     ctx.fillText(nf1.format(Math.hypot(b[0] - a[0], b[1] - a[1])) + ' mm', m[0] + 8, m[1] + 14); } }
 }
-function blank(c, txt) { const { ctx, w, h } = prep(c); ctx.font = '11px Arial, sans-serif'; ctx.fillStyle = css('--mut'); ctx.textAlign = 'center'; ctx.fillText(txt, w / 2, h / 2); }
+function blank(c, txt) { const { ctx, w, h } = prep(c); ctx.font = DP_CFONT; ctx.fillStyle = css('--ink2'); ctx.textAlign = 'center'; ctx.fillText(txt, w / 2, h / 2); }
 function drawCharts() {
   if (!ok()) { ['c1', 'c2', 'c3', 'c4'].forEach(id => blank($(id), A ? A.err : '')); return; }
   const d = A.disp, x0 = d[0].v, x1 = Math.max(d[d.length - 1].v, x0 + 1e-6), M = css('--mech'), I = css('--ink'), W = css('--warn');
@@ -594,10 +601,10 @@ function drawCharts() {
   const rng = (ys, pad) => { let a = Math.min(...ys), b = Math.max(...ys); if (b - a < 1e-6) { a -= 1; b += 1; } const m = (b - a) * pad; return [a - m, b + m]; };
   // Geist des gemerkten Stands (dünn, --mut), auf den aktuellen Antriebsbereich beschnitten
   const rd = refOk() ? REF.a.disp : null, ghost = f => rd ? [{ pts: rd.filter(o => o.v >= x0 - 1e-9 && o.v <= x1 + 1e-9).map(o => [o.v, f(o)]).filter(p => isFinite(p[1])), color: css('--mut'), width: 1.5 }] : [];
-  const gl = rd ? ' · dünn grau: gemerkt' : '';
+  const gl = rd ? [{ t: 'gemerkt', color: css('--mut'), width: 1.5 }] : [];
   if (A.S.out) {
     const gO = ghost(o => o.out), [y0, y1] = rng(d.map(o => o.out).concat(...gO.map(g => g.pts.map(p => p[1]))), 0.06), near = v => d.reduce((b, o) => Math.abs(o.v - v) < Math.abs(b.v - v) ? o : b, d[0]).out;
-    chart($('c1'), { x0, x1, y0, y1, xs, xl: xl + gl, yl: A.S.out.kind === 'link' ? 'Abtrieb ψ [°]' : 'Abtrieb s [mm]', series: [...gO, { pts: d.map(o => [o.v, o.out]), color: M }], vlines: cur,
+    chart($('c1'), { x0, x1, y0, y1, xs, xl, legend: gl, yl: A.S.out.kind === 'link' ? 'Abtrieb ψ [°]' : 'Abtrieb s [mm]', series: [...gO, { pts: d.map(o => [o.v, o.out]), color: M }], vlines: cur,
       points: A.rev.map(r => [dispV(r.v), near(dispV(r.v)), I]) });
     const ai = d.map(o => Math.abs(o.i)).filter(isFinite).sort((a, b) => a - b), lim = Math.max(5 * (ai[ai.length >> 1] || 0), 0.1);
     // je 10 °/mm Antrieb: chart.js beschriftet ganzzahlig
@@ -612,9 +619,11 @@ function drawCharts() {
     const k = crank() && Math.min(ql, aq[aq.length - 1] || 0) < 5 ? 1000 : 1;
     const pq = d.filter(o => isFinite(o.Q)).map(o => [o.v, k * Math.max(-ql, Math.min(ql, o.Q))]), [qy0, qy1] = rng(pq.map(p => p[1]).concat(0), 0.06);
     const gQ = ghost(o => k * Math.max(-ql, Math.min(ql, o.Q)));
-    chart($('c4'), { x0, x1, y0: qy0, y1: qy1, xs, xl: xl + gl, yl: crank() ? `Haltemoment M [${k > 1 ? 'N·mm' : 'N·m'}]` : 'Haltekraft F [N]', series: [...gQ, { pts: pq, color: M }, { pts: [[x0, 0], [x1, 0]], color: css('--mut'), width: 1, dash: [3, 4] }], vlines: cur });
+    chart($('c4'), { x0, x1, y0: qy0, y1: qy1, xs, xl, legend: gl, yl: crank() ? `Haltemoment M [${k > 1 ? 'N·mm' : 'N·m'}]` : 'Haltekraft F [N]', series: [...gQ, { pts: pq, color: M }, { pts: [[x0, 0], [x1, 0]], color: css('--mut'), width: 1, dash: [3, 4] }], vlines: cur });
   } else blank($('c4'), 'Last an einem Punkt eintragen (Konstruieren → Punkt wählen → Fx/Fy)');
-  if (A.T) chart($('c2'), { x0, x1, y0: 0, y1: 90, xs, xl: xl + gl, yl: 'μ [°]', series: [...(REF && REF.a.T ? ghost(o => o.mu) : []), { pts: d.map(o => [o.v, o.mu]), color: M }, { pts: [[x0, 40], [x1, 40]], color: W, width: 1, dash: [4, 4] }], vlines: cur });
+  // Grenzbereich μ < 40° als --warn-a-Fläche (Bedeutung zusätzlich zur Farbe: Fläche, Linie, Legende)
+  if (A.T) chart($('c2'), { x0, x1, y0: 0, y1: 90, xs, xl, yl: 'μ [°]', series: [{ pts: [[x0, 40], [x1, 40]], color: W, width: 1, dash: [4, 4], fill: css('--warn-a') }, ...(REF && REF.a.T ? ghost(o => o.mu) : []), { pts: d.map(o => [o.v, o.mu]), color: M }], vlines: cur,
+    legend: [{ t: 'μ', color: M }, { t: 'unter 40°: schwergängig', color: W, width: 1, dash: [4, 4] }, ...gl] });
   else blank($('c2'), 'μ nur für Viergelenk und Schubkurbel');
 }
 // aktueller Abtrieb im Bezugssystem des Diagramms (Winkel stetig zur Kurve)
@@ -623,50 +632,56 @@ function outNow() {
   const c = dispV(S.at), r = A.disp.reduce((b, o) => Math.abs(o.v - c) < Math.abs(b.v - c) ? o : b, A.disp[0]).out;
   v -= A.oshift; return v - 360 * Math.round((v - r) / 360);
 }
-function stat(v, label, warn, extra) { return `<div class="stat${warn ? ' warn' : ''}"><b>${v}</b><span>${label}</span>${extra ? `<span>${extra}</span>` : ''}</div>`; }
+const TERM = {
+  mu: 'Übertragungswinkel μ: Winkel, unter dem die Koppel am Abtriebsglied zieht. 90° ideal, unter 40° wird es schwergängig, unter 20° klemmt es.',
+  tot: 'Totlage: Stellung, über die der Antrieb nicht hinauskommt – dort Anschlag vorsehen oder als Verriegelung nutzen.',
+  um: 'Umkehrlage: Der Abtrieb kehrt um, obwohl der Antrieb weiterläuft.',
+  q: 'Kraft bzw. Moment am Antrieb, um die eingetragenen Lasten zu halten (reibungsfrei).',
+  i: 'Übersetzung: Bewegung des Abtriebs je Bewegung des Antriebs.'
+};
 function renderStats() {
-  const V = verdict(A), VR = REF && verdict(REF.a), h = [];
-  h.push(dpVerdict(V[0], V[1], VR && 'Gemerkt: ' + ['✓ passt', '⚠ knapp', '⚠ kritisch'][VR[0]] + ' – ' + VR[1]));
-  if (!ok()) { $('stats').innerHTML = h.join(''); return; }
+  const V = verdict(A), VR = REF && verdict(REF.a);
+  const vh = dpVerdict(V[0], V[1], VR && 'Gemerkt: ' + DP_LV[VR[0]] + ' – ' + VR[1]);
+  if (!ok()) { $('stats').innerHTML = vh; return; }
   const fD = v => nf1.format(v) + uD(), s = A.smp, KV = keyVals(A), KR = refOk() ? keyVals(REF.a) : null;
   const vs = (k, fmt) => KR && isFinite(KR[k]) && isFinite(KV[k]) ? `gemerkt ${fmt(KR[k])} (${dpDelta(KV[k], KR[k])})` : '';
-  h.push(stat(A.info ? A.info.type : '–', A.info ? 'Getriebetyp' : 'Getriebetyp (nur Viergelenk/Schubkurbel)'));
-  h.push(stat(A.full ? 'Umlauf 360°' : `${fD(dispV(s[0].v))} … ${fD(dispV(s[s.length - 1].v))}`, 'Bewegungsbereich Antrieb'));
-  h.push(stat(fD(dispV(S.at)), 'Antrieb aktuell'));
-  if (A.S.out) {
-    h.push(stat(nf1.format(outNow()) + uO(), 'Abtrieb aktuell'));
-    const os = A.disp.map(o => o.out); h.push(stat(nf1.format(Math.max(...os) - Math.min(...os)) + uO(), 'Hub Abtrieb', false, vs('hub', v => nf1.format(v) + uO())));
-    const i = Core.ratio(A.S, X), ui = uO().trim() + '/' + uD().trim();
-    h.push(stat(isFinite(i) && Math.abs(i) < 1000 ? nf2.format(i) + (ui === '°/°' ? '' : ' ' + ui) : '∞', 'Übersetzung aktuell'));
-  }
+  const main = [], more = [], put = (it, top) => (top || it.w ? main : more).push(it), j = (...a) => a.filter(Boolean).join(' · ');
+  put({ l: 'Bewegung', v: A.full ? '360°' : `${fD(dispV(s[0].v))} … ${fD(dispV(s[s.length - 1].v))}`, s: !A.full, n: A.full ? 'Antrieb läuft ganz herum' : 'Bereich des Antriebs' }, true);
   if (A.T) {
-    const mu = Core.trans(S, A.S, A.T, X), mn = s.reduce((b, o) => o.mu < b.mu ? o : b, s[0]);
-    h.push(stat((mu < 40 ? '⚠ ' : '') + nf1.format(mu) + '°', 'μ aktuell', mu < 40));
-    h.push(stat((mn.mu < 40 ? '⚠ ' : '') + nf1.format(mn.mu) + '°', `μ min bei ${fD(dispV(mn.v))}`, mn.mu < 40));
-    if (A.lim.some(v => v != null) && isFinite(KV.mu)) h.push(stat((KV.mu < 40 ? '⚠ ' : '') + nf1.format(KV.mu) + '°', 'μ min abseits der Totlagen (±5 % Bereich)', KV.mu < 40, vs('mu', v => nf1.format(v) + '°')));
+    const mn = s.reduce((b, o) => o.mu < b.mu ? o : b, s[0]), away = A.lim.some(v => v != null) && isFinite(KV.mu), m0 = away ? KV.mu : mn.mu;
+    put({ l: 'Übertragungswinkel min.', t: TERM.mu, v: (m0 < 40 ? '⚠ ' : '') + nf1.format(m0) + '°', w: m0 < 40, n: j(away ? 'abseits der Totlagen' : 'bei ' + fD(dispV(mn.v)), 'Richtwert ≥ 40°', vs('mu', v => nf1.format(v) + '°')) }, true);
+    if (away) put({ l: 'Übertragungswinkel min. gesamt', t: TERM.mu, v: nf1.format(mn.mu) + '°', n: 'bei ' + fD(dispV(mn.v)) });
+    const mu = Core.trans(S, A.S, A.T, X); put({ l: 'Übertragungswinkel aktuell', t: TERM.mu, v: nf1.format(mu) + '°', n: mu < 40 ? 'unter 40°' : '' });
   }
   if (S.loads && S.loads.length) {
-    const lims = A.lim.filter(v => v != null), q = Core.driveLoad(A.S, X, S.loads);
+    const lims = A.lim.filter(v => v != null), q = Core.driveLoad(A.S, X, S.loads), f = v => (crank() ? nf2 : nf1).format(v) + uQ();
     const qs = s.filter(o => lims.every(l => Math.abs(o.v - l) > 2)).map(o => o.Q).filter(isFinite), qm = qs.reduce((b, v) => Math.abs(v) > Math.abs(b) ? v : b, 0);
-    const f = v => (crank() ? nf2 : nf1).format(v) + uQ();
-    h.push(stat(isFinite(q) && Math.abs(q) < 1e6 ? f(q) : '∞', crank() ? 'Haltemoment aktuell' : 'Haltekraft aktuell'));
-    h.push(stat(f(qm), (crank() ? 'Haltemoment' : 'Haltekraft') + (lims.length ? ' max. (ohne ±2' + uD().trim() + ' um Totlagen)' : ' max.'), false, KR && isFinite(KR.q) && isFinite(KV.q) ? `abseits der Totlagen (±5 %): ${f(KV.q)}, gemerkt ${f(KR.q)} (${dpDelta(KV.q, KR.q)})` : ''));
+    put({ l: crank() ? 'Haltemoment max.' : 'Haltekraft max.', t: TERM.q, v: f(qm), n: j(lims.length ? 'ohne ±2' + uD().trim() + ' um Totlagen' : '', KR && isFinite(KR.q) && isFinite(KV.q) ? `abseits (±5 %): ${f(KV.q)}, gemerkt ${f(KR.q)} (${dpDelta(KV.q, KR.q)})` : '') }, true);
+    put({ l: crank() ? 'Haltemoment aktuell' : 'Haltekraft aktuell', t: TERM.q, v: isFinite(q) && Math.abs(q) < 1e6 ? f(q) : '∞' });
   }
-  const kinds = [...new Set(A.rev.map(r => r.kind))].join(' / ') || 'Umkehrlagen';
-  h.push(stat(A.rev.length ? A.rev.map(r => dispV(r.v)).sort((a, b) => a - b).map(v => nf1.format(v)).join(' · ') + uD() : 'keine', kinds + ' (Abtrieb kehrt um)'));
+  if (A.S.out) {
+    const os = A.disp.map(o => o.out); put({ l: 'Hub Abtrieb', v: nf1.format(Math.max(...os) - Math.min(...os)) + uO(), n: vs('hub', v => nf1.format(v) + uO()) }, true);
+    put({ l: 'Abtrieb aktuell', v: nf1.format(outNow()) + uO() });
+    const i = Core.ratio(A.S, X), ui = uO().trim() + '/' + uD().trim();
+    put({ l: 'Übersetzung aktuell', t: TERM.i, v: isFinite(i) && Math.abs(i) < 1000 ? nf2.format(i) + (ui === '°/°' ? '' : ' ' + ui) : '∞' });
+  }
   const lim = A.lim.filter(v => v != null).map(dispV).sort((a, b) => a - b);
-  h.push(stat((UI.blocked ? '⚠ ' : '') + (lim.length ? lim.map(v => nf1.format(v)).join(' · ') + uD() : 'keine'), UI.blocked ? 'Totlage erreicht – klemmt' : 'Totlagen (Antrieb blockiert)', UI.blocked));
+  put({ l: UI.blocked ? 'Totlage erreicht' : 'Totlagen', t: TERM.tot, v: (UI.blocked ? '⚠ ' : '') + (lim.length ? lim.map(v => nf1.format(v)).join(' · ') + uD() : 'keine'), w: UI.blocked, n: UI.blocked ? 'klemmt – Antrieb kommt nicht weiter' : 'Antrieb blockiert dort' });
+  put({ l: 'Getriebetyp', v: A.info ? A.info.type : '–', n: A.info ? '' : 'nur Viergelenk und Schubkurbel' });
+  put({ l: 'Antrieb aktuell', v: fD(dispV(S.at)) });
+  const kinds = [...new Set(A.rev.map(r => r.kind))].join(' / ') || 'Umkehrlagen';
+  put({ l: kinds, t: TERM.um, v: A.rev.length ? A.rev.map(r => dispV(r.v)).sort((a, b) => a - b).map(v => nf1.format(v)).join(' · ') + uD() : 'keine', n: 'Abtrieb kehrt um' });
   if (S.trace != null && S.trace < S.pts.length) {
     const xs = s.map(o => o.X[2 * S.trace]), ys = s.map(o => o.X[2 * S.trace + 1]);
-    h.push(stat(`${nf0.format(Math.max(...xs) - Math.min(...xs))} × ${nf0.format(Math.max(...ys) - Math.min(...ys))} mm`, 'Bahnkurve B × H'));
+    put({ l: 'Bahnkurve B × H', v: `${nf0.format(Math.max(...xs) - Math.min(...xs))} × ${nf0.format(Math.max(...ys) - Math.min(...ys))} mm` });
   }
-  $('stats').innerHTML = h.join('');
+  $('stats').innerHTML = dpStats(vh, main, more, 'mech');
 }
 function syncDrive() {
   const r = $('drv'), o = $('drvO');
   r.disabled = UI.mode !== 'move' || !ok();
   if (!ok()) { o.textContent = '–'; return; }
-  const s = A.smp; r.min = A.full ? 0 : dispV(s[0].v); r.max = A.full ? 360 : dispV(s[s.length - 1].v); r.step = crank() ? 0.1 : 0.1;
+  const s = A.smp; r.min = A.full ? 0 : dispV(s[0].v); r.max = A.full ? 360 : dispV(s[s.length - 1].v); r.step = 0.1;
   const v = UI.mode === 'move' ? S.at : A.S.v0; r.value = dispV(v); o.textContent = nf1.format(dispV(v)) + uD();
 }
 
@@ -818,13 +833,16 @@ function save() { const o = exportObj(); dpHashSet('m', o); const { at, ...g } =
 dpCompare($('cmp'), exportObj, ref => { const m = ref && parse(ref); REF = m ? { m, a: Core.analyze(m) } : null; if (REF && !REF.a.err) dispOf(REF.a); drawAll(); });
 // Eingang prüfen (Datei/Hash sind fremd)
 function parse(o) {
-  if (!o || o.type !== TYPE || !Array.isArray(o.pts) || !Array.isArray(o.links)) return null;
+  if (!o || o.type !== TYPE || !Array.isArray(o.pts) || !Array.isArray(o.links) || o.pts.length > 200 || o.links.length > 200) return null;
   const n = o.pts.length, idx = i => Number.isInteger(i) && i >= 0 && i < n; // Glied mit fremdem Index: Zeichnen stürzt ab
   if (!o.pts.every(p => p && isFinite(p.x) && isFinite(p.y)) || !o.links.every(L => Array.isArray(L) && L.every(idx))) return null;
-  const m = { pts: o.pts.map(p => p.fix ? { x: +p.x, y: +p.y, fix: 1 } : { x: +p.x, y: +p.y }), links: o.links, drive: o.drive || {}, out: o.out || {} };
+  const m = { pts: o.pts.map(p => p.fix ? { x: +p.x, y: +p.y, fix: 1 } : { x: +p.x, y: +p.y }), links: o.links.map(L => L.slice()), drive: {}, out: {} };
   if (o.slider && idx(o.slider.p) && idx(o.slider.a) && isFinite(o.slider.ang)) m.slider = { p: o.slider.p, a: o.slider.a, ang: +o.slider.ang };
+  // Antrieb/Abtrieb: Glied als ganze Zahl oder Schub (nur mit Schubgelenk), sonst keiner – Strings o. Ä. bräche die UI-Vergleiche
+  const role = r => r && Number.isInteger(r.link) && r.link >= 0 && r.link < m.links.length ? { link: r.link } : r && r.slider === true && m.slider ? { slider: true } : {};
+  m.drive = role(o.drive); m.out = role(o.out);
   if (idx(o.trace)) m.trace = o.trace;
-  if (Array.isArray(o.loads)) m.loads = o.loads.filter(l => l && idx(l.p) && isFinite(l.fx) && isFinite(l.fy)).map(l => ({ p: l.p, fx: +l.fx, fy: +l.fy }));
+  if (Array.isArray(o.loads)) m.loads = o.loads.slice(0, 200).filter(l => l && idx(l.p) && isFinite(l.fx) && isFinite(l.fy)).map(l => ({ p: l.p, fx: +l.fx, fy: +l.fy }));
   if (isFinite(o.at)) m.at = +o.at;
   return m;
 }
@@ -834,7 +852,7 @@ $('impF').onchange = e => { const f = e.target.files[0]; if (!f) return; f.text(
   $('fileN').textContent = m ? 'Geladen: ' + f.name : '⚠ Keine gültige Mechanismus-Datei'; if (m) load(m, m.at != null ? 'move' : 'build'); }); e.target.value = ''; };
 $('share').onclick = () => { save(); const u = location.href; (navigator.clipboard ? navigator.clipboard.writeText(u) : Promise.reject()).then(() => $('fileN').textContent = 'Link kopiert', () => $('fileN').textContent = 'Link steht in der Adresszeile'); };
 
-dpHeader('mechanismus', 'Mechanismen');
+dpHeader('mechanismus'); dpIcons();
 { const h = parse(dpHashGet('m')); load(h || TPL.ks(), h && h.at != null ? 'move' : 'build'); }
 window.addEventListener('resize', drawAll);
 </script>

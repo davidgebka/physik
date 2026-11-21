@@ -7,16 +7,43 @@
 <link rel="stylesheet" href="shared/style.css">
 </head>
 <body>
-<header><h1>Designphysik <small>· Physik für Produktdesign</small></h1></header>
+<header><h1>Designphysik <small>Physik für Produktdesign</small></h1></header>
+<section class="intro">
+  <h2 id="qs"></h2>
+  <p>Werkzeuge für schnelle physikalische Abschätzungen im Entwurf – zeichnen, Varianten vergleichen, Urteil in Minuten. Jedes Modul nennt sein Modell und sagt, ab wann Fachplanung nötig ist.</p>
+</section>
 <div class="cards" id="cards"></div>
-<p class="note" style="max-width:1440px;margin:0 auto;padding:0 24px 24px">Werkzeuge für schnelle physikalische Abschätzungen im Entwurf. Jedes Modul nennt sein Modell und seine Gültigkeit.</p>
 <script src="shared/util.js"></script>
 <script>
+// Entwurfsfragen als Einstieg (konzept.md Roadmap „Startseite nach Fragen“), unterstrichen in der Familienfarbe
+$('qs').innerHTML = DP_MODULES.filter(m => m.ready).map(m => `<a href="${m.key}/index.html" style="--c:var(${m.color})">${m.q}</a>`).join(' ');
 $('cards').innerHTML = DP_MODULES.map(m => `
   <a class="card ${m.ready ? '' : 'off'}" href="${m.key}/index.html">
-    <span class="badge">${m.ready ? 'verfügbar' : 'in Arbeit'}</span>
-    <h3>${dpMq(m, !m.ready)}${m.title}</h3><p>${m.desc}</p>
+    <canvas data-k="${m.key}" aria-hidden="true"></canvas>
+    <h3>${dpMq(m, !m.ready)}${m.name} <span class="q">${m.q}</span></h3>
+    <p>${m.title}: ${m.desc}</p>${m.ready ? '' : '<span class="badge">in Arbeit</span>'}
   </a>`).join('');
+// Skizzen in mm (dpSketch): Medium in der Familienfarbe
+const mir = p => p.map(([x, z]) => [-x, z]).reverse().concat(p);
+const SK = {
+  gefaess: () => { const p = [[0, 0], [40, 0], [47, 8], [53, 45], [50, 95], [36, 140], [24, 175], [22, 205], [28, 225]], wz = 110;
+    const water = mir(p.filter(q => q[1] <= wz).concat([[52, wz]]));
+    return [{ p: water, z: true, f: '--water-a', c: null }, { p: [[-52, wz], [52, wz]], c: '--water', w: 2 }, { p: mir(p), w: 2 }]; },
+  licht: () => [{ p: [[-150, -110], [150, -110], [300, -330], [-300, -330]], z: true, f: '--light-a', c: null },
+    { p: [[-150, -110], [-80, 70]], w: 2.5 }, { p: [[150, -110], [80, 70]], w: 2.5 }, { p: [[-320, -330], [320, -330]], c: '--mut', w: 1 },
+    { p: [[0, 0]], r: 5, f: '--light', c: '--ink' }],
+  mechanismus: () => { const A0 = [0, 0], B0 = [100, 0], pts = [], cc = []; // Kurbelschwinge 40/120/80/100, Koppelpunkt über der Koppelmitte
+    for (let k = 0; k <= 72; k++) { const t = k * Math.PI / 36, A = [40 * Math.cos(t), 40 * Math.sin(t)], dx = B0[0] - A[0], dy = B0[1] - A[1], d = Math.hypot(dx, dy),
+      x = (120 * 120 - 80 * 80 + d * d) / (2 * d), h = Math.sqrt(Math.max(0, 120 * 120 - x * x)), B = [A[0] + (x * dx - h * dy) / d, A[1] + (x * dy + h * dx) / d];
+      const C = [A[0] + 0.5 * (B[0] - A[0]) - 0.5 * (B[1] - A[1]), A[1] + 0.5 * (B[1] - A[1]) + 0.5 * (B[0] - A[0])]; cc.push(C); if (k === 12) pts.push(A, B, C); }
+    const [A, B, C] = pts;
+    return [{ p: cc, z: true, c: '--mech', w: 2 }, { p: [A0, A], w: 2.5 }, { p: [A, B, C], z: true, f: '--fill', w: 2.5 }, { p: [B, B0], w: 2.5 }, { p: [A0, B0], c: '--mut', w: 1, dash: [3, 4] }, { p: [A0, B0], r: 4, f: '--bg', c: '--ink' }]; },
+  last: () => { const L = 800, w = x => -40 * Math.sin(Math.PI * (x - 120) / 560), xs = Array.from({ length: 41 }, (_, i) => 20 * i);
+    return [{ p: [[0, 30], [L, 30], [L, 60], [0, 60]], z: true, f: '--load-a', c: '--load', w: 1 }, { p: [[0, 0], [L, 0], [L, 18], [0, 18]], z: true, f: '--fill', w: 1.5 },
+      { p: xs.map(x => [x, 9 + w(x)]), c: '--load', w: 2.5 }, { p: [[120, 0], [100, -32], [140, -32]], z: true, w: 1.5 }, { p: [[680, 0], [660, -32], [700, -32]], z: true, w: 1.5 }]; }
+};
+const draw = () => document.querySelectorAll('.card canvas').forEach(c => SK[c.dataset.k] && dpSketch(c, SK[c.dataset.k]()));
+draw(); window.addEventListener('resize', draw);
 </script>
 </body>
 </html>

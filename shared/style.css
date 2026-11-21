@@ -1,90 +1,163 @@
 /* Designphysik – gemeinsames Stylesheet. Gilt für Startseite und alle Module.
-   Grundrichtung F „Punktraster“ (docs/styleguide.md): weiß, alles schwarz, Punktraster 24 px,
-   Farbe nur für Physik-Familien und Warnung. Module definieren keine eigenen Farben. */
+   Grundrichtung F „Punktraster“ (docs/styleguide.md): weiß, alles schwarz, Punktraster 24 px überall,
+   Farbe nur für Physik-Familien und Warnung. Module definieren keine eigenen Farben.
+   Schriftstufen (§ 5): 12 Notiz/Achse · 14 Text/Bedienung · 18 Urteil/Tabellenwert · 28 Hauptkennwert. */
 :root{
   --u:24px;--h:24px;
-  --bg:#ffffff;--ink:#111111;--ink2:#4d4d4d;--mut:#767676;--dot:#c8c8c8;--fill:#f0f0f0;
+  --bg:#ffffff;--ink:#111111;--ink2:#4d4d4d;--mut:#767676;--dot:#c8c8c8;--dot-bg:#dcdcdc;--fill:#f0f0f0;
   --ctl:#111111;--ctl-ink:#ffffff;
   --warn:#d32f2f;--warn-a:rgba(211,47,47,.12);
   --water:#1f6fe0;--water-a:rgba(31,111,224,.28);
   --light:#d48a00;--light-a:rgba(212,138,0,.28);
   --mech:#12994a;--mech-a:rgba(18,153,74,.25);
-  --load:#5b55c9;--load-a:rgba(91,85,201,.25)
+  --load:#7b3fbf;--load-a:rgba(123,63,191,.22);
+  --font:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif
 }
 @media(pointer:coarse){:root{--h:48px}}
 *{box-sizing:border-box}
 html,body{margin:0}
-body{font:14px/24px Arial,sans-serif;color:var(--ink);background-color:var(--bg);
-  background-image:radial-gradient(circle,var(--dot) 1px,transparent 1.5px);background-size:var(--u) var(--u);background-position:calc(var(--u)/-2) calc(var(--u)/-2)}
+/* Seitenraster überall, auch hinter Text: hell (--dot-bg), damit kleine Schrift darauf ruhig bleibt */
+body{font:14px/24px var(--font);color:var(--ink);background-color:var(--bg);
+  background-image:radial-gradient(circle,var(--dot-bg) 1px,transparent 1.5px);background-size:var(--u) var(--u);background-position:calc(var(--u)/-2) calc(var(--u)/-2)}
+:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+svg.i{width:16px;height:16px;flex:none;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;vertical-align:-3px}
 
-/* Kopfzeile */
+/* Kopfzeile: Wortmarke links, Modulnavigation rechts (das Modul steht nur einmal: aktives Segment) */
 header{display:flex;align-items:center;gap:24px;flex-wrap:wrap;min-height:72px;margin:0 24px;padding:12px 0;box-shadow:0 1px var(--ink)}
-header h1{font-size:15px;line-height:24px;margin:0;font-weight:700;display:flex;align-items:center;gap:12px}
+header h1{font-size:14px;line-height:24px;margin:0;font-weight:700;text-transform:uppercase;letter-spacing:.12em;display:flex;align-items:center;gap:12px}
 header h1 a{color:inherit;text-decoration:none}
-header h1 small{font-weight:400;font-size:14px;display:flex;align-items:center;gap:6px}
+header h1 small{font-weight:400;font-size:14px;letter-spacing:0;text-transform:none;color:var(--ink2)}
 .mq{display:inline-block;width:12px;height:12px;flex:none;background:var(--c,var(--ink))}
-.mq.off{background:none;border:1px solid var(--mut);width:10px;height:10px}
+.mq.off{background:none;border:1px solid var(--ink2);width:10px;height:10px}
 nav{display:flex;margin-left:auto}
-nav a,nav span{display:flex;align-items:center;gap:6px;height:var(--h);padding:0 12px;border:1px solid var(--ink);font-size:13px;color:var(--ink);text-decoration:none;background:var(--bg)}
+nav a,nav span{display:flex;align-items:center;gap:6px;height:var(--h);padding:0 12px;border:1px solid var(--ink);font-size:14px;color:var(--ink);text-decoration:none;background:var(--bg)}
 nav>*+*{border-left:0}
 nav a.on{background:var(--ctl);color:var(--ctl-ink);border-color:var(--ctl)}
-nav span{color:var(--mut)}
+nav span{color:var(--ink2)}
 
-/* Raster-Layout: Höhen und senkrechte Abstände nur in Vielfachen von --u.
+/* Raster-Layout: Höhen und senkrechte Abstände in Vielfachen von --u (Telefon: Werkzeugzeilen 12 px).
    Linien als box-shadow statt border – sie liegen auf der Rasterkante und nehmen keinen Platz ein. */
 main{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:24px;padding:24px;max-width:1440px;margin:0 auto}
 .panel{box-shadow:inset 0 1px var(--ink);display:flex;flex-direction:column;gap:var(--u);min-width:0;container-type:inline-size}
-.panel h2{font-size:11px;line-height:24px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink);margin:0;font-weight:700}
+.panel h2{font-size:13px;line-height:24px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink);margin:0;font-weight:700}
+.panel h2 small{font-size:12px;font-weight:400;text-transform:none;letter-spacing:0;color:var(--ink2);margin-left:12px}
 canvas{width:100%;display:block;touch-action:none;background:var(--bg);
   height:round(down,calc(100cqw / var(--ar)),var(--u))} /* mit --ar (Breite/Höhe): Höhe auf --u abgerundet; ohne --ar gilt aspect-ratio */
 .ch{aspect-ratio:16/8;--ar:2}
 .row{display:flex;gap:var(--u) 12px;flex-wrap:wrap;align-items:center}
-.seg{display:flex}.seg>*+*{border-left:0}
+.seg{display:inline-flex}.seg>*+*{border-left:0}
 .sep{width:0;height:var(--h)}
 
-/* Bedienelemente */
-button,select{font:inherit;font-size:13px;line-height:1;height:var(--h);padding:0 12px;border:1px solid var(--ink);background:var(--bg);border-radius:0;cursor:pointer;color:var(--ink)}
-button.on{background:var(--ctl);color:var(--ctl-ink);border-color:var(--ctl)}
-input[type=number],input[type=text]{font:inherit;font-size:13px;height:var(--h);padding:0 6px;border:1px solid var(--ink);border-radius:0;background:var(--bg);color:var(--ink);font-variant-numeric:tabular-nums}
+/* Bedienelemente: Segment (.seg) = sich ausschließende Wahl, aktiv schwarz. Einzelner Schalter (.on außerhalb
+   eines Segments) = Fläche --fill mit Unterstrich. Leise Aktion (.q) = ohne Rahmen. */
+button,select{font:inherit;font-size:14px;line-height:1;height:var(--h);padding:0 12px;border:1px solid var(--ink);background:var(--bg);border-radius:0;cursor:pointer;color:var(--ink);display:inline-flex;align-items:center;gap:6px}
+select{display:inline-block}
+button:disabled{color:var(--ink2);border-color:var(--ink2);cursor:default}
+button.on{background:var(--fill);box-shadow:inset 0 -2px var(--ink)}
+.seg button.on{background:var(--ctl);color:var(--ctl-ink);border-color:var(--ctl);box-shadow:none}
+button.q{border-color:transparent;background:transparent;padding:0 6px}
+button.q:hover:not(:disabled){box-shadow:inset 0 -1px var(--ink)}
+button.q:disabled{border-color:transparent}
+input[type=number],input[type=text]{font:inherit;font-size:14px;height:var(--h);padding:0 6px;border:1px solid var(--ink);border-radius:0;background:var(--bg);color:var(--ink);font-variant-numeric:tabular-nums}
 input[type=range]{width:100%;margin:0;height:var(--h);accent-color:var(--ctl)}
 input[type=checkbox]{accent-color:var(--ctl);margin:0}
-label.chk{font-size:13px;display:flex;gap:6px;align-items:center;color:var(--ink);min-height:var(--h)}
+label.chk{font-size:14px;display:flex;gap:6px;align-items:center;color:var(--ink);min-height:var(--h)}
 .ctl{display:grid;grid-template-columns:auto 1fr auto;gap:0 12px;align-items:center;grid-auto-rows:minmax(var(--h),auto)}
 .ctl label{font-size:12px;color:var(--ink2);white-space:nowrap}
-.ctl output{font-variant-numeric:tabular-nums;font-size:13px;min-width:72px;text-align:right}
+.ctl output{font-variant-numeric:tabular-nums;font-size:14px;min-width:72px;text-align:right}
+details>summary{font-size:14px;cursor:pointer;line-height:24px}
+/* Fachbegriff mit Erklärung (dpTerm): gepunktet unterstrichen, Erklärung als title */
+.term{text-decoration:underline dotted;text-underline-offset:3px;cursor:help}
 
-/* Kennwerte */
-.stats{display:grid;grid-template-columns:repeat(auto-fill,minmax(144px,1fr));box-shadow:inset 0 -1px var(--ink);overflow:hidden}
-.stat{box-shadow:inset 0 1px var(--ink),1px 0 var(--ink);padding:0 6px;min-width:0}
-.stat b{display:block;font-size:22px;line-height:48px;font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.stat span{display:block;font-size:11px;line-height:24px}
-.stat span:last-child{color:var(--ink2)}
+/* Urteil (dpVerdict): Stufe als Marke, Satz als Hauptaussage */
+.verdict{grid-column:1/-1;display:flex;flex-wrap:wrap;align-items:center;gap:0 12px;padding:12px 0 24px}
+.verdict .lv{display:inline-flex;align-items:center;height:24px;padding:0 6px;font-size:14px;font-weight:700;border:1px solid var(--ink);white-space:nowrap}
+.verdict.l1 .lv{background:var(--warn-a);color:var(--warn);border-color:var(--warn)}
+.verdict.l2 .lv{background:var(--warn);color:#fff;border-color:var(--warn)}
+.verdict .vt{font-size:18px;line-height:24px;font-weight:700;flex:1 1 320px}
+.verdict .vx{flex-basis:100%;font-size:12px;color:var(--ink2)}
+
+/* Kennwerte: Label (eine Zeile) – Wert – Notiz; Zeilen per subgrid, damit Werte einer Reihe auf einer Linie stehen */
+.stats{display:grid;grid-template-columns:repeat(auto-fill,minmax(168px,1fr));box-shadow:inset 0 -1px var(--ink);overflow:hidden}
+.stat{box-shadow:inset 0 1px var(--ink),1px 0 var(--ink);padding:0 6px;min-width:0;display:grid;grid-row:span 3;grid-template-rows:subgrid;align-content:start}
+.stat>span:first-child{font-size:12px;line-height:24px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.stat b{display:block;font-size:28px;line-height:48px;font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.stat b small{font-size:60%;font-weight:400;margin-left:2px}
+.stat b.txt{font-size:18px}
+.stat>span+b+span,.stat>b+span{font-size:12px;line-height:24px;color:var(--ink2)}
 .stat.warn b{color:var(--warn)}
+/* Alle Werte (dpStats): kompakte Tabelle, aufklappbar */
+details.more{grid-column:1/-1;box-shadow:inset 0 1px var(--ink)}
+details.more>summary{font-size:14px}
+table.kv{border-collapse:collapse;width:100%;font-size:14px;line-height:24px}
+table.kv td{padding:0 6px;box-shadow:inset 0 1px var(--dot);vertical-align:top}
+table.kv td:nth-child(2){text-align:right;font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap}
+table.kv td:nth-child(3){font-size:12px;color:var(--ink2)}
+table.kv tr.warn td:nth-child(2){color:var(--warn)}
 
 .wide{grid-column:1/-1}
 .two{display:grid;grid-template-columns:1fr 1fr;gap:24px}
 .note{font-size:12px;line-height:24px;color:var(--ink2);margin:0}
 .warn{color:var(--warn)}
-@media(max-width:860px){main{grid-template-columns:1fr}.two{grid-template-columns:1fr}header{margin:0 12px}main{padding:24px 12px}}
+.stat.warn,tr.warn{color:inherit}
+
+/* Modell & Gültigkeit: aufklappbar, lesbare Zeilenlänge, auf breiten Schirmen zweispaltig */
+.model>details>summary{font-size:14px}
+.model .txt{columns:2 30em;column-gap:48px;margin-top:24px}
+.model h3{font-size:14px;line-height:24px;margin:0;font-weight:700;break-after:avoid}
+.model p{font-size:14px;line-height:24px;color:var(--ink);margin:0 0 24px;max-width:68ch}
+
+/* Telefon-Leiste mit dem Urteil (dpVerdict), springt zu den Kennwerten */
+#dp-bar{display:none}
+@media(max-width:860px){
+  main{grid-template-columns:1fr;padding:24px 12px}
+  .two{grid-template-columns:1fr}
+  header{margin:0 12px}
+  nav{width:100%;margin-left:0}
+  nav a,nav span{flex:1;justify-content:center;padding:0 6px}
+  .row{row-gap:12px}
+  .seg{flex-wrap:wrap}.seg>*+*{border-left:1px solid var(--ink)}.seg>*{margin:0 -1px -1px 0} /* lange Segmente umbrechen statt seitlich zu schieben */
+  main>*{order:2} main>.panel:first-child{order:0} main>.kpi{order:1}
+  .ico .lbl{display:none} /* nur ausgewählte leise Knöpfe (Rückgängig …) auf dem Telefon als Symbol */
+  body.has-bar{padding-bottom:48px}
+  #dp-bar{position:fixed;left:0;right:0;bottom:0;z-index:5;display:flex;align-items:center;gap:12px;height:48px;padding:0 12px;background:var(--bg);box-shadow:0 -1px var(--ink);font-size:14px;cursor:pointer;border:0;width:100%;text-align:left;border-radius:0}
+  #dp-bar[hidden]{display:none}
+  #dp-bar .vt{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:700}
+}
 
 /* Startseite */
+.intro{max-width:1440px;margin:0 auto;padding:24px 24px 0}
+.intro h2{font-size:28px;line-height:48px;margin:0;font-weight:700}
+.intro h2 a{color:inherit;text-decoration:none;box-shadow:inset 0 -2px var(--c,var(--ink))}
+.intro p{margin:0;color:var(--ink2);max-width:68ch}
 .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(264px,1fr));gap:24px;padding:24px;max-width:1440px;margin:0 auto}
 .card{box-shadow:inset 0 1px var(--ink);padding:0 0 24px;color:var(--ink);text-decoration:none;display:flex;flex-direction:column;gap:0}
-.card h3{margin:0;font-size:22px;line-height:48px;display:flex;align-items:center;gap:12px}
-.card p{margin:0;color:var(--ink2);font-size:13px}
-.card.off{color:var(--mut);pointer-events:none}.card.off p{color:var(--mut)}
-.badge{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink2)}
+.card:hover canvas,.card:focus-visible canvas{background:var(--fill)}
+.card canvas{height:168px;background:transparent}
+.card h3{margin:0;font-size:18px;line-height:24px;display:flex;align-items:center;gap:12px;padding-top:12px}
+.card .q{font-size:14px;font-weight:700}
+.card p{margin:0;color:var(--ink2);font-size:14px}
+.card.off{color:var(--ink2);pointer-events:none}
+.badge{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink2)}
+@media(max-width:860px){.intro{padding:24px 12px 0}.cards{padding:24px 12px}.intro h2{font-size:22px;line-height:24px;padding:12px 0}}
 
 /* Vorlagen-Galerie (dpGallery): Dialog über der Seite, Karten im 24-px-Raster, Skizze 96 px */
 dialog.gal{width:min(1008px,calc(100vw - 24px));max-height:calc(100vh - 48px);padding:0 24px 24px;border:1px solid var(--ink);border-radius:0;background:var(--bg);color:var(--ink)}
 dialog.gal::backdrop{background:rgba(17,17,17,.4)}
 .galtop{position:sticky;top:0;z-index:1;background:var(--bg);justify-content:space-between;padding:24px 0;box-shadow:0 1px var(--ink)}
-.gal h2,.gal h3{font-size:11px;line-height:24px;text-transform:uppercase;letter-spacing:.08em;margin:0;font-weight:700}
+.gal h2,.gal h3{font-size:13px;line-height:24px;text-transform:uppercase;letter-spacing:.06em;margin:0;font-weight:700}
 .gal h3{margin-top:24px;color:var(--ink2)}
 .galgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(144px,1fr));gap:0 12px}
-.galgrid button{height:auto;display:flex;flex-direction:column;align-items:stretch;text-align:left;padding:0 6px 24px;border:0;box-shadow:inset 0 1px var(--ink);line-height:24px}
+.galgrid button{height:auto;display:flex;flex-direction:column;align-items:stretch;text-align:left;padding:0 6px 24px;border:0;box-shadow:inset 0 1px var(--ink);line-height:24px;background:transparent}
 .galgrid button:hover,.galgrid button:focus-visible{background:var(--fill)}
 .galgrid canvas{height:96px;background:transparent}
-.galgrid b{font-size:13px;font-weight:700}
-.galgrid span{font-size:11px;color:var(--ink2)}
+.galgrid b{font-size:14px;font-weight:700}
+.galgrid span{font-size:12px;color:var(--ink2)}
 @media(max-width:860px){dialog.gal{padding:0 12px 24px}}
+
+/* Überlaufmenü (dpMenu): Nebenaktionen auf dem Telefon hinter „⋯“ */
+.menu{position:relative}
+.menu>summary{list-style:none;display:inline-flex;align-items:center;height:var(--h);padding:0 12px;border:1px solid var(--ink)}
+.menu>summary::-webkit-details-marker{display:none}
+.menu[open]>div{position:absolute;right:0;top:calc(var(--h) + 6px);z-index:4;background:var(--bg);border:1px solid var(--ink);display:flex;flex-direction:column;align-items:stretch;min-width:192px;padding:6px 0}
+.menu[open]>div button{justify-content:flex-start;height:var(--h)}

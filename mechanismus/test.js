@@ -109,3 +109,10 @@ for (let k = 1; k < en.length; k++) { Wk += (en[k].Q + en[k - 1].Q) / 2 * (en[k]
 let W90 = 0; for (let k = 1; k <= k90; k++) W90 += (en[k].Q + en[k - 1].Q) / 2 * (en[k].v - en[k - 1].v) * D;
 check('Energie 0…90°: ∫M dθ = W·Δy [N·m]', W90, 20 * (en[k90].X[9] - en[0].X[9]) / 1000, 1e-5);
 check('Energie Umlauf: ∮M dθ [N·m]', Wk, 0, 1e-6);
+// Ist-Lage nach vielen Umdrehungen: gleiche Lage wie nach dem Rest modulo 360°, Antriebswert bleibt stetig
+{ const m = fb(40, 120, 80, 100, 60), a1 = Core.analyze({ ...m, at: 90 }), a2 = Core.analyze({ ...m, at: 90 + 360 * 100 });
+  let e = 0; for (let i = 0; i < a1.cur.X.length; i++) e = Math.max(e, Math.abs(a1.cur.X[i] - a2.cur.X[i]));
+  check('Umlauf: Lage bei 90° + 100 Umdrehungen = Lage bei 90° [mm]', e, 0, 1e-6);
+  check('… Antriebswert stetig (36 090°)', a2.cur.v, 90 + 36000, 1e-12);
+  const a3 = Core.analyze({ ...m, at: 90 - 360 * 3 }); let e3 = 0; for (let i = 0; i < a1.cur.X.length; i++) e3 = Math.max(e3, Math.abs(a1.cur.X[i] - a3.cur.X[i]));
+  check('… auch rückwärts (−990°) [mm]', e3, 0, 1e-6); }

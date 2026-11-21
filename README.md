@@ -19,7 +19,7 @@ Funktioniert auch per Doppelklick auf index.html (file://).
     shared/chart.js     Diagramme
     tools/              Testwerkzeuge für Node (load-core.js, check.js)
     _vorlage/           Gerüst für neue Module
-    gefaess/            Modul Gefäß & Kippen (+ test.js)
+    gefaess/            Modul Gefäß & Kippen (index.html Kern, app.js Oberfläche, + test.js)
     licht/              Modul Lampenschirm (+ test.js)
     mechanismus/        Modul Mechanismen (+ test.js)
     last/               Modul Belastung – Balken 2D (+ test.js)
