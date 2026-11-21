@@ -74,3 +74,17 @@ label.chk{font-size:13px;display:flex;gap:6px;align-items:center;color:var(--ink
 .card p{margin:0;color:var(--ink2);font-size:13px}
 .card.off{color:var(--mut);pointer-events:none}.card.off p{color:var(--mut)}
 .badge{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink2)}
+
+/* Vorlagen-Galerie (dpGallery): Dialog über der Seite, Karten im 24-px-Raster, Skizze 96 px */
+dialog.gal{width:min(1008px,calc(100vw - 24px));max-height:calc(100vh - 48px);padding:0 24px 24px;border:1px solid var(--ink);border-radius:0;background:var(--bg);color:var(--ink)}
+dialog.gal::backdrop{background:rgba(17,17,17,.4)}
+.galtop{position:sticky;top:0;z-index:1;background:var(--bg);justify-content:space-between;padding:24px 0;box-shadow:0 1px var(--ink)}
+.gal h2,.gal h3{font-size:11px;line-height:24px;text-transform:uppercase;letter-spacing:.08em;margin:0;font-weight:700}
+.gal h3{margin-top:24px;color:var(--ink2)}
+.galgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(144px,1fr));gap:0 12px}
+.galgrid button{height:auto;display:flex;flex-direction:column;align-items:stretch;text-align:left;padding:0 6px 24px;border:0;box-shadow:inset 0 1px var(--ink);line-height:24px}
+.galgrid button:hover,.galgrid button:focus-visible{background:var(--fill)}
+.galgrid canvas{height:96px;background:transparent}
+.galgrid b{font-size:13px;font-weight:700}
+.galgrid span{font-size:11px;color:var(--ink2)}
+@media(max-width:860px){dialog.gal{padding:0 12px 24px}}

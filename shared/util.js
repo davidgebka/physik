@@ -101,3 +101,38 @@ function dpDelta(v, r) {
 function dpOptions(groups, first = 'Vorlage …') {
   return (first ? `<option value="">${first}</option>` : '') + groups.map(([g, a]) => `<optgroup label="${g}">${a.map(([k, n]) => `<option value="${k}">${n}</option>`).join('')}</optgroup>`).join('');
 }
+// Vorlagen-Galerie (ersetzt die Textliste): groups = [[Gruppe, [{k, n, s?, d}, …]], …] – k Schlüssel, n Name, s Zusatz (Entwurf · Jahr bzw. Prinzip),
+// d() liefert die Skizze für dpSketch (erst beim ersten Öffnen gerufen). Wahl → onPick(k). Der Knopf öffnet die Galerie.
+function dpGallery(btn, groups, onPick, title = 'Vorlage wählen') {
+  const dlg = document.createElement('dialog'), items = groups.flatMap(([, a]) => a);
+  dlg.className = 'gal'; dlg.setAttribute('aria-label', title);
+  dlg.innerHTML = `<div class="row galtop"><h2>${title}</h2><button type="button" data-x aria-label="Schließen">✕</button></div>` + groups.map(([g, a]) =>
+    `<h3>${g}</h3><div class="galgrid">${a.map(it => `<button type="button" data-k="${it.k}"><canvas></canvas><b>${it.n}</b>${it.s ? `<span>${it.s}</span>` : ''}</button>`).join('')}</div>`).join('');
+  document.body.append(dlg);
+  let drawn = false;
+  btn.textContent = '▦ Vorlage …'; btn.title = 'Vorlagen: Prinzipien und Designklassiker';
+  btn.onclick = () => {
+    dlg.showModal();
+    if (!drawn) { drawn = true; dlg.querySelectorAll('[data-k] canvas').forEach((cv, i) => { try { dpSketch(cv, items[i].d()); } catch (e) { /* Skizze fehlt, Name bleibt */ } }); }
+  };
+  dlg.onclick = e => {
+    if (e.target === dlg || e.target.closest('[data-x]')) return dlg.close(); // Klick neben den Inhalt oder ✕ schließt
+    const b = e.target.closest('[data-k]'); if (b) { dlg.close(); onPick(b.dataset.k); }
+  };
+  return dlg;
+}
+// Skizze in mm, y nach oben, auf die Fläche eingepasst: shapes = [{p: [[x, y], …], z?: geschlossen, f?: Füll-Token, c?: Linien-Token (null = keine), w?: Breite, r?: Punktradius px, dash?}]
+function dpSketch(cv, shapes) {
+  const { ctx, w, h } = prep(cv), all = shapes.flatMap(s => s.p);
+  if (!all.length) return;
+  const xs = all.map(q => q[0]), ys = all.map(q => q[1]), x0 = Math.min(...xs), x1 = Math.max(...xs), y0 = Math.min(...ys), y1 = Math.max(...ys);
+  const m = 12, k = Math.min((w - 2 * m) / Math.max(x1 - x0, 1e-9), (h - 2 * m) / Math.max(y1 - y0, 1e-9));
+  const T = q => [w / 2 + (q[0] - (x0 + x1) / 2) * k, h / 2 - (q[1] - (y0 + y1) / 2) * k];
+  ctx.lineJoin = ctx.lineCap = 'round';
+  for (const s of shapes) {
+    if (s.r) { for (const q of s.p) { const [x, y] = T(q); ctx.beginPath(); ctx.arc(x, y, s.r, 0, 7); ctx.fillStyle = css(s.f || '--ink'); ctx.fill(); if (s.c) { ctx.strokeStyle = css(s.c); ctx.lineWidth = 1; ctx.stroke(); } } continue; }
+    polyPath(ctx, s.p, T); if (s.z) ctx.closePath();
+    if (s.f) { ctx.fillStyle = css(s.f); ctx.fill(); }
+    if (s.c !== null) { ctx.strokeStyle = css(s.c || '--ink'); ctx.lineWidth = s.w || 1.5; ctx.setLineDash(s.dash || []); ctx.stroke(); ctx.setLineDash([]); }
+  }
+}

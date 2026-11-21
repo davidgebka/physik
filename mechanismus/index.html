@@ -19,7 +19,7 @@
     <div class="row">
       <button id="mBuild" class="on">Konstruieren</button><button id="mMove">Bewegen</button>
       <span class="sep"></span>
-      <select id="tpl" aria-label="Vorlage"></select><button id="undo" disabled>↶ Rückgängig</button><button id="cmp"></button>
+      <button id="tpl"></button><button id="undo" disabled>↶ Rückgängig</button><button id="cmp"></button>
     </div>
     <div class="row" id="tools">
       <button data-t="drag" class="on">Ziehen</button><button data-t="point">Punkt</button><button data-t="fix">Gestell</button>
@@ -370,20 +370,62 @@ if (typeof module !== 'undefined') module.exports = Core;
 const RAD = Math.PI / 180, nf2 = new Intl.NumberFormat('de-DE', { maximumFractionDigits: 2, minimumFractionDigits: 2 });
 const P = (x, y, fix) => fix ? { x: +x.toFixed(1), y: +y.toFixed(1), fix: 1 } : { x: +x.toFixed(1), y: +y.toFixed(1) };
 const cpl = (a, b, s, t) => [a[0] + s * (b[0] - a[0]) - t * (b[1] - a[1]), a[1] + s * (b[1] - a[1]) + t * (b[0] - a[0])];
-const TPL = {
-  ks() { const r = Core.fourbarClosed(40, 120, 80, 100, 60 * RAD, 1), C = cpl(r.A, r.B, 0.5, 0.5);
-    return { pts: [P(0, 0, 1), P(...r.A), P(...r.B), P(100, 0, 1), P(...C)], links: [[0, 1], [1, 2, 4], [2, 3]], drive: { link: 0 }, out: { link: 2 }, trace: 4 }; },
-  ds() { // Deckel = Koppel, angetrieben über die vordere Schwinge
-    // Deckel 2 kg, Schwerpunkt Deckelmitte → 19,6 N
-    return { pts: [P(20, -95, 1), P(60, 10), P(130, 10), P(80, -120, 1), P(400, 10), P(-10, 0, 1), P(410, 0, 1), P(410, -150, 1), P(-10, -150, 1), P(230, 10)],
-      links: [[0, 1], [1, 2, 4, 9], [2, 3], [5, 6, 7, 8]], drive: { link: 0 }, out: { link: 2 }, trace: 4, loads: [{ p: 9, fx: 0, fy: -19.6 }] }; },
-  sk() { const a = [40 * Math.cos(60 * RAD), 40 * Math.sin(60 * RAD)], p = [Core.sliderClosed(40, 120, 0, 60 * RAD), 0], M = cpl(a, p, 0.5, 0.25);
-    return { pts: [P(0, 0, 1), P(...a), P(...p), P(...M)], links: [[0, 1], [1, 2, 3]], slider: { p: 2, a: 0, ang: 0 }, drive: { link: 0 }, out: { slider: true }, trace: 3 }; },
-  st() { // Vorderbein+Lehne = Gestell; Sitz hochklappen → Hinterbein klappt an
-    return { pts: [P(400, 0, 1), P(60, 850, 1), P(298, 255, 1), P(219.8, 450.5, 1), P(405.1, 369.8), P(60, 0), P(300, 450.5), P(620, 450.5)],
-      links: [[0, 1, 2, 3], [2, 4, 5], [4, 6], [3, 6, 7]], drive: { link: 3 }, out: { link: 1 }, trace: 5 }; },
-  leer() { return { pts: [], links: [], drive: {}, out: {} }; }
-};
+// Schnittpunkt der Kreise (p, r) und (q, s); sg = +1 links, −1 rechts von p→q
+const cc = (p, r, q, s, sg) => { const dx = q[0] - p[0], dy = q[1] - p[1], d = Math.hypot(dx, dy), x = (r * r - s * s + d * d) / (2 * d), h = Math.sqrt(Math.max(0, r * r - x * x));
+  return [p[0] + (x * dx - sg * h * dy) / d, p[1] + (x * dy + sg * h * dx) / d]; };
+const pol = (p, r, a) => [p[0] + r * Math.cos(a * RAD), p[1] + r * Math.sin(a * RAD)];
+// Viergelenk A0 (Antrieb a) – A – B – B0 (Abtrieb c), Gestell d unter rot [°], Antrieb unter th gegen das Gestell, sg Zweig
+const fb4 = (a, b, c, d, th, sg = 1, rot = 0) => { const A0 = [0, 0], B0 = pol(A0, d, rot), A = pol(A0, a, th + rot); return { A0, A, B: cc(A, b, B0, c, sg), B0 }; };
+// Viergelenk als Modell, optional Koppelpunkt C (Bahnkurve) und weitere Felder
+const four = (r, C, ext) => ({ pts: [P(...r.A0, 1), P(...r.A), P(...r.B), P(...r.B0, 1)].concat(C ? [P(...C)] : []), links: [[0, 1], C ? [1, 2, 4] : [1, 2], [2, 3]],
+  drive: { link: 0 }, out: { link: 2 }, ...(C ? { trace: 4 } : {}), ...ext });
+// Vorlagen: [Schlüssel, Name, Zusatz, Modell()] – Gruppe Prinzipien bzw. Klassiker
+const TPLS = [['Prinzipien', [
+  ['ks', 'Kurbelschwinge', 'Kurbel dreht, Schwinge pendelt', () => { const r = Core.fourbarClosed(40, 120, 80, 100, 60 * RAD, 1); return four({ A0: [0, 0], B0: [100, 0], ...r }, cpl(r.A, r.B, 0.5, 0.5)); }],
+  ['dk', 'Doppelkurbel', 'kurzes Gestell: beide drehen um', () => { const r = fb4(80, 120, 100, 40, 60); return four(r, cpl(r.A, r.B, 0.5, -0.4)); }],
+  ['ds', 'Doppelschwinge', 'Klappdeckel, 2 kg Deckel', () => // Deckel = Koppel, angetrieben über die vordere Schwinge; Deckel 2 kg, Schwerpunkt Deckelmitte → 19,6 N
+    ({ pts: [P(20, -95, 1), P(60, 10), P(130, 10), P(80, -120, 1), P(400, 10), P(-10, 0, 1), P(410, 0, 1), P(410, -150, 1), P(-10, -150, 1), P(230, 10)],
+      links: [[0, 1], [1, 2, 4, 9], [2, 3], [5, 6, 7, 8]], drive: { link: 0 }, out: { link: 2 }, trace: 4, loads: [{ p: 9, fx: 0, fy: -19.6 }] })],
+  ['pg', 'Parallelogramm', 'Ablage bleibt waagrecht', () => { const A = pol([0, 0], 200, 30), B = pol([0, -60], 200, 30);
+    return { pts: [P(0, 0, 1), P(...A), P(...B), P(0, -60, 1), P(A[0] + 100, A[1])], links: [[0, 1], [1, 2, 4], [2, 3]], drive: { link: 0 }, out: { link: 2 }, trace: 4, loads: [{ p: 4, fx: 0, fy: -20 }] }; }],
+  ['sk', 'Schubkurbel', 'Drehen ↔ Schieben', () => { const a = pol([0, 0], 40, 60), p = [Core.sliderClosed(40, 120, 0, 60 * RAD), 0], M = cpl(a, p, 0.5, 0.25);
+    return { pts: [P(0, 0, 1), P(...a), P(...p), P(...M)], links: [[0, 1], [1, 2, 3]], slider: { p: 2, a: 0, ang: 0 }, drive: { link: 0 }, out: { slider: true }, trace: 3 }; }],
+  ['kn', 'Kniehebel', 'nahe der Strecklage: große Kraft', () => { const A = pol([0, 0], 60, -60), B = [0, A[1] - Math.sqrt(80 * 80 - A[0] * A[0])]; // Hebel 180 mm, Gegenkraft 500 N
+    return { pts: [P(0, 0, 1), P(...A), P(...B), P(0, 180)], links: [[0, 1, 3], [1, 2]], slider: { p: 2, a: 0, ang: -90 }, drive: { link: 0 }, out: { slider: true }, trace: 2, loads: [{ p: 2, fx: 0, fy: 500 }] }; }],
+  ['sh', 'Scherenhub', '2 Stufen, 50 kg oben', () => { const c = 200 * Math.cos(35 * RAD), s = 200 * Math.sin(35 * RAD);
+    return { pts: [P(0, 0, 1), P(c, 0), P(c, s), P(0, s), P(c / 2, s / 2), P(c / 2, 1.5 * s), P(c, 2 * s), P(0, 2 * s)],
+      links: [[0, 2, 4], [1, 3, 4], [3, 6, 5], [2, 7, 5]], slider: { p: 1, a: 0, ang: 0 }, drive: { slider: true }, out: { slider: true }, loads: [{ p: 6, fx: 0, fy: -250 }, { p: 7, fx: 0, fy: -250 }] }; }],
+  ['th', 'Viergelenk-Scharnier', 'Tür schwenkt aus (Draufsicht)', () => // Draufsicht, Tür geschlossen (Tür 400 mm, Korpuswand links): beide Lenker am Korpus, Tür = Koppel; öffnet um ≈ 136°
+    ({ pts: [P(25, -52, 1), P(69, 0), P(41, 0), P(48, -16, 1), P(400, 0), P(-18, 0), P(-18, -300, 1), P(0, -300, 1), P(0, -4, 1), P(-18, -4, 1)],
+      links: [[0, 1], [1, 2, 4, 5], [2, 3], [6, 7, 8, 9]], drive: { link: 0 }, out: { link: 2 }, trace: 4 })],
+  ['hb', 'Hebel mit Gegengewicht', '2 kg am Arm, 5 kg dahinter', () =>
+    ({ pts: [P(0, 0, 1), P(...pol([0, 0], 300, 20)), P(...pol([0, 0], -100, 20))], links: [[0, 1, 2]], drive: { link: 0 }, out: { link: 0 }, loads: [{ p: 1, fx: 0, fy: -20 }, { p: 2, fx: 0, fy: -50 }] })],
+  ['sy', 'Synchronmechanik', 'Bürostuhl: Lehne zieht den Sitz', () => // Lehne am Gestell gelagert, Sitz hinten an der Lehne, vorn in einer Führung; Person 60 kg auf dem Sitz
+    ({ pts: [P(0, 0, 1), P(-130, 520), P(40, 70), P(430, 100), P(230, 90), P(500, 100, 1)], links: [[0, 2, 1], [2, 3, 4]], slider: { p: 3, a: 5, ang: 180 }, drive: { link: 0 }, out: { slider: true }, loads: [{ p: 4, fx: 0, fy: -600 }] })],
+  ['st', 'Klappstuhl', 'Sitz hoch, Bein klappt an', () => // Vorderbein+Lehne = Gestell; Sitz hochklappen → Hinterbein klappt an
+    ({ pts: [P(400, 0, 1), P(60, 850, 1), P(298, 255, 1), P(219.8, 450.5, 1), P(405.1, 369.8), P(60, 0), P(300, 450.5), P(620, 450.5)],
+      links: [[0, 1, 2, 3], [2, 4, 5], [4, 6], [3, 6, 7]], drive: { link: 3 }, out: { link: 1 }, trace: 5 })],
+  ['tr', 'Tretkurbel', 'Bein als Viergelenk: Hüfte, Knie, Pedal', () => { const r = fb4(170, 460, 440, 680, 30, 1, 107); return four(r, null, { trace: 2 }); }] // Kurbel 170, Unterschenkel 460, Oberschenkel 440, Sattelrohr 73°
+]], ['Klassiker', [
+  ['watt', 'Watt-Geradführung', 'James Watt 1784', () => four({ A0: [0, 0], A: [100, 0], B: [100, 40], B0: [200, 40] }, [100, 20])],
+  ['cheb', 'Tschebyschow-Geradführung', 'Pafnuti Tschebyschow 1850', () => four({ A0: [0, 0], A: [60, 80], B: [20, 80], B0: [80, 0] }, [40, 80])],
+  ['robe', 'Roberts-Geradführung', 'Richard Roberts, 19. Jh.', () => { const h = Math.sqrt(2100); return four({ A0: [0, 0], A: [20, h], B: [60, h], B0: [80, 0] }, [40, 0]); }],
+  ['peau', 'Peaucellier-Inversor', 'Peaucellier 1864: exakt gerade', () => { // Kurbel 40 um Q, Arme 100, Raute 80: P läuft auf x = (100² − 80²)/80 = 45
+    const C = pol([40, 0], 40, 120), d = Math.hypot(...C), u = [C[0] / d, C[1] / d], x = (10000 - 6400 + d * d) / (2 * d), h = Math.sqrt(10000 - x * x);
+    return { pts: [P(0, 0, 1), P(40, 0, 1), P(...C), P(x * u[0] - h * u[1], x * u[1] + h * u[0]), P(x * u[0] + h * u[1], x * u[1] - h * u[0]), P((2 * x - d) * u[0], (2 * x - d) * u[1])],
+      links: [[1, 2], [0, 3], [0, 4], [2, 3], [2, 4], [3, 5], [4, 5]], drive: { link: 0 }, out: { link: 1 }, trace: 5 }; }],
+  ['hoek', 'Hoeken-Geradführung', 'Karl Hoecken 1926', () => { const r = fb4(30, 75, 75, 60, 60); return four(r, cpl(r.A, r.B, 2, 0)); }],
+  ['jans', 'Jansen-Bein', 'Theo Jansen, Strandbeest 1990', () => { // Jansens Längen (×1 mm)
+    const O = [0, 0], B = [-38, -7.8], C = pol(O, 15, 60), D = cc(C, 50, B, 41.5, -1), E = cc(B, 40.1, D, 55.8, 1), F = cc(C, 61.9, B, 39.3, 1), G = cc(E, 39.4, F, 36.7, -1), H = cc(F, 49, G, 65.7, 1);
+    return { pts: [P(...O, 1), P(...B, 1), P(...C), P(...D), P(...E), P(...F), P(...G), P(...H)], links: [[0, 2], [2, 3], [1, 3, 4], [2, 5], [1, 5], [4, 6], [5, 6, 7]], drive: { link: 0 }, out: { link: 2 }, trace: 7 }; }],
+  ['angl', 'Anglepoise-Arm', 'George Carwardine 1932', () => { // untere Parallelogrammstufe, Oberarm starr, Leuchtenkopf 0,5 kg – ohne Federn
+    const A = pol([0, 0], 320, 60), B = pol([40, 0], 320, 60), H = pol(A, 300, 15);
+    return { pts: [P(0, 0, 1), P(...A), P(...B), P(40, 0, 1), P(...H)], links: [[0, 1], [1, 2, 4], [2, 3]], drive: { link: 0 }, out: { link: 2 }, trace: 4, loads: [{ p: 4, fx: 0, fy: -5 }] }; }],
+  ['acker', 'Lenktrapez', 'Ackermann 1817 (Draufsicht)', () => { const a = Math.atan2(-700, 250) / RAD; // Spurweite 500, Radstand 700: Lenkhebel zielen auf die Hinterachsmitte
+    return four({ A0: [0, 0], A: pol([0, 0], 80, a), B: pol([500, 0], 80, 180 - a), B0: [500, 0] }, null); }]
+]]];
+const TPL = Object.fromEntries(TPLS.flatMap(([, a]) => a.map(([k, , , f]) => [k, f])));
+TPL.leer = () => ({ pts: [], links: [], drive: {}, out: {} });
 
 let S, A, X, REF = null; // REF: gemerkter Stand {m, a} (a = Core.analyze mit disp)
 const UI = { mode: 'build', tool: 'drag', sel: null, chain: [], pick: null, drag: null, view: null, blocked: false };
@@ -755,8 +797,15 @@ function load(m, mode) {
   const at = S.at; recompute('full');
   if (mode === 'move' && ok()) { setMode('move'); if (at != null) go(at); save(); }
 }
-$('tpl').innerHTML = dpOptions([['Vorlagen', [['ks', 'Kurbelschwinge'], ['ds', 'Doppelschwinge (Klappdeckel)'], ['sk', 'Schubkurbel'], ['st', 'Klappstuhl'], ['leer', 'Leer']]]]);
-$('tpl').onchange = e => { if (TPL[e.target.value]) load(TPL[e.target.value]()); e.target.value = ''; };
+// Vorlagen-Galerie; Skizze: Glieder, Gestell grau, Bahnkurve des Koppelpunkts in der Familienfarbe
+function tplSketch(m) {
+  const a = Core.analyze(m), out = [], p = i => [m.pts[i].x, m.pts[i].y];
+  if (!a.err && m.trace != null) out.push({ p: a.smp.map(s => [s.X[2 * m.trace], s.X[2 * m.trace + 1]]), c: '--mech', w: 1.5 });
+  m.links.forEach(L => { const h = hull(L.map(p)), g = L.filter(i => m.pts[i].fix).length >= 2; if (h.length > 1) out.push({ p: h, z: h.length > 2, f: h.length > 2 && !g ? '--fill' : null, c: g ? '--mut' : '--ink', w: g ? 3 : 2 }); });
+  out.push({ p: m.pts.filter(q => q.fix).map(q => [q.x, q.y]), r: 3 });
+  return out;
+}
+dpGallery($('tpl'), TPLS.map(([g, a]) => [g, a.map(([k, n, s, f]) => ({ k, n, s, d: () => tplSketch(f()) }))]).concat([['Neu', [{ k: 'leer', n: 'Leer', s: 'selbst konstruieren', d: () => [] }]]]), k => load(TPL[k]()));
 
 // ---- Datei & Teilen ----
 const TYPE = 'designphysik/mechanismus';
