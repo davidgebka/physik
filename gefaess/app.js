@@ -288,7 +288,7 @@ function drawEditor() {
   if (PH && PH.show) { const p = phBox(), [sx, sy] = w2s({ x: p.x0, z: p.z1 }); ctx.globalAlpha = PH.op; ctx.drawImage(PH.img, sx, sy, PH.w * V.s, PH.w * PH.ar * V.s); ctx.globalAlpha = 1; }
   // Punktraster (Styleguide § 7)
   const fDot = dpDots(ctx, w, h, V.s, V.ox, V.oy);
-  ctx.font = '11px Arial, sans-serif'; ctx.fillStyle = css('--ink2'); ctx.textAlign = 'right';
+  ctx.font = DP_CFONT; ctx.fillStyle = css('--ink2'); ctx.textAlign = 'right';
   ctx.fillText('1 Punkt = ' + nf0.format(fDot) + ' mm', w - 6, h - 6); ctx.textAlign = 'left';
   if (isPlan()) drawPlan(ctx, w, h); else if (isTube()) drawTube(ctx, w, h); else drawProfile(ctx, w, h);
   if (stroke) {
@@ -332,7 +332,7 @@ function drawPlan(ctx, w, h) {
   ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(bx, by); ctx.stroke(); ctx.setLineDash([]);
   const ux = (bx - ax) / Math.hypot(bx - ax, by - ay), uy = (by - ay) / Math.hypot(bx - ax, by - ay);
   ctx.beginPath(); ctx.moveTo(bx, by); ctx.lineTo(bx - 9 * ux - 5 * uy, by - 9 * uy + 5 * ux); ctx.lineTo(bx - 9 * ux + 5 * uy, by - 9 * uy - 5 * ux); ctx.fill();
-  ctx.font = '11px Arial, sans-serif'; ctx.fillText('kippt', bx + 6, by - 6);
+  ctx.font = DP_CFONT; ctx.fillText('kippt', bx + 6, by - 6);
   ctx.fillText(nf0.format(G.L) + ' × ' + nf0.format(G.B) + ' mm innen · H ' + nf0.format(G.H) + ' mm', 8, h - 8);
 }
 function drawProfile(ctx, w, h) {
@@ -344,7 +344,7 @@ function drawProfile(ctx, w, h) {
   // calibration marks
   if (S.marks && G.cap > 0) {
     const step = niceStep(G.cap / 6);
-    ctx.font = '11px Arial, sans-serif'; ctx.fillStyle = css('--mut'); ctx.strokeStyle = css('--ink'); ctx.lineWidth = 1;
+    ctx.font = DP_CFONT; ctx.fillStyle = css('--ink2'); ctx.strokeStyle = css('--ink'); ctx.lineWidth = 1;
     let yLast = Infinity;
     for (let v = step; v <= G.cap + 1e-6; v += step) {
       const z = fillHeight(v), iv = Core.intervalsAt(G.poly, z);
@@ -370,7 +370,7 @@ function drawProfile(ctx, w, h) {
   polyPath(ctx, [{ x: -G.rf, z: G.zst }, { x: G.rf, z: G.zst }], w2s); ctx.stroke(); ctx.setLineDash([]);
   if (G.stab) cross(ctx, w2s({ x: G.stab.xF, z: G.stab.zF }), css('--ink'), 'S');
   // dims
-  ctx.fillStyle = css('--mut'); ctx.font = '11px Arial, sans-serif';
+  ctx.fillStyle = css('--ink2'); ctx.font = DP_CFONT;
   const top = G.samp[G.samp.length - 1];
   const [, ry] = w2s({ x: top.x, z: top.z });
   ctx.fillText('Ø ' + nf0.format(2 * top.x) + ' mm', V.ox - 26, ry - 8);
@@ -387,7 +387,7 @@ function drawTube(ctx, w, h) {
   // Eichstriche an der vorderen Kontur (äußerster Schnitt der Umrisslinie mit dem Spiegel)
   if (S.marks && G.cap > 0) {
     const step = niceStep(G.cap / 6); let yLast = Infinity;
-    ctx.font = '11px Arial, sans-serif'; ctx.fillStyle = css('--mut'); ctx.strokeStyle = css('--ink');
+    ctx.font = DP_CFONT; ctx.fillStyle = css('--ink2'); ctx.strokeStyle = css('--ink');
     for (let v = step; v <= G.cap + 1e-6; v += step) {
       const z = fillHeight(v), sy0 = w2s({ x: 0, z })[1]; if (Math.abs(sy0 - yLast) < 12) continue;
       let xr = -Infinity; const o = G.outline;
@@ -402,14 +402,14 @@ function drawTube(ctx, w, h) {
   drawPoints(ctx, false);
   if (G.flat) { ctx.strokeStyle = css('--mut'); ctx.lineWidth = 1; ctx.setLineDash([3, 4]); polyPath(ctx, [{ x: -G.rfB, z: G.zst }, { x: G.rf, z: G.zst }], w2s); ctx.stroke(); ctx.setLineDash([]); }
   if (G.stab) cross(ctx, w2s({ x: G.stab.xF, z: G.stab.zF }), css('--ink'), 'S');
-  ctx.fillStyle = css('--mut'); ctx.font = '11px Arial, sans-serif';
+  ctx.fillStyle = css('--ink2'); ctx.font = DP_CFONT;
   const [bx, by] = w2s(G.B[G.B.length - 1]); ctx.fillText('vorne', bx + 8, by + 4);
   const [ax, ay] = w2s(G.A[G.A.length - 1]); ctx.textAlign = 'right'; ctx.fillText('hinten', ax - 8, ay + 4); ctx.textAlign = 'left';
 }
 function cross(ctx, [x, y], col, label) {
   ctx.strokeStyle = col; ctx.lineWidth = 1.5; ctx.beginPath();
   ctx.moveTo(x - 6, y); ctx.lineTo(x + 6, y); ctx.moveTo(x, y - 6); ctx.lineTo(x, y + 6); ctx.stroke();
-  ctx.fillStyle = css('--mut'); ctx.font = '11px Arial, sans-serif'; ctx.fillText(label, x + 6, y - 6);
+  ctx.fillStyle = css('--ink2'); ctx.font = DP_CFONT; ctx.fillText(label, x + 6, y - 6);
 }
 function snapP(p) {
   const g = S.snap; let x = mirror() ? Math.max(0, Math.abs(p.x)) : p.x, z = p.z;
@@ -539,6 +539,7 @@ function drawTilt() {
 
   // horizon reference
   ctx.strokeStyle = css('--mut'); ctx.setLineDash([4, 6]); ctx.beginPath(); ctx.moveTo(0, cy); ctx.lineTo(w, cy); ctx.stroke(); ctx.setLineDash([]);
+  ctx.font = DP_CFONT; ctx.fillStyle = css('--ink2'); ctx.textAlign = 'right'; ctx.fillText('Waagrechte durch den Drehpunkt', w - 6, cy - 6); ctx.textAlign = 'left';
 
   // liquid
   let L = null;
@@ -591,9 +592,9 @@ function drawTilt() {
     cross(ctx, [gx, gy], css('--ink'), 'S');
   }
   // labels
-  ctx.fillStyle = css('--ink'); ctx.font = '600 15px Arial, sans-serif';
+  ctx.fillStyle = css('--ink'); ctx.font = '700 18px ' + DP_CFONT.slice(5);
   ctx.fillText(nf1.format(S.theta) + '°', 12, 22);
-  ctx.font = '12px Arial, sans-serif'; ctx.fillStyle = css('--mut');
+  ctx.font = DP_CFONT; ctx.fillStyle = css('--ink2');
   ctx.fillText(isPlan() || S.lakes ? nf0.format(S.cur) + ' ml im Gefäß' + (S.lakes && S.lakes.length > 1 ? ' · ' + S.lakes.length + ' Wasserkörper' : '') : 'rechnet …', 12, 40);
   ctx.fillText('↓ g', w - 30, 22);
   if (S.slosh && (D.walk || D.stop)) { ctx.textAlign = 'right'; ctx.fillText(D.walk ? 'Gehen ' + nf1.format(S.wf) + ' Hz' : 'Anhalten', w - 12, 40); ctx.textAlign = 'left'; }
@@ -608,12 +609,12 @@ function drawCharts() {
   if (!G.geo || !G.curve) return;
   const N = 120, fc = [];
   for (let i = 0; i <= N; i++) { const v = G.cap * i / N; fc.push([v, fillHeight(v) - G.z0]); }
-  const F = REF && !REF.pending ? REF : null, gst = { color: css('--mut'), width: 1.5 }, gl = F ? ' · dünn grau: gemerkt' : '';
-  chart($('c1'), { x0: 0, x1: Math.max(1, G.cap, F ? F.cap : 0), y0: 0, y1: Math.max(1, G.H, F ? F.H : 0), xl: 'Volumen [ml]' + gl, yl: 'Füllhöhe [mm]',
+  const F = REF && !REF.pending ? REF : null, gst = { color: css('--mut'), width: 1.5 }, gl = F ? [{ t: 'gemerkt', ...gst }] : [];
+  chart($('c1'), { x0: 0, x1: Math.max(1, G.cap, F ? F.cap : 0), y0: 0, y1: Math.max(1, G.H, F ? F.H : 0), xl: 'Volumen [ml]', yl: 'Füllhöhe [mm]', legend: gl,
     series: [...(F ? [{ pts: F.fc, ...gst }] : []), { pts: fc, color: css('--ink') }], points: [[S.fill, fillHeight(S.fill) - G.z0, css('--water')]] });
   const kc = [], pc = [];
   for (let k = 0; k <= STEPS; k++) { kc.push([180 * k / STEPS, G.curve[k]]); pc.push([180 * k / STEPS, S.fill - G.curve[k]]); }
-  chart($('c2'), { x0: 0, x1: 180, xs: 30, y0: 0, y1: Math.max(1, S.fill, F ? F.fill : 0), xl: 'Neigung [°]' + gl, yl: 'Volumen [ml]',
+  chart($('c2'), { x0: 0, x1: 180, xs: 30, y0: 0, y1: Math.max(1, S.fill, F ? F.fill : 0), xl: 'Neigung [°]', yl: 'Volumen [ml]', legend: [{ t: 'im Gefäß', color: css('--water') }, { t: 'ausgegossen', color: css('--mut'), width: 1.5, dash: [5, 4] }, ...gl],
     series: [...(F ? [{ pts: F.kc, ...gst }] : []), { pts: kc, color: css('--water'), fill: css('--water-a') }, { pts: pc, color: css('--mut'), width: 1.5, dash: [5, 4] }],
     vlines: [{ x: S.theta, color: css('--ink') }], points: [[S.theta, S.cur, css('--ink')]] });
 }
@@ -714,8 +715,15 @@ function drawStats() {
   const ml = v => nf0.format(v) + ' ml', dg = v => nf1.format(v) + '°';
   const add = { 'Fassungsvermögen': vs(G.cap, F && F.cap, ml), 'Füllmenge': vs(V0, F && F.fill, ml), 'Ausgießbeginn': vs(start, F && F.start, dg), 'Kippwinkel': F ? ' · gemerkt min. ' + (F.tip != null ? dg(F.tip) : '–') : '',
     'Umstoßkraft': vs(K.push, F && F.push, v => nf1.format(v) + ' N'), 'Gewicht Gefäß': vs(G.mv, F && F.mv, v => nf0.format(v) + ' g') };
-  $('stats').innerHTML = dpVerdict(V[0], (K.ready ? '' : 'Vorläufig: ') + V[1], F && 'Gemerkt: ' + ['✓ passt', '⚠ knapp', '⚠ kritisch'][F.V[0]] + ' – ' + F.V[1])
-    + items.map(([a, b, n, warn]) => `<div class="stat${warn ? ' warn' : ''}"><span>${a}</span><b>${b}</b><span>${n}${add[a] || ''}</span></div>`).join('');
+  // Ebene 2: die Entwurfsfragen (Fassung, Ausgießen, Kippen, Umstoßen; beim Schwappen Gehen/Anhalten) groß, Rest in der Tabelle;
+  // Warnungen immer oben. Fachbegriffe mit Erklärung.
+  const TM = { 'Kippwinkel': 'Schräglage um die Standkante, ab der das Gefäß von selbst umfällt (Wasser läuft mit).',
+    'Umstoßkraft': 'Waagrechte Kraft am Rand, die das gefüllte Gefäß gerade ankippt. 1 N ≈ Gewicht von 100 g.',
+    'Ausgießbeginn': 'Neigung, bei der der erste Tropfen über Rand oder Tülle läuft.', 'Freibord Schwappen': 'Wellenhöhe am Rand, ab der Wasser überläuft.',
+    'Eigenfrequenz': 'So oft je Sekunde schwappt das Wasser hin und her.', 'Max. Dosierrate': 'Größte Ausgießmenge je Grad Neigung – je kleiner, desto feiner dosierbar.' };
+  const MAIN = ['Geometrie', 'Fassungsvermögen', 'Ausgießbeginn', 'Kippwinkel', 'Umstoßkraft'], it = items.map(([l, v, n, w]) => ({ l, v, n: (n || '') + (add[l] || ''), w, t: TM[l] }));
+  const isMain = x => x.w || MAIN.includes(x.l) || /^(Gehen|Anhalten)/.test(x.l);
+  $('stats').innerHTML = dpStats(dpVerdict(V[0], (K.ready ? '' : 'Vorläufig: ') + V[1], F && 'Gemerkt: ' + DP_LV[F.V[0]] + ' – ' + F.V[1]), it.filter(isMain), it.filter(x => !isMain(x)), 'gefaess');
   $('fillO').textContent = nf0.format(V0) + ' ml';
   $('tiltO').textContent = nf1.format(S.theta) + '°';
   $('wtO').textContent = nf1.format(S.t) + ' mm'; $('btO').textContent = nf1.format(S.tb) + ' mm';
@@ -748,7 +756,8 @@ function presetSketch(v) {
   return out;
 }
 dpGallery($('preset'), [['Prinzipien', 0], ['Designklassiker', 1]].map(([t, g]) => [t, Object.entries(PRESETS).filter(([, v]) => (v.g || 0) === g).map(([k, v]) => {
-  const [n, s] = v.n.split(' · '); return { k, n, s: s || PRINZIP[k], d: () => presetSketch(v) }; })]), k => {
+  const [n, s] = v.n.split(' · '), zs = (v.p || v.back || []).concat(v.front || []).map(q => q[1]), H = v.plan ? v.H : zs.length ? Math.max(...zs) - Math.min(...zs) : 0;
+  return { k, n, s: (s || PRINZIP[k]) + (H ? ' · H ' + nf0.format(H) + ' mm' : ''), d: () => presetSketch(v) }; })]), k => {
   const v = PRESETS[k];
   pushUndo();
   if (v.plan) { S.plan = toPts(v.plan); S.H = v.H; S.psmooth = v.sm; setKind('plan', true); }
@@ -768,11 +777,11 @@ function setKind(k, quiet) {
   $('planCtl').hidden = !p; $('marksL').hidden = p;
   ['footL', 'foot', 'footO', 'footAutoL'].forEach(id => $(id).hidden = k !== 'rot'); // Standkante folgt im Grundriss/Schlauch aus der Kontur
   $('smooth').checked = p ? S.psmooth : t ? S.tsmooth : S.smooth;
-  $('edT').textContent = p ? 'Grundriss (Innenkontur, senkrechte Wand)' : t ? 'Zwei Konturen (Seitenansicht, Kreisquerschnitte)' : 'Profil (Innenkontur, rotationssymmetrisch)';
- noteTxt = $('edNote').textContent = p
-    ? 'Grundriss von oben: Freihand eine geschlossene Kontur ziehen. Punkte: ziehen zum Verschieben, tippen fügt einen Punkt in die nächste Kante ein, Doppeltipp löscht. Höhe und Kipprichtung unten; der Pfeil zeigt die Seite, die beim Kippen absinkt. Raster 10 mm.'
-    : t ? 'Innenkontur hinten und vorne (Ausgießseite, rechts), jeweils vom Boden zur Mündung. Freihand: erst „hinten“ ziehen, danach ist „vorne“ dran. Dünne Linien = Kreisquerschnitte (Durchmesser von hinten nach vorne, gleicher Anteil der Bogenlänge). Punkte wie beim Profil. Raster 10 mm.'
-    : 'Freihand: Innenkontur vom Boden zum Rand ziehen, egal auf welcher Seite; sie wird gespiegelt. Punkte: ziehen zum Verschieben, auf die Linie tippen zum Einfügen, in freie Fläche tippen zum Anhängen, Doppeltipp zum Löschen. Ein fast waagrechter Freihand-Boden wird geebnet. Tülle/Henkel: unter „Bearbeiten“ wählen; Tülle rechts (Ausgießseite) vom Ansatz am Körper zur Spitze. Raster 10 mm.';
+  $('edT').textContent = p ? 'Grundriss, senkrechte Wand' : t ? 'zwei Konturen, Kreisquerschnitte' : 'Innenkontur, rotationssymmetrisch';
+  // kurzer Hinweis; ausführlich unter „Modell & Gültigkeit → Bedienung“
+  noteTxt = $('edNote').textContent = p ? 'Geschlossene Kontur von oben zeichnen · Punkte ziehen, tippen fügt ein, Doppeltipp löscht · Pfeil = Seite, die beim Kippen absinkt.'
+    : t ? 'Erst „hinten“, dann „vorne“ (Ausgießseite) vom Boden zur Mündung zeichnen · Punkte wie beim Profil.'
+    : 'Innenkontur vom Boden zum Rand zeichnen – sie wird gespiegelt · Punkte ziehen, auf die Linie tippen fügt ein, Doppeltipp löscht.';
   if (!quiet) { S.fill = null; S.theta = 0; $('tilt').value = 0; recompute(); fitView(); drawAll(); }
 }
 // Bearbeitungsziel im Drehkörper: Körper, Tülle oder Henkel (fehlendes Teil wird mit Vorschlag angelegt)
@@ -871,10 +880,10 @@ $('tilt').oninput = e => setTheta(+e.target.value);
 function refill() { S.lastPour = 0; S.theta = 0; $('tilt').value = 0; if (isPlan()) S.cur = S.fill; else { S.lakes = G.lakes0; S.cur = sumMl(S.lakes); } sloshReset(); }
 $('refill').onclick = () => { stopPlay(); refill(); drawAll(); };
 let playId = 0;
-function stopPlay() { cancelAnimationFrame(playId); playId = 0; $('play').textContent = '▶ Durchkippen'; }
+function stopPlay() { cancelAnimationFrame(playId); playId = 0; dpBtn($('play'), 'play', 'Durchkippen'); }
 $('play').onclick = () => {
   if (playId) return stopPlay();
-  refill(); $('play').textContent = '■ Stopp';
+  refill(); dpBtn($('play'), 'stop', 'Stopp');
   const t0 = performance.now(), dur = 7000;
   const step = now => { const t = Math.min(1, (now - t0) / dur); setTheta(180 * t); if (t < 1) playId = requestAnimationFrame(step); else stopPlay(); };
   playId = requestAnimationFrame(step);
@@ -996,7 +1005,7 @@ dpCompare($('cmp'), () => ({}), ref => { REF = ref ? { pending: true } : null; d
 function sloshButtons() {
   const on = S.slosh;
   $('slosh').classList.toggle('on', on); ['walkB', 'stopB', 'sloshCtl', 'sloshNote', 'c3'].forEach(id => $(id).hidden = !on);
-  $('walkB').classList.toggle('on', D.walk); $('walkB').textContent = D.walk ? '■ Gehen' : '▶ Gehen';
+  $('walkB').classList.toggle('on', D.walk); dpBtn($('walkB'), D.walk ? 'stop' : 'play', 'Gehen');
   $('stopB').classList.toggle('on', !!D.stop);
   [['wf', nf1.format(S.wf) + ' Hz'], ['wa', nf0.format(S.wa) + ' mm'], ['sv', nf1.format(S.sv) + ' m/s'], ['sb', S.sb.toFixed(2).replace('.', ',') + ' s']].forEach(([id, t]) => {
     $(id).value = S[id]; $(id + 'O').textContent = t; });
@@ -1066,14 +1075,14 @@ function linkObj() {
 }
 $('share').onclick = async () => {
   clearTimeout(linkT); dpHashSet('g', linkObj());
-  try { await navigator.clipboard.writeText(location.href); $('share').textContent = 'Kopiert ✓'; } catch { $('share').textContent = 'In Adresszeile ✓'; }
-  setTimeout(() => $('share').textContent = 'Link kopieren', 1500);
+  try { await navigator.clipboard.writeText(location.href); dpBtn($('share'), 'check', 'Kopiert'); } catch { dpBtn($('share'), 'check', 'Steht in der Adresszeile'); }
+  setTimeout(() => dpBtn($('share'), 'link', 'Link kopieren'), 1500);
 };
 function fromHash() { const d = dpHashGet('g'); return !!d && apply(d, false); }
 // Link im selben Tab eingefügt (nur der Hash ändert sich): übernehmen, Rückgängig möglich
 window.addEventListener('hashchange', () => { const keep = snap(); if (fromHash()) { pushUndo(keep); S.theta = 0; $('tilt').value = 0; recompute(); fitView(); drawAll(); } });
 window.addEventListener('resize', () => { fitView(); drawAll(); });
-dpHeader('gefaess', 'Gefäß & Kippen');
+dpHeader('gefaess'); dpIcons(); dpMenu($('fitB').parentNode, [$('fitB'), $('photoB')]);
 if (!fromHash()) setKind('rot', true);
 recompute(); sloshButtons();
 requestAnimationFrame(() => { fitView(); drawAll(); });

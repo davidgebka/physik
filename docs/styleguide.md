@@ -4,6 +4,8 @@ Verbindlich für Startseite und alle Module. Technische Quelle der Wahrheit ist 
 
 **Grundrichtung: F – Punktraster** (entschieden 20.11.2026, ersetzt D „Ulmer Raster“). Weißer Grund, alles Schwarz, ein dezentes Punktraster, an dem sich alles ausrichtet. Farbe trägt nur Bedeutung: welche Physik (Wasser, Licht, Bewegung …) und Warnung.
 
+**Design-Audit 21.11.2026** (umgesetzt): Hierarchie umgedreht – das Urteil ist die größte Aussage, wenige Hauptkennwerte groß, alles Weitere aufklappbar; Schriftstufen 12/14/18/28; Segmente für sich ausschließende Wahl, leise Aktionen ohne Rahmen; Inline-SVG-Symbole; Seitenraster überall, aber heller (`--dot-bg`); Telefon mit Urteilsleiste. Einzelheiten in den Abschnitten unten.
+
 ## 1. Prinzipien
 1. **Werkzeug, nicht Lehrbuch.** Geometrie und Ergebnis dominieren, Text ist Beschriftung.
 2. **Schwarz auf Weiß ist der Normalfall.** Text, Konturen, Achsen, Rahmen, Bedienung: Schwarz.
@@ -20,9 +22,9 @@ Verbindlich für Startseite und alle Module. Technische Quelle der Wahrheit ist 
 | `--h` | `24px`, bei `pointer: coarse` `48px` | Höhe von Buttons, Auswahllisten, Eingabefeldern, Navigationssegmenten |
 
 - **Erlaubte Maße:** 6 · 12 · 24 · 48 · 72 px und weitere Vielfache von 24. 6 px nur innerhalb eines Elements (Symbol–Text, Zellen-Innenabstand).
-- **Seite:** Punkte Ø 2 px in `--dot` im Abstand `--u` auf `--bg`, erster Punkt in der Ecke (0, 0). Kopfzeile 72 px (3 Einheiten), Seitenrand 24 px, Spaltenabstand 24 px.
+- **Seite:** Punkte Ø 2 px in `--dot-bg` (heller als `--dot`, damit kleine Schrift darauf ruhig bleibt) im Abstand `--u` auf `--bg`, erster Punkt in der Ecke (0, 0). Das Raster liegt **überall**, auch hinter Text und Kennwerten (Entscheidung des Nutzers 21.11.2026). Kopfzeile 72 px (3 Einheiten), Seitenrand 24 px, Spaltenabstand 24 px.
 - **Schrift im Raster:** jede Textzeile 24 px hoch (auch 11–13 px Schrift); große Kennzahl 48 px.
-- **Senkrecht nur ganze Einheiten** (seit 20.11.2026): Höhen und senkrechte Abstände sind Vielfache von 24 px, auch zwischen Elementen. 12 px nur waagerecht (zwischen Gruppen einer Zeile); 6 px nur innerhalb eines Elements. Jede Oberkante liegt auf einer Punktreihe.
+- **Senkrecht nur ganze Einheiten** (seit 20.11.2026): Höhen und senkrechte Abstände sind Vielfache von 24 px, auch zwischen Elementen. 12 px nur waagerecht (zwischen Gruppen einer Zeile); 6 px nur innerhalb eines Elements. Jede Oberkante liegt auf einer Punktreihe. **Ausnahme Telefon** (≤ 860 px): umgebrochene Werkzeugzeilen 12 px, sonst frisst die Leiste den Bildschirm.
 - **Linien nehmen keinen Platz ein:** Trennlinien und Zellrahmen als `box-shadow` (`inset 0 1px var(--ink)` oben), nicht als `border` – sonst wandert alles darunter je Linie 1 px aus dem Raster. `border` nur an Elementen fester Höhe (Buttons, Felder, Navigation; `box-sizing: border-box`).
 - **Zeichenflächen:** Höhe über `--ar` (Breite/Höhe) statt `aspect-ratio`, z. B. `#ed{--ar:calc(1/1.05)}`; style.css rundet die Höhe auf ein Vielfaches von 24 px ab (`round()` mit `cqw`, `.panel` ist Container). Ohne `--ar` gilt `aspect-ratio` – dann liegt alles darunter neben dem Raster.
 - **Zeichenfläche:** deckend `--bg`, eigenes Punktraster in Millimetern (§ 7). Die Seitenpunkte laufen nicht hindurch, weil Zeichenflächen zoomen.
@@ -38,7 +40,8 @@ Nur diese Farben sind erlaubt. Module definieren **keine eigenen Farben** in `:r
 | `--ink` | `#111111` | Text, Konturen, Achsen, Rahmen, Trennlinien | 18,9:1 |
 | `--ink2` | `#4d4d4d` | Sekundärtext: Labels, Notizen, Achsbeschriftung | 8,5:1 |
 | `--mut` | `#767676` | Tertiär: deaktiviert, Hilfslinien, Vergleichskurven, Spiegelseite | 4,5:1 |
-| `--dot` | `#c8c8c8` | Rasterpunkte (Seite, Zeichenfläche fein, Diagramm) | – (nur Raster) |
+| `--dot` | `#c8c8c8` | Rasterpunkte der Zeichenfläche (fein) und der Diagramme | – (nur Raster) |
+| `--dot-bg` | `#dcdcdc` | Rasterpunkte der Seite (heller, liegt auch hinter Text) | – (nur Raster) |
 | `--fill` | `#f0f0f0` | neutrale Fläche: ternäre Glieder, markierte Bereiche, Fortschritts-Hintergrund | – |
 | `--ctl` | `#111111` | **Bedienung aktiv**: gewählter Button/Reiter, ausgewählter Griff, Freihandstrich, Antriebsglied, Regler, Häkchen | 18,9:1 |
 | `--ctl-ink` | `#ffffff` | Schrift und Symbole auf `--ctl` | 18,9:1 |
@@ -51,7 +54,9 @@ Nur diese Farben sind erlaubt. Module definieren **keine eigenen Farben** in `:r
 | Fluid | `--water` `#1f6fe0` | `--water-a` `rgba(31,111,224,.28)` | Gefäß; ★ Nachtropfen, Schwimmen, Resonator | 4,8:1 |
 | Licht & Strahlung | `--light` `#d48a00` | `--light-a` `rgba(212,138,0,.28)` | Lampenschirm; ★ Sonnenstand, Lichtleiter | 2,8:1 → Linien ≥ 2,5 px |
 | Bewegung | `--mech` `#12994a` | `--mech-a` `rgba(18,153,74,.25)` | Mechanismen; ★ Tasten-Haptik, Federn | 3,7:1 |
-| Kraft & Festigkeit (reserviert) | `--load` `#5b55c9` | `--load-a` `rgba(91,85,201,.25)` | Last; ★ Schnapphaken, Festkörpergelenk, Holz | 5,9:1 |
+| Kraft & Festigkeit | `--load` `#7b3fbf` | `--load-a` `rgba(123,63,191,.22)` | Last; ★ Schnapphaken, Festkörpergelenk, Holz | 6,4:1 |
+
+`--load` wurde am 21.11.2026 von `#5b55c9` (Farbton ~244°) nach `#7b3fbf` (~268°) verschoben: Abstand zu `--water` (~215°) vorher knapp 30°, die Modulquadrate in der Navigation waren kaum zu unterscheiden.
 
 **Warum Familien statt Modulfarben:** Neue Module bekommen die Farbe ihrer Physik, nicht eine neue. So reichen wenige Farben für viele Module. Eine **neue Familie** nur per Styleguide-Eintrag durch den Style-Chat und nur wenn: Farbton ≥ 30° Abstand zu allen Familien und zu `--warn`, Linienkontrast ≥ 2,5:1, höchstens sechs Familien insgesamt.
 
@@ -70,32 +75,52 @@ Nur diese Farben sind erlaubt. Module definieren **keine eigenen Farben** in `:r
 
 ## 4. Farbregeln
 - **Physik-Farbe** nur für das Medium und seine Größen: Wasser, Füll- und Kippkurve; Lichtstrahlen, Lampe, Leuchtdichte, Lichtverteilung, Beleuchtungsstärke; Bahnkurve, Koppelpunkt, Haltemoment, μ. Nie für Bedienung, nie für Text.
-- **Bedienung** ist immer `--ctl` (Schwarz). Aktiv = schwarz gefüllt mit `--ctl-ink`; nicht aktiv = `--bg` mit 1 px `--ink`-Rahmen.
+- **Bedienung** ist immer `--ctl` (Schwarz), in drei Arten:
+  - **Segment** (`.seg`): sich ausschließende Wahl (Modus, Werkzeug, Ansicht), Knöpfe ohne Lücke; aktiv = schwarz gefüllt mit `--ctl-ink`. Nur hier und in der Navigation volles Schwarz.
+  - **Schalter** (einzelner Knopf mit `.on`, z. B. „Stand merken“, „Symmetrie“, „Schwappen“): Rahmen 1 px; an = Fläche `--fill` mit 2 px Unterstrich `--ink`.
+  - **Leise Aktion** (`.q`): ohne Rahmen, Symbol + Wort (Rückgängig, Einpassen, Foto, Export, Import, Link); Hover = 1 px Unterstrich. `.ico` = auf dem Telefon nur Symbol.
 - **Serien in einem Diagramm** (höchstens 3): 1. Familie durchgezogen 2 px (Licht 2,5 px) · 2. `--ink` gestrichelt [4,4] · 3. `--mut` gestrichelt [3,4]. Aktueller Zustand: senkrechte Linie `--ink`.
-- **Warnung:** Wert oder Linie in `--warn`, dazu immer ⚠ und ein Satz. Grenzbereich als `--warn-a`-Fläche. Bewegung (Grün) und Warnung (Rot) treffen in Mechanismen aufeinander; deshalb nie Bedeutung nur über Farbe.
+- **Warnung:** Wert oder Linie in `--warn`, dazu immer ⚠ und ein Satz. Grenzbereich als `--warn-a`-Fläche. **Rot nur bei Überschreitung:** Grenzlinien sind `--ink` gestrichelt und werden erst rot, wenn der Wert sie überschreitet. In Kennwerten färbt `.warn` nur den Wert, nicht Label und Notiz. Familienfarben nie für Bedienung (Fortschrittsbalken `--ink`). Bewegung (Grün) und Warnung (Rot) treffen in Mechanismen aufeinander; deshalb nie Bedeutung nur über Farbe.
 - **Falschfarbe** (Leuchtdichte): Verlauf `--mut` → Familie, ab Grenzwert `--warn` mit ⚠-Text.
 - **Feldbild** (Lichtfeld, seit 20.11.2026): Verlauf `--ink` → Familie → `--bg` auf dunklem Grund – dunkel heißt wenig, hell viel, wie bei einer Belichtung. Darüber Konturen, Lampe und Beschriftung in `--bg`, Legende als Verlaufsbalken mit 0 und Bezugswert. Neben der Falschfarbe der einzige erlaubte Verlauf.
 - **Modulkennung:** Quadrat 12 × 12 px in der Familienfarbe vor dem Modulnamen – Kopfzeile, Navigation, Startseite. Farbe kommt aus `DP_MODULES[].color`.
 
 ## 5. Typografie
-- Stack: `Arial, sans-serif` (lokale Helvetica mit defektem Bold-Schnitt führte zu hohlen Überschriften). Basis 14 px / 24 px.
-- Stufen: h1 15 px/700 · Abschnitt (`.panel h2`) 11 px Versalien/700, Sperrung .08em, `--ink` · Kennzahl 22 px/700 auf 48 px · Bedienelemente 13 px · Labels/Notizen 12 px `--ink2` · Kleinst 11 px.
+- Stack: `--font` = `system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif` (seit 21.11.2026; vorher Arial wegen einer lokalen Helvetica mit defektem Bold – `system-ui` greift diese nicht). Basis 14 px / 24 px.
+- **Vier Stufen, nie unter 12 px:**
+  | Stufe | Größe | Verwendung |
+  |---|---|---|
+  | Notiz | 12 px / 24 px | Labels der Kennwerte, Notizen, Reglerbeschriftung, Achsen und Canvas-Text |
+  | Text | 14 px / 24 px | Fließtext, Bedienung, Tabellen, Abschnittstitel (13 px Versalien, Sperrung .06em) |
+  | Aussage | 18 px / 24 px, 700 | Urteilssatz, Textwerte in Kennwerten, Modulname auf der Startseite |
+  | Kennzahl | 28 px / 48 px, 700 | Hauptkennwert; Einheit dahinter 60 %, 400 |
+- Wortmarke „Designphysik“: 14 px/700 Versalien, Sperrung .12em.
+- Abschnittstitel höchstens zwei Wörter; Zusatz als `<small>` (12 px, normal, `--ink2`) daneben.
 - Zahlen immer `font-variant-numeric: tabular-nums`.
-- Canvas: `11px Arial`, `--ink2`; Kennwert im Canvas `600 15px Arial`, `--ink`.
+- Canvas: `DP_CFONT` aus `chart.js` (12 px Systemschrift), `--ink2`; Kennwert im Canvas 700 18 px `--ink`.
 
 ## 6. Layout & Komponenten
-- `header`: 72 px, Titel mit Modulquadrat links, Navigation rechts, unten 1 px `--ink`. Bricht sie um (Telefon), Zeilenabstand 24 px.
-- `nav`: Segmente in `--h` Höhe, 1 px `--ink`, ohne Lücke aneinander; aktiv `--ctl`. Jedes Segment mit Modulquadrat; nicht verfügbare Module `--mut`, Quadrat nur als Umriss.
+- `header`: 72 px, Wortmarke links, Navigation rechts, unten 1 px `--ink`. Das Modul steht nur einmal: als aktives Segment (`dpHeader(key)`). Telefon: Navigation volle Breite, vier gleich breite Segmente.
+- `nav`: Segmente in `--h` Höhe, 1 px `--ink`, ohne Lücke aneinander; aktiv `--ctl`. Jedes Segment mit Modulquadrat und dem einen Modulnamen aus `DP_MODULES[].name` (Gefäß · Licht · Mechanik · Last); nicht verfügbare Module `--ink2`, Quadrat nur als Umriss.
 - `main`: 2 Spalten, Abstand 24 px, Rand 24 px, max. 1440 px; unter 860 px einspaltig.
 - `.panel`: **kein Kasten** – oben 1 px `--ink`, keine Seiten, kein Hintergrund (Punkte sichtbar), Abstand zwischen Inhalten 24 px. `h2` in der ersten Zeile.
 - `.row`: Werkzeugleiste; Abstand 12 px zwischen Gruppen, 24 px zwischen umbrochenen Zeilen, Segmente einer Gruppe ohne Lücke (`.seg`). `.sep` = 12 px Leerraum.
 - `button`, `select`, `input`: Höhe `--h`, 1 px `--ink`, Radius 0, `--bg`; aktiv `button.on` = `--ctl`/`--ctl-ink`. Kein Verschieben beim Drücken.
 - `input[type=range]`, Checkbox: `accent-color: var(--ctl)`.
 - `.ctl` (label · range · output): Zeile 24 px (Touch 48 px), output mit Einheit.
-- `.stats`/`.stat`: Zellen ohne Außenkasten, oben und unten 1 px `--ink`, zwischen Zellen 1 px `--ink`; Label 11 px, Wert 22 px auf 48 px, Notiz 11 px `--ink2`; kein Innenabstand unten (Zelle 72, 96, 120 … px). Überschreitung: `.stat.warn` → Wert `--warn` mit ⚠.
+- **Ergebnisse in drei Ebenen** (`dpStats(dpVerdict(…), haupt, weitere, key)`):
+  - **Urteil** `.verdict`: Marke (✓ passt = Rahmen `--ink`; ⚠ knapp = Fläche `--warn-a`, Schrift und Rahmen `--warn`; ⚠ kritisch = `--warn` gefüllt, Schrift weiß) und Satz 18 px/700; gemerkter Stand 12 px `--ink2` darunter. Stufen damit auch ohne Farbsehen unterscheidbar (Fläche, Füllung, Wort).
+  - **Hauptkennwerte** `.stat` (3–5, Überschreitungen immer dazu): Label 12 px **einzeilig** (Stelle, Bedingungen in die Notiz), Wert 28 px auf 48 px, Notiz 12 px `--ink2`. Zeilen per `subgrid`, damit Werte einer Reihe auf einer Linie stehen. Reiner Text als Wert 18 px.
+  - **Alle Werte** `details.more` mit `table.kv` (14 px, Wert rechtsbündig fett, Notiz 12 px); Auf/zu bleibt beim Neuzeichnen erhalten.
+- **Fachbegriff** `dpTerm(wort, erklärung)` bzw. `t` im Kennwert: gepunktet unterstrichen, Erklärung als `title`.
+- **Modell & Gültigkeit** `.model`: aufklappbar, Unterpunkte als `h3` 14 px/700, Text 14 px `--ink` mit höchstens 68 Zeichen je Zeile, ab ~60em zweispaltig. Bedienhinweise unter den Editoren nur ein Satz je Werkzeug; Ausführliches unter „Bedienung“ im Modelltext.
+- **Telefon** (≤ 860 px): Reihenfolge Editor → Kennwerte (`.kpi`) → Rest; feste Urteilsleiste `#dp-bar` (48 px) unten, solange die Kennwerte nicht im Blick sind; Nebenaktionen hinter „⋯“ (`dpMenu`).
+- **Symbole** (`dpIco`, `dpBtn`, `<button data-i>` + `dpIcons()`): Inline-SVG 16 px, 1,5 px Strich, `currentColor`; keine Unicode-Ersatzzeichen (▦ ◫ ⟲ ✎ …), keine Icon-Schrift.
+- **Datei**: in jedem Modul eigener Abschnitt „Datei“ vor „Modell & Gültigkeit“ mit Export · Import · Link kopieren (leise Aktionen).
+- Fokus: `:focus-visible` 2 px `--ink`, Abstand 2 px (auch auf schwarzen Knöpfen sichtbar).
 - `.note`: 12 px / 24 px `--ink2`.
 - **Vorlagen-Galerie** (`dpGallery`, seit 21.11.2026): Knopf „▦ Vorlage …“ öffnet einen Dialog (1 px `--ink`, Hintergrund abgedunkelt), Kopfzeile bleibt stehen. Gruppen als Abschnitt (11 px Versalien, `--ink2`), Karten wie `.card` (oben 1 px `--ink`, ab 144 px Breite): Skizze 96 px, Name 13 px/700, Entwurf · Jahr bzw. Prinzip 11 px `--ink2`; Hover/Fokus `--fill`. Skizzen über `dpSketch`: Kontur `--ink`, Medium in der Familie (`-a`-Fläche bzw. Linie), Gestell `--mut`; jede Skizze einzeln eingepasst (kein gemeinsamer Maßstab).
-- Startseite: `.card` = oben 1 px `--ink`, Modulquadrat + Titel, Beschreibung `--ink2`; `.card.off` in `--mut`.
+- Startseite: oben die Entwurfsfragen 28 px als Links, unterstrichen in der Familienfarbe (`DP_MODULES[].q`), darunter ein Satz. `.card` = oben 1 px `--ink`, Skizze 168 px (`dpSketch`, Medium in der Familienfarbe), Modulquadrat + Name 18 px + Frage, Beschreibung `--ink2`; `.card.off` in `--ink2` mit „in Arbeit“.
 - Keine Radien, keine Schatten, keine Verläufe (außer Falschfarbe und Feldbild).
 
 ## 7. Zeichenfläche (Editor-Canvas)
@@ -110,6 +135,8 @@ Nur diese Farben sind erlaubt. Module definieren **keine eigenen Farben** in `:r
 - Nur über `chart()` aus `shared/chart.js`; Seitenverhältnis `.ch` 16:8.
 - Keine Gitterlinien: Punkte `--dot` an den Tick-Kreuzungen, Achsen links und unten 1 px `--ink`, Beschriftung 11 px `--ink2`.
 - Achsen mit Größe und Einheit: `Volumen [ml]`, `Winkel [°]`. Serien nach § 4.
+- **Legende** über `legend: [{t, color, width?, dash?}]` oben rechts im Diagramm (Strich im Muster der Serie) – nicht an die Achsenbeschriftung anhängen.
+- Linien in Zeichenflächen, die nicht selbsterklärend sind (Waagrechte, Geisterlagen), am Ende beschriften (12 px `--ink2`).
 
 ## 9. Text & Einheiten
 - Deutsch, neutral, Imperativ in Hinweisen („Punkt ziehen, um …“).
@@ -118,9 +145,10 @@ Nur diese Farben sind erlaubt. Module definieren **keine eigenen Farben** in `:r
 - Begriffe aus der Produktsprache (Ausguss, Lippe, Schirm, Auflager); Fachbegriffe beim ersten Auftreten in `.note` erklären.
 
 ## 10. Zugänglichkeit & Zustände
-- Text ≥ 4,5:1 (`--ink`, `--ink2`, `--mut`). Physik-Farben nie für Text.
+- Text ≥ 4,5:1: für lesbaren Text `--ink` oder `--ink2`; `--mut` nur für Linien und Deaktiviertes. Physik-Farben nie für Text.
+- Zeichenflächen mit `role="img"`; `dpVerdict` setzt den Urteilssatz als `aria-label`.
 - Bedeutung nie nur über Farbe (⚠, Text, Strichart).
-- Fokus sichtbar (Browser-Default nicht entfernen).
+- Fokus sichtbar über `:focus-visible` (siehe § 6).
 - Touch: `--h` = 48 px bei `pointer: coarse`.
 - Leerzustand: Canvas zeigt Startgeometrie, nie leer.
 
