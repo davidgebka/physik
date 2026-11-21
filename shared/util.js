@@ -73,6 +73,13 @@ function dpHashSet(key, obj) { history.replaceState(null, '', '#' + key + '=' + 
 function dpVerdict(level, text, extra) {
   return `<div class="stat verdict${level ? ' warn' : ''}" style="grid-column:1/-1"><b>${['✓ passt', '⚠ knapp', '⚠ kritisch'][level]}</b><span>${text}</span>${extra ? `<span>${extra}</span>` : ''}</div>`;
 }
+// Tastatur: Fokus in einem Textfeld (Zahl, Text) – dort gehören Strg+Z und Rücktaste dem Feld; Regler, Knöpfe, Häkchen nicht
+function dpEditing() {
+  const t = document.activeElement; if (!t) return false;
+  return t.isContentEditable || t.tagName === 'TEXTAREA' || (t.tagName === 'INPUT' && !/^(range|checkbox|radio|button|submit|file|color)$/.test(t.type));
+}
+// Strg+Z (ohne Umschalt: Strg+Umschalt+Z ist „Wiederholen“), nicht beim Tippen in einem Feld
+const dpUndoKey = e => (e.ctrlKey || e.metaKey) && !e.shiftKey && !e.altKey && e.key.toLowerCase() === 'z' && !dpEditing();
 // Rückgängig: save(obj) nach jedem abgeschlossenen Schritt (gleicher Zustand → kein Schritt), Knopf und Strg+Z rufen apply(obj) mit dem Vorzustand
 function dpHistory(btn, apply, max = 50) {
   const H = []; let last = null;
@@ -81,7 +88,7 @@ function dpHistory(btn, apply, max = 50) {
     undo() { if (!H.length) return; last = H.pop(); btn.disabled = !H.length; apply(JSON.parse(last)); }
   };
   btn.onclick = h.undo;
-  window.addEventListener('keydown', e => { if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !/INPUT|TEXTAREA/.test(document.activeElement.tagName)) { e.preventDefault(); h.undo(); } });
+  window.addEventListener('keydown', e => { if (dpUndoKey(e)) { e.preventDefault(); h.undo(); } });
   return h;
 }
 // Variantenvergleich: Knopf merkt den aktuellen Zustand get() bzw. hebt den Vergleich auf; onChange(ref | null)

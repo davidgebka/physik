@@ -356,14 +356,14 @@ const Core = (() => {
   }
 
   // Abschirmwinkel (EN 12464-1, rein geometrisch, Schirm undurchsichtig, Punktquelle): kleinster Winkel unter der
-  // Horizontalen, ab dem die Quelle sichtbar ist. Je C-Ebene (5°) größtes sichtbares γ ≤ 90° suchen, α = 90° − γ;
+  // Horizontalen, ab dem die Quelle sichtbar ist. Je C-Ebene (5°) größtes sichtbares γ ≤ 90° suchen (Abtastung 0,1°, dann Bisektion), α = 90° − γ;
   // ungünstigste Ebene zählt. 90° = von unten nie sichtbar. 'ext': nur quer (C0 und C180), Quelle in der Mitte (y = 0).
   function shield(o) {
     const S = segs(o), sx = o.source.x, sz = o.source.z, ext = isExt(o);
     const vis = (g, c) => { const sg = sin(g); return nearest(S, sx, 0, sz, sg * cos(c), sg * sin(c), -cos(g), -1) < 0; };
     let alpha = 0, cw = 0;
     for (let cd = 0; cd < 360; cd += ext ? 180 : sx === 0 ? 360 : 5) {
-      const c = cd * PI / 180; let g = PI / 2, step = 0.5 * PI / 180;
+      const c = cd * PI / 180; let g = PI / 2, step = 0.1 * PI / 180; // 0,1°: schmale Durchblicke (PH-Schalen) nicht überspringen
       while (g >= 0 && !vis(g, c)) g -= step;
       let a;
       if (g < 0) a = 90;
@@ -571,6 +571,7 @@ function restart() {
   if (shK !== shC.k) shC = { k: shK, a: Core.shield(o).alpha };
   J = { id: J.id + 1, o, t0: performance.now(), acc: null, done: false, calm: null, sh: shC.a };
   R = null;
+  linkLater();
   if (worker) worker.postMessage({ job: J.id, o, chunk: 20000 });
   else { const id = J.id, step = () => { if (J.id !== id || J.done) return; onChunk(Object.assign({ job: id }, Core.trace(Object.assign({}, o, { N: 4000, seed: (id * 7919 + (J.k = (J.k || 0) + 1)) * 0x9E3779B1 | 0 })))); setTimeout(step, 0); }; setTimeout(step, 0); }
   drawAll();
@@ -638,7 +639,10 @@ function fitView() {
 }
 const w2s = p => [V.ox + p.x * V.s, V.oy - p.z * V.s];
 const s2w = (x, y) => ({ x: (x - V.ox) / V.s, z: (V.oy - y) / V.s });
-const hex = c => { const n = parseInt(c.slice(1), 16); return [n >> 16 & 255, n >> 8 & 255, n & 255]; };
+// Token-Farbe → [r, g, b]: #rgb, #rrggbb oder rgb(…) – unabhängig von der Schreibweise in style.css
+const hex = c => { if (/^#[0-9a-f]{3}$/i.test(c)) c = '#' + [...c.slice(1)].map(x => x + x).join('');
+  if (/^#[0-9a-f]{6}/i.test(c)) { const n = parseInt(c.slice(1, 7), 16); return [n >> 16 & 255, n >> 8 & 255, n & 255]; }
+  const m = c.match(/[\d.]+/g); return m && m.length >= 3 ? m.slice(0, 3).map(Number) : [0, 0, 0]; };
 function lcol(L, Lsc) { // Falschfarbe: --grid2 (dunkel) → --light (hell); ab Grenzwert --warn
   if (L >= LIM) return css('--warn');
   const a = hex(css('--mut')), b = hex(css('--light')), t = Math.min(1, L / Lsc);
@@ -786,7 +790,7 @@ function endPointer() {
 ed.addEventListener('pointerup', endPointer);
 ed.addEventListener('pointercancel', endPointer);
 window.addEventListener('keydown', e => {
-  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') { e.preventDefault(); undo(); }
+  if (dpUndoKey(e)) { e.preventDefault(); undo(); }
   else if ((e.key === 'Delete' || e.key === 'Backspace') && S.sel >= 0 && cur().pts.length > 2 && !/INPUT|SELECT/.test(document.activeElement.tagName)) {
     pushUndo(); cur().pts.splice(S.sel, 1); S.sel = -1; changed();
   }
@@ -914,7 +918,7 @@ function drawStats() {
     ['E unter der Leuchte', nf0.format(R.E[G.e0]) + ' lx', 'Tisch ' + nf0.format(S.dist) + ' mm tiefer' + (S.sym ? '' : ', unter der Mittelachse') + pm(st.sE) + vs(R.E[G.e0], F && F.E[REF.e0], v => nf0.format(v) + ' lx' + (REF.dist !== S.dist ? ` in ${nf0.format(REF.dist)} mm` : ''))]
   ];
   if (R.lost > 1e-3 * R.N) items.push(['Nicht gerechnet', '⚠ ' + pct(R.lost / R.N), 'Licht nach 1000 Reflexionen abgebrochen', true]);
-  $('stats').innerHTML = dpVerdict(V[0], V[1], VR && 'Gemerkt: ' + ['✓ passt', '⚠ knapp', '⚠ kritisch'][VR[0]] + ' – ' + VR[1]) + items.map(([a, b, n, warn]) => `<div class="stat"><span>${a}</span><b${warn ? ' style="color:var(--warn)"' : ''}>${b}</b><span>${n}</span></div>`).join('');
+  $('stats').innerHTML = dpVerdict(V[0], V[1], VR && 'Gemerkt: ' + ['✓ passt', '⚠ knapp', '⚠ kritisch'][VR[0]] + ' – ' + VR[1]) + items.map(([a, b, n, warn]) => `<div class="stat${warn ? ' warn' : ''}"><span>${a}</span><b>${b}</b><span>${n}</span></div>`).join('');
   prog.style.width = (100 * R.prog).toFixed(1) + '%';
   stt.textContent = nf1.format(R.N / 1e6) + ' Mio. Lichtteilchen · LVK ±' + nf1.format(100 * st.sP) + ' % · ' +
     (J.done ? 'ruhig nach ' + nf1.format(J.calm / 1000) + ' s' : 'wird ruhiger …') + (worker ? '' : ' · ohne Worker');
@@ -983,7 +987,7 @@ function syncCtl() {
 
 // ---- Export / Import / Link (Werte aus Datei/Link begrenzen und prüfen) ----
 const num = (v, def, lo, hi) => v !== null && v !== '' && Number.isFinite(+v) ? Math.min(hi, Math.max(lo, +v)) : def;
-const prof = (a, ext) => { const p = Array.isArray(a) ? a.filter(q => Array.isArray(q) && Number.isFinite(+q[0]) && Number.isFinite(+q[1])).map(([x, z]) => ({ x: Math.min(5000, Math.max(ext ? -5000 : 0, +x)), z: Math.min(5000, Math.max(-5000, +z)) })) : [];
+const prof = (a, ext) => { const p = Array.isArray(a) ? a.slice(0, 1000).filter(q => Array.isArray(q) && Number.isFinite(+q[0]) && Number.isFinite(+q[1])).map(([x, z]) => ({ x: Math.min(5000, Math.max(ext ? -5000 : 0, +x)), z: Math.min(5000, Math.max(-5000, +z)) })) : [];
   return p.length >= 2 ? p : null; };
 function matFrom(m) { // Schlüssel einer Vorlage oder 6 Rohwerte [ρd in, ρs in, ρd außen, ρs außen, τd, τs]
   if (typeof m === 'string' && Object.hasOwn(MATS, m)) return { mat: m, raw: null };
@@ -1020,6 +1024,11 @@ $('share').onclick = async () => {
   setTimeout(() => $('share').textContent = 'Link kopieren', 1500);
 };
 
+// Link laufend aktuell halten (wie Last/Mechanismen), verzögert: Safari erlaubt nur ~100 replaceState je 30 s
+let linkT = 0;
+function linkLater() { clearTimeout(linkT); linkT = setTimeout(() => { if (S.parts.some(pt => pt.pts.length >= 2)) dpHashSet('l', snapshot()); }, 400); }
+// eingefügter Link im selben Tab (dpHashSet löst kein hashchange aus)
+window.addEventListener('hashchange', () => { const keep = snap(), d = dpHashGet('l'); if (d && apply(d)) { pushUndo(keep); syncCtl(); fitView(); restart(); } });
 window.addEventListener('resize', () => { fitView(); drawAll(); });
 dpHeader('licht', 'Lampenschirm');
 apply(dpHashGet('l') || {});

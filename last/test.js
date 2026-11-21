@@ -112,6 +112,8 @@ r = Core.analyze(base({ sup: [pin(0), pin(L)], N: 0.25 * PI * PI * EI / (L * L),
 check('II. Ordnung: α = 1/(1 − 1/λ) bei λ = 4', r.alpha, 4 / 3);
 check('… w = α · FL³/48EI', -wmin(r), 4 / 3 * F * L ** 3 / (48 * EI), 1e-4);
 check('… σ = N/A + α·M/W', r.max.sig.v, r.Nc[0] / sec.A + 4 / 3 * F * L / 4 / (sec.I / 10), 1e-4);
+check('… V = α · F/2 (Querkraft mit verstärkt)', Math.abs(r.max.V.v), 4 / 3 * F / 2, 1e-4);
+check('… τ = α · 1,5·(F/2)/A', r.max.tau.v, 4 / 3 * 1.5 * F / 2 / sec.A, 1e-4);
 check('Über Knicklast: gemeldet', Core.analyze(base({ sup: [pin(0), pin(L)], N: 1.1 * PI * PI * EI / (L * L) })).buckled ? 1 : 0, 1, 0);
 // Stehende Stütze, nur Eigengewicht: Kragstütze q·L³ = 7,837 EI (Greenhill)
 r = Core.analyze(base({ orient: 'v', sw: true, rhoA, sup: [fix(0)] }));

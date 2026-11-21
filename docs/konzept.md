@@ -33,9 +33,9 @@ Bei Zielkonflikten entscheidet A.
 - **Modulübergreifende Geometrie** (z. B. Gefäßprofil für Schwimmen/Nachtropfen, Schirm für Kühlkörper): gemeinsames Format erst festlegen, wenn der zweite Nutzer konkret entsteht – dann hier eintragen, kein drittes Profilformat erfinden.
 
 ## Konventionen (verbindlich)
-- **Struktur:** `index.html` (Startseite) · `shared/` (style.css, util.js, chart.js) · `tools/` (load-core.js, check.js) · `_vorlage/` · `<modul>/index.html` + `<modul>/test.js` · `docs/` (konzept, styleguide, historie, `<modul>.md`)
+- **Struktur:** `index.html` (Startseite) · `shared/` (style.css, util.js, chart.js) · `tools/` (load-core.js, check.js) · `_vorlage/` · `<modul>/index.html` (Rechenkern; Oberfläche bei Bedarf in weiteren Skripten im Modulordner, z. B. `gefaess/app.js`) + `<modul>/test.js` · `docs/` (konzept, styleguide, historie, `<modul>.md`)
 - **Modul-Registry:** `DP_MODULES` in `shared/util.js` – einzige Stelle; Kopfzeile per `dpHeader(key, titel)`
-- **Shared-Globale:** `$`, `nf0`, `nf1`, `css` (Token-Werte gecacht in `dpCss`), `prep`, `polyPath`, `dpDots`, `dpMq`, `dpDownload`, `dpHashGet/Set`, `niceStep`, `chart`; Entwurfshilfen `dpVerdict` (Urteil), `dpHistory` (Rückgängig, Strg+Z), `dpCompare` + `dpDelta` (Variantenvergleich), `dpOptions` (Vorlagen als Textliste, Last), `dpGallery` + `dpSketch` (Vorlagen-Galerie mit Skizze, Name, Entwurf/Prinzip; Gefäß, Licht, Mechanismen) – Vorbild Last v1.4
+- **Shared-Globale:** `dpEditing`/`dpUndoKey` (Tastatur: Strg+Z nicht beim Tippen), `$`, `nf0`, `nf1`, `css` (Token-Werte gecacht in `dpCss`), `prep`, `polyPath`, `dpDots`, `dpMq`, `dpDownload`, `dpHashGet/Set`, `niceStep`, `chart`; Entwurfshilfen `dpVerdict` (Urteil), `dpHistory` (Rückgängig, Strg+Z), `dpCompare` + `dpDelta` (Variantenvergleich), `dpOptions` (Vorlagen als Textliste, Last), `dpGallery` + `dpSketch` (Vorlagen-Galerie mit Skizze, Name, Entwurf/Prinzip; Gefäß, Licht, Mechanismen) – Vorbild Last v1.4
 - **Links** immer explizit auf `…/index.html` (damit file:// funktioniert)
 - **Technik:** Vanilla JS, Canvas 2D (WebGL/WebGPU nur, wo nötig), keine CDNs
 - **Einheiten:** mm, ml, g, N, lm/cd/lx, Winkel in Grad in der UI; deutsche Zahlenformatierung; Alltagsbezug mitgeben, wo er hilft (N ≈ kg)
@@ -53,10 +53,10 @@ Bei Zielkonflikten entscheidet A.
 ## Module (Stand 21.11.2026; Details in `docs/<modul>.md`)
 | Modul | Key | Stand | Entwurfsfrage |
 |---|---|---|---|
-| Gefäß & Kippen | `gefaess` | v1.12 | Wie viel passt rein, wo sind Eichstriche, wann gießt es aus, kippt es um, schwappt es beim Tragen über? |
-| Licht / Lampenschirm | `licht` | v2.4 | Wie verteilt der Schirm das Licht, wird der Tisch hell genug, blendet es? |
-| Last / Statik | `last` | v1.4 | Hält das Brett/der Balken, wie stark hängt es durch, schwingt es? |
-| Mechanismen | `mechanismus` | v1.3 | Wie bewegt sich das Getriebe, wo klemmt es, welche Kraft braucht es? |
+| Gefäß & Kippen | `gefaess` | v1.13 | Wie viel passt rein, wo sind Eichstriche, wann gießt es aus, kippt es um, schwappt es beim Tragen über? |
+| Licht / Lampenschirm | `licht` | v2.5 | Wie verteilt der Schirm das Licht, wird der Tisch hell genug, blendet es? |
+| Last / Statik | `last` | v1.5 | Hält das Brett/der Balken, wie stark hängt es durch, schwingt es? |
+| Mechanismen | `mechanismus` | v1.4 | Wie bewegt sich das Getriebe, wo klemmt es, welche Kraft braucht es? |
 
 ## Roadmap (21.11.2026, nach Persona A)
 **Moratorium auf Tiefe:** In Gefäß und Licht keine neuen Physik-Verfeinerungen, bis die Punkte „Jetzt“ erledigt sind. Fehlerbehebungen und Bedienung gehen immer.

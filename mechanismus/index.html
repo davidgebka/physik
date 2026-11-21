@@ -56,7 +56,7 @@
     <p class="note"><b>Begriffe:</b> <i>Umkehrlage</i> – der Abtrieb kehrt um (Übersetzung 0); fluchten dabei Antriebsglied und Koppel, heißt sie Streck- bzw. Decklage. <i>Totlage</i> – der Antrieb kommt nicht weiter, jenseits gibt es keine Lage (Bewegungsgrenze, „klemmt“). <i>Übertragungswinkel μ</i> – Winkel zwischen Koppel und gestellnahem Abtriebsglied (0–90°); unter 40° drohen bei Reibung Klemmen und hohe Gelenkkräfte (Richtwert). <i>Übersetzung</i> – Abtriebs- je Antriebsbewegung, exakt aus der Geschwindigkeitsanalyse; an Totlagen unbeschränkt.</p>
     <p class="note"><b>Gültigkeit:</b> Getriebetyp (Grashof), μ und Streck-/Decklage nur für erkannte Viergelenke und Schubkurbeln. Im Grenzfall (Durchschlag, z. B. Parallelogramm) ist der Zweig in der Verzweigungslage nicht eindeutig; das Werkzeug folgt der Tangente. Freiheitsgrad durch Abzählen (2 je beweglichem Punkt − Bedingungen): überbestimmte, aber bewegliche Getriebe (Parallelogramm mit drittem parallelem Glied) werden als blockiert gemeldet. Ein Schubgelenk, Führung fest am Gestell.</p>
     <p class="note"><b>Kräfte (v1.1):</b> Punktlasten Fx/Fy [N] an beliebigen Punkten, z. B. Gewicht Fy = −m·9,81 N/kg am Schwerpunkt eines Glieds. Haltemoment [N·m] bzw. Haltekraft [N] am Antrieb aus virtueller Arbeit (Q = −Σ F·∂p/∂Antrieb): reibungsfrei, quasistatisch, ohne Eigengewicht der Glieder (nur, was als Last eingetragen ist). Positiv = in Richtung wachsender Antriebswerte. An Totlagen geht der Wert gegen ∞ (Diagramm begrenzt).</p>
-    <p class="note"><b>Nicht enthalten:</b> Gelenkkräfte, Reibung, Dynamik, Federn und Gasdruckfedern, Dynamik, Kollision der Glieder, Synthese aus Wunschlagen, mehrere Antriebe, bewegte Führungen.</p>
+    <p class="note"><b>Nicht enthalten:</b> Gelenkkräfte, Reibung, Dynamik, Federn und Gasdruckfedern, Kollision der Glieder, Synthese aus Wunschlagen, mehrere Antriebe, bewegte Führungen.</p>
   </section>
 </main>
 
@@ -348,7 +348,10 @@ const Core = (() => {
       const X = advance(S, Xa, va, (va + vb) / 2).X;
       rev.push({ v: (va + vb) / 2, X, kind: revKind(T, m, S, X) });
     }
-    const cur = advance(S, S.X0, v0, m.at == null ? v0 : m.at);
+    // Ist-Lage: bei Umlauf auf demselben Zweig (Lage nach 360° = Ausgangslage) nur den Rest modulo 360° fahren –
+    // sonst wächst der Weg mit jeder Umdrehung (Antriebswert bleibt stetig, z. B. 3630°)
+    const at = m.at == null ? v0 : m.at, per = full && maxDiff(f.out[f.out.length - 1].X, S.X0) < 1e-6;
+    const cur = per ? { ...advance(S, S.X0, v0, v0 + (((at - v0) % 360) + 360) % 360), v: at } : advance(S, S.X0, v0, at);
     return { S, T, info: T && topoInfo(m, T), smp, full, lim: [b.lim, f.lim], rev, cur };
   }
   // Umkehrlage als Streck-/Decklage Antrieb–Koppel benennen (nur bei erkannter Topologie, Kurbelantrieb)
@@ -623,7 +626,8 @@ function outNow() {
   const c = dispV(S.at), r = A.disp.reduce((b, o) => Math.abs(o.v - c) < Math.abs(b.v - c) ? o : b, A.disp[0]).out;
   v -= A.oshift; return v - 360 * Math.round((v - r) / 360);
 }
-function stat(v, label, warn, extra) { return `<div class="stat${warn ? ' warn' : ''}"><b>${v}</b><span>${label}</span>${extra ? `<span>${extra}</span>` : ''}</div>`; }
+// Kennwert nach Styleguide § .stat: Label, Wert, Notiz; Überschreitung über .warn
+function stat(v, label, warn, extra) { return `<div class="stat${warn ? ' warn' : ''}"><span>${label}</span><b>${v}</b>${extra ? `<span>${extra}</span>` : ''}</div>`; }
 function renderStats() {
   const V = verdict(A), VR = REF && verdict(REF.a), h = [];
   h.push(dpVerdict(V[0], V[1], VR && 'Gemerkt: ' + ['✓ passt', '⚠ knapp', '⚠ kritisch'][VR[0]] + ' – ' + VR[1]));
@@ -666,7 +670,7 @@ function syncDrive() {
   const r = $('drv'), o = $('drvO');
   r.disabled = UI.mode !== 'move' || !ok();
   if (!ok()) { o.textContent = '–'; return; }
-  const s = A.smp; r.min = A.full ? 0 : dispV(s[0].v); r.max = A.full ? 360 : dispV(s[s.length - 1].v); r.step = crank() ? 0.1 : 0.1;
+  const s = A.smp; r.min = A.full ? 0 : dispV(s[0].v); r.max = A.full ? 360 : dispV(s[s.length - 1].v); r.step = 0.1;
   const v = UI.mode === 'move' ? S.at : A.S.v0; r.value = dispV(v); o.textContent = nf1.format(dispV(v)) + uD();
 }
 
@@ -818,13 +822,16 @@ function save() { const o = exportObj(); dpHashSet('m', o); const { at, ...g } =
 dpCompare($('cmp'), exportObj, ref => { const m = ref && parse(ref); REF = m ? { m, a: Core.analyze(m) } : null; if (REF && !REF.a.err) dispOf(REF.a); drawAll(); });
 // Eingang prüfen (Datei/Hash sind fremd)
 function parse(o) {
-  if (!o || o.type !== TYPE || !Array.isArray(o.pts) || !Array.isArray(o.links)) return null;
+  if (!o || o.type !== TYPE || !Array.isArray(o.pts) || !Array.isArray(o.links) || o.pts.length > 200 || o.links.length > 200) return null;
   const n = o.pts.length, idx = i => Number.isInteger(i) && i >= 0 && i < n; // Glied mit fremdem Index: Zeichnen stürzt ab
   if (!o.pts.every(p => p && isFinite(p.x) && isFinite(p.y)) || !o.links.every(L => Array.isArray(L) && L.every(idx))) return null;
-  const m = { pts: o.pts.map(p => p.fix ? { x: +p.x, y: +p.y, fix: 1 } : { x: +p.x, y: +p.y }), links: o.links, drive: o.drive || {}, out: o.out || {} };
+  const m = { pts: o.pts.map(p => p.fix ? { x: +p.x, y: +p.y, fix: 1 } : { x: +p.x, y: +p.y }), links: o.links.map(L => L.slice()), drive: {}, out: {} };
   if (o.slider && idx(o.slider.p) && idx(o.slider.a) && isFinite(o.slider.ang)) m.slider = { p: o.slider.p, a: o.slider.a, ang: +o.slider.ang };
+  // Antrieb/Abtrieb: Glied als ganze Zahl oder Schub (nur mit Schubgelenk), sonst keiner – Strings o. Ä. bräche die UI-Vergleiche
+  const role = r => r && Number.isInteger(r.link) && r.link >= 0 && r.link < m.links.length ? { link: r.link } : r && r.slider === true && m.slider ? { slider: true } : {};
+  m.drive = role(o.drive); m.out = role(o.out);
   if (idx(o.trace)) m.trace = o.trace;
-  if (Array.isArray(o.loads)) m.loads = o.loads.filter(l => l && idx(l.p) && isFinite(l.fx) && isFinite(l.fy)).map(l => ({ p: l.p, fx: +l.fx, fy: +l.fy }));
+  if (Array.isArray(o.loads)) m.loads = o.loads.slice(0, 200).filter(l => l && idx(l.p) && isFinite(l.fx) && isFinite(l.fy)).map(l => ({ p: l.p, fx: +l.fx, fy: +l.fy }));
   if (isFinite(o.at)) m.at = +o.at;
   return m;
 }

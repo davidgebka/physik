@@ -88,7 +88,7 @@ select{max-width:100%}
     <p class="note"><b>Rechnung:</b> Finite Elemente mit verknüpften Ansätzen (Timoshenko, Φ = 12EI/(G·A<sub>s</sub>·h²); Schubfläche A<sub>s</sub>: Rechteck 5/6·A, Rundstab 0,9·A, Rohr A/2, Profile Steg bzw. Wände), Schubmodul G je Material (Holz G ≈ E/16 nach EN 338; Platten Querschub-Schätzwerte), Knoten an jedem Lager, Lastpunkt und Streckenlast-Ende, dazwischen 80 Elemente über die Länge. So sind Verschiebungen an den Knoten exakt, dazwischen ergänzt um die exakte Lösung der Streckenlast (Biegung und Schub). Biegemoment und Querkraft folgen aus dem Gleichgewicht von Auflagerkräften und Lasten. Geprüft gegen die Formeln der Baustatik (Einfeld-, Krag-, Zwei-Feld- und eingespannte Träger, Überstand, Teilstreckenlast; siehe <code>last/test.js</code>).</p>
     <p class="note"><b>Spannung:</b> σ = N/A ± M·e/I an Ober- und Unterkante, τ = V·S/(I·b) in der Schwerachse. <i>Sicherheit</i> = Festigkeit f / größte Spannung; f ist der charakteristische Wert (Holz: Biegefestigkeit, Metall: Streckgrenze, Glas/Kunststoff: Biege- bzw. Zugfestigkeit). Die <i>Zielsicherheit</i> je Material ist ein Richtwert, der Lastfaktoren, Materialstreuung, Dauerlast und Feuchte pauschal abdeckt (Holz ≈ γ<sub>F</sub>·γ<sub>M</sub>/k<sub>mod</sub>) – kein Ersatz für einen Nachweis nach Eurocode. Werte aus EN 338, EN 10025, EN 755-2, EN 572; Platten und Kunststoffe Schätzwerte nach Norm-Mindestwerten bzw. Datenblättern (bei „Material“ angegeben).</p>
     <p class="note"><b>Durchbiegung:</b> <i>sofort</i> unter allen Lasten; <i>Endzustand</i> mit Kriechen: Anteil aus Dauerlasten (Eigengewicht, „dauerhaft“) × (1 + k<sub>def</sub>), k<sub>def</sub> nach EN 1995 für Nutzungsklasse 1 (trocken innen), Kunststoffe geschätzt aus dem Kriechmodul nach 1000 h. Federnde Lager kriechen dabei mit (sichere Seite), ihre Einfederung zählt zur Durchbiegung. Grenze l/x bezogen auf die Stützweite des Feldes, bei Überständen auf die doppelte Kraglänge (EN 1995). Übliche Richtwerte: Regalboden l/200–l/300, Tisch und Bank l/300.</p>
-    <p class="note"><b>Knicken:</b> „Längsdruck“ wirkt am Ende x = L in Balkenachse (stehend: oben, plus Eigengewicht darüber). Knicksicherheit = kleinster Lastfaktor λ mit (K − λ·K<sub>G</sub>)·φ = 0 (Euler, geometrische Steifigkeit); geprüft an den vier Eulerfällen und der Kragstütze unter Eigengewicht; mit Schubverformung ≈ Engesser N<sub>E</sub>/(1 + N<sub>E</sub>/GA<sub>s</sub>) (auf 1 % bei N<sub>E</sub>/GA<sub>s</sub> ≤ 0,2, bei extrem schubweichen Querschnitten etwas zu niedrig). Querlasten werden mit α = 1/(1 − 1/λ) verstärkt (Theorie II. Ordnung genähert). Ohne Vorkrümmung und ohne Fließen: reale Stützen versagen deutlich vor λ = 1, daher Ziel λ ≥ 3.</p>
+    <p class="note"><b>Knicken:</b> „Längsdruck“ wirkt am Ende x = L in Balkenachse (stehend: oben, plus Eigengewicht darüber). Knicksicherheit = kleinster Lastfaktor λ mit (K − λ·K<sub>G</sub>)·φ = 0 (Euler, geometrische Steifigkeit); geprüft an den vier Eulerfällen und der Kragstütze unter Eigengewicht; mit Schubverformung ≈ Engesser N<sub>E</sub>/(1 + N<sub>E</sub>/GA<sub>s</sub>) (auf 1 % bei N<sub>E</sub>/GA<sub>s</sub> ≤ 0,2, bei extrem schubweichen Querschnitten etwas zu niedrig). Biegemoment, Querkraft und Durchbiegung aus Querlasten werden mit α = 1/(1 − 1/λ) verstärkt (Theorie II. Ordnung genähert); Lagerkräfte bleiben statisch. Längszug (negativer Wert, nur per Datei/Link) wirkt in der Spannung, seine versteifende Wirkung wird nicht gerechnet (sichere Seite). Ohne Vorkrümmung und ohne Fließen: reale Stützen versagen deutlich vor λ = 1, daher Ziel λ ≥ 3.</p>
     <p class="note"><b>Dynamik:</b> Eigenfrequenzen aus K·φ = ω²·M·φ mit konsistenter Massenmatrix (Drehträgheit vernachlässigt) (Balkenmasse, Dauerlasten liegend als mitschwingende Masse, Längsdruck senkt die Steifigkeit). Richtwert: unter ~8 Hz federt eine Sitz- oder Lauffläche spürbar (EN 1995 für Decken). <i>Stoß:</i> Last mit Fallhöhe h wirkt wie F·n mit n = 1 + √(1 + 2h/δ<sub>st</sub>) (Energieansatz, Balkenmasse und Dämpfung vernachlässigt → sicher). h = 0 heißt „plötzlich aufgesetzt“ und ist nur statisch gerechnet; für „plötzlich“ n = 2 eine kleine Fallhöhe setzen. <i>Polster</i> = Einfederung zwischen Last und Balken unter F (Sitzpolster, Gesäß und Beine einer Person ≈ 20–40 mm, Schätzung): wirkt als Feder in Reihe, δ<sub>st</sub> = Balken + Polster – ohne Polster ist ein Mensch als starre Masse stark übertrieben. Mehrere Stöße werden gleichzeitig angenommen. Prüfnormen für Möbel (EN 1728, EN 16139) arbeiten mit eigenen Prüflasten und Stoßkörpern.</p>
     <p class="note"><b>Nicht enthalten:</b> Kippen/Biegedrillknicken hochkant stehender Bretter und schlanker Profile, örtliches Beulen dünner Wände, Lochleibung und Verbindungen (Dübel, Schrauben, Konsolen), Querdruck am Auflager, Drehfedern (teilweise Einspannung), Holz quer zur Faser, Ermüdung, Temperatur und Feuchte über Nutzungsklasse 1, schiefe Biegung (L-Winkel), nichtlineares Material.</p>
   </section>
@@ -350,9 +350,9 @@ const Core = (() => {
     // Kombination
     const kd = Math.max(0, +m.kdef || 0), al = isFinite(alpha) ? alpha : 1, n = smp.length;
     const x = smp.map(s => s.x), wInst = [], wFin = [], wPeak = [], Mo = [], V = [], Nc = [], sT = [], sB = [], tau = [], sig = [];
-    for (let i = 0; i < n; i++) {
+    for (let i = 0; i < n; i++) { // α auf w, M und V (= dM/dx); Lagerkräfte statisch
       wInst[i] = al * (P.w[i] + Vr.w[i]); wFin[i] = al * (P.w[i] * (1 + kd) + Vr.w[i]); wPeak[i] = al * (P.w[i] + Vr.w[i] + D.w[i]);
-      Mo[i] = al * (P.mv[i][0] + Vr.mv[i][0] + D.mv[i][0]); V[i] = P.mv[i][1] + Vr.mv[i][1] + D.mv[i][1]; Nc[i] = Nat(x[i]);
+      Mo[i] = al * (P.mv[i][0] + Vr.mv[i][0] + D.mv[i][0]); V[i] = al * (P.mv[i][1] + Vr.mv[i][1] + D.mv[i][1]); Nc[i] = Nat(x[i]);
       sT[i] = -Nc[i] / A - Mo[i] * sec.eT / I; sB[i] = -Nc[i] / A + Mo[i] * sec.eB / I; sig[i] = Math.max(Math.abs(sT[i]), Math.abs(sB[i]));
       tau[i] = Math.abs(V[i]) * sec.S0 / (I * sec.b0);
     }
@@ -499,7 +499,7 @@ function drawEd() {
   if (S.N) { const X = L * k, d = S.N > 0 ? 1 : -1, t0 = X + 4 + (d > 0 ? 40 : 0), tip = d > 0 ? X + 4 : X + 44; loc();
     ctx.strokeStyle = ctx.fillStyle = I; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(X + 4, 0); ctx.lineTo(X + 44, 0); ctx.stroke();
     ctx.beginPath(); ctx.moveTo(tip, 0); ctx.lineTo(tip + 8 * d, -5); ctx.lineTo(tip + 8 * d, 5); ctx.closePath(); ctx.fill();
-    text(X + 24, g.v ? -10 : -10, `N = ${fv(Math.abs(S.N))} N${d < 0 ? ' Zug' : ''}`, g.v ? 'right' : 'center'); }
+    text(X + 24, -10, `N = ${fv(Math.abs(S.N))} N${d < 0 ? ' Zug' : ''}`, g.v ? 'right' : 'center'); }
   // Biegelinie (Endzustand), überhöht
   if (!R.err && !R.buckled) {
     const wm = Math.max(1e-9, Math.abs(R.max.wFin.v), Math.abs(R.max.wPeak.v)), tgt = 0.16 * (g.v ? w : h), s = wm * k >= tgt ? k : tgt / wm;
@@ -554,7 +554,8 @@ function drawSec() {
   ctx.fillText(`${fv(sT)} N/mm²`, x0, top - 10); ctx.fillText(`${fv(sB)} N/mm²`, x0, top + Hd + 18);
   ctx.textAlign = 'left'; ctx.fillText(`Spannung bei x = ${nf0.format(R.x[j])} mm (− Druck, + Zug)`, 6, h - 6);
 }
-function stat(v, label, warn, extra) { return `<div class="stat${warn ? ' warn' : ''}"><b>${v}</b><span>${label}</span>${extra ? `<span>${extra}</span>` : ''}</div>`; }
+// Kennwert nach Styleguide § .stat: Label, Wert, Notiz; Überschreitung über .warn
+function stat(v, label, warn, extra) { return `<div class="stat${warn ? ' warn' : ''}"><span>${label}</span><b>${v}</b>${extra ? `<span>${extra}</span>` : ''}</div>`; }
 // Urteil in Designsprache: [Stufe 0/1/2, Text]; f1 = erste Eigenfrequenz oder null
 function verdict(R, mt, lim, f1) {
   if (R.err) return [2, R.err];
@@ -604,7 +605,8 @@ function renderStats() {
   h.push(stat(nf0.format(SP.I) + ' mm⁴', `Flächenmoment I · W = ${nf0.format(SP.I / Math.max(SP.eT, SP.eB))} mm³ · A = ${nf0.format(SP.A)} mm²`));
   $('stats').innerHTML = h.join('');
   if (REF && !RF) notes.push('Gemerkter Stand nicht berechenbar – nur sein Urteil wird gezeigt.');
-  if (R.alpha > 1.0005) notes.push(`Längsdruck verstärkt Biegung und Durchbiegung um α = ${nf2.format(R.alpha)} (Theorie II. Ordnung genähert).`);
+  if (R.alpha > 1.0005) notes.push(`Längsdruck verstärkt Biegung, Querkraft und Durchbiegung um α = ${nf2.format(R.alpha)} (Theorie II. Ordnung genähert).`);
+  if (S.N < 0) notes.push('Längszug: in der Spannung enthalten, versteifende Wirkung nicht gerechnet (sichere Seite).');
   if (R.imp.some(o => o.rigid)) notes.push('⚠ Stoß direkt über einem Lager ohne Polster: Stoßkraft unbegrenzt, nur statisch gerechnet – Polster eintragen.');
   if (R.imp.length) notes.push('Stoß: ' + R.imp.map(o => `${fv(o.F)} N aus ${nf0.format(o.h)} mm → × ${nf2.format(o.n)} (δ_st = ${fv(o.d)} mm${o.c ? ', davon Polster ' + fv(o.c) + ' mm' : ''})`).join(' · ') + '. Spannung, Moment, Querkraft und Lagerkräfte enthalten den Stoß; Grenze l/x gilt für die statische Last.');
   if (R.imp.length) notes.push('Lagerkräfte statisch; beim Stoß: ' + R.R.map((r, i) => `${letter(i)} ${fv(r.Fpk)} N`).join(' · ') + '.');
