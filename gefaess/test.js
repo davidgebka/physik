@@ -282,3 +282,10 @@ check('Schwappen Quader halbvoll: Freibord 50 mm (Ebene bis Rand) [mm]', 8 / Mat
   for (let t = 0; t < 10; t += 1e-3) { const x0 = 10 * Math.sin(om * t), x1 = 10 * Math.sin(om * (t + 1e-3)); Core.sloshStep(d, om, 0.005, 0, 0, x0, x1, 1e-3); Core.sloshStep(e, om, 0.005, 0, 0, x0, x1, 1e-3, 0.5); m = Math.max(m, Math.abs(e[0])); }
   check('Brechen: ohne Grenze bei Resonanz |s| > 5', +(Math.abs(d[0]) > 5 || Math.abs(d[1]) > 100), 1, 0);
   check('Brechen: mit Grenze |s| ≤ 0,5', m, 0.5, 1e-12); }
+// Randhubfaktor unabhängig: ebene Neigung r·cosφ auf die Eigenform projiziert, Randwert der Projektion / Randwert der Ebene
+{ const n = 20000; let a = 0, b = 0; for (let k = 0; k < n; k++) { const r = (k + 0.5) / n, j = Core.J1(XI * r); a += r * j * r; b += j * j * r; }
+  check('Randhubfaktor Kreis: Projektion von r·cosφ auf J1(ξr/R), Rand [–]', a / b * Core.J1(XI), Core.sloshCoef({ A: 1, I: 1, ua: 0, ub: 1, uc: 0 }, 1, true).kap, 1e-6);
+  let c = 0, e = 0; for (let k = 0; k < n; k++) { const x = -0.5 + (k + 0.5) / n, f = Math.sin(Math.PI * x); c += x * f; e += f * f; }
+  check('Randhubfaktor Rechteck: Projektion von x auf sin(πx/L), Rand / (L/2)', c / e * 2, Core.sloshCoef({ A: 1, I: 1, ua: 0, ub: 1, uc: 0 }, 1, false).kap, 1e-6); }
+{ const g = pg([[0, 0], [40, 0], [40, 100]], { lid: true }), lk = Core.fillLakes(g, 1e9).lakes[0];
+  check('Schwappen: Deckel zu, randvoll → kein freier Spiegel', +(Core.lakeSurf(g, lk, 0) === null), 1, 0); }

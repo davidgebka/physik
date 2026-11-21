@@ -1865,8 +1865,8 @@ function sloshItems() {
   return [
     ['Eigenfrequenz', nf1.format(m.c.f) + ' Hz', 'Periode ' + nf0.format(1000 / m.c.f) + ' ms · Dämpfung ' + nf1.format(m.c.ze * 100) + ' %' + more],
     ['Freibord Schwappen', Number.isFinite(m.free) ? mm(m.free) : '–', Number.isFinite(m.free) ? 'aufrecht: Randhub, ab dem Wasser hinaus oder in eine andere Tasche läuft' : 'läuft auch bei großen Wellen nicht über'],
-    ['Gehen ' + nf1.format(S.wf) + ' Hz, Hub ±' + nf0.format(S.wa) + ' mm', wv, 'Randhub eingeschwungen · ' + wn + res, ww],
-    ['Anhalten ' + nf1.format(S.sv) + ' m/s in ' + nf1.format(S.sb) + ' s', sv, 'größter Randhub · ' + sn, sw]
+    ['Gehen ' + nf1.format(S.wf) + ' Hz, Hub ±' + nf0.format(S.wa) + ' mm', wv, 'aufrecht, eingeschwungen · ' + wn + res, ww],
+    ['Anhalten ' + nf1.format(S.sv) + ' m/s in ' + nf1.format(S.sb) + ' s', sv, 'aufrecht, größter Randhub · ' + sn, sw]
   ];
 }
 function sloshButtons() {
