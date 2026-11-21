@@ -8,7 +8,7 @@ const DP_MODULES = [
   { key: 'licht',   name: 'Licht',  q: 'Wie hell?',       title: 'Lampenschirm',   desc: 'Schirm zeichnen: Lichtverteilung, Helligkeit auf dem Tisch, Blendung', ready: true, color: '--light' },
   { key: 'mechanismus', name: 'Mechanik', q: 'Klemmt es?', title: 'Gelenkgetriebe', desc: 'Getriebe skizzieren und bewegen: Bahnkurve, Totlagen, Kraft am Antrieb', ready: true, color: '--mech' },
   { key: 'last',    name: 'Last',   q: 'Hält es?',        title: 'Balken & Bretter', desc: 'Durchbiegung, Sicherheit, Knicken, Schwingen', ready: true, color: '--load' },
-  { key: 'elektronik', name: 'Elektronik', q: 'Hält der Akku?', title: 'Einfache Schaltungen', desc: 'Batterie, Schalter, LED, Motor, Mikrocontroller: Laufzeit, Strom, Wärme', ready: false, color: '--ink' } // --elec, sobald style.css die Familie Elektrik hat
+  { key: 'elektronik', name: 'Elektronik', q: 'Hält der Akku?', title: 'Einfache Schaltungen', desc: 'Batterie, Schalter, LED, Motor, Mikrocontroller: Laufzeit, Strom, Wärme', ready: true, color: '--elec' }
 ];
 
 // Kopfzeile mit Modulnavigation in <header id="dp-header"> rendern; Modulquadrat in der Familienfarbe (Styleguide § 4)
@@ -17,9 +17,9 @@ const dpMq = (m, off) => `<i class="mq${off ? ' off' : ''}" style="--c:var(${m.c
 function dpHeader(activeKey) {
   const el = document.getElementById('dp-header'); if (!el) return;
   const cur = DP_MODULES.find(m => m.key === activeKey);
-  // Nur fertige Module: fünf Segmente passen auf 390 px nicht (Wunsch an Style-Chat in konzept.md)
-  const nav = DP_MODULES.filter(m => m.ready).map(m =>
-    `<a href="../${m.key}/index.html" class="${m.key === activeKey ? 'on' : ''}"${m.key === activeKey ? ' aria-current="page"' : ''}>${dpMq(m)}${m.name}</a>`).join('');
+  const nav = DP_MODULES.map(m => m.ready
+    ? `<a href="../${m.key}/index.html" class="${m.key === activeKey ? 'on' : ''}"${m.key === activeKey ? ' aria-current="page"' : ''}>${dpMq(m)}${m.name}</a>`
+    : `<span title="folgt">${dpMq(m, true)}${m.name}</span>`).join('');
   el.innerHTML = `<h1><a href="../index.html">Designphysik</a></h1><nav aria-label="Module">${nav}</nav>`;
   if (cur) document.title = 'Designphysik · ' + cur.name;
 }
@@ -184,10 +184,6 @@ function dpCompare(btn, get, onChange) {
 function dpDelta(v, r) {
   if (!isFinite(v) || !isFinite(r) || r === 0) return '';
   const p = (v / r - 1) * 100; return Math.abs(p) < 0.5 ? '±0 %' : (p > 0 ? '+' : '−') + nf0.format(Math.abs(p)) + ' %';
-}
-// Auswahlliste mit Gruppen (Vorlagen): groups = [[Gruppe, [[key, Name], …]], …]
-function dpOptions(groups, first = 'Vorlage …') {
-  return (first ? `<option value="">${first}</option>` : '') + groups.map(([g, a]) => `<optgroup label="${g}">${a.map(([k, n]) => `<option value="${k}">${n}</option>`).join('')}</optgroup>`).join('');
 }
 // Vorlagen-Galerie (ersetzt die Textliste): groups = [[Gruppe, [{k, n, s?, d}, …]], …] – k Schlüssel, n Name, s Zusatz (Entwurf · Jahr bzw. Prinzip),
 // d() liefert die Skizze für dpSketch (erst beim ersten Öffnen gerufen). Wahl → onPick(k). Der Knopf öffnet die Galerie.

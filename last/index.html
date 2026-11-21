@@ -93,6 +93,7 @@ select{max-width:100%}
     <h3>Durchbiegung</h3><p><i>sofort</i> unter allen Lasten; <i>Endzustand</i> mit Kriechen: Anteil aus Dauerlasten (Eigengewicht, „dauerhaft“) × (1 + k<sub>def</sub>), k<sub>def</sub> nach EN 1995 für Nutzungsklasse 1 (trocken innen), Kunststoffe geschätzt aus dem Kriechmodul nach 1000 h. Federnde Lager kriechen dabei mit (sichere Seite), ihre Einfederung zählt zur Durchbiegung. Grenze l/x bezogen auf die Stützweite des Feldes, bei Überständen auf die doppelte Kraglänge (EN 1995). Übliche Richtwerte: Regalboden l/200–l/300, Tisch und Bank l/300.</p>
     <h3>Knicken</h3><p>„Längsdruck“ wirkt am Ende x = L in Balkenachse (stehend: oben, plus Eigengewicht darüber). Knicksicherheit = kleinster Lastfaktor λ mit (K − λ·K<sub>G</sub>)·φ = 0 (Euler, geometrische Steifigkeit); geprüft an den vier Eulerfällen und der Kragstütze unter Eigengewicht; mit Schubverformung ≈ Engesser N<sub>E</sub>/(1 + N<sub>E</sub>/GA<sub>s</sub>) (auf 1 % bei N<sub>E</sub>/GA<sub>s</sub> ≤ 0,2, bei extrem schubweichen Querschnitten etwas zu niedrig). Biegemoment, Querkraft und Durchbiegung aus Querlasten werden mit α = 1/(1 − 1/λ) verstärkt (Theorie II. Ordnung genähert); Lagerkräfte bleiben statisch. Längszug (negativer Wert, nur per Datei/Link) wirkt in der Spannung, seine versteifende Wirkung wird nicht gerechnet (sichere Seite). Ohne Vorkrümmung und ohne Fließen: reale Stützen versagen deutlich vor λ = 1, daher Ziel λ ≥ 3.</p>
     <h3>Dynamik</h3><p>Eigenfrequenzen aus K·φ = ω²·M·φ mit konsistenter Massenmatrix (Drehträgheit vernachlässigt) (Balkenmasse, Dauerlasten liegend als mitschwingende Masse, Längsdruck senkt die Steifigkeit). Richtwert: unter ~8 Hz federt eine Sitz- oder Lauffläche spürbar (EN 1995 für Decken). <i>Stoß:</i> Last mit Fallhöhe h wirkt wie F·n mit n = 1 + √(1 + 2h/δ<sub>st</sub>) (Energieansatz, Balkenmasse und Dämpfung vernachlässigt → sicher). h = 0 heißt „plötzlich aufgesetzt“ und ist nur statisch gerechnet; für „plötzlich“ n = 2 eine kleine Fallhöhe setzen. <i>Polster</i> = Einfederung zwischen Last und Balken unter F (Sitzpolster, Gesäß und Beine einer Person ≈ 20–40 mm, Schätzung): wirkt als Feder in Reihe, δ<sub>st</sub> = Balken + Polster – ohne Polster ist ein Mensch als starre Masse stark übertrieben. Mehrere Stöße werden gleichzeitig angenommen. Prüfnormen für Möbel (EN 1728, EN 16139) arbeiten mit eigenen Prüflasten und Stoßkörpern.</p>
+    <h3>Designklassiker</h3><p>unter „Vorlage“: Maße nach Hersteller- und Händlerangaben, gerundet; geschätzt sind die Dicke des String-Bodens, die Wand des USM-Rohrs, die Plattendicken von Eiermann- und Tulip-Tisch, die Auflage des Tulip-Fußes und der Beindurchmesser des Stuhls Nr. 14 (gebogenes Bein gerade genähert). Lasten sind typische Nutzung, keine Herstellerangaben – Annäherung, keine Werksstatik.</p>
     <h3>Nicht enthalten</h3><p>Kippen/Biegedrillknicken hochkant stehender Bretter und schlanker Profile, örtliches Beulen dünner Wände, Lochleibung und Verbindungen (Dübel, Schrauben, Konsolen), Querdruck am Auflager, Drehfedern (teilweise Einspannung), Holz quer zur Faser, Ermüdung, Temperatur und Feuchte über Nutzungsklasse 1, schiefe Biegung (L-Winkel), nichtlineares Material.</p>
     </div></details>
   </section>
@@ -410,11 +411,39 @@ const TPL = {
   bierbank: () => base({ L: 2000, sec: { type: 'Un', b: 292, h: 120, t: 21 }, sup: [{ x: 80, t: 'pin' }, { x: 1920, t: 'pin' }], pl: [{ x: 1000, F: 981, perm: false, h: 50, c: 25 }], ql: [{ a: 0, b: 2000, q: 1635, perm: false }] }),
   tisch: () => base({ L: 1800, sec: { type: 'rect', b: 800, h: 25 }, mat: 'bsp', sup: [{ x: 350, t: 'pin' }, { x: 1450, t: 'pin' }], pl: [{ x: 0, F: 600, perm: false, h: 0 }] }),
   konsole: () => base({ L: 300, sec: { type: 'rhs', b: 20, h: 40, t: 2 }, mat: 's235', lim: 200, sup: [{ x: 0, t: 'fix' }], pl: [{ x: 300, F: 500, perm: false, h: 0 }] }),
-  stuetze: () => base({ L: 720, orient: 'v', sec: { type: 'tube', d: 25, t: 1.5 }, mat: 'al6060', N: 2000, sup: [{ x: 0, t: 'pin' }, { x: 720, t: 'pin' }], pl: [{ x: 360, F: 50, perm: false, h: 0 }] })
+  stuetze: () => base({ L: 720, orient: 'v', sec: { type: 'tube', d: 25, t: 1.5 }, mat: 'al6060', N: 2000, sup: [{ x: 0, t: 'pin' }, { x: 720, t: 'pin' }], pl: [{ x: 360, F: 50, perm: false, h: 0 }] }),
+  // Gleiche Dachlatte 24 × 48 mm, 1,5 m, 20 kg mittig: hochkant bzw. flach (I wächst mit h³)
+  hoch: () => base({ L: 1500, sec: { type: 'rect', b: 24, h: 48 }, sup: [{ x: 0, t: 'pin' }, { x: 1500, t: 'pin' }], pl: [{ x: 750, F: 196, perm: false, h: 0 }] }),
+  flach: () => base({ L: 1500, sec: { type: 'rect', b: 48, h: 24 }, sup: [{ x: 0, t: 'pin' }, { x: 1500, t: 'pin' }], pl: [{ x: 750, F: 196, perm: false, h: 0 }] }),
+  // Stahlrohr Ø 30 × 2 bzw. Vollstab gleichen Gewichts (Ø 15), 1 m, 20 kg mittig: Material außen trägt mehr
+  rohr: () => base({ L: 1000, sec: { type: 'tube', d: 30, t: 2 }, mat: 's235', sup: [{ x: 0, t: 'pin' }, { x: 1000, t: 'pin' }], pl: [{ x: 500, F: 196, perm: false, h: 0 }] }),
+  stab: () => base({ L: 1000, sec: { type: 'circ', d: 15 }, mat: 's235', sup: [{ x: 0, t: 'pin' }, { x: 1000, t: 'pin' }], pl: [{ x: 500, F: 196, perm: false, h: 0 }] }),
+  // MDF-Boden wie oben, aber beidseitig fest eingespannt (verleimt): Gleichlast w = ql⁴/384EI statt 5ql⁴/384EI
+  einsp: () => base({ L: 800, sec: { type: 'rect', b: 300, h: 19 }, mat: 'mdf', sup: [{ x: 0, t: 'fix' }, { x: 800, t: 'fix' }], ql: [{ a: 0, b: 800, q: 343, perm: true }] }),
+  // Designklassiker: Maße nach Hersteller-/Händlerangaben, gerundet; Lasten typische Nutzung. Annäherung, keine Werksstatik.
+  // String-Boden (Nisse Strinning 1949): 780 × 200, Holz ≈ 15 mm (geschätzt), an den Enden auf den Drahtleitern; Bücher 20 kg
+  string: () => base({ L: 780, sec: { type: 'rect', b: 200, h: 15 }, mat: 'c24', sup: [{ x: 5, t: 'pin' }, { x: 775, t: 'pin' }], ql: [{ a: 0, b: 780, q: 251, perm: true }] }),
+  // USM Haller (Fritz Haller 1963): Verbindungsrohr Ø 19, Wand 1,5 (geschätzt), 750 zwischen den Kugeln (gelenkig, sicher); trägt die halbe Bodenlast (30 kg)
+  usm: () => base({ L: 750, sec: { type: 'tube', d: 19, t: 1.5 }, mat: 's235', sup: [{ x: 0, t: 'pin' }, { x: 750, t: 'pin' }], ql: [{ a: 0, b: 750, q: 196, perm: true }] }),
+  // Ulmer Hocker (Max Bill, Hans Gugelot 1954): Sitzbrett Fichte 395 × 295 × 19, zwischen den Wangen ≈ 355, Zinkung als Einspannung; Person sitzt (100 kg, ohne Stoß – siehe Prinzip Sitzbank)
+  ulmer: () => base({ L: 395, sec: { type: 'rect', b: 295, h: 19 }, mat: 'c24', sup: [{ x: 20, t: 'fix' }, { x: 375, t: 'fix' }], pl: [{ x: 197.5, F: 981, perm: false, h: 0 }] }),
+  // Eiermann-Tisch (Egon Eiermann 1953): Platte 1600 × 800, Multiplex 25 (geschätzt), Gestell ≈ 1200 breit; Abstützen am Plattenrand 60 kg
+  eier: () => base({ L: 1600, sec: { type: 'rect', b: 800, h: 25 }, mat: 'bsp', sup: [{ x: 200, t: 'pin' }, { x: 1400, t: 'pin' }], pl: [{ x: 0, F: 589, perm: false, h: 0 }] }),
+  // Tulip-Tisch (Eero Saarinen 1957): Platte Ø 1200 auf einem Mittelfuß (Auflage Ø ≈ 300, geschätzt), Multiplex 20, mit dem Fuß verschraubt (eingespannt); Abstützen am Rand 60 kg
+  tulip: () => base({ L: 1200, sec: { type: 'rect', b: 600, h: 20 }, mat: 'bsp', sup: [{ x: 450, t: 'fix' }, { x: 750, t: 'fix' }], pl: [{ x: 0, F: 589, perm: false, h: 0 }] }),
+  // Stuhl Nr. 14 (Michael Thonet 1859): Hinterbein Buche gebogen, gerade genähert Ø 28 (geschätzt), 450 frei; ein Viertel von 100 kg als Längsdruck
+  thonet: () => base({ L: 450, orient: 'v', sec: { type: 'circ', d: 28 }, mat: 'd40', N: 245, sup: [{ x: 0, t: 'pin' }, { x: 450, t: 'pin' }], pl: [{ x: 225, F: 20, perm: false, h: 0 }] })
 };
-const TPLS = [['Regal', [['regal', 'Regalbrett auf Konsolen'], ['regalF', 'Regalbrett auf nachgiebigen Konsolen'], ['mdf', 'Regalboden MDF zwischen Seiten'], ['glas', 'Glasboden'], ['alu', 'Wandregal Alu, drei Konsolen']]],
-  ['Sitzen & Tisch', [['bank', 'Sitzbank Eiche (Person setzt sich)'], ['bierbank', 'Bierbank Buchbach (besetzt, eine Person setzt sich)'], ['tisch', 'Tischplatte, Abstützen am Überstand']]],
-  ['Konstruktion', [['konsole', 'Wandkonsole (Kragarm Stahl)'], ['stuetze', 'Stütze / Tischbein (stehend)']]]];
+// Vorlagen-Galerie: [Schlüssel, Name, Zusatz]
+const TPLS = [['Prinzipien', [['regal', 'Regalbrett auf Konsolen', 'Überstand entlastet das Feld'], ['regalF', 'Nachgiebige Konsolen', 'weiche Lager: Brett sackt mit'],
+    ['mdf', 'MDF zwischen Seiten', 'MDF kriecht unter Dauerlast'], ['einsp', 'MDF eingespannt', 'eingespannt: fünfmal steifer'], ['glas', 'Glasboden', 'spröde: hohe Sicherheit nötig'],
+    ['alu', 'Durchlaufträger', 'Mittellager halbiert die Biegung'], ['hoch', 'Latte hochkant', 'h³: viermal steifer als flach'], ['flach', 'Latte flach', 'gleiche Latte, viermal weicher'],
+    ['rohr', 'Rohr', 'Material außen: steif und leicht'], ['stab', 'Vollstab', 'gleiches Gewicht wie das Rohr'],
+    ['bank', 'Sitzbank', 'Hinsetzen: Stoß verdoppelt die Last'], ['tisch', 'Tischplatte mit Überstand', 'Abstützen am Rand: Lager hebt ab'],
+    ['konsole', 'Kragarm', 'Wandkonsole: biegt am stärksten'], ['stuetze', 'Stütze', 'Längsdruck: Knicken']]],
+  ['Designklassiker', [['string', 'String-Boden', 'Strinning 1949'], ['usm', 'USM-Haller-Rohr', 'Haller 1963'],
+    ['ulmer', 'Ulmer Hocker', 'Bill & Gugelot 1954'], ['eier', 'Eiermann-Tisch', 'Eiermann 1953'], ['tulip', 'Tulip-Tisch', 'Saarinen 1957'],
+    ['thonet', 'Stuhlbein Nr. 14', 'Thonet 1859'], ['bierbank', 'Bierbank Buchbach', 'besetzt, eine Person setzt sich']]]];
 const HINT = {
   drag: 'Lager und Lasten entlang des Balkens ziehen; antippen zum Bearbeiten. Streckenlast an den Enden ziehen ändert die Länge.',
   sup: 'Tippen setzt ein gelenkiges Lager (unten umstellbar: eingespannt, federnd).', pl: 'Tippen setzt eine Einzellast 500 N (≈ 51 kg).',
@@ -761,17 +790,6 @@ document.querySelectorAll('#tools button').forEach(b => b.onclick = () => setToo
 
 // ---- Querschnitt, Material, Optionen ----
 $('secT').innerHTML = Object.entries(SECS).map(([k, v]) => `<option value="${k}">${v[0]}</option>`).join('');
-// Vorlagen-Galerie: Skizze aus Balken, Lagern und Lasten
-function tplSketch(m) {
-  const L = m.L, v = m.orient === 'v', T = (x, y) => v ? [y, x] : [x, y], th = L / 40, out = [];
-  out.push({ p: [T(0, -th / 2), T(L, -th / 2), T(L, th / 2), T(0, th / 2)], z: true, f: '--fill', w: 1.5 });
-  for (const s of m.sup) { const d = L / 30; out.push(s.t === 'fix' ? { p: [T(s.x, -th * 2), T(s.x, th * 2)], w: 3 } : { p: [T(s.x, -th / 2), T(s.x - d, -th / 2 - 1.6 * d), T(s.x + d, -th / 2 - 1.6 * d)], z: true, w: 1.5 }); }
-  for (const p of m.pl) { const a = L / 7; out.push({ p: [T(p.x, th / 2 + a), T(p.x, th / 2)], c: '--load', w: 2 }); }
-  for (const q of m.ql) out.push({ p: [T(q.a, th / 2 + L / 14), T(q.b, th / 2 + L / 14), T(q.b, th / 2), T(q.a, th / 2)], z: true, f: '--load-a', c: '--load', w: 1 });
-  if (m.N) out.push({ p: [T(L + L / 6, 0), T(L, 0)], c: '--load', w: 2 });
-  return out;
-}
-dpGallery($('tpl'), TPLS.map(([g, a]) => [g, a.map(([k, n]) => { const m = n.match(/^(.*) \((.+)\)$/); return { k, n: m ? m[1] : n, s: m ? m[2] : '', d: () => tplSketch(TPL[k]()) }; })]), k => load(TPL[k]()));
 { const gr = {}; for (const [k, m] of Object.entries(Core.MAT)) (gr[m.grp] = gr[m.grp] || []).push(`<option value="${k}">${m.name}</option>`);
   $('mat').innerHTML = Object.entries(gr).map(([g, o]) => `<optgroup label="${g}">${o.join('')}</optgroup>`).join('') + '<option value="eigen">Eigenes Material …</option>'; }
 function renderSecIn() {
@@ -812,7 +830,23 @@ $('len').onchange = e => setL(+e.target.value);
 $('oH').onclick = () => { S.orient = 'h'; syncInputs(); recompute(); };
 $('oV').onclick = () => { S.orient = 'v'; syncInputs(); recompute(); };
 function load(m) { S = m; UI.sel = null; UI.drag = null; setTool('drag'); syncInputs(); recompute(); }
-
+// Skizze: Balken mit Biegelinie (überhöht), Lager, Lasten; stehend senkrecht
+function tplSketch(m) {
+  const L = m.L, u = L / 20, v = m.orient === 'v', T = (x, y) => v ? [y, x] : [x, y], c = calc(m, false), out = [];
+  const arrow = (x, y0, y1) => [{ p: [T(x, y0), T(x, y1)], c: '--load', w: 2 }, { p: [T(x - u * 0.4, y1 + u * 0.6), T(x, y1), T(x + u * 0.4, y1 + u * 0.6)], c: '--load', w: 2 }];
+  for (const q of m.ql) out.push({ p: [T(q.a, u), T(q.b, u), T(q.b, 2.2 * u), T(q.a, 2.2 * u)], z: true, f: '--load-a', c: null });
+  out.push({ p: [T(0, 0), T(L, 0)], w: 4 });
+  if (!c.R.err && !c.R.buckled) { const w = c.R.wFin, k = 2 * u / Math.max(1e-9, ...w.map(Math.abs)); out.push({ p: c.R.x.map((x, i) => T(x, w[i] * k)), c: '--load', w: 1.5, dash: [3, 3] }); } // w im Kern nach oben positiv
+  for (const s of m.sup) {
+    if (s.t === 'fix') out.push({ p: [T(s.x, -1.5 * u), T(s.x, 1.5 * u)], w: 4 });
+    else if (s.t === 'spring') out.push({ p: [T(s.x, 0), T(s.x - u * .4, -u * .4), T(s.x + u * .4, -u * .8), T(s.x - u * .4, -u * 1.2), T(s.x, -u * 1.6), T(s.x - u * .6, -u * 1.6), T(s.x + u * .6, -u * 1.6)] });
+    else out.push({ p: [T(s.x, 0), T(s.x - u * .6, -u), T(s.x + u * .6, -u)], z: true });
+  }
+  for (const p of m.pl) out.push(...arrow(p.x, 2.6 * u, 0.3 * u));
+  if (m.N > 0) out.push(...(v ? [{ p: [T(L + 3 * u, 0), T(L + 0.3 * u, 0)], c: '--load', w: 2 }, { p: [T(L + u, -u * .5), T(L + .3 * u, 0), T(L + u, u * .5)], c: '--load', w: 2 }] : []));
+  return out;
+}
+dpGallery($('tpl'), TPLS.map(([g, a]) => [g, a.map(([k, n, s]) => ({ k, n, s, d: () => tplSketch(TPL[k]()) }))]), k => load(TPL[k]()));
 
 // ---- Datei & Teilen ----
 const TYPE = 'designphysik/last';
