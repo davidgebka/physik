@@ -21,7 +21,7 @@
       <button id="tpl"></button><button id="cmp"></button><button id="undo" class="q ico" data-i="undo" disabled>Rückgängig</button>
     </div>
     <div class="row"><span class="seg" id="tools">
-      <button data-t="drag" class="on">Ziehen</button><button data-t="point">Punkt</button><button data-t="fix">Gestell</button><button data-t="link">Glied</button><button data-t="slider">Schub</button><button data-t="del">Löschen</button>
+      <button data-t="drag" class="on">Ziehen</button><button data-t="point">Punkt</button><button data-t="fix" title="Fester Punkt, der sich nicht bewegt (z. B. am Möbelkorpus)">Gestell</button><button data-t="link" title="Starrer Stab zwischen zwei Punkten">Glied</button><button data-t="slider" title="Gerade Führung: Punkt gleitet auf einer Linie (wie eine Schublade)">Schub</button><button data-t="del">Löschen</button>
     </span></div>
     <canvas id="ed" role="img"></canvas>
     <div class="ctl"><label for="drv">Antrieb</label><input type="range" id="drv" step="0.1"><output id="drvO"></output></div>
@@ -31,13 +31,13 @@
   <section class="panel kpi">
     <h2>Kennwerte</h2>
     <div class="stats" id="stats"></div>
-    <h2>Abtrieb über Antrieb</h2>
+    <h2>Abtrieb <small>wie sich das bewegte Teil mitbewegt</small></h2>
     <canvas id="c1" class="ch"></canvas>
-    <h2>Übertragungswinkel</h2>
+    <h2>Übertragungswinkel <small>unter 40° schwergängig</small></h2>
     <canvas id="c2" class="ch"></canvas>
-    <h2>Übersetzung</h2>
+    <h2>Übersetzung <small>Weg am Abtrieb je Weg am Antrieb</small></h2>
     <canvas id="c3" class="ch"></canvas>
-    <h2>Haltemoment am Antrieb</h2>
+    <h2>Haltemoment <small>Kraft am Antrieb, um die Lasten zu halten</small></h2>
     <canvas id="c4" class="ch"></canvas>
   </section>
   <section class="panel wide">
@@ -49,13 +49,14 @@
   </section>
   <section class="panel wide model">
     <h2>Modell &amp; Gültigkeit</h2>
-    <details data-k="model"><summary>Modell, Begriffe und Grenzen lesen</summary><div class="txt">
-    <h3>Modell</h3><p>Ebenes Getriebe aus starren Gliedern, ideale Dreh- und Schubgelenke ohne Spiel und Reibung, quasistatisch (keine Massen, keine Trägheit). Ein Glied ist eine starre Punktmenge; Zusatzpunkte (Koppelpunkt, Lehne, Fuß) bewegen sich mit.</p>
-    <h3>Lage</h3><p>Newton-Raphson auf den Schließbedingungen (Toleranz 1e-9 mm), Startwert = letzte Lage. Ein Schritt zählt nur, wenn er mit zwei Halbschritten auf 1e-6 mm übereinstimmt – so bleibt der Zweig (die Einbaulage) erhalten. Die Konstruktionslage ist immer zusammengebaut; Längen ergeben sich aus ihr.</p>
-    <h3>Begriffe</h3><p><i>Umkehrlage</i> – der Abtrieb kehrt um (Übersetzung 0); fluchten dabei Antriebsglied und Koppel, heißt sie Streck- bzw. Decklage. <i>Totlage</i> – der Antrieb kommt nicht weiter, jenseits gibt es keine Lage (Bewegungsgrenze, „klemmt“). <i>Übertragungswinkel μ</i> – Winkel zwischen Koppel und gestellnahem Abtriebsglied (0–90°); unter 40° drohen bei Reibung Klemmen und hohe Gelenkkräfte (Richtwert). <i>Übersetzung</i> – Abtriebs- je Antriebsbewegung, exakt aus der Geschwindigkeitsanalyse; an Totlagen unbeschränkt.</p>
-    <h3>Gültigkeit</h3><p>Getriebetyp (Grashof), μ und Streck-/Decklage nur für erkannte Viergelenke und Schubkurbeln. Im Grenzfall (Durchschlag, z. B. Parallelogramm) ist der Zweig in der Verzweigungslage nicht eindeutig; das Werkzeug folgt der Tangente. Freiheitsgrad durch Abzählen (2 je beweglichem Punkt − Bedingungen): überbestimmte, aber bewegliche Getriebe (Parallelogramm mit drittem parallelem Glied) werden als blockiert gemeldet. Ein Schubgelenk, Führung fest am Gestell.</p>
-    <h3>Kräfte</h3><p>Punktlasten Fx/Fy [N] an beliebigen Punkten, z. B. Gewicht Fy = −m·9,81 N/kg am Schwerpunkt eines Glieds. Haltemoment [N·m] bzw. Haltekraft [N] am Antrieb aus virtueller Arbeit (Q = −Σ F·∂p/∂Antrieb): reibungsfrei, quasistatisch, ohne Eigengewicht der Glieder (nur, was als Last eingetragen ist). Positiv = in Richtung wachsender Antriebswerte. An Totlagen geht der Wert gegen ∞ (Diagramm begrenzt).</p>
-    <h3>Nicht enthalten</h3><p>Gelenkkräfte, Reibung, Dynamik, Federn und Gasdruckfedern, Kollision der Glieder, Synthese aus Wunschlagen, mehrere Antriebe, bewegte Führungen.</p>
+    <details data-k="model"><summary>Wie gerechnet wird, Begriffe, Grenzen und weiterführende Werkzeuge</summary><div class="txt">
+    <h3>Was gerechnet wird</h3><p>Ein ebenes Getriebe (<a href="https://de.wikipedia.org/wiki/Koppelgetriebe" target="_blank" rel="noopener">Koppelgetriebe</a>) aus starren Stäben („Glieder“), verbunden durch Drehgelenke und höchstens eine gerade Führung („Schub“). Ein Glied ist fest („Gestell“). Typisches Beispiel ist die <a href="https://de.wikipedia.org/wiki/Viergelenkkette" target="_blank" rel="noopener">Viergelenkkette</a>: vier Stäbe im Viereck. Die Gelenke haben kein Spiel und keine Reibung; bewegt wird langsam (keine Massen, kein Schwung). Zusatzpunkte auf einem Glied (Koppelpunkt, Lehne, Fuß) bewegen sich mit.</p>
+    <h3>Rechenweg</h3><p>Für jede Antriebsstellung sucht das Werkzeug die Lage, in der alle Stäbe ihre Länge behalten (<a href="https://de.wikipedia.org/wiki/Newton-Verfahren" target="_blank" rel="noopener">Newton-Verfahren</a>, auf 0,000&nbsp;000&nbsp;001&nbsp;mm genau). Es geht in kleinen Schritten vor und prüft jeden Schritt doppelt, damit das Getriebe nicht unbemerkt in eine andere Einbaulage umspringt. Die gezeichnete Stellung ist immer zusammengebaut; aus ihr ergeben sich die Längen.</p>
+    <h3>Begriffe</h3><p><i>Umkehrlage</i> – der Abtrieb bleibt kurz stehen und läuft zurück, wie ein Scheibenwischer am Ende seines Wegs. Liegen dabei Antrieb und Koppel auf einer Linie, heißt sie Streck- bzw. Decklage. <i>Totlage</i> – der Antrieb kommt nicht weiter, dahinter gibt es keine mögliche Stellung („klemmt“); dort einen Anschlag vorsehen oder sie als Verriegelung nutzen (<a href="https://de.wikipedia.org/wiki/Totpunkt" target="_blank" rel="noopener">Totpunkt</a>). <i>Übertragungswinkel μ</i> – Winkel zwischen Koppel und Abtriebsglied (0–90°). Bei 90° wird die Kraft am besten weitergegeben; unter etwa 40° drückt die Koppel vor allem gegen das Gelenk, statt das Glied zu drehen – mit Reibung wird es schwergängig oder klemmt (Richtwert). <i>Übersetzung</i> – wie weit sich der Abtrieb bewegt, wenn sich der Antrieb ein Stück bewegt; an einer Totlage unbegrenzt groß.</p>
+    <h3>Kräfte</h3><p>Lasten Fx/Fy [N] an beliebigen Punkten, z.&nbsp;B. ein Gewicht: Fy = −Masse × 9,81 (1&nbsp;kg ≈ 10&nbsp;N nach unten). Das Werkzeug berechnet, welches <a href="https://de.wikipedia.org/wiki/Drehmoment" target="_blank" rel="noopener">Drehmoment</a> [N·m] bzw. welche Kraft [N] man am Antrieb braucht, um das Getriebe in jeder Stellung zu halten – ohne Reibung und ohne Eigengewicht der Glieder (es zählt nur, was als Last eingetragen ist). Positiv = in Richtung wachsender Antriebswerte. An einer Totlage geht der Wert gegen unendlich (Diagramm abgeschnitten). Für Fachleute: <a href="https://de.wikipedia.org/wiki/Prinzip_der_virtuellen_Arbeit" target="_blank" rel="noopener">Prinzip der virtuellen Arbeit</a>, Q = −Σ F·∂p/∂Antrieb.</p>
+    <h3>Gültigkeit</h3><p>Getriebetyp (kann sich die Kurbel ganz herumdrehen? Grashof-Bedingung), μ und Streck-/Decklage nur für erkannte Viergelenke und <a href="https://de.wikipedia.org/wiki/Schubkurbel" target="_blank" rel="noopener">Schubkurbeln</a>. In Grenzfällen wie dem Parallelogramm kann das Getriebe an einer Stelle in zwei Richtungen weiterlaufen; das Werkzeug läuft dann geradeaus weiter. Ob sich das Getriebe bewegen kann, wird durch Abzählen geprüft (2 je beweglichem Punkt minus Bedingungen): Getriebe mit überzähligen, aber passenden Stäben (Parallelogramm mit drittem parallelem Stab) werden deshalb als blockiert gemeldet. Nur eine Führung, fest am Gestell.</p>
+    <h3>Nicht enthalten</h3><p>Kräfte in den Gelenken, Reibung, Schwung und Massenträgheit, Federn und Gasdruckfedern, Zusammenstoßen der Glieder, automatisches Entwerfen aus Wunschstellungen, mehrere Antriebe, bewegte Führungen. Für räumliche Mechanismen, Kollisionen und Gelenkkräfte: Bewegungssimulation im CAD (unten).</p>
+    <h3></h3><p><h3>Weiterführende Werkzeuge</h3><p><a href="https://motiongen.io/" target="_blank" rel="noopener">MotionGen</a> – kostenlos, Browser und App: Getriebe aus Wunschstellungen entwerfen lassen<br><a href="https://blog.rectorsquid.com/linkage-mechanism-designer-and-simulator/" target="_blank" rel="noopener">Linkage</a> – kostenlos, Windows: Getriebe zeichnen und animieren, auch mit Zahnrädern<br><a href="https://www.geogebra.org/classic" target="_blank" rel="noopener">GeoGebra</a> – kostenlos: Getriebe als Konstruktion selbst aufbauen und bewegen<br><a href="https://www.onshape.com/" target="_blank" rel="noopener">Onshape</a> – CAD im Browser: Baugruppen in 3D bewegen, Kollisionen prüfen</p></p>
     </div></details>
   </section>
 </main>

@@ -34,18 +34,18 @@ Bei Zielkonflikten entscheidet A.
 
 ## Konventionen (verbindlich)
 - **Struktur:** `index.html` (Startseite) · `shared/` (style.css, util.js, chart.js) · `tools/` (load-core.js, check.js) · `_vorlage/` · `<modul>/index.html` (Rechenkern; Oberfläche bei Bedarf in weiteren Skripten im Modulordner, z. B. `gefaess/app.js`) + `<modul>/test.js` · `docs/` (konzept, styleguide, historie, `<modul>.md`)
-- **Modul-Registry:** `DP_MODULES` in `shared/util.js` – einzige Stelle (`name` = einziger Modulname überall, `title` nur Startseite; keine Entwurfsfragen als Namen); Kopfzeile per `dpHeader(key)`
+- **Modul-Registry:** `DP_MODULES` in `shared/util.js` – einzige Stelle (`name` = einziger Modulname überall, `desc` = ein Satz auf der Startseite; keine Entwurfsfragen, keine Untertitel); Kopfzeile per `dpHeader(key)`
 - **Shared-Globale:** `dpEditing`/`dpUndoKey` (Tastatur: Strg+Z nicht beim Tippen), `$`, `nf0`, `nf1`, `css` (Token-Werte gecacht in `dpCss`), `prep`, `polyPath`, `dpDots`, `dpMq`, `dpDownload`, `dpHashGet/Set`, `niceStep`, `chart`; Entwurfshilfen `dpVerdict` (Urteil), `dpHistory` (Rückgängig, Strg+Z), `dpCompare` + `dpDelta` (Variantenvergleich), `dpGallery` + `dpSketch` (Vorlagen-Galerie mit Skizze, Name, Entwurf/Prinzip; alle vier Module); Darstellung (Design-Audit 21.11.2026): `dpStats` + `dpStat` (Urteil, Hauptkennwerte, „Alle Werte“), `dpTerm` (Fachbegriff mit Erklärung), `dpIco`/`dpBtn`/`dpIcons` (SVG-Symbole), `dpMenu` (Telefon „⋯“), `DP_LV`; `legend` in `chart()`, `DP_CFONT`
 - **Links** immer explizit auf `…/index.html` (damit file:// funktioniert)
 - **Technik:** Vanilla JS, Canvas 2D (WebGL/WebGPU nur, wo nötig), keine CDNs
 - **Einheiten:** mm, ml, g, N, lm/cd/lx, Winkel in Grad in der UI; deutsche Zahlenformatierung; Alltagsbezug mitgeben, wo er hilft (N ≈ kg)
-- **Sprache:** nur Deutsch (bewusst, keine i18n-Vorbereitung)
+- **Sprache:** nur Deutsch (bewusst, keine i18n-Vorbereitung). Alle Texte verständlich für Abiturienten: Alltagswörter zuerst, Fachbegriff beim ersten Auftreten erklärt; für Grundlagen auf die deutsche Wikipedia verlinken statt selbst lange zu erklären; Formeln und Normdetails nur als „Für Fachleute“ am Absatzende. Externe Links mit `target="_blank" rel="noopener"`.
 - **Rechenkern** im Block `// === CORE START … CORE END`, ohne DOM, endet mit `if (typeof module !== 'undefined') module.exports = Core;`. Jede Physik wird gegen analytische Fälle verifiziert (test.js).
 - **Ergebnisse in drei Ebenen** (neu 21.11.2026, Vorbild Last v1.2; bestehende Module ziehen nach):
   1. **Urteil** zuerst: ok / knapp / kritisch (knapp/kritisch mit `--warn` + ⚠) und ein Satz in Designsprache („Brett hängt sichtbar durch“, „Lampe blendet seitlich“, „Klappe klemmt bei 80°“).
   2. **Kennwerte** mit Einheit; Fachbegriffe (LVK, λ, μ, N_cr …) beim ersten Auftreten kurz erklärt (`title` bzw. Glossar).
   3. **Details** (Diagramme, Eigenformen, Rohwerte, „Modell & Gültigkeit“) – erreichbar, aber nicht im Weg.
-- **Gültigkeit:** Jedes Modul hat einen Abschnitt „Modell & Gültigkeit“ und nennt, ab wann Fachplanung nötig ist. Unsichere Eingangswerte (Schätzmaterialien, Streuung) als solche kennzeichnen, wo möglich als Band statt Einzelwert.
+- **Gültigkeit:** Jedes Modul hat einen Abschnitt „Modell & Gültigkeit“ und nennt, ab wann Fachplanung nötig ist; darin zuletzt „Weiterführende Werkzeuge“ (3–5 Links mit einem Satz, wofür). Unsichere Eingangswerte (Schätzmaterialien, Streuung) als solche kennzeichnen, wo möglich als Band statt Einzelwert.
 - **Export:** JSON `{type:"designphysik/<modul>", version, …}`; Teilen per URL-Hash `#<kürzel>=…`
 - **Look:** Grundrichtung F „Punktraster“ (20.11.2026), verbindlich nach `docs/styleguide.md`. Farbe nur je **Physik-Familie** (`--water` Fluid, `--light` Licht, `--mech` Bewegung, reserviert `--load` Kraft & Festigkeit; jeweils `-a` für Flächen) und `--warn`. Alle Farben in style.css, Module definieren keine eigenen; Modulfarbe in `DP_MODULES[].color`. Canvas-Raster über `dpDots()`.
 - **Modulgröße:** wächst ein `index.html` über ~1500 Zeilen, vor der nächsten Erweiterung Aufteilen oder eigenes Modul prüfen.
