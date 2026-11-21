@@ -117,6 +117,19 @@ check('Über Knicklast: gemeldet', Core.analyze(base({ sup: [pin(0), pin(L)], N:
 r = Core.analyze(base({ orient: 'v', sw: true, rhoA, sup: [fix(0)] }));
 check('Kragstütze unter Eigengewicht: λ·qL³ = 7,837 EI', r.lam * rhoA * 9810 * L ** 3, 7.837 * EI, 1e-3);
 
+// Stehend, gelenkig–gelenkig, Eigengewicht + Zug oben (N < 0): Längskraft wechselt das Vorzeichen (Kg indefinit).
+// Referenz unabhängig: Rayleigh-Ritz mit 24 Sinusgliedern (erfüllen die Randbedingungen, K diagonal), kleinstes positives λ.
+{ const qg = rhoA * 9810, nT = 24, kappa = n => n * PI / L;
+  for (const [Nt, tag] of [[-0.25 * qg * L, 'Zug oben ¼ qL'], [-0.6 * qg * L, 'Zug oben 0,6 qL (Zug überwiegt)']]) {
+    const Kd = Array.from({ length: nT }, (_, i) => EI * kappa(i + 1) ** 4 * L / 2), C = new Float64Array(nT * nT), ns = 4000;
+    for (let i = 0; i < nT; i++) for (let j = 0; j < nT; j++) { let s = 0; // ∫ N(x)·φi'·φj' dx, Simpson
+      for (let k = 0; k <= ns; k++) { const x = L * k / ns, wgt = k === 0 || k === ns ? 1 : k % 2 ? 4 : 2;
+        s += wgt * (Nt + qg * (L - x)) * kappa(i + 1) * Math.cos(kappa(i + 1) * x) * kappa(j + 1) * Math.cos(kappa(j + 1) * x); }
+      C[i * nT + j] = s * L / ns / 3 / Math.sqrt(Kd[i] * Kd[j]); }
+    const muMax = Math.max(...Core.jacobi(C, nT).d);
+    r = Core.analyze(base({ orient: 'v', sw: true, rhoA, N: Nt, sup: [pin(0), pin(L)] }));
+    check('Knicken stehend, ' + tag + ': λ gegen Ritz', r.lam, 1 / muMax, 2e-3); } }
+
 // ---- Dynamik ----
 const fq = (sup, bl) => Core.analyze(base({ sup, rhoA, modes: true }))
   .f.slice(0, bl.length).map((f, i) => [f, bl[i] ** 2 / (2 * PI * L * L) * Math.sqrt(EI / rhoA)]);
@@ -127,6 +140,13 @@ fq([fix(0), fix(L)], [4.730041, 7.853205]).forEach(([g, w], i) => check('Eigenfr
 const mP = 50 / 9810; // 50 N
 r = Core.analyze(base({ sup: [pin(0), pin(L)], rhoA: 1e-9 * rhoA, modes: true, pl: [{ x: L / 2, F: 50, perm: true }] }));
 check('Punktmasse mittig: f₁ = √(48EI/mL³)/2π', r.f[0], Math.sqrt(48 * EI / (mP * L ** 3)) / (2 * PI), 1e-5);
+// Nach oben wirkende Dauerlast ist keine Masse: f₁ wie unbelastet
+{ const fU = Core.analyze(base({ sup: [pin(0), pin(L)], rhoA, modes: true, ql: [{ a: 0, b: L, q: -0.5, perm: true }], pl: [{ x: L / 3, F: -200, perm: true }] })).f[0],
+    fR = Core.analyze(base({ sup: [pin(0), pin(L)], rhoA, modes: true })).f[0];
+  check('Dauerlast nach oben: f₁ wie unbelastet', fU, fR, 1e-6); }
+// Kriechen entlastet (Dauerlast nach oben): Grenze gegen den ungünstigeren Zustand (sofort)
+{ const qu = 0.3, rr = Core.analyze(base({ sup: [pin(0), pin(L)], kdef: 0.6, ql: [{ a: 0, b: L, q: -qu, perm: true }], pl: [{ x: L / 2, F }] }));
+  check('Grenze l/x: sofort ungünstiger als Endzustand', rr.lim.r, (F * L ** 3 / (48 * EI) - 5 * qu * L ** 4 / (384 * EI)) / L); }
 // Längsdruck senkt f: f(N)/f(0) = √(1 − N/N_cr) (gelenkig, Grundform)
 const f0 = Core.analyze(base({ sup: [pin(0), pin(L)], rhoA, modes: true })).f[0];
 const fN = Core.analyze(base({ sup: [pin(0), pin(L)], rhoA, modes: true, N: 0.5 * PI * PI * EI / (L * L) })).f[0];

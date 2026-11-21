@@ -98,7 +98,7 @@ select{max-width:100%}
 <script src="../shared/chart.js"></script>
 <script>
 // === CORE START
-// Ebener gerader Biegebalken (Euler-Bernoulli). Kein DOM.
+// Ebener gerader Biegebalken (Timoshenko; ohne G Euler-Bernoulli). Kein DOM.
 // Einheiten: mm, N, N/mm² (= MPa), Masse t (= N·s²/mm), Dichte kg/m³, g = 9810 mm/s².
 // Vorzeichen intern: Querkraft, Verschiebung w und Lasten positiv nach oben; Lasten werden „nach unten positiv“ übergeben (F, q).
 // Verfahren: FEM mit Hermite-Elementen, Knoten an allen Unstetigkeiten (Auflager, Lastpunkte, Streckenlast-Enden) →
@@ -256,7 +256,7 @@ const Core = (() => {
     const K = new Float64Array(nd * nd), Kg = new Float64Array(nd * nd), M = new Float64Array(nd * nd);
     const add = (T, e, k) => { for (let i = 0; i < 4; i++) for (let j = 0; j < 4; j++) T[(2 * e + i) * nd + 2 * e + j] += k[i][j]; };
     let axial = false;
-    const permLine = x => !v ? ql.reduce((s, q) => s + (q.perm && q.a < x && x < q.b ? q.q : 0), 0) / G : 0;
+    const permLine = x => !v ? ql.reduce((s, q) => s + (q.perm && q.a < x && x < q.b ? Math.max(0, q.q) : 0), 0) / G : 0; // nach oben wirkende Dauerlast ist keine Masse
     for (let e = 0; e < ne; e++) {
       const h = X[e + 1] - X[e], c = EI / h ** 3, xm = (X[e] + X[e + 1]) / 2, Ne = Nat(xm), g = Ne / (30 * h), mu = (m.rhoA + permLine(xm)) * h / 420;
       const P = 12 * EI / (GAs * h * h), cp = c / (1 + P); // Timoshenko-Element (verknüpfte Ansätze), Φ = 0 → Euler-Bernoulli
@@ -265,7 +265,7 @@ const Core = (() => {
       if (Ne) add(Kg, e, [[36 * g, 3 * h * g, -36 * g, 3 * h * g], [3 * h * g, 4 * h * h * g, -3 * h * g, -h * h * g], [-36 * g, -3 * h * g, 36 * g, -3 * h * g], [3 * h * g, -h * h * g, -3 * h * g, 4 * h * h * g]]);
       add(M, e, [[156 * mu, 22 * h * mu, 54 * mu, -13 * h * mu], [22 * h * mu, 4 * h * h * mu, 13 * h * mu, -3 * h * h * mu], [54 * mu, 13 * h * mu, 156 * mu, -22 * h * mu], [-13 * h * mu, -3 * h * h * mu, -22 * h * mu, 4 * h * h * mu]]);
     }
-    if (!v) for (const p of pl) if (p.perm) M[2 * node(p.x) * (nd + 1)] += p.F / G; // Dauerlast als Punktmasse
+    if (!v) for (const p of pl) if (p.perm && p.F > 0) M[2 * node(p.x) * (nd + 1)] += p.F / G; // Dauerlast als Punktmasse
     const fixd = new Set(); for (const s of sup) { const i = node(s.x); if (s.t === 'spring') K[2 * i * (nd + 1)] += s.k; else fixd.add(2 * i); if (s.t === 'fix') fixd.add(2 * i + 1); }
     const free = []; for (let d = 0; d < nd; d++) if (!fixd.has(d)) free.push(d);
     const nf = free.length, red = T => { const R = new Float64Array(nf * nf); for (let i = 0; i < nf; i++) for (let j = 0; j < nf; j++) R[i * nf + j] = T[free[i] * nd + free[j]]; return R; };
@@ -314,17 +314,22 @@ const Core = (() => {
     const cD = solve(imp.map(o => ({ x: o.x, F: (o.n - 1) * o.F })), []);
     const P = evalCase(cP), Vr = evalCase(cV), D = evalCase(cD);
 
-    // Knicken: kleinstes λ mit (K − λ·Kg)φ = 0 (inverse Vektoriteration)
-    let lam = Infinity, alpha = 1, buck = null, Kgf = null;
+    // Knicken: kleinstes positives λ mit (K − λ·Kg)φ = 0 = größtes μ = 1/λ von K⁻¹Kg (Potenzmethode, Rayleigh-Quotient).
+    // Kg indefinit (stehend, Zug oben, Eigengewicht unten): Lauf 1 findet evtl. das negative μ, Lauf 2 mit Verschiebung |μ| das größte positive.
+    let lam = Infinity, alpha = 1, buck = null, Kgf = null, bv = null;
     if (axial) {
-      Kgf = red(Kg); let x = new Float64Array(nf).map((_, i) => 1 + 0.3 * Math.sin(1.7 * i)), l0 = 0;
-      for (let it = 0; it < 1000; it++) {
-        const gx = mv(Kgf, nf, x), y = cholSolve(LK, nf, gx), gy = mv(Kgf, nf, y), den = dot(y, gy);
-        if (!(den > 0)) { lam = Infinity; break; }
-        lam = dot(y, gx) / den; const nr = Math.sqrt(dot(y, y)); x = y.map(t => t / nr);
-        if (Math.abs(lam - l0) <= 1e-11 * lam && it > 3) break; l0 = lam;
-      }
-      if (isFinite(lam)) { const u = new Float64Array(nd); free.forEach((d, i) => u[d] = x[i]); buck = smp.map(s => herm(u, s.e, s.xi)); }
+      Kgf = red(Kg);
+      const pow = sh => { let z = new Float64Array(nf).map((_, i) => 1 + 0.3 * Math.sin(1.7 * i)), mu = 0, m0 = NaN;
+        for (let it = 0; it < 2000; it++) {
+          const y = cholSolve(LK, nf, mv(Kgf, nf, z)); for (let i = 0; i < nf; i++) y[i] += sh * z[i];
+          const nr = Math.sqrt(dot(y, y)); if (!(nr > 0)) return { mu: 0, z };
+          z = y.map(t => t / nr); mu = dot(z, mv(Kgf, nf, z)) / dot(z, mv(Kf, nf, z));
+          if (Math.abs(mu - m0) <= 1e-12 * Math.abs(mu) && it > 3) break; m0 = mu;
+        }
+        return { mu, z }; };
+      let r = pow(0); if (r.mu < 0) r = pow(-r.mu);
+      if (r.mu > 0) { lam = 1 / r.mu; bv = r.z; }
+      if (bv) { const u = new Float64Array(nd); free.forEach((d, i) => u[d] = bv[i]); buck = smp.map(s => herm(u, s.e, s.xi)); }
       alpha = lam > 1 ? 1 / (1 - 1 / lam) : Infinity; // Verstärkung II. Ordnung (Dischinger)
     }
 
@@ -359,7 +364,8 @@ const Core = (() => {
     for (let i = 1; i < xs.length; i++) fields.push([xs[i - 1], xs[i], xs[i] - xs[i - 1]]);
     if (L - xs[xs.length - 1] > tol) fields.push([xs[xs.length - 1], L, 2 * (L - xs[xs.length - 1])]);
     let lim = { r: 0, x: 0, ref: 0, w: 0 };
-    for (const [a, b, ref] of fields) for (let i = 0; i < n; i++) if (x[i] >= a - tol && x[i] <= b + tol) { const r = Math.abs(wFin[i]) / ref; if (r > lim.r || isNaN(r)) lim = { r, x: x[i], ref, w: wFin[i] }; }
+    for (const [a, b, ref] of fields) for (let i = 0; i < n; i++) if (x[i] >= a - tol && x[i] <= b + tol) { // ungünstigerer Zustand: Dauerlast nach oben kann durch Kriechen entlasten
+      const w = Math.abs(wFin[i]) >= Math.abs(wInst[i]) ? wFin[i] : wInst[i], r = Math.abs(w) / ref; if (r > lim.r || isNaN(r)) lim = { r, x: x[i], ref, w }; }
     const RS = cP.R.map((r, i) => ({ x: r.x, t: r.t, F: r.F + cV.R[i].F, M: r.M + cV.R[i].M, w: r.w * (1 + kd) + cV.R[i].w /* Einfederung Endzustand */, Fpk: r.F + cV.R[i].F + cD.R[i].F, Mpk: r.M + cV.R[i].M + cD.R[i].M }));
     return {
       x, buckled: !isFinite(alpha), wInst, wFin, wPeak, M: Mo, V, Nc, sT, sB, sig, tau, R: RS, imp, lam, alpha, buck, f, modes, lim, nodes: X, sup,
@@ -745,7 +751,8 @@ $('tpl').onchange = e => { if (TPL[e.target.value]) load(TPL[e.target.value]());
 
 // ---- Datei & Teilen ----
 const TYPE = 'designphysik/last';
-function exportObj() { const o = { type: TYPE, version: 1, L: S.L, orient: S.orient, sec: S.sec, mat: S.mat, sw: S.sw, shear: S.shear, N: S.N, lim: S.lim, sup: S.sup, pl: S.pl, ql: S.ql };
+function exportObj() { const o = { type: TYPE, version: 1, L: S.L, orient: S.orient, sec: S.sec, mat: S.mat, sw: S.sw, shear: S.shear, N: S.N, lim: S.lim, // Felder wie parse() liefert, sonst legt Rückgängig einen leeren Schritt an
+    sup: S.sup.map(s => s.t === 'spring' ? { x: s.x, t: s.t, k: s.k } : { x: s.x, t: s.t }), pl: S.pl.map(p => ({ x: p.x, F: p.F, perm: p.perm, h: p.h, c: p.c || 0 })), ql: S.ql.map(q => ({ a: q.a, b: q.b, q: q.q, perm: q.perm })) };
   if (S.mat === 'eigen') o.cm = { E: S.cm.E, G: S.cm.G, rho: S.cm.rho, f: S.cm.f, fv: S.cm.fv, kdef: S.cm.kdef, S: S.cm.S }; return o; }
 // Rückgängig: jeder abgeschlossene Zustand (nicht jedes Zieh-Bild) als Schnappschuss
 const HIST = []; let last = null;
