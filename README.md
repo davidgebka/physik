@@ -21,6 +21,7 @@ Funktioniert auch per Doppelklick auf index.html (file://).
     gefaess/            Modul Gefäß & Kippen (+ test.js)
     licht/              Modul Lampenschirm (+ test.js)
     mechanismus/        Modul Mechanismen (+ test.js)
+    last/               Modul Belastung – Balken 2D (+ test.js)
 
 ## Neues Modul
 1. _vorlage/ nach <modulkey>/ kopieren, MODULNAME/MODULKEY ersetzen
@@ -34,3 +35,4 @@ Laufen auch in der CI bei jedem Push (.github/workflows/test.yml).
     node gefaess/test.js
     node licht/test.js
     node mechanismus/test.js
+    node last/test.js

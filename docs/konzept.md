@@ -107,8 +107,11 @@ Niederschwellige Browser-Werkzeugsuite für Produktdesign (nicht Physikunterrich
 (Modul-Chats tragen hier ein; der zentrale Chat bzw. der Style-Chat arbeitet sie ab.)
 
 Offen:
-- **shared/util.js** (Last): `last` auf `ready: true`, `desc: 'Balken: Durchbiegung, Spannung, Sicherheit, Knicken, Eigenfrequenz'` (bis dahin Startseiten-Karte grau, Modul per `last/index.html` erreichbar).
-- **README.md** (Last): `last/` in Struktur und Tests (`node last/test.js`).
+- (keine)
+
+Erledigt (21.11.2026, mit PR Last auf Wunsch des Nutzers):
+- **shared/util.js** (Last): `last` auf `ready: true`, neue `desc`.
+- **README.md** (Last): `last/` in Struktur und Tests.
 
 Erledigt (20.11.2026, zentraler Chat):
 - **Licht, Gefäß, Mechanismen** (Style-Chat, Raster): Zeichenflächen mit `--ar` (Licht/Gefäß `#ed` 1/1,05, `#lvk`/`#tv` 1, Mechanismen 4/3), `aspect-ratio` als Rückfall. Licht: `.bar` als 24-px-Zeile (Balken 6 px mittig), `.raw` ohne 6-px-Abstände, Knopf in `.ctl output` oben bündig (Zeile war 24,5 px). Gemessen 1280/390 px: alle Blöcke der drei Module auf Punktreihen.
