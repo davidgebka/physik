@@ -24,7 +24,7 @@
       <button id="mEdit" class="on">● Punkte</button>
       <span class="sep"></span>
       <select id="preset" aria-label="Vorlage"></select>
-      <button id="undo" title="Rückgängig (Strg+Z)">↶</button>
+      <button id="undo" title="Rückgängig (Strg+Z)">↶</button><button id="cmp"></button>
       <button id="fitB">Einpassen</button>
       <button id="photoB" title="Foto als Vorlage zum Nachzeichnen laden (bleibt auf dem Gerät)">Foto …</button>
       <input type="file" id="photoF" accept="image/*" hidden>
@@ -987,6 +987,7 @@ const S = { kind: 'rot', pts: toPts(PRESETS.karaffe.p), smooth: true, plan: toPt
   slosh: false, wf: 1.8, wa: 10, sv: 1.4, sb: 0.3 }; // Schwappen: Schrittfrequenz [Hz], Hub [mm], Tempo [m/s], Bremszeit [s] (Schätzwerte)
 const MATS = { glas: ['Glas', 2.5], porzellan: ['Porzellan', 2.4], steinzeug: ['Steinzeug', 2.3], pp: ['PP', 0.9], edelstahl: ['Edelstahl', 7.9] };
 let G = {};
+let REF = null; // gemerkter Stand: Schnappschuss {cap, fill, start, tip, push, mv, fc, kc, V …}; pending bis Kipplauf und Standsicherheit fertig
 const isPlan = () => S.kind === 'plan', isRot = () => S.kind === 'rot', isTube = () => S.kind === 'tube';
 const P = () => isPlan() ? S.plan : isTube() ? (S.tPart === 'A' ? S.tA : S.tB) : S.part === 'spout' ? S.spout.p : S.part === 'handle' ? S.handle.p : S.pts; // aktuell bearbeitete Punkte
 const setP = a => { if (isPlan()) S.plan = a; else if (isTube()) { if (S.tPart === 'A') S.tA = a; else S.tB = a; } else if (S.part === 'spout') S.spout.p = a; else if (S.part === 'handle') S.handle.p = a; else S.pts = a; };
@@ -1536,12 +1537,13 @@ function drawCharts() {
   if (!G.geo || !G.curve) return;
   const N = 120, fc = [];
   for (let i = 0; i <= N; i++) { const v = G.cap * i / N; fc.push([v, fillHeight(v) - G.z0]); }
-  chart($('c1'), { x0: 0, x1: Math.max(1, G.cap), y0: 0, y1: Math.max(1, G.H), xl: 'Volumen [ml]', yl: 'Füllhöhe [mm]',
-    series: [{ pts: fc, color: css('--ink') }], points: [[S.fill, fillHeight(S.fill) - G.z0, css('--water')]] });
+  const F = REF && !REF.pending ? REF : null, gst = { color: css('--mut'), width: 1.5 }, gl = F ? ' · dünn grau: gemerkt' : '';
+  chart($('c1'), { x0: 0, x1: Math.max(1, G.cap, F ? F.cap : 0), y0: 0, y1: Math.max(1, G.H, F ? F.H : 0), xl: 'Volumen [ml]' + gl, yl: 'Füllhöhe [mm]',
+    series: [...(F ? [{ pts: F.fc, ...gst }] : []), { pts: fc, color: css('--ink') }], points: [[S.fill, fillHeight(S.fill) - G.z0, css('--water')]] });
   const kc = [], pc = [];
   for (let k = 0; k <= STEPS; k++) { kc.push([180 * k / STEPS, G.curve[k]]); pc.push([180 * k / STEPS, S.fill - G.curve[k]]); }
-  chart($('c2'), { x0: 0, x1: 180, xs: 30, y0: 0, y1: Math.max(1, S.fill), xl: 'Neigung [°]', yl: 'Volumen [ml]',
-    series: [{ pts: kc, color: css('--water'), fill: css('--water-a') }, { pts: pc, color: css('--mut'), width: 1.5, dash: [5, 4] }],
+  chart($('c2'), { x0: 0, x1: 180, xs: 30, y0: 0, y1: Math.max(1, S.fill, F ? F.fill : 0), xl: 'Neigung [°]' + gl, yl: 'Volumen [ml]',
+    series: [...(F ? [{ pts: F.kc, ...gst }] : []), { pts: kc, color: css('--water'), fill: css('--water-a') }, { pts: pc, color: css('--mut'), width: 1.5, dash: [5, 4] }],
     vlines: [{ x: S.theta, color: css('--ink') }], points: [[S.theta, S.cur, css('--ink')]] });
 }
 
@@ -1565,6 +1567,29 @@ function tipItem(deg) {
   const [f, df] = minDir(st.tipF, st.backF), [e, de] = minDir(st.tipE, st.backE),
     side = d => isTube() ? (d ? 'nach hinten' : 'nach vorne') : d ? 'zur Gegenseite' : (hasSpout() ? 'zur Tülle' : 'nach +x');
   return ['Kippwinkel', deg(f), 'gefüllt ' + side(df) + ' · leer ' + deg(e) + ' ' + side(de)];
+}
+function pushN() {
+  const st = G.stab; if (!standOk() || !st) return null;
+  const a = isPlan() ? G.rf - st.xF : isTube() ? Math.min(G.rf - st.xF, G.rfB + st.xF) : G.rf - Math.abs(st.xF);
+  return Core.pushForce(st.mF, a, G.hRim);
+}
+// kleinster Kippwinkel über gefüllt/leer und beide Richtungen [°] oder null
+function tipMin() {
+  const st = G.stab; if (!standOk() || !st) return null;
+  const v = [st.tipF, st.tipE, st.backF, st.backE].filter(x => x != null && isFinite(x)); return v.length ? Math.min(...v) : null;
+}
+// Urteil in Designsprache aus den Kennzahlen k (siehe keyVals)
+function verdict(k) {
+  const c = [], w = [];
+  if (k.bad) c.push('Geometrie prüfen: ' + k.bad);
+  if (k.spillFill) c.push('läuft beim Befüllen über die Tülle über (Tülle tiefer als Rand)');
+  if (!k.stand) w.push(k.tube ? 'steht nicht stabil: Boden nicht waagrecht' : 'steht nicht stabil: kein flacher Boden');
+  else if (k.tip != null && k.tip < 10) c.push(`kippt leicht um: schon bei ${nf0.format(k.tip)}° Schräglage`);
+  else if (k.tip != null && k.tip < 15) w.push(`kippt recht leicht: bei ${nf0.format(k.tip)}° Schräglage`);
+  if (k.sloshOver) w.push('schwappt beim ' + k.sloshOver + ' über');
+  const t = a => a.join(' · ').replace(/^./, x => x.toUpperCase());
+  if (c.length) return [2, t(c.concat(w))]; if (w.length) return [1, t(w)];
+  return [0, `Fasst ${nf0.format(k.cap)} ml, ${k.tip != null ? 'steht sicher (kippt erst bei ' + nf0.format(k.tip) + '°)' : 'steht'}${k.start != null ? ', gießt ab ' + nf0.format(k.start) + '° aus' : ''}`];
 }
 function pushItem() {
   if (!standOk()) return ['Umstoßkraft', '–', ''];
@@ -1602,9 +1627,24 @@ function drawStats() {
       : tipItem(deg),
     pushItem()
   ];
-  if (S.slosh) items.push(...sloshItems());
+  const sl = S.slosh ? sloshItems() : [];
+  if (S.slosh) items.push(...sl);
   if (G.bad) items.unshift(['Geometrie', '⚠ prüfen', G.bad, true]);
-  $('stats').innerHTML = items.map(([a, b, n, warn]) => `<div class="stat"><span>${a}</span><b${warn ? ' style="color:var(--warn)"' : ''}>${b}</b><span>${n}</span></div>`).join('');
+  // Urteil und Vergleich (gemerkter Stand = eingefrorener Schnappschuss der Kennzahlen und Kurven)
+  const so = sl.filter(x => x[3] && /schwappt über/.test(x[2])).map(x => /^Gehen/.test(x[0]) ? 'Gehen' : 'Anhalten');
+  const K = { bad: G.bad, spillFill: hasSpout() && G.cap < G.capRim - 1 && !S.lid, stand: standOk(), tube: isTube(), tip: tipMin(), start, fill: V0, cap: G.cap, H: G.H,
+    half, empty, push: pushN(), mv: G.mv, sloshOver: so.join(' und '), ready: !!G.stab };
+  if (REF && REF.pending && K.ready) { const fc = [], kc = [];
+    for (let i = 0; i <= 120; i++) { const v = G.cap * i / 120; fc.push([v, fillHeight(v) - G.z0]); }
+    for (let k = 0; k <= STEPS; k++) kc.push([180 * k / STEPS, c[k]]);
+    REF = { ...K, V: verdict(K), fc, kc }; }
+  const F = REF && !REF.pending ? REF : null, V = verdict(K);
+  const vs = (cur, ref, fmt) => F && cur != null && ref != null && isFinite(cur) && isFinite(ref) ? ` · gemerkt ${fmt(ref)} (${dpDelta(cur, ref)})` : F && ref != null ? ` · gemerkt ${fmt(ref)}` : '';
+  const ml = v => nf0.format(v) + ' ml', dg = v => nf1.format(v) + '°';
+  const add = { 'Fassungsvermögen': vs(G.cap, F && F.cap, ml), 'Füllmenge': vs(V0, F && F.fill, ml), 'Ausgießbeginn': vs(start, F && F.start, dg), 'Kippwinkel': F ? ' · gemerkt min. ' + (F.tip != null ? dg(F.tip) : '–') : '',
+    'Umstoßkraft': vs(K.push, F && F.push, v => nf1.format(v) + ' N'), 'Gewicht Gefäß': vs(G.mv, F && F.mv, v => nf0.format(v) + ' g') };
+  $('stats').innerHTML = dpVerdict(V[0], (K.ready ? '' : 'Vorläufig: ') + V[1], F && 'Gemerkt: ' + ['✓ passt', '⚠ knapp', '⚠ kritisch'][F.V[0]] + ' – ' + F.V[1])
+    + items.map(([a, b, n, warn]) => `<div class="stat"><span>${a}</span><b${warn ? ' style="color:var(--warn)"' : ''}>${b}</b><span>${n}${add[a] || ''}</span></div>`).join('');
   $('fillO').textContent = nf0.format(V0) + ' ml';
   $('tiltO').textContent = nf1.format(S.theta) + '°';
   $('wtO').textContent = nf1.format(S.t) + ' mm'; $('btO').textContent = nf1.format(S.tb) + ' mm';
@@ -1869,6 +1909,7 @@ function sloshItems() {
     ['Anhalten ' + nf1.format(S.sv) + ' m/s in ' + nf1.format(S.sb) + ' s', sv, 'aufrecht, größter Randhub · ' + sn, sw]
   ];
 }
+dpCompare($('cmp'), () => ({}), ref => { REF = ref ? { pending: true } : null; drawStats(); drawCharts(); });
 function sloshButtons() {
   const on = S.slosh;
   $('slosh').classList.toggle('on', on); ['walkB', 'stopB', 'sloshCtl', 'sloshNote', 'c3'].forEach(id => $(id).hidden = !on);
