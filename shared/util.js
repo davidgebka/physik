@@ -139,7 +139,7 @@ const dpOpen = {};
 document.addEventListener('toggle', e => { const d = e.target; if (d.matches && d.matches('details[data-k]')) dpOpen[d.dataset.k] = d.open; }, true);
 function dpStats(verdictHtml, main, more = [], key = 'more') {
   const rows = more.map(it => `<tr${it.w ? ' class="warn"' : ''}><td>${dpTerm(it.l, it.t)}</td><td>${it.v}</td><td>${it.n || ''}</td></tr>`).join('');
-  return verdictHtml + main.map(dpStat).join('') +
+  return verdictHtml + `<div class="sts">${main.map(dpStat).join('')}</div>` + // eigenes Raster: Kennwerte füllen die Breite
     (more.length ? `<details class="more" data-k="${key}"${dpOpen[key] ? ' open' : ''}><summary>Alle Werte (${more.length})</summary><table class="kv">${rows}</table></details>` : '');
 }
 // Telefon: Nebenaktionen (Elemente) hinter „⋯“ in ein Menü am Ende der Zeile row; Desktop: an ihrem Platz

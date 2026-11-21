@@ -71,7 +71,7 @@ details>summary{font-size:14px;cursor:pointer;line-height:24px}
 .term{text-decoration:underline dotted;text-underline-offset:3px;cursor:help}
 
 /* Urteil (dpVerdict): Stufe als Marke, Satz als Hauptaussage */
-.verdict{grid-column:1/-1;display:flex;flex-wrap:wrap;align-items:flex-start;gap:0 12px;padding:0 0 24px} /* Marke an der ersten Zeile; ohne Innenabstand oben, sonst liegen die Kennwerte 12 px neben dem Raster */
+.verdict{display:flex;flex-wrap:wrap;align-items:flex-start;gap:0 12px;padding:0 0 24px} /* Marke an der ersten Zeile; ohne Innenabstand oben, sonst liegen die Kennwerte 12 px neben dem Raster */
 .verdict .lv{display:inline-flex;align-items:center;height:24px;padding:0 6px;font-size:14px;font-weight:700;border:1px solid var(--ink);white-space:nowrap}
 .verdict.l1 .lv{background:var(--warn-a);color:var(--warn);border-color:var(--warn)}
 .verdict.l2 .lv{background:var(--warn);color:#fff;border-color:var(--warn)}
@@ -79,7 +79,8 @@ details>summary{font-size:14px;cursor:pointer;line-height:24px}
 .verdict .vx{flex-basis:100%;font-size:12px;color:var(--ink2)}
 
 /* Kennwerte: Label (eine Zeile) – Wert – Notiz; Zeilen per subgrid, damit Werte einer Reihe auf einer Linie stehen */
-.stats{display:grid;grid-template-columns:repeat(auto-fill,minmax(168px,1fr));box-shadow:inset 0 -1px var(--ink);overflow:hidden}
+.stats{box-shadow:inset 0 -1px var(--ink)}
+.sts{display:grid;grid-template-columns:repeat(auto-fit,minmax(168px,1fr));overflow:hidden} /* auto-fit: Kennwerte füllen die Breite */
 .stat{box-shadow:inset 0 1px var(--ink),1px 0 var(--ink);padding:0 6px;min-width:0;display:grid;grid-row:span 3;grid-template-rows:subgrid;align-content:start}
 .stat>span:first-child{font-size:12px;line-height:24px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .stat b{display:block;font-size:28px;line-height:48px;font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -88,7 +89,7 @@ details>summary{font-size:14px;cursor:pointer;line-height:24px}
 .stat>span+b+span,.stat>b+span{font-size:12px;line-height:24px;color:var(--ink2)}
 .stat.warn b{color:var(--warn)}
 /* Alle Werte (dpStats): kompakte Tabelle, aufklappbar */
-details.more{grid-column:1/-1;box-shadow:inset 0 1px var(--ink)}
+details.more{box-shadow:inset 0 1px var(--ink)}
 details.more>summary{font-size:14px}
 table.kv{border-collapse:collapse;width:100%;font-size:14px;line-height:24px}
 table.kv td{padding:0 6px;box-shadow:inset 0 1px var(--dot);vertical-align:top}

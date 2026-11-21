@@ -12,7 +12,8 @@
 .ctl output>*{vertical-align:top}
 .raw{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:0 12px}
 .raw label{font-size:12px;color:var(--ink2);display:flex;justify-content:space-between;align-items:center;gap:6px}
-.ctl select{min-width:0;width:100%}</style>
+.ctl select{min-width:0;width:100%}
+@media(max-width:860px){#phiP+output{grid-column:2/-1;text-align:left}} /* Telefon: Lichtstrom-Feld unter die Liste, sonst werden alle Listen zu schmal */</style>
 </head>
 <body>
 <header id="dp-header"></header>
@@ -74,7 +75,7 @@
   </section>
 
   <section class="panel wide">
-    <h2>Beleuchtungsstärke auf dem Tisch</h2>
+    <h2>Beleuchtungsstärke <small>auf dem Tisch</small></h2>
     <div class="ctl">
       <label for="dist">Tisch unter der Lampe</label><input type="range" id="dist" min="100" max="2000" step="10"><output id="distO"></output>
     </div>
