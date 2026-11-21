@@ -405,9 +405,9 @@ const TPL = {
   alu: () => base({ L: 2400, sec: { type: 'rhs', b: 30, h: 50, t: 2 }, mat: 'al6060', sup: [{ x: 200, t: 'pin' }, { x: 1200, t: 'pin' }, { x: 2200, t: 'pin' }], ql: [{ a: 0, b: 2400, q: 300, perm: true }] }),
   bank: () => base({ L: 1600, sec: { type: 'rect', b: 350, h: 40 }, mat: 'd30', sup: [{ x: 150, t: 'pin' }, { x: 1450, t: 'pin' }], pl: [{ x: 800, F: 981, perm: false, h: 50, c: 25 }] }),
   // Bierbank Buchbach: Bretter 21 mm, Sitzbrett 250 mm, Zargen außen 120 mm hoch → umgedrehtes U 292 × 120 × 21;
-  // Beine 10° ausgestellt, Fuß unter dem Brettende, Sitzhöhe ≈ 450 mm angenommen → Lager ≈ 85 mm vom Ende;
+  // Beine 21 mm, 10° ausgestellt, Fuß außen bündig mit dem Brettende, Beinlänge 300/400/500 mm → Beinmitte oben 63/80/98 mm vom Ende (Vorlage 400);
   // besetzt mit 100 kg je 60 cm Sitzbreite, mittig setzt sich eine Person (50 mm, Gesäß als Polster 25 mm wie „bank“; doppelt gezählt = sichere Seite)
-  bierbank: () => base({ L: 2000, sec: { type: 'Un', b: 292, h: 120, t: 21 }, sup: [{ x: 85, t: 'pin' }, { x: 1915, t: 'pin' }], pl: [{ x: 1000, F: 981, perm: false, h: 50, c: 25 }], ql: [{ a: 0, b: 2000, q: 1635, perm: false }] }),
+  bierbank: () => base({ L: 2000, sec: { type: 'Un', b: 292, h: 120, t: 21 }, sup: [{ x: 80, t: 'pin' }, { x: 1920, t: 'pin' }], pl: [{ x: 1000, F: 981, perm: false, h: 50, c: 25 }], ql: [{ a: 0, b: 2000, q: 1635, perm: false }] }),
   tisch: () => base({ L: 1800, sec: { type: 'rect', b: 800, h: 25 }, mat: 'bsp', sup: [{ x: 350, t: 'pin' }, { x: 1450, t: 'pin' }], pl: [{ x: 0, F: 600, perm: false, h: 0 }] }),
   konsole: () => base({ L: 300, sec: { type: 'rhs', b: 20, h: 40, t: 2 }, mat: 's235', lim: 200, sup: [{ x: 0, t: 'fix' }], pl: [{ x: 300, F: 500, perm: false, h: 0 }] }),
   stuetze: () => base({ L: 720, orient: 'v', sec: { type: 'tube', d: 25, t: 1.5 }, mat: 'al6060', N: 2000, sup: [{ x: 0, t: 'pin' }, { x: 720, t: 'pin' }], pl: [{ x: 360, F: 50, perm: false, h: 0 }] })
