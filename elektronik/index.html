@@ -31,7 +31,7 @@
   </section>
   <section class="panel kpi">
     <h2>Kennwerte</h2>
-    <div class="row"><label for="soll" class="note">Laufzeit soll</label><input type="number" id="soll" min="0" step="1" style="width:80px"><span class="note">h – leer: ohne Vorgabe</span></div>
+    <div class="row"><label for="soll" class="note">Laufzeit soll</label><input type="number" id="soll" min="0" step="1" style="width:80px"><span class="note">h</span><span class="sep"></span><label for="hday" class="note">Betrieb</label><input type="number" id="hday" min="0" max="24" step="0.5" style="width:80px"><span class="note">h/Tag – leer: dauernd</span></div>
     <div class="stats" id="stats"></div>
   </section>
   <section class="panel wide">
@@ -47,6 +47,8 @@
     <h3>Modell</h3><p>Gleichstrom im eingeschwungenen Zustand: Knotenanalyse mit Newton-Verfahren für die nichtlinearen Bauteile. Leitungen sind ideal (0 Ω). Verbunden ist, was sich einen Rasterpunkt teilt: Leitungsenden, Abzweige und Bauteilanschlüsse, auch mitten auf einer Leitung. Kreuzende Leitungen ohne Knotenpunkt sind nicht verbunden. Kein Wechselstrom, kein Ein- und Ausschwingen.</p>
     <h3>Quellen</h3><p>Leerlaufspannung mit Innenwiderstand, Zellen in Reihe addieren beides. Kapazität, Innenwiderstand und Dauerstrom sind Richtwerte für neue Zellen bei Raumtemperatur. <i>Laufzeit</i> = Kapazität / Strom: obere Abschätzung, denn bei hohem Strom, Kälte und alten Zellen liefern vor allem Alkali-Zellen deutlich weniger, und die Spannung sinkt beim Entladen. Netzteile: feste Spannung, kleiner Innenwiderstand, Grenzstrom.</p>
     <h3>Bauteile</h3><p><i>LED</i>: Diodenkennlinie mit Bahnwiderstand, angepasst an die Flussspannung beim Nennstrom (5 mm: 20 mA, Grenze 30 mA). Helligkeit ≈ Strom / Nennstrom. <i>Glühlampe</i>: Strom ∝ Spannung^0,6 (warmer Faden), Licht ∝ Spannung^3,4. <i>Motor</i> mit Last proportional zur Drehzahl (Lüfter, Rad): im Lauf wie ein Widerstand Nennspannung / Laufstrom, beim Anlauf zieht er den Anlaufstrom (Ankerwiderstand). <i>Kabel</i>: Kupfer, ein Leiter, R = 0,0175 Ω·mm²/m · Länge / Querschnitt. <i>Schalter</i>: 10 mΩ geschlossen.</p>
+    <h3>Betrieb und Ruhe</h3><p>„Betrieb h/Tag“: so lange gilt die Schaltung wie gezeichnet, die übrige Zeit der Ruhezustand – alle Schalter offen, Mikrocontroller im tiefsten Schlafmodus (Platine mit Spannungsregler, USB-Chip und LED: Arduino Uno ≈ 35 mA, Nano ≈ 7 mA, ESP32 DevKit ≈ 10 mA, Pico ≈ 2 mA; Raspberry Pi ohne Schlafmodus), Pins aus. Laufzeit = Kapazität / mittlerer Strom. Selbstentladung und Alterung sind nicht gerechnet (bei Monaten Laufzeit wichtig: NiMH verliert ≈ 20 %/Monat, Alkali und Lithium ≈ 2 %/Jahr).</p>
+    <h3>Erwärmung</h3><p>Temperatur = 25 °C + Verlustleistung × Wärmewiderstand zur Luft ohne Kühlkörper: Widerstand +100 K bei Nennleistung, TO-220 (7805, MOSFET) 62–65 K/W, SOT-223 (AMS1117) ≈ 90 K/W, TO-92 (BC547, 2N2222) ≈ 200 K/W, Wandlermodul ≈ 40 K/W. Richtwerte für freie Luft; im geschlossenen Gehäuse deutlich wärmer. Über 85 °C markiert.</p>
     <h3>Mikrocontroller, Wandler, Transistor</h3><p><i>Mikrocontroller</i> (Arduino, ESP32, Pico, Raspberry Pi) als Block: mittlere Stromaufnahme an der Versorgung (WLAN-Spitzen, Peripherie und Schlafmodi nicht gerechnet), erlaubter Spannungsbereich am jeweiligen Pin, ein Ausgangspin als Spannungsquelle (5 bzw. 3,3 V mit Innenwiderstand), dessen Strom aus der Versorgung kommt. Antippen schaltet den Pin. Kein Programm, keine Pegel- oder Zeitabläufe. <i>Linearregler</i>: Ausgang = Sollspannung, solange der Eingang um den Dropout höher liegt; Eingangsstrom = Ausgangsstrom + Eigenverbrauch, die Differenz wird Wärme. <i>Step-down/Step-up</i>: Eingangsleistung = Ausgangsleistung / Wirkungsgrad (fest). <i>MOSFET</i>: Widerstand Ron, sobald die Gatespannung über der Schaltschwelle liegt (weicher Übergang); Standardtypen brauchen ≈ 10 V, Logik-Pegel-Typen schalten mit 3,3–5 V. <i>NPN</i>: Kollektorstrom = Stromverstärkung × Basisstrom, begrenzt durch die Last (Sättigung ≈ 0,1 V). Grenzen ohne Kühlkörper (Richtwerte).</p>
     <h3>Urteil</h3><p>Kritisch: Quelle über Dauerstrom oder Kurzschluss (Klemmenspannung unter der Hälfte), LED über Grenzstrom, Widerstand über Nennleistung, Lampe über 110 % und Motor über 150 % der Nennspannung, Kabel über 15 A/mm², Laufzeit unter halbem Soll, Mikrocontroller außerhalb seines Spannungsbereichs oder Pin über Grenzstrom, Wandler über Grenzstrom oder Eingangsspannung, Linearregler über Verlustleistung, Transistor über Grenzstrom oder Verlustleistung. Knapp: Quelle über 80 % oder Spannungseinbruch über 15 %, Anlaufstrom über Dauerstrom, LED über 120 % Nennstrom, verpolt oder fast dunkel, Widerstand über 70 %, Lampe unter 90 % der Nennspannung (≈ 70 % Licht), Motor unter 50 % bzw. über 120 %, Kabel über 8 A/mm² oder mehr als 10 % Spannungsverlust, Laufzeit unter Soll, offener Anschluss, Pin über empfohlenem Strom, Linearregler über 60 % Verlust, Wandler-Ausgang unter 95 % (Eingang zu niedrig), Transistor über 50 % Verlust, MOSFET nicht ganz durchgeschaltet, NPN nicht gesättigt.</p>
     <h3>Nicht enthalten</h3><p>230-V-Netzspannung und Transformatoren (Elektrofachkraft; hier nur Netzteile mit Ausgangsspannung) · Code ausführen (dafür Wokwi oder Tinkercad Circuits) · Platinen (Fritzing, KiCad) · Kondensatoren, Spulen, Schwingkreise, Zeitverläufe (Falstad CircuitJS) · Erwärmung in °C, Belastbarkeit von Schaltern und Steckern, Entladekurven.</p>
@@ -79,31 +81,33 @@ const Core = (() => {
     pbank: { n: 'Powerbank 10 000 mAh', U: 5, Ri: 0.15, C: 6300, Imax: 2.4, g: 200, vol: 110, dim: '140 × 70 × 15 mm' } // C: 10 000 mAh bei 3,7 V → ≈ 6300 mAh bei 5 V (85 % Wandler)
   };
   // Mikrocontroller-Boards (Richtwerte aus Datenblättern/Foren, typisch): Versorgung Vmin…Vmax am Pin vp, Aufnahme I0 (Mittel, ohne Pinstrom),
-  // Ausgangspin: Pegel Vio, Innenwiderstand Ri, empfohlener Strom In, Grenze Imax
+  // Ausgangspin: Pegel Vio, Innenwiderstand Ri, empfohlener Strom In, Grenze Imax; Isl Ruhestrom der ganzen Platine im tiefsten Schlafmodus (Spannungsregler,
+  // USB-Chip und LED laufen weiter – darum weit über dem Chip-Wert; Raspberry Pi: kein Schlafmodus)
   const BOARDS = {
-    uno:   { n: 'Arduino Uno R3', s: 'Uno', vp: 'VIN', Vmin: 7, Vmax: 12, I0: 0.05, Vio: 5, Ri: 25, In: 0.02, Imax: 0.04 },
-    uno5:  { n: 'Arduino Uno (5-V-Pin/USB)', s: 'Uno', vp: '5V', Vmin: 4.75, Vmax: 5.25, I0: 0.045, Vio: 5, Ri: 25, In: 0.02, Imax: 0.04 },
-    nano:  { n: 'Arduino Nano', s: 'Nano', vp: 'VIN', Vmin: 7, Vmax: 12, I0: 0.02, Vio: 5, Ri: 25, In: 0.02, Imax: 0.04 },
-    esp32: { n: 'ESP32 DevKit (WLAN an)', s: 'ESP32', vp: '5V', Vmin: 4.5, Vmax: 6, I0: 0.1, Vio: 3.3, Ri: 30, In: 0.02, Imax: 0.04 },
-    pico:  { n: 'Raspberry Pi Pico', s: 'Pico', vp: 'VSYS', Vmin: 1.8, Vmax: 5.5, I0: 0.025, Vio: 3.3, Ri: 40, In: 0.008, Imax: 0.012 },
-    pi4:   { n: 'Raspberry Pi 4', s: 'Pi 4', vp: '5V', Vmin: 4.75, Vmax: 5.25, I0: 0.6, Vio: 3.3, Ri: 40, In: 0.008, Imax: 0.016 },
-    pi5:   { n: 'Raspberry Pi 5', s: 'Pi 5', vp: '5V', Vmin: 4.75, Vmax: 5.25, I0: 0.7, Vio: 3.3, Ri: 40, In: 0.008, Imax: 0.016 },
-    piz:   { n: 'Raspberry Pi Zero 2 W', s: 'Zero', vp: '5V', Vmin: 4.75, Vmax: 5.25, I0: 0.12, Vio: 3.3, Ri: 40, In: 0.008, Imax: 0.016 }
+    uno:   { n: 'Arduino Uno R3', s: 'Uno', vp: 'VIN', Vmin: 7, Vmax: 12, I0: 0.05, Vio: 5, Ri: 25, In: 0.02, Imax: 0.04, Isl: 0.035 },
+    uno5:  { n: 'Arduino Uno (5-V-Pin/USB)', s: 'Uno', vp: '5V', Vmin: 4.75, Vmax: 5.25, I0: 0.045, Vio: 5, Ri: 25, In: 0.02, Imax: 0.04, Isl: 0.03 },
+    nano:  { n: 'Arduino Nano', s: 'Nano', vp: 'VIN', Vmin: 7, Vmax: 12, I0: 0.02, Vio: 5, Ri: 25, In: 0.02, Imax: 0.04, Isl: 0.007 },
+    esp32: { n: 'ESP32 DevKit (WLAN an)', s: 'ESP32', vp: '5V', Vmin: 4.5, Vmax: 6, I0: 0.1, Vio: 3.3, Ri: 30, In: 0.02, Imax: 0.04, Isl: 0.01 },
+    pico:  { n: 'Raspberry Pi Pico', s: 'Pico', vp: 'VSYS', Vmin: 1.8, Vmax: 5.5, I0: 0.025, Vio: 3.3, Ri: 40, In: 0.008, Imax: 0.012, Isl: 0.002 },
+    pi4:   { n: 'Raspberry Pi 4', s: 'Pi 4', vp: '5V', Vmin: 4.75, Vmax: 5.25, I0: 0.6, Vio: 3.3, Ri: 40, In: 0.008, Imax: 0.016, Isl: 0.6 },
+    pi5:   { n: 'Raspberry Pi 5', s: 'Pi 5', vp: '5V', Vmin: 4.75, Vmax: 5.25, I0: 0.7, Vio: 3.3, Ri: 40, In: 0.008, Imax: 0.016, Isl: 0.7 },
+    piz:   { n: 'Raspberry Pi Zero 2 W', s: 'Zero', vp: '5V', Vmin: 4.75, Vmax: 5.25, I0: 0.12, Vio: 3.3, Ri: 40, In: 0.008, Imax: 0.016, Isl: 0.12 }
   };
   // Spannungswandler: lin = Linearregler (Verlust (Uein − Uaus)·I), buck = Step-down, boost = Step-up (Wirkungsgrad eta); drop Mindestabstand Ein–Aus, Iq Eigenverbrauch
   const REGS = {
-    ams33: { n: 'Linearregler 3,3 V (AMS1117)', k: 'lin', Vset: 3.3, drop: 1.1, Iq: 0.005, Imax: 0.8, Pmax: 1, Vimax: 15 },
-    l7805: { n: 'Linearregler 5 V (7805)', k: 'lin', Vset: 5, drop: 2, Iq: 0.005, Imax: 1, Pmax: 2, Vimax: 35 },
-    buck5: { n: 'Step-down 5 V (3 A, 90 %)', k: 'buck', Vset: 5, drop: 1, Iq: 0.003, eta: 0.9, Imax: 3, Vimax: 28 },
-    buck33:{ n: 'Step-down 3,3 V (3 A, 88 %)', k: 'buck', Vset: 3.3, drop: 1, Iq: 0.003, eta: 0.88, Imax: 3, Vimax: 28 },
-    boost5:{ n: 'Step-up 5 V (1 A, 85 %)', k: 'boost', Vset: 5, Vstart: 0.9, Iq: 0.005, eta: 0.85, Imax: 1, Iinmax: 2.5, Vimax: 5 }
+    ams33: { n: 'Linearregler 3,3 V (AMS1117)', k: 'lin', Vset: 3.3, drop: 1.1, Iq: 0.005, Imax: 0.8, Pmax: 1, Vimax: 15, Rth: 90 },
+    l7805: { n: 'Linearregler 5 V (7805)', k: 'lin', Vset: 5, drop: 2, Iq: 0.005, Imax: 1, Pmax: 2, Vimax: 35, Rth: 65 },
+    buck5: { n: 'Step-down 5 V (3 A, 90 %)', k: 'buck', Vset: 5, drop: 1, Iq: 0.003, eta: 0.9, Imax: 3, Vimax: 28, Rth: 40 },
+    buck33:{ n: 'Step-down 3,3 V (3 A, 88 %)', k: 'buck', Vset: 3.3, drop: 1, Iq: 0.003, eta: 0.88, Imax: 3, Vimax: 28, Rth: 40 },
+    boost5:{ n: 'Step-up 5 V (1 A, 85 %)', k: 'boost', Vset: 5, Vstart: 0.9, Iq: 0.005, eta: 0.85, Imax: 1, Iinmax: 2.5, Vimax: 5, Rth: 40 }
   };
+  // Rth: Wärmewiderstand zur Luft ohne Kühlkörper [K/W] (TO-220 ≈ 62, SOT-223 auf Platine ≈ 90, TO-92 ≈ 200, Wandlermodul ≈ 40)
   // Transistoren als Schalter: mos = N-MOSFET (Ron, Schaltschwelle Vm ± w), npn = Bipolar (Stromverstärkung beta); Grenzen ohne Kühlkörper
   const TRANS = {
-    irlz:  { n: 'MOSFET Logik-Pegel (IRLZ44N)', k: 'mos', Ron: 0.025, Vm: 2.0, w: 0.25, Imax: 10, Pmax: 1.5 },
-    irf:   { n: 'MOSFET Standard (IRF540N)', k: 'mos', Ron: 0.044, Vm: 4.5, w: 0.4, Imax: 10, Pmax: 1.5 },
-    bc547: { n: 'NPN klein (BC547)', k: 'npn', beta: 200, Imax: 0.1, Pmax: 0.5 },
-    n2222: { n: 'NPN (2N2222)', k: 'npn', beta: 100, Imax: 0.6, Pmax: 0.5 }
+    irlz:  { n: 'MOSFET Logik-Pegel (IRLZ44N)', k: 'mos', Ron: 0.025, Vm: 2.0, w: 0.25, Imax: 10, Pmax: 1.5, Rth: 62 },
+    irf:   { n: 'MOSFET Standard (IRF540N)', k: 'mos', Ron: 0.044, Vm: 4.5, w: 0.4, Imax: 10, Pmax: 1.5, Rth: 62 },
+    bc547: { n: 'NPN klein (BC547)', k: 'npn', beta: 200, Imax: 0.1, Pmax: 0.5, Rth: 200 },
+    n2222: { n: 'NPN (2N2222)', k: 'npn', beta: 100, Imax: 0.6, Pmax: 0.5, Rth: 200 }
   };
   const BE = { Vf: 0.65, In: 1e-3, Rs: 10, nvt: 0.026 }; // Basis-Emitter-Diode: 0,65 V bei 1 mA
   // LEDs: Flussspannung Vf beim Nennstrom In, Grenze Imax, Bahnwiderstand Rs (5-mm-Standard; Power-LED 1 W)
@@ -117,6 +121,7 @@ const Core = (() => {
   };
   const NVT = 0.06;       // n·U_T der LED-Kennlinie: ≈ 0,14 V je Dekade Strom
   const RHO_CU = 0.0175;  // Ω·mm²/m
+  const T_AMB = 25;       // °C Umgebung für die Erwärmung
   const R_SW = 0.01;      // Schalter geschlossen (Kontaktwiderstand)
   const GMIN = 1e-12;     // S je Knoten nach Masse: nur über Sperrstrecken verbundene Knoten bleiben bestimmt
   const LAMP_EXP = 0.6;   // Glühlampe: I ∝ U^0,6 (Wolfram, warmer Faden)
@@ -162,7 +167,8 @@ const Core = (() => {
   }
 
   // Netzliste: Rasterpunkte über Leitungen vereinigen → Knoten; Bauteile → Elemente
-  function netlist(m, start) {
+  // start: Motoren als Ankerwiderstand (Anlauf); rest: Ruhezustand – Schalter offen, Mikrocontroller schlafen, Pins aus
+  function netlist(m, start, rest) {
     const par = new Map(), key = q => q[0] + ',' + q[1];
     const find = k => { if (!par.has(k)) par.set(k, k); let r = k; while (par.get(r) !== r) r = par.get(r); par.set(k, r); return r; };
     const uni = (a, b) => par.set(find(a), find(b));
@@ -176,12 +182,12 @@ const Core = (() => {
     const el = m.parts.map((p, i) => {
       const N = T[i].map(node), a = N[0], b = N[1];
       switch (p.t) {
-        case 'mcu': return { k: 'nl', n: N, f: mcuF(BOARDS[p.board] || BOARDS.uno, p.hi) };
+        case 'mcu': { const B = BOARDS[p.board] || BOARDS.uno; return { k: 'nl', n: N, f: rest ? mcuF({ ...B, I0: B.Isl }, false) : mcuF(B, p.hi) }; }
         case 'reg': return { k: 'nl', n: N, f: regF(REGS[p.rt] || REGS.buck5) };
         case 'tr': return { k: 'nl', n: N, f: trF(TRANS[p.tt] || TRANS.irlz) };
         case 'bat': { const c = cell(p); return { k: 'src', a, b, U: c.U, Ri: c.Ri }; }
         case 'r': return { k: 'g', a, b, g: 1 / Math.max(p.R, 1e-6) };
-        case 'sw': return { k: 'g', a, b, g: p.on ? 1 / R_SW : 0 };
+        case 'sw': return { k: 'g', a, b, g: p.on && !rest ? 1 / R_SW : 0 };
         case 'cab': return { k: 'g', a, b, g: p.A / (RHO_CU * Math.max(p.L, 1e-6)) };
         case 'mot': return { k: 'g', a, b, g: (start ? p.Ia : p.In) / p.Un }; // Lauf: Last ∝ Drehzahl → R = Un/In; Anlauf: Ankerwiderstand Un/Ia
         case 'led': return { k: 'led', a, b, L: led(p) };
@@ -334,16 +340,24 @@ const Core = (() => {
           else if (Umax && Math.abs(U) > 0.1 * Umax) set(1, `Kabel verliert ${f2(Math.abs(U))} V`);
           break; }
       }
+      const Rth = p.t === 'r' ? 100 / p.Pn : p.t === 'tr' ? (TRANS[p.tt] || TRANS.irlz).Rth : p.t === 'reg' ? (REGS[p.rt] || REGS.buck5).Rth : 0; // Widerstand: +100 K bei Nennleistung
+      if (Rth && o.P > 0) o.dT = o.P * Rth;
       if (o.lv) issues.push([o.lv, o.msg, i]);
       return o;
     });
+    // Betrieb hday Stunden am Tag, sonst Ruhezustand: mittlerer Strom je Batterie, Laufzeit = C / Mittel
+    const d = m.hday > 0 && m.hday < 24 ? m.hday / 24 : 1, rr = d < 1 ? solve(netlist(m, false, true)) : null;
+    parts.forEach((o, i) => { if (m.parts[i].t !== 'bat') return; o.h0 = o.h; o.Ir = rr && !rr.err ? rr.I[i] : o.I; o.Iavg = d * o.I + (1 - d) * o.Ir;
+      o.h = o.cell.C && o.Iavg > 1e-9 ? o.cell.C / 1000 / o.Iavg : null; });
     const bats = parts.filter((o, i) => m.parts[i].t === 'bat');
-    const hs = bats.filter(o => o.h != null).map(o => o.h), h = hs.length ? Math.min(...hs) : null;
+    const hs = bats.filter(o => o.h != null).map(o => o.h), h = hs.length ? Math.min(...hs) : null, h0s = bats.filter(o => o.h0 != null).map(o => o.h0);
+    const fh = x => x >= 48 ? f2(Math.round(x / 2.4) / 10) + ' Tage' : f2(x) + ' h';
     if (!bats.length) issues.push([1, 'Keine Stromquelle', -1]);
-    if (h != null && m.soll > 0 && h < m.soll) issues.push([h < m.soll / 2 ? 2 : 1, `Batterie hält nur ${f2(h)} h (Soll ${f2(m.soll)} h)`, -1]);
+    if (h != null && m.soll > 0 && h < m.soll) issues.push([h < m.soll / 2 ? 2 : 1, `Batterie hält nur ${fh(h)} (Soll ${fh(m.soll)})` + (d < 1 && bats.some(o => o.Ir > 0.5 * o.Iavg) ? ' – vor allem der Ruhestrom' : ''), -1]);
+    const hot = parts.reduce((b, o, i) => o.dT > (b ? b.dT : 0) ? { i, dT: o.dT, T: T_AMB + o.dT } : b, null);
     issues.sort((a, b) => b[0] - a[0]);
     const P = bats.reduce((s, o) => s + Math.max(0, o.P), 0), g = bats.reduce((s, o) => s + o.cell.g, 0), vol = bats.reduce((s, o) => s + o.cell.vol, 0);
-    return { parts, issues, h, P, g, vol, net, it: r.it };
+    return { parts, issues, h, h0: h0s.length ? Math.min(...h0s) : null, d, Ir: bats.reduce((s, o) => s + Math.max(0, o.Ir), 0), hot, P, g, vol, net, it: r.it };
   }
 
   // Leitungen aufräumen (nach jeder Bearbeitung): an Anschlüssen und Leitungsenden, die mitten auf einer Leitung liegen, wird sie geteilt (T-Abzweig);
@@ -362,7 +376,7 @@ const Core = (() => {
     return out;
   }
 
-  return { CELLS, LEDS, BOARDS, REGS, TRANS, BE, NVT, ledIs, RHO_CU, R_SW, TERMS, place, term, cell, ledIV, lampIV, mcuF, regF, trF, netlist, solve, analyze, tidy };
+  return { T_AMB, CELLS, LEDS, BOARDS, REGS, TRANS, BE, NVT, ledIs, RHO_CU, R_SW, TERMS, place, term, cell, ledIV, lampIV, mcuF, regF, trF, netlist, solve, analyze, tidy };
 })();
 if (typeof module !== 'undefined') module.exports = Core;
 // === CORE END
@@ -372,7 +386,7 @@ const nf2 = new Intl.NumberFormat('de-DE', { maximumFractionDigits: 2, minimumFr
 const fI = I => { const a = Math.abs(I); return a >= 1 ? nf2.format(a) + ' A' : a >= 0.01 ? nf0.format(a * 1000) + ' mA' : nf1.format(a * 1000) + ' mA'; };
 const fU = U => (Math.abs(U) >= 10 ? nf1 : nf2).format(U) + ' V';
 const fP = P => P >= 1 ? nf2.format(P) + ' W' : nf0.format(P * 1000) + ' mW';
-const fh = h => h < 1 ? nf0.format(h * 60) + ' min' : h < 100 ? nf1.format(h) + ' h' : nf0.format(h) + ' h';
+const fh = h => h < 1 ? nf0.format(h * 60) + ' min' : h < 48 ? nf1.format(h) + ' h' : nf1.format(h / 24) + ' Tage';
 const fN = v => String(+(+v).toPrecision(4)).replace('.', ',');
 const NAME = { bat: 'Batterie', sw: 'Schalter', r: 'Widerstand', led: 'LED', lamp: 'Glühlampe', mot: 'Motor', cab: 'Kabel', mcu: 'Mikrocontroller', tr: 'Transistor', reg: 'Wandler' };
 const DEF = { bat: { cell: 'aa', n: 2 }, sw: { on: true }, r: { R: 330, Pn: 0.25 }, led: { col: 'rot' }, lamp: { Un: 3, Pn: 0.9 }, mot: { Un: 3, In: 0.25, Ia: 1.5 }, cab: { L: 5, A: 0.25 }, mcu: { board: 'uno', hi: true }, tr: { tt: 'irlz' }, reg: { rt: 'buck5' } };
@@ -431,6 +445,7 @@ const TPLS = [['Prinzipien', [
     wires: [...W([0, 2], [0, 0], [17, 0]), [4, 0, 4, 3], ...W([8, 3], [8, 2], [10, 2]), ...W([0, 4], [0, 7], [17, 7]), [6, 5, 6, 7], [10, 4, 10, 7], [17, 2, 17, 3], [17, 5, 17, 7], ...W([14, 3], [14, 4], [15, 4])] })],
   ['pico', 'Pico am LiPo', 'Laufzeit mit Mikrocontroller', () => ({ parts: [BAT({ cell: 'lipo' }), P('mcu', 3, 2, 0, { board: 'pico' }), P('r', 7, 3, 0, { R: 330 }), P('led', 9, 3, 0)],
     wires: [...W([0, 2], [3, 2]), ...W([0, 4], [3, 4]), ...W([11, 3], [11, 6], [3, 6], [3, 4])], soll: 24 })],
+  ['espbat', 'ESP32-Sensor auf Batterie', '½ h am Tag – der Ruhestrom zählt', () => ({ parts: [BAT({ cell: 'aanimh', n: 4 }), P('mcu', 3, 2, 0, { board: 'esp32', hi: false })], wires: [...W([0, 2], [3, 2]), ...W([0, 4], [3, 4])], hday: 0.5, soll: 720 })],
   ['pibank', 'Raspberry Pi an Powerbank', 'wie lange läuft er?', () => ({ parts: [BAT({ cell: 'pbank' }), P('mcu', 3, 2, 0, { board: 'pi4', hi: false })], wires: [...W([0, 2], [3, 2]), ...W([0, 4], [3, 4])], soll: 8 })],
   ['lin', 'Linearregler 12 → 5 V', 'Pi 4 am 7805: wird heiß', () => ({ parts: [BAT({ cell: 'psu12' }), P('reg', 2, 0, 0, { rt: 'l7805' }), P('mcu', 8, 2, 0, { board: 'pi4', hi: false })],
     wires: [...W([0, 2], [0, 0], [2, 0]), ...W([6, 0], [8, 0], [8, 2]), ...W([8, 4], [8, 6], [0, 6], [0, 4]), [4, 2, 4, 6]] })],
@@ -439,7 +454,7 @@ const TPLS = [['Prinzipien', [
 ]], ['Produkte', [
   ['torch', 'Taschenlampe', '2 × AA, Glühlampe 3 V', () => ring({ cell: 'aa', n: 2 }, [{ t: 'sw' }], { t: 'lamp' })],
   ['usbl', 'USB-Leuchte', '3 weiße LEDs, je 100 Ω', () => branches({ cell: 'usb' }, [0, 1, 2].map(() => [{ t: 'r', R: 100 }, { t: 'led', col: 'weiss' }]))],
-  ['nacht', 'Nachtlicht', '18650, weiße LED, 47 Ω', () => { const m = ring({ cell: 'li18650', n: 1 }, [{ t: 'sw' }, { t: 'r', R: 47 }], { t: 'led', col: 'weiss' }); m.soll = 100; return m; }],
+  ['nacht', 'Nachtlicht', '18650, 8 h je Nacht', () => { const m = ring({ cell: 'li18650', n: 1 }, [{ t: 'sw' }, { t: 'r', R: 47 }], { t: 'led', col: 'weiss' }); m.hday = 8; return m; }],
   ['lese', 'USB-Leselampe 1 W', 'Power-LED: Widerstand wird heiß', () => ring({ cell: 'usb' }, [{ t: 'sw' }, { t: 'r', R: 5.6, Pn: 0.5 }], { t: 'led', col: 'w1' })],
   ['fan', 'Ventilator', 'Netzteil 12 V, Lüfter 0,1 A', () => ring({ cell: 'psu12' }, [{ t: 'sw' }], { t: 'mot', Un: 12, In: 0.1, Ia: 0.3 })],
   ['auto', 'Spielzeugauto', '2 × AA, Motor 3 V: Anlaufstrom', () => { const m = ring({ cell: 'aa', n: 2 }, [{ t: 'sw' }], { t: 'mot' }); m.soll = 2; return m; }]
@@ -499,6 +514,7 @@ function drawEd() {
   // Knoten (≥ 3 Anschlüsse) gefüllt, offene Anschlüsse als Ring
   const deg = new Map(), inc = q => { const s = q + ''; deg.set(s, (deg.get(s) || 0) + 1); };
   S.wires.forEach(q => { inc([q[0], q[1]]); inc([q[2], q[3]]); }); S.parts.forEach(p => Core.term(p).forEach(inc));
+  S.parts.forEach(p => { if (p.t === 'mcu') { const q = Core.term(p)[2] + ''; if (deg.get(q) === 1) deg.delete(q); } }); // freier Pin ist kein Fehler
   for (const [s, d] of deg) { const [x, y] = T(s.split(',').map(Number)); ctx.beginPath(); ctx.arc(x, y, d >= 3 ? 3.5 : 3, 0, 7);
     if (d >= 3) { ctx.fillStyle = css('--elec'); ctx.fill(); } else if (d === 1) { ctx.fillStyle = css('--bg'); ctx.fill(); ctx.strokeStyle = css('--warn'); ctx.lineWidth = 1.5; ctx.stroke(); } }
   // Auswahl: Griffe an den Enden
@@ -534,7 +550,8 @@ function drawMulti(ctx, p, i, T, k) {
     const r = p.t === 'mcu' ? fU(o.U) + ' · ' + fI(o.I) : p.t === 'reg' ? 'aus ' + fU(o.U) + ' · ' + fI(o.I) : fI(o.I) + (o.P > 0.01 ? ' · ' + fP(o.P) : '');
     rows.push([(warn ? '⚠ ' : '') + r, warn ? '--warn' : '--ink']);
     if (p.t === 'mcu' && Math.abs(o.pin) > 1e-6) rows.push(['Pin ' + fI(o.pin), '--ink']);
-    if (p.t === 'reg' && o.I > 1e-4) rows.push([(Core.REGS[p.rt].k === 'lin' ? '' : 'η ' + nf0.format(o.eta * 100) + ' % · ') + 'Verlust ' + fP(o.P), '--ink2']);
+    if (p.t === 'reg' && o.I > 1e-4) rows.push([(Core.REGS[p.rt].k === 'lin' ? '' : 'η ' + nf0.format(o.eta * 100) + ' % · ') + 'Verlust ' + fP(o.P) + (o.dT > 20 ? ' · ' + nf0.format(Core.T_AMB + o.dT) + ' °C' : ''), '--ink2']);
+    if (p.t === 'tr' && o.dT > 20) rows.push(['≈ ' + nf0.format(Core.T_AMB + o.dT) + ' °C', warn ? '--warn' : '--ink2']);
   }
   ctx.font = DP_CFONT; ctx.textBaseline = 'middle';
   rows.forEach(([t, c], j) => { ctx.fillStyle = css(c);
@@ -569,7 +586,7 @@ function drawPart(ctx, p, i, T, k) {
     if (vert) { ctx.textAlign = 'left'; ctx.fillText(t, C[0] + 0.6 * k, C[1] + side * 9); } else { ctx.textAlign = 'center'; ctx.fillText(t, C[0], C[1] + side * 0.72 * k); }
     ctx.textBaseline = 'alphabetic'; };
   ctx.font = DP_CFONT; if (k >= 28) lab(pv(p, true), -1, css('--ink2')); // eng (Telefon): nur Ergebnisse, Werte in der Auswahlzeile
-  if (o) { const r = p.t === 'bat' ? fU(o.U) + ' · ' + fI(o.I) : p.t === 'cab' ? 'ΔU ' + fU(Math.abs(o.U)) : p.t === 'sw' ? (p.on ? fI(o.I) : '') : fI(o.I);
+  if (o) { const r = p.t === 'bat' ? fU(o.U) + ' · ' + fI(o.I) : p.t === 'cab' ? 'ΔU ' + fU(Math.abs(o.U)) : p.t === 'sw' ? (p.on ? fI(o.I) : '') : fI(o.I) + (o.dT > 20 ? ' · ' + nf0.format(Core.T_AMB + o.dT) + ' °C' : '');
     if (r || warn) lab((warn ? '⚠ ' : '') + r, 1, css(warn ? '--warn' : '--ink')); }
 }
 
@@ -579,9 +596,9 @@ function verdict(a) {
   if (a.issues.length) return [a.issues[0][0], a.issues[0][1] + (a.issues.length > 1 ? ` <small>(+${a.issues.length - 1} weitere)</small>` : '')];
   const Isrc = a.parts.reduce((s, o, i) => s + (S.parts[i] && S.parts[i].t === 'bat' ? Math.max(0, o.I) : 0), 0);
   if (Isrc < 1e-5) return [0, 'Kreis offen – es fließt kein Strom'];
-  return [0, a.h != null ? 'Alles im grünen Bereich – Batterie hält ≈ ' + fh(a.h) : 'Alles im grünen Bereich'];
+  return [0, a.h != null ? 'Alles im grünen Bereich – Batterie hält ≈ ' + fh(a.h) + (a.d < 1 ? ' bei ' + nf1.format(a.d * 24) + ' h/Tag' : '') : 'Alles im grünen Bereich'];
 }
-function keyVals(a, m) { const Isrc = a.parts.reduce((s, o, i) => s + (m.parts[i].t === 'bat' ? Math.max(0, o.I) : 0), 0); return { h: a.h, I: Isrc, P: a.P, g: a.g }; }
+function keyVals(a, m) { const Isrc = a.parts.reduce((s, o, i) => s + (m.parts[i].t === 'bat' ? Math.max(0, o.I) : 0), 0); return { h: a.h, I: Isrc, P: a.P, g: a.g, vol: a.vol, T: a.hot ? a.hot.T : null }; }
 function renderStats() {
   const V = verdict(A), VR = REF && verdict(REF.a);
   const vh = dpVerdict(V[0], V[1], VR && 'Gemerkt: ' + DP_LV[VR[0]] + ' – ' + VR[1].replace(/<[^>]*>/g, ''));
@@ -592,11 +609,13 @@ function renderStats() {
   const bats = S.parts.map((p, i) => [p, A.parts[i]]).filter(([p]) => p.t === 'bat'), net = bats.length && bats.every(([p]) => !Core.CELLS[p.cell].C);
   const low = A.h != null && S.soll > 0 && A.h < S.soll;
   const main = [
-    { l: 'Laufzeit', t: 'Kapazität / Strom: obere Abschätzung für neue Zellen (siehe Modell)', v: A.h != null ? (low ? '⚠ ' : '') + fh(A.h) : net ? '∞' : '–', w: low, n: j(A.h != null ? 'Batterie, Richtwert' : net ? 'Netzteil' : 'kein Strom', S.soll > 0 ? 'Soll ' + fh(S.soll) : '', vs('h', fh)) },
+    { l: 'Laufzeit', t: 'Kapazität / Strom: obere Abschätzung für neue Zellen (siehe Modell)', v: A.h != null ? (low ? '⚠ ' : '') + fh(A.h) : net ? '∞' : '–', w: low, n: j(A.h != null ? (A.d < 1 ? nf1.format(A.d * 24) + ' h/Tag, dauernd ' + fh(A.h0) : 'Batterie, Richtwert') : net ? 'Netzteil' : 'kein Strom', S.soll > 0 ? 'Soll ' + fh(S.soll) : '', vs('h', fh)) },
     { l: 'Strom aus der Quelle', v: fI(KV.I), n: vs('I', fI) },
     { l: 'Leistung', v: fP(A.P), n: vs('P', fP) }
   ];
-  if (A.g) main.push({ l: 'Batterien', v: nf0.format(A.g) + ' g', n: j(nf1.format(A.vol) + ' cm³', [...new Set(bats.filter(([p]) => Core.CELLS[p.cell].C).map(([p]) => (p.n > 1 ? p.n + ' × ' : '') + Core.CELLS[p.cell].dim))].join(', '), vs('g', g => nf0.format(g) + ' g')) });
+  if (A.d < 1 && A.h != null) main.push({ l: 'Ruhestrom', t: 'Strom außerhalb der Betriebszeit: Schalter offen, Mikrocontroller im Schlafmodus, Pins aus', v: fI(A.Ir), n: A.Ir > 0 ? 'verbraucht ' + nf0.format(100 * (1 - A.d) * A.Ir / ((1 - A.d) * A.Ir + A.d * KV.I)) + ' % der Ladung' : 'nichts in der Ruhezeit' });
+  if (A.g) main.push({ l: 'Batterien', v: nf0.format(A.g) + ' g', n: j(nf1.format(A.vol) + ' cm³', [...new Set(bats.filter(([p]) => Core.CELLS[p.cell].C).map(([p]) => (p.n > 1 ? p.n + ' × ' : '') + Core.CELLS[p.cell].dim))].join(', '), vs('g', g => nf0.format(g) + ' g'), vs('vol', v => nf1.format(v) + ' cm³')) });
+  if (A.hot && A.hot.dT > 5) { const hp = S.parts[A.hot.i]; main.push({ l: 'Wärmste Stelle', t: 'Erwärmung = Verlustleistung × Wärmewiderstand ohne Kühlkörper, bei 25 °C Umgebung (Richtwert)', v: '≈ ' + nf0.format(A.hot.T) + ' °C', w: A.hot.T > 85, n: j(NAME[hp.t] + ' ' + (A.hot.i + 1), A.hot.T > 150 ? 'rechnerisch – real schaltet der Schutz ab oder das Bauteil fällt aus' : A.hot.T > 85 ? 'zu heiß für Gehäuse und Hand' : A.hot.T > 50 ? 'warm' : '', vs('T', t => nf0.format(t) + ' °C')) }); }
   const more = S.parts.map((p, i) => { const o = A.parts[i];
     return { l: NAME[p.t] + ' ' + (i + 1) + ' <small>' + pv(p) + '</small>', v: (p.t === 'bat' ? fU(o.U) : fU(Math.abs(o.U))) + ' · ' + fI(o.I) + ' · ' + fP(Math.abs(o.P)),
       n: o.msg ? '⚠ ' + o.msg : p.t === 'mcu' ? 'Pin ' + fI(o.pin) + ' · ' + fU(o.Vpin) : p.t === 'reg' ? 'ein ' + fU(o.Vi) + ' · ' + fI(o.Iin) + ' · Verlust ' + fP(o.P) + (o.Iin > 1e-6 ? ' · η ' + nf0.format(o.eta * 100) + ' %' : '')
@@ -702,9 +721,10 @@ document.querySelectorAll('#tools button, #parts button, #parts2 button').forEac
   document.querySelectorAll('#tools button, #parts button, #parts2 button').forEach(x => x.classList.toggle('on', x === b)); drawEd(); renderSel();
 });
 $('soll').onchange = e => { const v = +e.target.value; S.soll = v > 0 && isFinite(v) ? v : 0; recompute(); };
+$('hday').onchange = e => { const v = +e.target.value; S.hday = v > 0 && v < 24 ? v : 0; e.target.value = S.hday || ''; recompute(); };
 
 // ---- Vorlagen ----
-function load(m) { S = m; S.wires = Core.tidy(S); UI.sel = null; UI.pend = null; $('soll').value = S.soll || ''; A = Core.analyze(S); fit(true); drawAll(); store(); }
+function load(m) { S = m; S.wires = Core.tidy(S); UI.sel = null; UI.pend = null; $('soll').value = S.soll || ''; $('hday').value = S.hday || ''; A = Core.analyze(S); fit(true); drawAll(); store(); }
 function tplSketch(m) {
   const out = m.wires.map(q => ({ p: [[q[0], -q[1]], [q[2], -q[3]]], c: '--elec', w: 1.5 }));
   m.parts.forEach(p => { if (MBOX[p.t]) { out.push({ p: MBOX[p.t].map(q => { const g = Core.place(p, q); return [g[0], -g[1]]; }), z: 1, f: '--bg', w: 1.5 }); return; }
@@ -717,8 +737,8 @@ dpGallery($('tpl'), TPLS.map(([g, a]) => [g, a.map(([k, n, s, f]) => ({ k, n, s,
 
 // ---- Datei & Teilen ----
 const TYPE = 'designphysik/elektronik';
-const exportObj = () => ({ type: TYPE, version: 1, parts: S.parts, wires: S.wires, ...(S.soll > 0 ? { soll: S.soll } : {}) });
-const HIST = dpHistory($('undo'), o => { const m = parse(o); if (m) { S = m; UI.sel = null; $('soll').value = S.soll || ''; recompute(false); dpHashSet('e', exportObj()); } });
+const exportObj = () => ({ type: TYPE, version: 1, parts: S.parts, wires: S.wires, ...(S.soll > 0 ? { soll: S.soll } : {}), ...(S.hday > 0 ? { hday: S.hday } : {}) });
+const HIST = dpHistory($('undo'), o => { const m = parse(o); if (m) { S = m; UI.sel = null; $('soll').value = S.soll || ''; $('hday').value = S.hday || ''; recompute(false); dpHashSet('e', exportObj()); } });
 function store() { const o = exportObj(); dpHashSet('e', o); HIST.save(JSON.parse(JSON.stringify(o))); }
 dpCompare($('cmp'), exportObj, ref => { const m = ref && parse(ref); REF = m ? { m, a: Core.analyze(m) } : null; drawAll(); });
 // Eingang prüfen (Datei/Link sind fremd): unbekannte Bauteile verwerfen, Zahlen außerhalb des Bereichs → Vorgabe
@@ -731,7 +751,7 @@ function parse(o) {
     if (q.t === 'bat') q.n = Math.min(12, Math.max(1, Math.round(q.n)));
     return q; });
   const wires = o.wires.filter(w => Array.isArray(w) && w.length === 4 && w.every(int) && (w[0] !== w[2] || w[1] !== w[3])).map(w => w.slice());
-  return { parts, wires, soll: pos(o.soll, 0) };
+  return { parts, wires, soll: pos(o.soll, 0), hday: o.hday > 0 && o.hday < 24 ? +o.hday : 0 };
 }
 $('exp').onclick = () => dpDownload(exportObj(), 'elektronik.json');
 $('imp').onclick = () => $('impF').click();

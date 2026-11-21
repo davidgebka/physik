@@ -143,3 +143,15 @@ const regM = rt => (m => (m.wires = Core.tidy(m), m))({ parts: [{ t: 'bat', x: 0
     out.forEach((x, i) => { if (r.V[i] !== 0) worst = Math.max(worst, Math.abs(x + 1e-12 * r.V[i])); });
   }
   ok(`300 Zufallsnetze mit Mehrpolen: ≥ 98 % konvergiert (${300 - bad})`, bad <= 6); /* Rest: widersinnige Verdrahtungen (Wandlerausgang an der Quelle o. Ä.) → Meldung „konvergiert nicht“ */ check('… max |Σ I| je Knoten', worst, 0, 1e-6); }
+
+// ---- v3: Betriebsprofil (Stunden am Tag, sonst Ruhe: Schalter offen, Mikrocontroller schlafen) und Erwärmung ----
+{ const m = mcuM('aanimh', 'esp32', []); m.parts[0].n = 4; m.hday = 0.5; const a = Core.analyze(m), o = a.parts[0], d = 0.5 / 24;
+  check('ESP32 an 4 × NiMH: Ruhestrom ≈ 10 mA', o.Ir, 0.01, 1e-3); check('Laufzeit = C / (d·I_an + (1 − d)·I_Ruhe)', a.h, 2 / (d * o.I + (1 - d) * o.Ir), 1e-9);
+  ok('Soll 30 Tage verfehlt, „vor allem der Ruhestrom“', (m.soll = 720, /Ruhestrom/.test(Core.analyze(m).issues[0][1]))); }
+{ const m = loop({ cell: 'aa', n: 2 }, { t: 'lamp', Un: 3, Pn: 0.9 }, [{ t: 'sw', x: 4, y: 0, r: 1, on: true }]); m.wires = [[0, 0, 4, 0], [4, 2, 0, 2], [2, 0, 2, 2]];
+  const a0 = Core.analyze(m); m.hday = 1; const a = Core.analyze(m); check('Taschenlampe 1 h/Tag: Laufzeit × 24 (Ruhe = Schalter offen)', a.h, a0.h * 24, 1e-6); check('Ruhestrom 0', a.Ir, 0, 1e-9); }
+{ const m = { parts: [{ t: 'bat', x: 0, y: 2, r: 1, cell: 'pbank', n: 1 }, { t: 'mcu', x: 3, y: 2, r: 0, board: 'pi4', hi: false }], wires: [[0, 2, 3, 2], [0, 4, 3, 4]], hday: 2 };
+  const a = Core.analyze(m); check('Raspberry Pi ohne Schlafmodus: Profil ändert nichts', a.h, a.h0, 1e-6); }
+{ const m = { parts: [{ t: 'bat', x: 0, y: 0, r: 0, cell: 'e9v' }, { t: 'r', x: 0, y: 2, r: 0, R: 330, Pn: 0.25 }, { t: 'led', x: 2, y: 2, r: 0, col: 'rot' }], wires: [[0, 0, 0, 2], [4, 2, 4, 0], [4, 0, 2, 0]] };
+  const a = Core.analyze(m), o = a.parts[1]; check('Widerstand: ΔT = P · 100 K / Nennleistung', o.dT, o.I * o.I * 330 * 100 / 0.25, 1e-9); ok('wärmste Stelle = Widerstand', a.hot.i === 1 && Math.abs(a.hot.T - 25 - o.dT) < 1e-9); }
+{ const a = Core.analyze(regM('l7805')); check('7805: ΔT = Verlust · 65 K/W', a.parts[1].dT, a.parts[1].P * 65, 1e-9); }
