@@ -8,10 +8,10 @@
 <style>
 #ed{--ar:3;aspect-ratio:3/1}
 #ed.v{--ar:1;aspect-ratio:1/1}
-@media(max-width:600px){#ed{--ar:calc(4/3);aspect-ratio:4/3}#sc{--ar:calc(3/2);aspect-ratio:3/2}}
 #sc{--ar:3;aspect-ratio:3/1}
-.fl{display:grid;grid-template-columns:repeat(auto-fill,minmax(168px,1fr));gap:0 12px}
-.fl label{display:flex;justify-content:space-between;align-items:center;gap:6px;font-size:12px;color:var(--ink2);min-height:var(--h)}
+@media(max-width:600px){#ed{--ar:calc(4/3);aspect-ratio:4/3}#sc{--ar:calc(3/2);aspect-ratio:3/2}} /* nach #sc, sonst überschreibt die Grundregel das Telefon */
+.fl{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:0 12px} /* längstes Label + Feld (Schubmodul G, 226 px) einzeilig */
+.fl label{display:flex;justify-content:space-between;align-items:center;gap:6px;white-space:nowrap;font-size:12px;color:var(--ink2);min-height:var(--h)}
 .fl label.chk{font-size:14px;color:var(--ink)}
 .fl label.chk{justify-content:flex-start}
 .fl input[type=number],.sel input[type=number]{width:84px}
@@ -575,8 +575,8 @@ function drawSec() {
   const { ctx, w, h } = prep(sc), I2 = css('--ink2');
   ctx.font = DP_CFONT;
   if (!SP) { ctx.fillStyle = css('--warn'); ctx.textAlign = 'center'; ctx.fillText('⚠ ' + (R.err || ''), w / 2, h / 2); return; }
-  const s = S.sec, round = s.type === 'circ' || s.type === 'tube', B = round ? s.d : s.b, H = SP.h, k = Math.min(w * 0.32 / B, (h - 72) / H);
-  const kv = round ? k : Math.max(k, 24 / H), cx = Math.max(w * 0.3, B * k / 2 + 24 + ctx.measureText(`h = ${fv(H)}`).width), by = h / 2 + H * kv / 2, P = (x, y) => [cx + x * k, by - y * kv]; // flache Bretter: Höhe mind. 24 px, überhöht
+  const s = S.sec, round = s.type === 'circ' || s.type === 'tube', B = round ? s.d : s.b, H = SP.h, k = Math.min(w * 0.32 / B, (h - 86) / H), cy = h / 2 - 19; // Band 24 … h − 62: darunter Breitenmaß und Spannungszeile
+  const kv = round ? k : Math.max(k, 24 / H), cx = Math.max(w * 0.3, B * k / 2 + 24 + ctx.measureText(`h = ${fv(H)}`).width), by = cy + H * kv / 2, P = (x, y) => [cx + x * k, by - y * kv]; // flache Bretter: Höhe mind. 24 px, überhöht
   secPath(ctx, s, P); ctx.fillStyle = css('--fill'); ctx.fill('evenodd'); ctx.strokeStyle = css('--ink'); ctx.lineWidth = 1.5; ctx.stroke();
   const yna = by - SP.yc * kv, xl = cx - B * k / 2, xr = cx + B * k / 2, yt = by - H * kv;
   // Maßlinien mit Endstrichen: Breite unten, Höhe links
@@ -587,7 +587,7 @@ function drawSec() {
   ctx.textAlign = 'right'; ctx.fillText(`h = ${fv(H)}`, xl - 20, (yt + by) / 2 + 4);
   if (kv > k * 1.01) { ctx.textAlign = 'left'; ctx.fillText('Höhe überhöht', xl, yt - 8); }
   // Spannungsverlauf an der Stelle der größten Spannung (eigene Höhe, mind. 72 px)
-  const Hd = Math.max(H * kv, 72), top = h / 2 - Hd / 2, x0 = w * 0.78, yN = top + Hd * (1 - SP.yc / H);
+  const Hd = Math.max(H * kv, 72), top = cy - Hd / 2, x0 = w * 0.78, yN = top + Hd * (1 - SP.yc / H);
   ctx.strokeStyle = css('--mut'); ctx.lineWidth = 1; ctx.setLineDash([2, 4]); ctx.beginPath(); ctx.moveTo(xl - 6, yna); ctx.lineTo(xr + 6, yna); ctx.moveTo(x0 - w * 0.17, yN); ctx.lineTo(x0 + w * 0.17, yN); ctx.stroke(); ctx.setLineDash([]);
   ctx.textAlign = 'left'; ctx.fillStyle = I2; ctx.fillText('Schwerachse', xr + 8, yna + 4);
   if (R.err || R.buckled) return;
