@@ -53,7 +53,7 @@ Bei Zielkonflikten entscheidet A.
 ## Module (Stand 21.11.2026; Details in `docs/<modul>.md`)
 | Modul | Key | Stand | Entwurfsfrage |
 |---|---|---|---|
-| Gefäß & Kippen | `gefaess` | v1.9.1 | Wie viel passt rein, wo sind Eichstriche, wann gießt es aus, kippt es um? |
+| Gefäß & Kippen | `gefaess` | v1.10 | Wie viel passt rein, wo sind Eichstriche, wann gießt es aus, kippt es um, schwappt es beim Tragen über? |
 | Licht / Lampenschirm | `licht` | v2.2 | Wie verteilt der Schirm das Licht, wird der Tisch hell genug, blendet es? |
 | Last / Statik | `last` | v1.3.1 | Hält das Brett/der Balken, wie stark hängt es durch, schwingt es? |
 | Mechanismen | `mechanismus` | v1.1 | Wie bewegt sich das Getriebe, wo klemmt es, welche Kraft braucht es? |
