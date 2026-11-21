@@ -35,7 +35,7 @@ Bei Zielkonflikten entscheidet A.
 ## Konventionen (verbindlich)
 - **Struktur:** `index.html` (Startseite) · `shared/` (style.css, util.js, chart.js) · `tools/` (load-core.js, check.js) · `_vorlage/` · `<modul>/index.html` (Rechenkern; Oberfläche bei Bedarf in weiteren Skripten im Modulordner, z. B. `gefaess/app.js`) + `<modul>/test.js` · `docs/` (konzept, styleguide, historie, `<modul>.md`)
 - **Modul-Registry:** `DP_MODULES` in `shared/util.js` – einzige Stelle (`name` = einziger Modulname überall, `q` = Entwurfsfrage, `title` nur Startseite); Kopfzeile per `dpHeader(key)`
-- **Shared-Globale:** `dpEditing`/`dpUndoKey` (Tastatur: Strg+Z nicht beim Tippen), `$`, `nf0`, `nf1`, `css` (Token-Werte gecacht in `dpCss`), `prep`, `polyPath`, `dpDots`, `dpMq`, `dpDownload`, `dpHashGet/Set`, `niceStep`, `chart`; Entwurfshilfen `dpVerdict` (Urteil), `dpHistory` (Rückgängig, Strg+Z), `dpCompare` + `dpDelta` (Variantenvergleich), `dpOptions` (Vorlagen als Textliste, Last), `dpGallery` + `dpSketch` (Vorlagen-Galerie mit Skizze, Name, Entwurf/Prinzip; alle vier Module); Darstellung (Design-Audit 21.11.2026): `dpStats` + `dpStat` (Urteil, Hauptkennwerte, „Alle Werte“), `dpTerm` (Fachbegriff mit Erklärung), `dpIco`/`dpBtn`/`dpIcons` (SVG-Symbole), `dpMenu` (Telefon „⋯“), `DP_LV`; `legend` in `chart()`, `DP_CFONT`
+- **Shared-Globale:** `dpEditing`/`dpUndoKey` (Tastatur: Strg+Z nicht beim Tippen), `$`, `nf0`, `nf1`, `css` (Token-Werte gecacht in `dpCss`), `prep`, `polyPath`, `dpDots`, `dpMq`, `dpDownload`, `dpHashGet/Set`, `niceStep`, `chart`; Entwurfshilfen `dpVerdict` (Urteil), `dpHistory` (Rückgängig, Strg+Z), `dpCompare` + `dpDelta` (Variantenvergleich), `dpGallery` + `dpSketch` (Vorlagen-Galerie mit Skizze, Name, Entwurf/Prinzip; alle vier Module); Darstellung (Design-Audit 21.11.2026): `dpStats` + `dpStat` (Urteil, Hauptkennwerte, „Alle Werte“), `dpTerm` (Fachbegriff mit Erklärung), `dpIco`/`dpBtn`/`dpIcons` (SVG-Symbole), `dpMenu` (Telefon „⋯“), `DP_LV`; `legend` in `chart()`, `DP_CFONT`
 - **Links** immer explizit auf `…/index.html` (damit file:// funktioniert)
 - **Technik:** Vanilla JS, Canvas 2D (WebGL/WebGPU nur, wo nötig), keine CDNs
 - **Einheiten:** mm, ml, g, N, lm/cd/lx, Winkel in Grad in der UI; deutsche Zahlenformatierung; Alltagsbezug mitgeben, wo er hilft (N ≈ kg)
@@ -55,9 +55,9 @@ Bei Zielkonflikten entscheidet A.
 |---|---|---|---|
 | Gefäß & Kippen | `gefaess` | v1.14 | Wie viel passt rein, wo sind Eichstriche, wann gießt es aus, kippt es um, schwappt es beim Tragen über? |
 | Licht / Lampenschirm | `licht` | v2.6 | Wie verteilt der Schirm das Licht, wird der Tisch hell genug, blendet es? |
-| Last / Statik | `last` | v1.6 | Hält das Brett/der Balken, wie stark hängt es durch, schwingt es? |
+| Last / Statik | `last` | v1.8 | Hält das Brett/der Balken, wie stark hängt es durch, schwingt es? |
 | Mechanismen | `mechanismus` | v1.5 | Wie bewegt sich das Getriebe, wo klemmt es, welche Kraft braucht es? |
-| Elektronik | `elektronik` | Konzept | Hält der Akku lange genug, reicht der Strom, wird etwas zu heiß? |
+| Elektronik | `elektronik` | v3 | Hält der Akku lange genug, reicht der Strom, wird etwas zu heiß? |
 
 ## Roadmap (21.11.2026, nach Persona A)
 **Moratorium auf Tiefe:** In Gefäß und Licht keine neuen Physik-Verfeinerungen, bis die Punkte „Jetzt“ erledigt sind. Fehlerbehebungen und Bedienung gehen immer.
@@ -65,12 +65,12 @@ Bei Zielkonflikten entscheidet A.
 **Jetzt – Grundlage für Persona A (shared + Nachziehen der Module)**
 1. ~~**Urteil/Ampel**~~ – erledigt 21.11.2026 in allen vier Modulen (`dpVerdict`); Schwellen je Modul in `docs/<modul>.md`.
 2. ~~**Variantenvergleich**~~ – erledigt 21.11.2026 in allen vier Modulen (`dpCompare`/`dpDelta`): Last und Mechanismen rechnen den gemerkten Stand neu, Licht und Gefäß frieren Kennwerte und Kurven ein (Gefäß: globale Geometrie, Licht: Monte-Carlo-Lauf). Geist in den Diagrammen; offen: Geist im Editor.
-3. **Rückgängig** und **Vorlagen-Menü** – `dpHistory`/`dpOptions` in Last und Mechanismen (neu dort: Rückgängig). Gefäß und Licht behalten ihre eigene, geprüfte Umsetzung (Schnappschuss vor der Änderung, Ziehen als ein Schritt); Umstellen nur, wenn dort ohnehin umgebaut wird. **Vorlagen-Galerie** (21.11.2026) statt Textliste in Gefäß, Licht, Mechanismen: je 20 Vorlagen in „Prinzipien“ und „Designklassiker“, Skizze aus den Vorlagendaten (Modul liefert `d()` → `dpSketch`); Last behält vorerst `dpOptions`.
+3. **Rückgängig** und **Vorlagen-Menü** – `dpHistory` in Last und Mechanismen (neu dort: Rückgängig). Gefäß und Licht behalten ihre eigene, geprüfte Umsetzung (Schnappschuss vor der Änderung, Ziehen als ein Schritt); Umstellen nur, wenn dort ohnehin umgebaut wird. **Vorlagen-Galerie** (21.11.2026) statt Textliste in allen Modulen: je 20 Vorlagen in „Prinzipien“ und „Designklassiker“, Skizze aus den Vorlagendaten (Modul liefert `d()` → `dpSketch`); Last seit v1.8 ebenso (zwei Gruppen, Biegelinie in der Skizze); `dpOptions` entfernt.
 4. ~~**Glossar/Tooltips**~~ – erledigt 21.11.2026: `dpTerm` bzw. `t` im Kennwert, Erklärungen an den Hauptbegriffen aller Module; weitere Begriffe nach Bedarf im Modul ergänzen.
 5. ~~**Startseite nach Fragen**~~ – erledigt 21.11.2026: „Kippt es? Wie hell? Klemmt es? Hält es?“ als Einstieg, Karten mit Skizze.
 
 **Danach – Breite statt Tiefe** (Reihenfolge = Priorität)
-0. **Neues Modul Elektronik** (21.11.2026): v1 nach `docs/elektronik.md` auf Branch `modul/elektronik`; in der Registry `ready: false`, bis v1 steht.
+0. ~~**Neues Modul Elektronik**~~ – v1 bis v3 integriert 21.11.2026 (Mikrocontroller, Transistor, Wandler, Betriebsprofil, Erwärmung).
 1. Mechanismen: **Federn/Gasdruckfedern** (Klappen, Deckel; baut auf v1.1 auf)
 2. **Kippsicherheit allgemeiner Körper/Möbel** (hohe Regale, Leuchten auf Fuß; sicherheitsrelevant)
 3. **Berührtemperatur** (Wärmeeindringkoeffizient; wenig Aufwand, typisch Design)
@@ -88,5 +88,4 @@ Bei Zielkonflikten entscheidet A.
 (Modul-Chats tragen hier ein; der zentrale Chat bzw. der Style-Chat arbeitet sie ab. Erledigtes wandert nach `docs/historie.md`.)
 
 Offen:
-- **Elektronik** – Style-Chat: neue Physik-Familie **Elektrik** `--elec`/`--elec-a` (Farbton mit genug Abstand zu `--water`, `--light`, `--mech`, `--load`, `--warn`; Kontrast wie die übrigen Familien) im Styleguide § Farben und in style.css. Bis dahin nutzt das Modul `--ink`.
-- **Navigation mit fünf Modulen** (21.11.2026, zentraler Chat) – Style-Chat: Kopfzeile auf 390 px für fünf Segmente auslegen (heute 387 px Inhalt in 366 px, Seite scrollt quer). Bis dahin zeigt `dpHeader` nur Module mit `ready: true`; nötig, sobald Elektronik fertig ist.
+- (keine)
