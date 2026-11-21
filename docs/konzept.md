@@ -57,7 +57,7 @@ Bei Zielkonflikten entscheidet A.
 | Licht / Lampenschirm | `licht` | v2.6 | Wie verteilt der Schirm das Licht, wird der Tisch hell genug, blendet es? |
 | Last / Statik | `last` | v1.8 | Hält das Brett/der Balken, wie stark hängt es durch, schwingt es? |
 | Mechanismen | `mechanismus` | v1.5 | Wie bewegt sich das Getriebe, wo klemmt es, welche Kraft braucht es? |
-| Elektronik | `elektronik` | v1 | Hält der Akku lange genug, reicht der Strom, wird etwas zu heiß? |
+| Elektronik | `elektronik` | v1.1 | Hält der Akku lange genug, reicht der Strom, wird etwas zu heiß? |
 
 ## Roadmap (21.11.2026, nach Persona A)
 **Moratorium auf Tiefe:** In Gefäß und Licht keine neuen Physik-Verfeinerungen, bis die Punkte „Jetzt“ erledigt sind. Fehlerbehebungen und Bedienung gehen immer.

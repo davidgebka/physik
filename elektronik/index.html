@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Designphysik · Elektronik</title>
 <link rel="stylesheet" href="../shared/style.css">
-<!-- Familie Elektrik (--elec) ist beim Style-Chat angefragt; bis dahin --ink, Licht von LED/Lampe in --light -->
+<!-- Familie Elektrik: Leitungen und Knoten in --elec (Medium wie Wasser/Bahnkurve), Bauteile --ink, Licht von LED/Lampe in --light -->
 <style>
 #ed{aspect-ratio:4/3;--ar:calc(4/3);touch-action:none}
 .sel input[type=number]{width:80px}
@@ -352,7 +352,7 @@ function drawEd() {
   ctx.fill();
   ctx.lineCap = ctx.lineJoin = 'round';
   // Leitungen
-  S.wires.forEach((q, i) => { const sel = UI.sel && UI.sel.t === 'w' && UI.sel.i === i; ctx.strokeStyle = css('--ink'); ctx.lineWidth = sel ? 4 : 2;
+  S.wires.forEach((q, i) => { const sel = UI.sel && UI.sel.t === 'w' && UI.sel.i === i; ctx.strokeStyle = css('--elec'); ctx.lineWidth = sel ? 4 : 2;
     ctx.beginPath(); ctx.moveTo(...T([q[0], q[1]])); ctx.lineTo(...T([q[2], q[3]])); ctx.stroke(); });
   if (UI.pend) { const a = T(UI.pend), b = UI.hover ? T(UI.hover) : a; ctx.strokeStyle = css('--ctl'); ctx.setLineDash([3, 4]); ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(...a); ctx.lineTo(...b); ctx.stroke(); ctx.setLineDash([]); }
   // Bauteile
@@ -361,7 +361,7 @@ function drawEd() {
   const deg = new Map(), inc = q => { const s = q + ''; deg.set(s, (deg.get(s) || 0) + 1); };
   S.wires.forEach(q => { inc([q[0], q[1]]); inc([q[2], q[3]]); }); S.parts.forEach(p => Core.term(p).forEach(inc));
   for (const [s, d] of deg) { const [x, y] = T(s.split(',').map(Number)); ctx.beginPath(); ctx.arc(x, y, d >= 3 ? 3.5 : 3, 0, 7);
-    if (d >= 3) { ctx.fillStyle = css('--ink'); ctx.fill(); } else if (d === 1) { ctx.fillStyle = css('--bg'); ctx.fill(); ctx.strokeStyle = css('--warn'); ctx.lineWidth = 1.5; ctx.stroke(); } }
+    if (d >= 3) { ctx.fillStyle = css('--elec'); ctx.fill(); } else if (d === 1) { ctx.fillStyle = css('--bg'); ctx.fill(); ctx.strokeStyle = css('--warn'); ctx.lineWidth = 1.5; ctx.stroke(); } }
   // Auswahl: Griffe an den Enden
   const hs = UI.sel ? (UI.sel.t === 'p' ? Core.term(S.parts[UI.sel.i]) : [[S.wires[UI.sel.i][0], S.wires[UI.sel.i][1]], [S.wires[UI.sel.i][2], S.wires[UI.sel.i][3]]]) : [];
   ctx.fillStyle = css('--ctl'); hs.forEach(q => { const [x, y] = T(q); ctx.fillRect(x - 5, y - 5, 10, 10); });
@@ -518,7 +518,7 @@ $('soll').onchange = e => { const v = +e.target.value; S.soll = v > 0 && isFinit
 // ---- Vorlagen ----
 function load(m) { S = m; UI.sel = null; UI.pend = null; $('soll').value = S.soll || ''; A = Core.analyze(S); fit(true); drawAll(); store(); }
 function tplSketch(m) {
-  const out = m.wires.map(q => ({ p: [[q[0], -q[1]], [q[2], -q[3]]], w: 1.5 }));
+  const out = m.wires.map(q => ({ p: [[q[0], -q[1]], [q[2], -q[3]]], c: '--elec', w: 1.5 }));
   m.parts.forEach(p => { const [a, b] = Core.term(p), c = [(a[0] + b[0]) / 2, -(a[1] + b[1]) / 2];
     out.push({ p: [[a[0], -a[1]], [b[0], -b[1]]], w: 1.5 });
     out.push({ p: [[c[0] - 0.4, c[1] - 0.4], [c[0] + 0.4, c[1] - 0.4], [c[0] + 0.4, c[1] + 0.4], [c[0] - 0.4, c[1] + 0.4]], z: 1, f: p.t === 'led' || p.t === 'lamp' ? '--light-a' : '--bg', w: 1.5 }); });

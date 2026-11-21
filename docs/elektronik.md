@@ -2,7 +2,7 @@
 
 Vom Modul-Chat gepflegt (Branch `modul/elektronik`). Verbindliche Konventionen stehen in `docs/konzept.md`.
 
-**Stand:** v1 (21.11.2026), Key `elektronik`, Hash `#e=`. In `DP_MODULES` mit `ready: true`, Familie Elektrik `--elec` (style.css). Offen im Modul: Zeichnung noch in `--ink`, auf `--elec` umstellen.
+**Stand:** v1 (21.11.2026), Key `elektronik`, Hash `#e=`. In `DP_MODULES` mit `ready: true`, Familie Elektrik `--elec` (style.css). Leitungen und Knoten in `--elec` (Editor und Galerie-Skizzen), Bauteile `--ink`, Leuchten `--light-a`.
 
 ## Entwurfsfrage
 „Hält der Akku lange genug, reicht der Strom, wird etwas zu heiß?“ – Persona A entscheidet Batterie/Akku (Laufzeit, Bauraum, Gewicht), Netzteil, Leitungen, ob ein Mikrocontroller einen Verbraucher direkt schalten kann. Kein Schaltungssimulator, kein Lehrbaukasten.
@@ -52,3 +52,4 @@ Spannungsteiler · Reihen-/Parallelschaltung · Innenwiderstand (Klemmenspannung
   - test.js: 48 Prüfungen – Reihe, Spannungsteiler, Parallel, Innenwiderstand, Kurzschluss, LED I(Vf) = In je Farbe, LED + Vorwiderstand gegen unabhängige Bisektion (5 Fälle, auch ohne Widerstand), dI/dv gegen Differenzenquotient, Sperrrichtung, Glühlampe Nenn-/Halbspannung und Reihe, 4 × AA, Motor Lauf/Anlauf/Drehzahl, Kabelwiderstand, Schalter offen/zu, offener Anschluss, Urteile (LED 20 mA passt, ohne Widerstand kritisch, CR2032 überlastet, Kurzschluss, Lampe glimmt, Soll-Laufzeit), Laufzeit = C/I, 300 Zufallsnetze (alle konvergiert, Σ I je Knoten < 1e-9 A).
   - Browser (Chrome headless, file://, 1280 px und 390 px Touch): alle Vorlagen, Bauteile setzen, Leitung ziehen und antippen, Verschieben mit Leitungsenden, Schalter, Farbe, Drehen, Strg+Z, Vergleich, Link-Rundreise identisch, kaputter/ungültiger Link; kein Überlaufen, Konsole fehlerfrei.
   - Offen: Mikrocontroller-Blöcke, Transistor/MOSFET, Spannungswandler (v2) · Lastprofil, Bauraum im Vergleich (v3) · Leitungen mit Abzweig in der Mitte · Wechsel-/Taster · Vorgabewerte gegen Datenblätter prüfen.
+- **v1.1** (21.11.2026, zentraler Chat): Farbe Elektrik – Leitungen und Knoten in `--elec`, auch in den Galerie-Skizzen; Bauteile bleiben `--ink` (wie Gefäß/Mechanik: Medium in der Familienfarbe).
