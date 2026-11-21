@@ -15,6 +15,7 @@
 .fl label.chk{justify-content:flex-start}
 .fl input[type=number],.sel input[type=number]{width:84px}
 .sel b{font-size:12px}
+sub,sup{line-height:0} /* sonst wächst die Textzeile über 24 px (Raster) */
 #tools button{white-space:nowrap;padding:0 9px}
 select{max-width:100%}
 </style>
@@ -26,7 +27,7 @@ select{max-width:100%}
     <h2>Balken · Seitenansicht [mm]</h2>
     <div class="row">
       <span class="seg" id="tools"><button data-t="drag" class="on">Ziehen</button><button data-t="sup">+ Lager</button><button data-t="pl">+ Last</button><button data-t="ql">+ Strecke</button><button data-t="del">Löschen</button></span>
-      <select id="tpl" aria-label="Vorlage"></select>
+      <select id="tpl" aria-label="Vorlage"></select><button id="undo" disabled>↶ Rückgängig</button>
     </div>
     <canvas id="ed"></canvas>
     <div class="ctl"><label for="len">Länge L</label><input type="range" id="len" min="100" max="4000" step="10"><output id="lenO"></output></div>
@@ -480,6 +481,9 @@ function drawEd() {
     const wm = Math.max(1e-9, Math.abs(R.max.wFin.v), Math.abs(R.max.wPeak.v)), tgt = 0.16 * (g.v ? w : h), s = wm * k >= tgt ? k : tgt / wm;
     loc(); ctx.strokeStyle = css('--load'); ctx.lineWidth = 2.5; ctx.lineJoin = 'round'; ctx.beginPath();
     R.x.forEach((x, i) => { const X = x * k, Y = -R.wFin[i] * s; i ? ctx.lineTo(X, Y) : ctx.moveTo(X, Y); }); ctx.stroke();
+    const mX = R.max.wFin.x * k, mY = -R.max.wFin.v * s; ctx.fillStyle = css('--load'); ctx.beginPath(); ctx.arc(mX, mY, 3.5, 0, 7); ctx.fill();
+    if (Math.abs(R.max.wFin.v) > 0) { scr(); const [px, py] = g.tf(mX, mY), t = `w = ${fv(Math.abs(R.max.wFin.v))} mm`, tw = ctx.measureText(t).width; // freigestellt über der Biegelinie
+      ctx.fillStyle = css('--bg'); ctx.fillRect(px + 6, py - 9, tw + 6, 15); ctx.fillStyle = I2; ctx.fillText(t, px + 9, py + 3); }
     scr(); ctx.fillStyle = I2; ctx.textAlign = 'right';
     ctx.fillText(s > k * 1.01 ? `Biegelinie ${nf0.format(s / k)}-fach überhöht` : 'Biegelinie maßstäblich', w - 6, h - 6); ctx.textAlign = 'left';
   }
@@ -536,22 +540,24 @@ function renderStats() {
   }
   const mm = v => fv(Math.abs(v)) + ' mm', creep = Math.abs(R.max.wFin.v - R.max.wInst.v) > 1e-9 * Math.abs(R.max.wInst.v) + 1e-12;
   const okL = R.lim.r * S.lim <= 1;
+  const sg = R.max.sig, Sb = mt.f / Math.abs(sg.v), t = R.max.tau, Sv = mt.fv / t.v;
+  // zuerst das Urteil (bestanden / ⚠), dann die Einzelwerte
   h.push(stat(mm(R.max.wFin.v), (creep ? 'Durchbiegung Endzustand' : 'Durchbiegung max.') + ` (x = ${nf0.format(R.max.wFin.x)} mm)`));
   h.push(stat((okL ? '' : '⚠ ') + (R.lim.r > 0 ? 'l/' + Math.round(1 / R.lim.r) : '–'), `Verhältnis, Grenze l/${S.lim} (l = ${nf0.format(R.lim.ref)} mm)`, !okL));
+  h.push(stat((Sb < mt.S ? '⚠ ' : '') + fS(Sb), `Sicherheit Biegung f/σ (Ziel ≥ ${nf1.format(mt.S)})`, Sb < mt.S));
+  h.push(stat((Sv < mt.S ? '⚠ ' : '') + fS(Sv), `Sicherheit Schub fv/τ (Ziel ≥ ${nf1.format(mt.S)})`, Sv < mt.S));
+  if (isFinite(R.lam)) h.push(stat((R.lam < 3 ? '⚠ ' : '') + fS(R.lam), `Knicksicherheit λ (Ziel ≥ 3)${S.N > 0 ? ' · N_cr = ' + fv(R.lam * S.N) + ' N' : ''}`, R.lam < 3));
+  if (MOD && MOD.f.length) { const f1 = MOD.f[0]; h.push(stat((f1 < 8 ? '⚠ ' : '') + nf1.format(f1) + ' Hz', 'Eigenfrequenz f₁' + (f1 < 8 ? ' – federt spürbar (< 8 Hz)' : ''), f1 < 8)); }
+  if (R.imp.length) { const nmax = Math.max(...R.imp.map(o => o.n)), rg = R.imp.some(o => o.rigid); h.push(stat(rg ? '⚠ ∞' : '× ' + nf2.format(nmax), rg ? 'Stoßfaktor – Stoß auf starres Lager' : 'Stoßfaktor (fallende Last)', rg)); }
   if (creep) h.push(stat(mm(R.max.wInst.v), `Durchbiegung sofort (Kriechen ×${nf2.format(1 + mt.kdef)} auf Dauerlast)`));
   if (R.imp.length) h.push(stat(mm(R.max.wPeak.v), 'Durchbiegung beim Stoß'));
-  const sg = R.max.sig, Sb = mt.f / Math.abs(sg.v), t = R.max.tau, Sv = mt.fv / t.v;
-  h.push(stat(fv(Math.abs(sg.v)) + ' N/mm²', `Spannung max. (x = ${nf0.format(sg.x)} mm)`));
-  h.push(stat((Sb < mt.S ? '⚠ ' : '') + fS(Sb), `Sicherheit Biegung f/σ (Ziel ≥ ${nf1.format(mt.S)})`, Sb < mt.S));
-  h.push(stat((Sv < mt.S ? '⚠ ' : '') + fS(Sv), `Sicherheit Schub (τ = ${fv(t.v)} N/mm²)`, Sv < mt.S));
+  h.push(stat(fv(Math.abs(sg.v)) + ' N/mm²', `Spannung max. (x = ${nf0.format(sg.x)} mm, f = ${fv(mt.f)})`));
+  h.push(stat(fv(t.v) + ' N/mm²', `Schubspannung max. (fv = ${fv(mt.fv)})`));
   h.push(stat(fv(Math.abs(R.max.M.v) / 1000) + ' N·m', `Biegemoment max. (x = ${nf0.format(R.max.M.x)} mm)`));
   R.R.forEach((r, i) => {
     const up = r.F < -1e-9;
     h.push(stat((up ? '⚠ ' : '') + fv(r.F) + ' N', `Lager ${letter(i)}${r.t === 'fix' ? ` · M = ${fv(r.M / 1000)} N·m` : ''}${up ? ' – zieht: muss abhebend halten' : ''}`, up));
   });
-  if (R.imp.length) { const nmax = Math.max(...R.imp.map(o => o.n)), rg = R.imp.some(o => o.rigid); h.push(stat(rg ? '⚠ ∞' : '× ' + nf2.format(nmax), rg ? 'Stoßfaktor – Stoß auf starres Lager' : 'Stoßfaktor (fallende Last)', rg)); }
-  if (isFinite(R.lam)) h.push(stat((R.lam < 3 ? '⚠ ' : '') + fS(R.lam), `Knicksicherheit λ (Ziel ≥ 3)${S.N > 0 ? ' · N_cr = ' + fv(R.lam * S.N) + ' N' : ''}`, R.lam < 3));
-  if (MOD && MOD.f.length) { const f1 = MOD.f[0]; h.push(stat((f1 < 8 ? '⚠ ' : '') + nf1.format(f1) + ' Hz', 'Eigenfrequenz f₁' + (f1 < 8 ? ' – federt spürbar (< 8 Hz)' : ''), f1 < 8)); }
   h.push(stat(fv(R.mass) + ' kg', `Gewicht Balken (${mt.name})`));
   h.push(stat(nf0.format(SP.I) + ' mm⁴', `Flächenmoment I · W = ${nf0.format(SP.I / Math.max(SP.eT, SP.eB))} mm³ · A = ${nf0.format(SP.A)} mm²`));
   $('stats').innerHTML = h.join('');
@@ -572,14 +578,14 @@ function drawCharts() {
   const creep = R.wFin.some((v, i) => Math.abs(v - R.wInst[i]) > 1e-9);
   const sw = [{ pts: xy(R.wFin), color: Ld }]; if (creep) sw.push({ pts: xy(R.wInst), color: I, dash: [4, 4] }); if (R.imp.length) sw.push({ pts: xy(R.wPeak), color: Mu, dash: [3, 4] });
   let [y0, y1] = rng(sw.map(s => s.pts.map(p => p[1])));
-  chart($('c1'), { x0: 0, x1: L, y0, y1, xl: 'x [mm]' + (creep ? ' · Endzustand / sofort (gestrichelt)' : '') + (R.imp.length ? ' / Stoß (grau)' : ''), yl: 'w [mm]', series: sw, vlines: vl });
+  chart($('c1'), { x0: 0, x1: L, y0, y1, xl: 'x [mm]' + (creep ? ' · Endzustand / sofort (gestrichelt)' : '') + (R.imp.length ? ' / Stoß (grau)' : ''), yl: 'w [mm]', series: sw, vlines: vl, points: [[R.max.wFin.x, R.max.wFin.v, Ld]] });
   const Mn = R.M.map(v => v / 1000); [y0, y1] = rng([Mn]);
-  chart($('c2'), { x0: 0, x1: L, y0, y1, xl: 'x [mm]', yl: 'M [N·m]', series: [{ pts: xy(Mn), color: Ld }, { pts: [[0, 0], [L, 0]], color: Mu, width: 1, dash: [3, 4] }], vlines: vl });
+  chart($('c2'), { x0: 0, x1: L, y0, y1, xl: 'x [mm]', yl: 'M [N·m]', series: [{ pts: xy(Mn), color: Ld }, { pts: [[0, 0], [L, 0]], color: Mu, width: 1, dash: [3, 4] }], vlines: vl, points: [[R.max.M.x, R.max.M.v / 1000, Ld]] });
   [y0, y1] = rng([R.V]);
   chart($('c3'), { x0: 0, x1: L, y0, y1, xl: 'x [mm]', yl: 'V [N]', series: [{ pts: xy(R.V), color: Ld }, { pts: [[0, 0], [L, 0]], color: Mu, width: 1, dash: [3, 4] }], vlines: vl });
   const mt = matOf(), zul = mt.f / mt.S;
   [y0, y1] = rng([R.sig, [zul]], 0); y0 = 0;
-  chart($('c4'), { x0: 0, x1: L, y0, y1, xl: 'x [mm] · gestrichelt: f / Zielsicherheit', yl: '|σ| [N/mm²]', series: [{ pts: xy(R.sig), color: Ld }, { pts: [[0, zul], [L, zul]], color: css('--warn'), width: 1, dash: [4, 4] }], vlines: vl });
+  chart($('c4'), { x0: 0, x1: L, y0, y1, xl: 'x [mm] · gestrichelt: f / Zielsicherheit', yl: '|σ| [N/mm²]', series: [{ pts: xy(R.sig), color: Ld }, { pts: [[0, zul], [L, zul]], color: css('--warn'), width: 1, dash: [4, 4] }], vlines: vl, points: [[R.max.sig.x, R.max.sig.v, R.max.sig.v > zul ? css('--warn') : Ld]] });
   if (MOD && MOD.modes.length) {
     const st = [{ color: Ld }, { color: I, dash: [4, 4] }, { color: Mu, dash: [3, 4] }];
     chart($('c5'), { x0: 0, x1: L, y0: -1.15, y1: 1.15, xl: 'x [mm]', yl: 'Auslenkung (normiert)', series: MOD.modes.map((m, i) => ({ pts: MOD.x.map((v, j) => [v, m[j]]), ...st[i] })), vlines: vl });
@@ -634,12 +640,13 @@ function setL(v) {
 }
 
 // ---- Zeiger ----
+const TOUCH = matchMedia('(pointer: coarse)').matches; // Finger: Trefferzone ~ halbe Bedienhöhe (48 px)
 function hit(X, Y) {
-  const g = UI.G, k = g.k, th = thick(g);
-  for (let i = S.pl.length - 1; i >= 0; i--) if (Math.abs(X - S.pl[i].x * k) < 14 && Y > -th / 2 - 60 && Y < -th / 2 + 4) return { t: 'p', i, mode: 'x' };
+  const g = UI.G, k = g.k, th = thick(g), r = TOUCH ? 24 : 14;
+  for (let i = S.pl.length - 1; i >= 0; i--) if (Math.abs(X - S.pl[i].x * k) < r && Y > -th / 2 - 46 - r && Y < -th / 2 + 4) return { t: 'p', i, mode: 'x' };
   for (const o of qBands(g).reverse()) { const X0 = o.a * k, X1 = o.b * k, top = o.Y0 - o.hq;
-    if (Y > top - 10 && Y < o.Y0 + 4 && X > X0 - 12 && X < X1 + 12) return { t: 'q', i: o.i, mode: Math.abs(X - X0) < 12 ? 'a' : Math.abs(X - X1) < 12 ? 'b' : 'm' }; }
-  for (let i = S.sup.length - 1; i >= 0; i--) if (Math.abs(X - S.sup[i].x * k) < 16 && Y > -th / 2 - 12 && Y < th / 2 + 36) return { t: 's', i, mode: 'x' };
+    if (Y > top - r && Y < o.Y0 + 4 && X > X0 - r && X < X1 + r) return { t: 'q', i: o.i, mode: Math.abs(X - X0) < r && X - X0 < X1 - X ? 'a' : Math.abs(X - X1) < r ? 'b' : 'm' }; }
+  for (let i = S.sup.length - 1; i >= 0; i--) if (Math.abs(X - S.sup[i].x * k) < r + 2 && Y > -th / 2 - 12 && Y < th / 2 + 26 + r) return { t: 's', i, mode: 'x' };
   return null;
 }
 function evLocal(e) { const r = cv.getBoundingClientRect(); return UI.G.inv(e.clientX - r.left, e.clientY - r.top); }
@@ -673,7 +680,8 @@ cv.addEventListener('pointermove', e => {
 });
 function endDrag() { const d = UI.drag; if (!d) return; UI.drag = null; if (d.moved) recompute(); else drawEd(); }
 cv.addEventListener('pointerup', endDrag); cv.addEventListener('pointercancel', endDrag);
-window.addEventListener('keydown', e => { if ((e.key === 'Delete' || e.key === 'Backspace') && UI.sel && !/INPUT|SELECT/.test(document.activeElement.tagName)) { del(UI.sel.t, UI.sel.i); recompute(); } });
+window.addEventListener('keydown', e => { if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !/INPUT/.test(document.activeElement.tagName)) { e.preventDefault(); undo(); return; }
+  if ((e.key === 'Delete' || e.key === 'Backspace') && UI.sel && !/INPUT|SELECT/.test(document.activeElement.tagName)) { del(UI.sel.t, UI.sel.i); recompute(); } });
 function setTool(t) { UI.tool = t; document.querySelectorAll('#tools button').forEach(b => b.classList.toggle('on', b.dataset.t === t)); $('hint').textContent = HINT[t]; }
 document.querySelectorAll('#tools button').forEach(b => b.onclick = () => setTool(b.dataset.t));
 
@@ -721,7 +729,11 @@ $('tpl').onchange = e => { if (TPL[e.target.value]) load(TPL[e.target.value]());
 const TYPE = 'designphysik/last';
 function exportObj() { const o = { type: TYPE, version: 1, L: S.L, orient: S.orient, sec: S.sec, mat: S.mat, sw: S.sw, N: S.N, lim: S.lim, sup: S.sup, pl: S.pl, ql: S.ql };
   if (S.mat === 'eigen') o.cm = { E: S.cm.E, rho: S.cm.rho, f: S.cm.f, fv: S.cm.fv, kdef: S.cm.kdef, S: S.cm.S }; return o; }
-function save() { dpHashSet('b', exportObj()); }
+// Rückgängig: jeder abgeschlossene Zustand (nicht jedes Zieh-Bild) als Schnappschuss
+const HIST = []; let last = null;
+function save() { const o = exportObj(), j = JSON.stringify(o); if (j !== last) { if (last) HIST.push(last); if (HIST.length > 50) HIST.shift(); last = j; } $('undo').disabled = !HIST.length; dpHashSet('b', o); }
+function undo() { if (!HIST.length) return; last = HIST.pop(); const m = parse(JSON.parse(last)); if (m) load(m); }
+$('undo').onclick = undo;
 // Eingang prüfen (Datei/Link sind fremd)
 function parse(o) {
   if (!o || o.type !== TYPE) return null;
