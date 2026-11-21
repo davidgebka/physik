@@ -154,12 +154,11 @@ const Core = (() => {
   }
 
   // ---- dichte lineare Algebra (n ≤ ~250) ----
-  function chol(A, n) { // A = L·Lᵀ; null, wenn nicht positiv definit (Balken beweglich bzw. geknickt)
-    const L = new Float64Array(n * n); let dm = 0;
-    for (let i = 0; i < n; i++) dm = Math.max(dm, Math.abs(A[i * n + i]));
+  function chol(A, n) { // A = L·Lᵀ; null, wenn nicht positiv definit (geknickt). Pivot relativ zur eigenen Diagonale:
+    const L = new Float64Array(n * n); // Verschiebungs- und Drehfreiheitsgrade unterscheiden sich um ~1/h² (globaler Maßstab verwarf stabile Balken)
     for (let j = 0; j < n; j++) {
       let s = A[j * n + j]; for (let k = 0; k < j; k++) s -= L[j * n + k] * L[j * n + k];
-      if (!(s > 1e-11 * dm)) return null;
+      if (!(s > 1e-13 * Math.abs(A[j * n + j]))) return null;
       const d = Math.sqrt(s); L[j * n + j] = d;
       for (let i = j + 1; i < n; i++) { let v = A[i * n + j]; for (let k = 0; k < j; k++) v -= L[i * n + k] * L[j * n + k]; L[i * n + j] = v / d; }
     }
@@ -227,6 +226,8 @@ const Core = (() => {
     for (const s of m.sup || []) { const x = cl(s.x), o = sup.find(q => Math.abs(q.x - x) < tol); if (o) { if (s.t === 'fix') o.t = 'fix'; } else sup.push({ x, t: s.t === 'fix' ? 'fix' : 'pin' }); }
     sup.sort((a, b) => a.x - b.x);
     if (!sup.length) return { err: 'Kein Auflager' };
+    // starre Bewegung (Verschieben, Drehen) ist nur gesperrt mit zwei Lagerstellen oder einer Einspannung – geometrisch, nicht über Rundung
+    if (sup.length < 2 && sup[0].t !== 'fix') return { err: 'Lagerung beweglich: mindestens zwei Auflager oder eine Einspannung nötig' };
     const pl = (m.pl || []).map(p => ({ x: cl(p.x), F: +p.F || 0, perm: !!p.perm, h: p.perm ? 0 : Math.max(0, +p.h || 0), c: Math.max(0, +p.c || 0) }));
     const ql = (m.ql || []).map(q => ({ a: cl(Math.min(q.a, q.b)), b: cl(Math.max(q.a, q.b)), q: +q.q || 0, perm: !!q.perm })).filter(q => q.b - q.a > tol);
     const selfQ = m.sw && !v ? m.rhoA * G : 0; // Eigengewicht quer (liegend) [N/mm]
@@ -294,8 +295,8 @@ const Core = (() => {
     const lnsP = ql.filter(q => q.perm); if (selfQ) lnsP.push({ a: 0, b: L, q: selfQ });
     const cP = solve(pl.filter(p => p.perm), lnsP), cV = solve(pl.filter(p => !p.perm), ql.filter(q => !q.perm));
     const imp = pl.map((p, i) => ({ p, i })).filter(o => o.p.h > 0 && o.p.F > 0).map(({ p, i }) => {
-      const d = -solve([{ x: p.x, F: p.F }], []).u[2 * node(p.x)] + p.c, n = d > 0 ? 1 + Math.sqrt(1 + 2 * p.h / d) : 1; // Federn in Reihe: δ_st = Balken + Polster
-      return { i, x: p.x, F: p.F, h: p.h, c: p.c, d, n };
+      const d = -solve([{ x: p.x, F: p.F }], []).u[2 * node(p.x)] + p.c, rigid = !(d > 1e-9 * L); // Federn in Reihe: δ_st = Balken + Polster
+      return { i, x: p.x, F: p.F, h: p.h, c: p.c, d, n: rigid ? 1 : 1 + Math.sqrt(1 + 2 * p.h / d), rigid }; // starr (über Lager, ohne Polster): unbegrenzt, gemeldet statt gerechnet
     });
     const cD = solve(imp.map(o => ({ x: o.x, F: (o.n - 1) * o.F })), []);
     const P = evalCase(cP), Vr = evalCase(cV), D = evalCase(cD);
@@ -548,13 +549,14 @@ function renderStats() {
     const up = r.F < -1e-9;
     h.push(stat((up ? '⚠ ' : '') + fv(r.F) + ' N', `Lager ${letter(i)}${r.t === 'fix' ? ` · M = ${fv(r.M / 1000)} N·m` : ''}${up ? ' – zieht: muss abhebend halten' : ''}`, up));
   });
-  if (R.imp.length) { const nmax = Math.max(...R.imp.map(o => o.n)); h.push(stat('× ' + nf2.format(nmax), 'Stoßfaktor (fallende Last)')); }
+  if (R.imp.length) { const nmax = Math.max(...R.imp.map(o => o.n)), rg = R.imp.some(o => o.rigid); h.push(stat(rg ? '⚠ ∞' : '× ' + nf2.format(nmax), rg ? 'Stoßfaktor – Stoß auf starres Lager' : 'Stoßfaktor (fallende Last)', rg)); }
   if (isFinite(R.lam)) h.push(stat((R.lam < 3 ? '⚠ ' : '') + fS(R.lam), `Knicksicherheit λ (Ziel ≥ 3)${S.N > 0 ? ' · N_cr = ' + fv(R.lam * S.N) + ' N' : ''}`, R.lam < 3));
   if (MOD && MOD.f.length) { const f1 = MOD.f[0]; h.push(stat((f1 < 8 ? '⚠ ' : '') + nf1.format(f1) + ' Hz', 'Eigenfrequenz f₁' + (f1 < 8 ? ' – federt spürbar (< 8 Hz)' : ''), f1 < 8)); }
   h.push(stat(fv(R.mass) + ' kg', `Gewicht Balken (${mt.name})`));
   h.push(stat(nf0.format(SP.I) + ' mm⁴', `Flächenmoment I · W = ${nf0.format(SP.I / Math.max(SP.eT, SP.eB))} mm³ · A = ${nf0.format(SP.A)} mm²`));
   $('stats').innerHTML = h.join('');
   if (R.alpha > 1.0005) notes.push(`Längsdruck verstärkt Biegung und Durchbiegung um α = ${nf2.format(R.alpha)} (Theorie II. Ordnung genähert).`);
+  if (R.imp.some(o => o.rigid)) notes.push('⚠ Stoß direkt über einem Lager ohne Polster: Stoßkraft unbegrenzt, nur statisch gerechnet – Polster eintragen.');
   if (R.imp.length) notes.push('Stoß: ' + R.imp.map(o => `${fv(o.F)} N aus ${nf0.format(o.h)} mm → × ${nf2.format(o.n)} (δ_st = ${fv(o.d)} mm${o.c ? ', davon Polster ' + fv(o.c) + ' mm' : ''})`).join(' · ') + '. Spannung, Moment, Querkraft und Lagerkräfte enthalten den Stoß; Grenze l/x gilt für die statische Last.');
   if (R.imp.length) notes.push('Lagerkräfte statisch; beim Stoß: ' + R.R.map((r, i) => `${letter(i)} ${fv(r.Fpk)} N`).join(' · ') + '.');
   if (S.sec.h / S.L > 0.1 || (S.sec.d || 0) / S.L > 0.1) notes.push('⚠ Kurzer, hoher Balken (h/L > 1/10): Schubverformung nicht enthalten, Durchbiegung zu klein.');
@@ -589,6 +591,14 @@ function drawCharts() {
 // ---- Auswahl ----
 function renderSel() {
   const el = $('selp'), s = UI.sel; $('hint').textContent = HINT[UI.tool];
+  const o = s ? ({ s: S.sup, p: S.pl, q: S.ql })[s.t][s.i] : S, key = s ? s.t + (o.perm ? 'd' : '') : 'L';
+  // nur bei anderer Auswahl neu aufbauen – sonst gingen Fokus und Tab-Reihenfolge nach jeder Eingabe verloren
+  if (o !== UI.selObj || key !== UI.selKey) { UI.selObj = o; UI.selKey = key; renderSelIn(el, s); return; }
+  const val = { eL: S.L, ex: o.x, et: o.t, eF: o.F, eh: o.h, ec: o.c || 0, ea: o.a, eb: o.b, eq: o.q };
+  for (const [id, v] of Object.entries(val)) { const e = $(id); if (e && e !== document.activeElement && v != null) e.value = typeof v === 'number' ? +v.toFixed(2) : v; }
+  if ($('eK')) $('eK').textContent = s.t === 'p' ? `≈ ${fv(o.F / 9.81)} kg` : `≈ ${fv(o.q / 9.81)} kg/m`;
+}
+function renderSelIn(el, s) {
   const num = (id, v, st = 1) => `<input type="number" id="${id}" step="${st}" value="${+(+v).toFixed(2)}">`;
   if (!s) { el.innerHTML = `<b>Balken</b> L ${num('eL', S.L, 10)} mm <span class="note">Lager oder Last antippen zum Bearbeiten.</span>`;
     $('eL').onchange = e => setL(+e.target.value); return; }
@@ -596,7 +606,7 @@ function renderSel() {
     el.innerHTML = `<b>Lager ${letter(s.i)}</b> x ${num('ex', o.x)} mm <select id="et"><option value="pin">gelenkig</option><option value="fix">eingespannt</option></select><button id="edel">✕ löschen</button>`;
     $('et').value = o.t; $('et').onchange = e => { o.t = e.target.value; recompute(); };
   } else if (s.t === 'p') { const o = S.pl[s.i];
-    el.innerHTML = `<b>Last</b> x ${num('ex', o.x)} mm F ${num('eF', o.F, 10)} N <span class="note">≈ ${fv(o.F / 9.81)} kg</span>
+    el.innerHTML = `<b>Last</b> x ${num('ex', o.x)} mm F ${num('eF', o.F, 10)} N <span class="note" id="eK">≈ ${fv(o.F / 9.81)} kg</span>
       <label class="chk"><input type="checkbox" id="ep" ${o.perm ? 'checked' : ''}> dauerhaft</label>
       <label class="chk">Fallhöhe ${num('eh', o.h, 10)} mm</label><label class="chk">Polster ${num('ec', o.c || 0, 1)} mm</label><button id="edel">✕ löschen</button>`;
     $('eF').onchange = e => { if (isFinite(+e.target.value)) { o.F = +e.target.value; recompute(); } };
@@ -604,7 +614,7 @@ function renderSel() {
     $('eh').disabled = $('ec').disabled = o.perm; $('eh').onchange = e => { o.h = Math.max(0, +e.target.value || 0); recompute(); };
     $('ec').onchange = e => { o.c = Math.max(0, +e.target.value || 0); recompute(); };
   } else { const o = S.ql[s.i];
-    el.innerHTML = `<b>Streckenlast</b> von ${num('ea', o.a)} bis ${num('eb', o.b)} mm q ${num('eq', o.q, 10)} N/m <span class="note">≈ ${fv(o.q / 9.81)} kg/m</span>
+    el.innerHTML = `<b>Streckenlast</b> von ${num('ea', o.a)} bis ${num('eb', o.b)} mm q ${num('eq', o.q, 10)} N/m <span class="note" id="eK">≈ ${fv(o.q / 9.81)} kg/m</span>
       <label class="chk"><input type="checkbox" id="ep" ${o.perm ? 'checked' : ''}> dauerhaft</label><button id="edel">✕ löschen</button>`;
     const ab = () => { const a = +$('ea').value, b = +$('eb').value; if (isFinite(a) && isFinite(b)) { o.a = Math.min(S.L, Math.max(0, a)); o.b = Math.min(S.L, Math.max(0, b)); recompute(); } };
     $('ea').onchange = ab; $('eb').onchange = ab;
@@ -646,7 +656,9 @@ cv.addEventListener('pointerdown', e => {
     setTool('drag'); recompute(); return;
   }
   UI.sel = hh ? { t: hh.t, i: hh.i } : null;
-  if (hh) { const o = ({ s: S.sup, p: S.pl, q: S.ql })[hh.t][hh.i]; UI.drag = { ...hh, x0: x, a: o.a, b: o.b, ox: o.x, moved: false }; }
+  if (hh) { const o = ({ s: S.sup, p: S.pl, q: S.ql })[hh.t][hh.i];
+    if (hh.t === 'q' && o.a > o.b) { [o.a, o.b] = [o.b, o.a]; hh.mode = hh.mode === 'a' ? 'b' : hh.mode === 'b' ? 'a' : 'm'; } // Enden ordnen, sonst springt das Verschieben
+    UI.drag = { ...hh, x0: x, a: o.a, b: o.b, ox: o.x, moved: false }; }
   drawAll();
 });
 let raf = 0;
@@ -655,7 +667,7 @@ cv.addEventListener('pointermove', e => {
   const x = evLocal(e)[0] / UI.G.k, dx = x - d.x0; d.moved = true;
   if (d.t === 'q') { const o = S.ql[d.i];
     if (d.mode === 'a') o.a = snap(d.a + dx); else if (d.mode === 'b') o.b = snap(d.b + dx);
-    else { const len = d.b - d.a, a = Math.min(S.L - Math.max(len, 0), Math.max(Math.min(0, -len), d.a + dx)); o.a = snap(a); o.b = snap(a + len); } }
+    else { const len = d.b - d.a, a = Math.min(S.L - len, Math.max(0, d.a + dx)); o.a = snap(a); o.b = snap(a + len); } }
   else ({ s: S.sup, p: S.pl })[d.t][d.i].x = snap(d.ox + dx);
   if (!raf) raf = requestAnimationFrame(() => { raf = 0; recompute(true); });
 });

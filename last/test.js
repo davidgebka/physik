@@ -148,3 +148,28 @@ check('Last 1 mm neben Auflager: A = F·999/1000', r.R[0].F, F * 0.999);
 r = Core.analyze(base({ sup: [pin(0), pin(L)], pl: [{ x: L / 2, F, h: 50, c: 20 }] }));
 check('Stoß mit Polster: n = 1 + √(1 + 2h/(δ_st + c))', r.imp[0].n, 1 + Math.sqrt(1 + 100 / (dst + 20)));
 check('… Balkendurchbiegung beim Stoß = n · δ_st (ohne Polster)', -Math.min(...r.wPeak), r.imp[0].n * dst);
+// ---- Runde 1: Invarianten an Zufallsbalken (auch statisch unbestimmt) ----
+// EI·w'' = M im Elementinneren (zweite Differenz), w = 0 an jedem Lager; Einzellager bei jeder Länge beweglich
+{ let s2 = 11, worst = 0, wsup = 0, n = 0, single = 0; const rr = () => (s2 = (s2 * 16807) % 2147483647) / 2147483647;
+  for (let k = 0; k < 200; k++) {
+    const Lr = 300 + 3000 * rr(), ns = 1 + Math.floor(rr() * 4), sup = [];
+    for (let i = 0; i < ns; i++) sup.push({ x: Math.round(Lr * rr()), t: rr() < .3 ? 'fix' : 'pin' });
+    const pl = Array.from({ length: Math.floor(rr() * 4) }, () => ({ x: Lr * rr(), F: 2000 * (rr() - .3), perm: rr() < .5 }));
+    const ql = Array.from({ length: Math.floor(rr() * 3) }, () => ({ a: Lr * rr(), b: Lr * rr(), q: 3 * (rr() - .2), perm: rr() < .5 }));
+    const res = Core.analyze(base({ L: Lr, sup, pl, ql, sw: rr() < .5, rhoA }));
+    const movable = new Set(sup.map(s => s.x)).size < 2 && !sup.some(s => s.t === 'fix');
+    if (movable) { if (!res.err) single++; continue; }
+    if (res.err) { single++; continue; } n++;
+    const Mm = Math.max(1e-9, ...res.M.map(Math.abs)), wm = Math.max(1e-12, ...res.wInst.map(Math.abs));
+    for (let i = 0; i + 6 < res.x.length; i += 7) for (let j = 2; j <= 4; j++) {
+      const h = res.x[i + j + 1] - res.x[i + j], w2 = (res.wInst[i + j + 1] - 2 * res.wInst[i + j] + res.wInst[i + j - 1]) / (h * h);
+      worst = Math.max(worst, Math.abs(EI * w2 - res.M[i + j]) / Mm); }
+    for (const s of res.sup) wsup = Math.max(wsup, Math.abs(res.wInst[res.x.findIndex(x => Math.abs(x - s.x) < 1e-9 * Lr)]) / wm);
+  }
+  check(`${n} Zufallsbalken: max |EI·w'' − M| / max |M|`, worst, 0, 1e-3);
+  check('… w an den Lagern / max w', wsup, 0, 1e-9);
+  check('… Beweglichkeit richtig erkannt (Fehler)', single, 0, 0); }
+r = Core.analyze(base({ L: 413, sup: [pin(367)], pl: [{ x: 164, F: 26 }] }));
+check('Ein Gelenklager, L = 413 (vorher als stabil gerechnet)', r.err ? 1 : 0, 1, 0);
+r = Core.analyze(base({ sup: [pin(0), pin(L)], pl: [{ x: L, F, h: 50 }] }));
+check('Stoß über dem Lager ohne Polster: als starr gemeldet', r.imp[0].rigid ? 1 : 0, 1, 0);
