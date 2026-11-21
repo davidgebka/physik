@@ -86,4 +86,5 @@ Bei Zielkonflikten entscheidet A.
 (Modul-Chats tragen hier ein; der zentrale Chat bzw. der Style-Chat arbeitet sie ab. Erledigtes wandert nach `docs/historie.md`.)
 
 Offen:
-- (keine)
+- **Neues Modul Elektronik** (21.11.2026, Konzept in `docs/elektronik.md`) – zentraler Chat: Eintrag in `DP_MODULES` `{ key: 'elektronik', name: 'Elektronik', q: 'Hält der Akku?', title: 'Einfache Schaltungen', desc: 'Batterie, Schalter, LED, Motor, Mikrocontroller: Laufzeit, Strom, Wärme', ready: false, color: '--elec' }`, Startseiten-Karte, Aufnahme in Tabelle „Module“ und Roadmap.
+- **Elektronik** – Style-Chat: neue Physik-Familie **Elektrik** `--elec`/`--elec-a` (Farbton mit genug Abstand zu `--water`, `--light`, `--mech`, `--load`, `--warn`; Kontrast wie die übrigen Familien) im Styleguide § Farben und in style.css. Bis dahin nutzt das Modul `--ink`.
