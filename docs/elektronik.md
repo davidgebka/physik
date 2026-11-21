@@ -2,7 +2,7 @@
 
 Vom Modul-Chat gepflegt (Branch `modul/elektronik`). Verbindliche Konventionen stehen in `docs/konzept.md`.
 
-**Stand:** v1 (21.11.2026), Key `elektronik`, Hash `#e=`. In `DP_MODULES` mit `ready: true`, Familie Elektrik `--elec` (style.css). Leitungen und Knoten in `--elec` (Editor und Galerie-Skizzen), Bauteile `--ink`, Leuchten `--light-a`.
+**Stand:** v3 (21.11.2026), Key `elektronik`, Hash `#e=`. In `DP_MODULES` mit `ready: true`, Familie Elektrik `--elec` (style.css). Leitungen und Knoten in `--elec` (Editor und Galerie-Skizzen), Bauteile `--ink`, Leuchten `--light-a`.
 
 ## Entwurfsfrage
 „Hält der Akku lange genug, reicht der Strom, wird etwas zu heiß?“ – Persona A entscheidet Batterie/Akku (Laufzeit, Bauraum, Gewicht), Netzteil, Leitungen, ob ein Mikrocontroller einen Verbraucher direkt schalten kann. Kein Schaltungssimulator, kein Lehrbaukasten.
