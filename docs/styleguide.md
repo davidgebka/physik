@@ -94,6 +94,7 @@ Nur diese Farben sind erlaubt. Module definieren **keine eigenen Farben** in `:r
 - `.ctl` (label · range · output): Zeile 24 px (Touch 48 px), output mit Einheit.
 - `.stats`/`.stat`: Zellen ohne Außenkasten, oben und unten 1 px `--ink`, zwischen Zellen 1 px `--ink`; Label 11 px, Wert 22 px auf 48 px, Notiz 11 px `--ink2`; kein Innenabstand unten (Zelle 72, 96, 120 … px). Überschreitung: `.stat.warn` → Wert `--warn` mit ⚠.
 - `.note`: 12 px / 24 px `--ink2`.
+- **Vorlagen-Galerie** (`dpGallery`, seit 21.11.2026): Knopf „▦ Vorlage …“ öffnet einen Dialog (1 px `--ink`, Hintergrund abgedunkelt), Kopfzeile bleibt stehen. Gruppen als Abschnitt (11 px Versalien, `--ink2`), Karten wie `.card` (oben 1 px `--ink`, ab 144 px Breite): Skizze 96 px, Name 13 px/700, Entwurf · Jahr bzw. Prinzip 11 px `--ink2`; Hover/Fokus `--fill`. Skizzen über `dpSketch`: Kontur `--ink`, Medium in der Familie (`-a`-Fläche bzw. Linie), Gestell `--mut`; jede Skizze einzeln eingepasst (kein gemeinsamer Maßstab).
 - Startseite: `.card` = oben 1 px `--ink`, Modulquadrat + Titel, Beschreibung `--ink2`; `.card.off` in `--mut`.
 - Keine Radien, keine Schatten, keine Verläufe (außer Falschfarbe und Feldbild).
 

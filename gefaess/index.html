@@ -23,7 +23,7 @@
       <button id="mDraw">✎ Freihand</button>
       <button id="mEdit" class="on">● Punkte</button>
       <span class="sep"></span>
-      <select id="preset" aria-label="Vorlage"></select>
+      <button id="preset"></button>
       <button id="undo" title="Rückgängig (Strg+Z)">↶</button><button id="cmp"></button>
       <button id="fitB">Einpassen</button>
       <button id="photoB" title="Foto als Vorlage zum Nachzeichnen laden (bleibt auf dem Gerät)">Foto …</button>
@@ -134,7 +134,7 @@
     <p class="note"><b>Zwei Konturen</b>: Kontur hinten und vorne in der Seitenansicht, jeweils vom Boden zur Mündung. Dazwischen liegen Kreisquerschnitte, deren Durchmesser je einen Punkt hinten mit dem Punkt vorne verbindet, der beim gleichen Anteil der Bogenlänge liegt; der Kreis steht senkrecht zur Zeichenebene (dünne Linien im Editor). So entstehen geneigte Hälse, schiefe und gebogene Formen; der Drehkörper ist der Sonderfall gespiegelter Konturen. Die Form ist spiegelsymmetrisch zur Zeichenebene. Gekippt wird in der Zeichenebene nach vorne (Kippansicht, Kurven) und für den Kippwinkel auch nach hinten; seitliches Kippen wird nicht gerechnet. Weil der tiefste Punkt jedes Querschnitts auf einer der beiden Konturen liegt, gilt das Taschenmodell exakt bis auf die Unterteilung (250 Abschnitte, geprüft gegen Zylinder, schiefen und geneigten Zylinder, Torusabschnitt). Mündung = letzter Querschnitt (auch schräg), Boden = erster Querschnitt; nur ein waagrechter Boden ist Standfläche. Biegt die Form enger als ihr Radius, durchdringen sich Querschnitte (⚠). Masse: Schale der Wandstärke um die Kreisquerschnitte plus Bodenplatte.</p>
     <p class="note"><b>Schwappen</b> (Schalter „≈ Schwappen“): Jeder Wasserkörper schwingt in seiner ersten Eigenschwingung in der Kippebene – ein linearer Oszillator je Tasche, angeregt durch waagrechte Bewegung und Drehen des Gefäßes (Drehpunkt = Bildmitte der Kippansicht). Eigenfrequenz f₁ = √(g·k·tanh(k·h))/2π mit mittlerer Tiefe h = Volumen/Spiegelfläche; die Wellenzahl k folgt aus Fläche und zweitem Moment der tatsächlichen Spiegelfläche (Rayleigh-Quotient, kalibriert auf Kreis bzw. beim Grundriss auf Rechteck: Zylinder und Quader exakt, Kreis-Grundriss −1,5&nbsp;%, andere Formen geschätzt ±10&nbsp;%). Die Kopplung an die Bewegung folgt der Potentialtheorie (Ersatzpendel im Abstand (2/k)·tanh(kh/2) unter dem Spiegel). Dämpfung: Grenzschicht an glatter Wand für Wasser (Mikishev/Dorozhkin), etwa 0,5–2&nbsp;%; echte Gefäße sind durch Kontaktlinie, Schaum, Einbauten meist stärker gedämpft, die Ausschläge daher eher zu groß. Überschwappen: Der Wellenberg am Rand wird durch eine geneigte Ebene mit gleichem Randhub ersetzt; was dann über einer Engstelle steht, läuft wie über ein Wehr (Q = 0,4·√(2g)·b·H^1,5, Breite b = Sehne am Rand bzw. Tüllen-Ø) in die Nachbartasche oder hinaus; die Welle verliert dabei keine Energie (obere Abschätzung). Brechen: steiler als Randhub = halbe Spiegelbreite wird die Welle nicht, darüber geht ihre Bewegung verloren. Teilen und Vereinigen von Taschen übertragen den Schwingzustand massengewichtet. <b>Freibord</b> = Randhub, ab dem Wasser über Rand, Tülle oder in eine andere Tasche läuft (aufrecht). <b>Gehen</b>: reine Sinusbewegung in Kipprichtung, eingeschwungene Amplitude; reale Schritte haben Oberschwingungen – liegt f₁ nahe dem Doppelten der Schrittfrequenz, die Frequenz dort testen. <b>Anhalten</b>: gleichmäßiges Bremsen aus dem Tempo, größter Ausschlag. Grenzen: nur die erste Schwingung, nur in der Kippebene (kein Drehschwappen, das nahe der Resonanz im Zylinder auftritt), Wellen klein gegen die Spiegelbreite (⚠ ab Randhub &gt; 25&nbsp;% der halben Breite: nur qualitativ), Brechen nur als Grenze, kein Spritzen, keine Kopplung über unter Wasser verbundene Spiegel (U-Rohr). Senkrechte Beschleunigung wird nicht gerechnet.</p>
     <p class="note"><b>Foto als Vorlage</b>: „Foto …“ legt ein Bild halbdurchsichtig unter den Editor, darauf die Kontur von Hand nachzeichnen (Freihand oder Punkte). Maßstab: Fotobreite so einstellen, dass ein bekanntes Maß stimmt (H und Ø stehen im Editor, 1 Punkt des Rasters ist angegeben); mit „Foto ↔“ die Gefäßmitte auf die gestrichelte Achse legen. Am genauesten ist eine Aufnahme genau von der Seite aus größerem Abstand (Tele), sonst verzerrt die Perspektive. Gezeichnet wird die Innenkontur – auf dem Foto sieht man die Außenkontur, also um die Wandstärke nach innen versetzen. Das Foto bleibt auf dem Gerät und wird weder exportiert noch im Link gespeichert.</p>
-    <p class="note"><b>Designklassiker</b> unter „Vorlage“: Außenmaße nach Hersteller- und Händlerangaben, Innenkontur und Wandstärken daraus nachempfunden – Annäherung, keine Werkszeichnung. Tüllen, Henkel und Deckel fehlen.</p>
+    <p class="note"><b>Designklassiker</b> unter „Vorlage“: Außenmaße nach Hersteller- und Händlerangaben, Innenkontur und Wandstärken daraus nachempfunden – Annäherung, keine Werkszeichnung. Picardie: Facetten als glatter Kegel; EM77: nur der Glaseinsatz, Höhe geschätzt. Kelchglas: Stiel nicht gerechnet.</p>
     <p class="note">Gefäßgewicht als dünne Schale: Wandstärke × Mittelfläche (Innenkontur um halbe Wandstärke nach außen versetzt; exakt für Zylinder- und Kegelwände), dazu eine Bodenplatte unter dem flachen Boden. Gültig für Wandstärke deutlich kleiner als der Radius (Fehler wächst mit Wandstärke/Krümmungsradius, an Ecken genähert). Standradius auto = Bodenplatte; ein von Hand gesetzter Standradius verschiebt nur die Kippkante, seine Masse wird nicht gerechnet. Ohne flachen Boden (z.&nbsp;B. Rundboden, Standring) von Hand setzen. <b>Kippwinkel</b>: Neigung um die Standkante, ab der das Gefäß von selbst umfällt; das Wasser läuft dabei mit und läuft gegebenenfalls aus (quasistatisch, kein Rutschen, kein Henkel). <b>Umstoßkraft</b>: waagrechte Kraft am Rand, die das aufrechte, gefüllte Gefäß gerade ankippt.</p>
   </section>
 </main>
@@ -972,6 +972,17 @@ const PRESETS = {
   kopf:    { n: 'Krug mit geneigtem Kopf', back: [[-55,0],[-85,9],[-89,54],[-79,97],[-45,131],[-41,151],[-52,180],[-42,220],[-11,249],[18,260]],
              front: [[55,0],[83,43],[82,86],[63,117],[38,143],[32,163],[41,180],[58,191],[83,199]], sm: true },
   schief:  { n: 'Schräges Glas', back: [[-35,0],[-5,110]], front: [[35,0],[65,110]], sm: false },
+  // Grundform Kelchglas: Kelch auf Stiel, Fuß Ø 76 (Stiel nicht gerechnet)
+  kelch:   { n: 'Kelchglas', p: [[0,90],[18,91],[33,102],[41,125],[40,160],[34,190]], r: 38, t: 1.5, tb: 3, m: 'glas' },
+  // Grundform Schiffskaraffe: sehr breiter Boden, steile Schulter, enger Hals
+  schiff:  { n: 'Schiffskaraffe', p: [[0,0],[105,0],[110,6],[100,40],[60,95],[24,140],[18,160],[18,200],[22,215]], t: 4, tb: 8, m: 'glas' },
+  // Erlenmeyerkolben 250 ml, Enghals (Emil Erlenmeyer, 1860; Maße nach DIN ISO 1773): H 145, Ø 85, Hals Ø 34 außen
+  erlen:   { n: 'Erlenmeyerkolben · Erlenmeyer 1860', g: 1, p: [[0,0],[38,0],[41,3],[41,6],[17,108],[16,112],[16,140],[18,144]], t: 1.3, tb: 1.5, m: 'glas' },
+  // Picardie 25 cl (Duralex, 1954): H ≈ 90, Ø ≈ 85 (Händlerangaben, gerundet); Facetten als glatter Kegel
+  picardie: { n: 'Picardie 25 cl · Duralex 1954', g: 1, p: [[0,0],[27,0],[29,3],[38,62],[39,64],[40,84]], t: 2.5, tb: 6, m: 'glas' },
+  // Isolierkanne EM77, 1 l (Erik Magnussen, 1977): H ≈ 265 (geschätzt); Glaseinsatz als Innenkontur, Außenhülle und Kippverschluss fehlen
+  em77:    { n: 'Isolierkanne EM77 · Magnussen 1977', g: 1, p: [[0,0],[40,0],[42,4],[42,180],[30,200],[22,210],[22,222]], t: 3, tb: 10, m: 'glas',
+             hp: [[-56,200],[-92,190],[-92,70],[-56,50]], hd: 14, lid: true },
   kubus:   { n: 'Kubus-Behälter · Wagenfeld 1938', g: 1, plan: [[-88,-80],[-86,-86],[-80,-88],[80,-88],[86,-86],[88,-80],[88,80],[86,86],[80,88],[-80,88],[-86,86],[-88,80]], H: 78, sm: false, t: 4, tb: 5, m: 'glas' }
 };
 const toPts = a => a.map(([x, z]) => ({ x, z }));
@@ -1662,11 +1673,23 @@ function drawAll() { drawEditor(); drawTilt(); drawCharts(); drawStats(); }
 function setMode(m) { S.mode = m; $('mDraw').classList.toggle('on', m === 'draw'); $('mEdit').classList.toggle('on', m === 'edit'); drawEditor(); }
 $('mDraw').onclick = () => setMode('draw');
 $('mEdit').onclick = () => setMode('edit');
-// Vorlagen: Grundformen und Designklassiker (g: 1), Designklassiker setzen auch Wand, Boden, Material
-$('preset').innerHTML = '<option value="">Vorlage …</option>' + [['Grundformen', 0], ['Designklassiker', 1]].map(([t, g]) =>
-  `<optgroup label="${t}">` + Object.entries(PRESETS).filter(([, v]) => (v.g || 0) === g).map(([k, v]) => `<option value="${k}">${v.n}${v.plan ? ' (Grundriss)' : v.back ? ' (zwei Konturen)' : ''}</option>`).join('') + '</optgroup>').join('');
-$('preset').onchange = e => {
-  const v = PRESETS[e.target.value]; if (!v) return;
+// Vorlagen-Galerie: Prinzipien und Designklassiker (g: 1); Designklassiker setzen auch Wand, Boden, Material. Name „Titel · Entwurf Jahr“
+const PRINZIP = { becher: 'senkrechte Wand: gleichmäßige Eichstriche', konisch: 'nach oben weiter: Eichstriche rücken zusammen', karaffe: 'bauchig mit Hals',
+  flasche: 'enger Hals: gießt erst bei starker Neigung', schale: 'flach und weit: schwappt leicht über', kammer: 'zwei Kammern: ein Rest bleibt hängen',
+  teekanne: 'Tülle tief angesetzt, Deckel', kelch: 'Kelch auf Stiel: hoher Schwerpunkt', schiff: 'breiter Boden: kippt erst sehr spät',
+  kopf: 'geneigter Kopf (zwei Konturen)', schief: 'schräge Wand (zwei Konturen)' };
+// Skizze: Innenkontur gespiegelt mit Wasserfläche, Tülle und Henkel als Mittellinie; Grundriss von oben; zwei Konturen hinten/vorne
+function presetSketch(v) {
+  const body = v.plan ? v.plan : v.back ? [...v.back].reverse().concat(v.front) : v.p.map(([r, z]) => [-r, z]).reverse().concat(v.p);
+  const out = [{ p: body, z: true, f: '--water-a', c: null }, { p: body, z: !!v.plan, w: 2 }];
+  if (v.sp) out.push({ p: v.sp, w: 3 }); if (v.hp) out.push({ p: v.hp, w: 3 });
+  if (v.lid) { const r = v.p[v.p.length - 1]; out.push({ p: [[-r[0], r[1]], [r[0], r[1]]], w: 3 }); }
+  if (v.r) { const z = v.p[0][1]; out.push({ p: [[0, 0], [0, z]], w: 2 }, { p: [[-v.r, 0], [v.r, 0]], w: 2 }); } // Stiel und Fuß
+  return out;
+}
+dpGallery($('preset'), [['Prinzipien', 0], ['Designklassiker', 1]].map(([t, g]) => [t, Object.entries(PRESETS).filter(([, v]) => (v.g || 0) === g).map(([k, v]) => {
+  const [n, s] = v.n.split(' · '); return { k, n, s: s || PRINZIP[k], d: () => presetSketch(v) }; })]), k => {
+  const v = PRESETS[k];
   pushUndo();
   if (v.plan) { S.plan = toPts(v.plan); S.H = v.H; S.psmooth = v.sm; setKind('plan', true); }
   else if (v.back) { S.tA = toPts(v.back); S.tB = toPts(v.front); S.tsmooth = v.sm; setKind('tube', true); }
@@ -1675,8 +1698,8 @@ $('preset').onchange = e => {
     setKind('rot', true);
   }
   if (v.m) { S.t = v.t; S.tb = v.tb; S.mat = v.m; }
-  S.fill = null; S.foot = v.r ?? null; S.theta = 0; $('tilt').value = 0; S.sel = -1; recompute(); fitView(); drawAll(); e.target.value = '';
-};
+  S.fill = null; S.foot = v.r ?? null; S.theta = 0; $('tilt').value = 0; S.sel = -1; recompute(); fitView(); drawAll();
+});
 // Drehkörper ↔ Grundriss; beide Geometrien bleiben erhalten
 function setKind(k, quiet) {
   S.kind = k; S.sel = -1; const p = k === 'plan', t = k === 'tube';

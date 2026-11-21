@@ -27,7 +27,7 @@ details summary{font-size:12.5px;cursor:pointer}
       <button id="addP" title="Weiteren, getrennten Schirm anlegen und gleich freihand zeichnen">+ Schirm</button>
       <button id="sym" class="on" title="An: Profil wird um die Achse gedreht. Aus: Querschnitt frei zeichnen, entlang der Länge gezogen (Langfeldleuchte).">⟲ Symmetrie an</button>
       <span class="sep"></span>
-      <select id="preset" aria-label="Vorlage"></select>
+      <button id="preset"></button>
       <button id="undo" title="Rückgängig (Strg+Z)">↶</button><button id="cmp"></button>
       <button id="fitB">Einpassen</button>
     </div>
@@ -96,7 +96,7 @@ details summary{font-size:12.5px;cursor:pointer}
     <p class="note"><b>Modell.</b> Symmetrie an: Der gezeichnete Schirm wird um die Achse gedreht. Symmetrie aus (Langfeldleuchte): Der Querschnitt wird entlang der Länge gezogen, die Enden sind offen, die Lampe ist ein gleichmäßig leuchtender Stab über die ganze Länge. Alle Schirme sind dünne Schalen ohne Wandstärke, jeder mit eigenem Material; getrennte Schirme werfen Licht aufeinander. Von der Lampe (Punktquelle) aus werden Lichtteilchen in 3D verfolgt (Monte-Carlo-Photonenverfolgung): Bei jedem Auftreffen werden sie je nach Material diffus oder spiegelnd reflektiert, diffus oder klar durchgelassen oder absorbiert, bis sie den Schirm verlassen. Daraus folgen Lichtverteilungskurve (LVK), Wirkungsgrad η, Beleuchtungsstärke und Leuchtdichte. <b>Lichtfeld:</b> Raumbeleuchtungsstärke E₀ [lx] im Schnitt durch die Leuchte – das Licht, das aus allen Richtungen an einem Punkt im Raum ankommt (Summe der Weglängen der Lichtteilchen je Rasterzelle). Symmetrisch: Mittel über Ringe um die Achse; Langfeld: Mittel über die Länge. Helligkeit ∝ (E₀/Bezug)^0,4, Bezug = 99. Perzentil (direkt an der Lampe wächst E₀ mit 1/Abstand² unbegrenzt); wird nur gerechnet, solange die Ansicht offen ist, und braucht mindestens 1 Mio. Lichtteilchen. Das Bild wird mit jedem Rechenpaket ruhiger; angegeben ist die statistische Unsicherheit ±σ. Grundlage und Prüffälle: <code>docs/licht-grundlagen.md</code>, <code>licht/test.js</code>.</p>
     <p class="note"><b>Begriffe.</b> LVK: Lichtstärke [cd] je Richtung; γ = 0° zeigt nach unten, C0–C180 und C90–C270 sind zwei senkrechte Schnittebenen (gleich, solange die Lampe auf der Achse sitzt). Bei der Langfeldleuchte ist C0–C180 quer, C90–C270 längs zur Leuchte. cd/klm = Lichtstärke je 1000 lm Lampenlichtstrom. Leuchtdichte [cd/m²]: wie hell eine Fläche wirkt. Abschirmwinkel: Winkel unter der Horizontalen, ab dem die Lampe direkt sichtbar wird.</p>
     <p class="note"><b>Materialwerte</b> sind Richtwerte und meist die größte Fehlerquelle. Opalglas τ 30–65 % (Überfangopal), weiß lackiert ρ 75–90 %, Aluminium gebürstet ρ 55–58 %, Spiegel (eloxiertes, beschichtetes Aluminium) ρ 75–95 % – Klarglas τ 80–90 % – Wertebereiche nach der IES-Materialtabelle (UNCG eLight, „Material Properties“). Die Aufteilung von gebürstetem Aluminium in diffus/gespiegelt ist geschätzt. <b>Papier, Stoff, Filz, Acryl satiniert und Kunststoff halbopak sind Schätzwerte</b>, für sie wurde keine belastbare Messquelle gefunden; echte Werte schwanken stark mit Dicke, Webart und Farbe. Eigene Messwerte unter „Erweitert“ eintragen.</p>
-    <p class="note"><b>Designklassiker</b> unter „Vorlage“: Außenmaße nach Hersteller- und Händlerangaben, Profil nachempfunden – Annäherung, keine Werkszeichnung. Gerechnet wird nur der Schirm (Fuß, Bogen, Fassung fehlen), Lampe als Punkt; Messing (Golden Bell) als gebürstetes Aluminium, gelochte Scheitel (Arco, Golden Bell) als offene Kreisöffnung. Mehrschalige Leuchten (PH 5, Artichoke) als mehrere Schirme; bei der Artichoke ist jede Blattreihe ein geschlossener Ring – die Lücken zwischen den sechs Blättern einer Reihe fehlen, real tritt dort etwas mehr Licht seitlich aus.</p>
+    <p class="note"><b>Designklassiker</b> unter „Vorlage“: Außenmaße nach Hersteller- und Händlerangaben, Profil nachempfunden – Annäherung, keine Werkszeichnung. Gerechnet wird nur der Schirm (Fuß, Bogen, Fassung fehlen), Lampe als Punkt; Messing (Golden Bell) als gebürstetes Aluminium, gelochte Scheitel (Arco, Golden Bell) als offene Kreisöffnung. Mehrschalige Leuchten (PH 5, Artichoke) als mehrere Schirme; bei der Artichoke ist jede Blattreihe ein geschlossener Ring – die Lücken zwischen den sechs Blättern einer Reihe fehlen, real tritt dort etwas mehr Licht seitlich aus. Flowerpot (Emaille farbig) und Atollo (lackiert) als weiß lackiert, Atollo ohne Zylinderfuß; angenommen sind die kleine Flowerpot-Schale Ø 130, die Kegelhöhe der Mayday (≈ 330) und die Höhe der Glo-Ball (≈ 290).</p>
     <p class="note"><b>Blendhinweis.</b> ⚠ ab 20 000 cd/m²: Ab dieser Lampenleuchtdichte verlangt EN 12464-1 einen Mindestabschirmwinkel (20–50 kcd/m² → 15°, 50–500 kcd/m² → 20°, ab 500 kcd/m² → 30°). Hier auf die Leuchtdichte des Schirms übertragen – Richtwert, keine Normprüfung (UGR braucht den Raum). Der Abschirmwinkel ist rein geometrisch (Langfeld: nur quer, Lampe in Leuchtenmitte): Schirm undurchsichtig, Lampe als Punkt; Spiegelbilder und Durchsicht durch klare Materialien zählen nicht, eine reale Lampe ist etwas größer.</p>
     <p class="note"><b>Gültig für</b> dünne rotationssymmetrische oder gerade gezogene Schirme, photometrisch (keine Farbe), Umgebung schwarz: Beleuchtungsstärke ist nur das direkte Licht der Leuchte auf einer unendlichen Tischebene, ohne Licht von Wänden und Decke; bei der Langfeldleuchte gemittelt über die Leuchtenlänge. Liegt die Lampe neben der Achse, ist die Leuchtdichte rundum gemittelt dargestellt, und die LVK-Ebenen C0–C180 und C90–C270 sind Mittel über Sektoren von ±37,5°. <b>Nicht erfasst:</b> Wandstärke und Brechung, winkelabhängige Reflexion (Fresnel), Streukeulen halbglänzender Oberflächen, Endkappen der Langfeldleuchte, Farbe/Spektrum, Wärme, Raumreflexionen, LDT-Export.</p>
   </section>
@@ -400,12 +400,22 @@ const artiP = (a, b, n, L, wb) => {
   const [xt, zt] = rows[n - 1][0][0]; // Aufhängung: geschlossene Kappe über dem Innenende der obersten Reihe
   return rows.concat([[[[0, zt], [r1(xt + 15), zt]], 'weiss']]);
 };
+// Halbkugel nach oben offen (Schale): Rand r = R bei zRim, Boden bei zRim − R
+const hemiUp = (R, n, zRim) => Array.from({ length: n + 1 }, (_, i) => { const t = Math.PI / 2 * i / n; return [+(R * Math.cos(t)).toFixed(1), +(zRim - R * Math.sin(t)).toFixed(1)]; });
+// Ellipsoid um (0,0), Halbachsen a quer, b hoch, unten geschlossen, oben Öffnung rTop
+const ellP = (a, b, rTop, n) => { const t1 = Math.PI - Math.asin(rTop / a); return Array.from({ length: n + 1 }, (_, i) => { const t = t1 * i / n; return [+(a * Math.sin(t)).toFixed(1), +(-b * Math.cos(t)).toFixed(1)]; }); };
 const PRESETS = { // Profile rotationssymmetrisch (r ≥ 0); bei Symmetrie aus wird gespiegelt (toExt)
   kegel:    ['Kegelschirm', [[150, -110], [80, 70]], [0, 0], 'stoff'],
   zylinder: ['Zylinder', [[100, -120], [100, 120]], [0, 0], 'papier'],
   kugel:    ['Kugel (Opal)', sphereP(120, 25, 14), [0, 0], 'opal'],
   glocke:   ['Glocke', [[170, -90], [160, -60], [130, -25], [95, 10], [70, 50], [55, 90], [40, 120]], [0, 40], 'weiss'],
   scheibe:  ['Flache Scheibe', [[0, 40], [220, 40]], [0, 0], 'weiss'],
+  // Lampe im Brennpunkt (f = 30 mm) eines Spiegelparaboloids: gebündelt nach unten
+  parabol:  ['Parabolreflektor', [0, 15, 30, 45, 60, 75, 90, 105].map(r => [r, +(30 - r * r / 120).toFixed(1)]), [0, 0], 'spiegel'],
+  // Schale nach oben offen, Lampe in der Schale: Licht geht an die Decke
+  uplight:  ['Uplight-Schale', [[0, -40], [60, -40], [120, -10], [160, 40]], [0, -10], 'weiss'],
+  // Lampe tief im Rohr: großer Abschirmwinkel
+  tief:     ['Tiefstrahler', [[60, -150], [60, 60], [0, 60]], [0, 30], 'alu'],
   // Designklassiker (5. Feld = 1): Maße nach Hersteller-/Händlerangaben, Kontur nachempfunden; nur der Schirm, ohne Fuß/Gestell
   // A330S „Golden Bell“ (Alvar Aalto, 1937): Ø 170, H 200, Messing → Näherung Aluminium gebürstet
   goldenbell: ['Golden Bell · Aalto 1937', [[85, -125], [83, -112], [74, -90], [57, -60], [43, -30], [36, 0], [34, 35], [30, 60], [16, 75]], [0, -20], 'alu', 1],
@@ -424,7 +434,18 @@ const PRESETS = { // Profile rotationssymmetrisch (r ≥ 0); bei Symmetrie aus w
     [[[115, 55], [150, 40], [200, 10], [250, -40]], 'weiss'], [[[0, -117], [70, -117], [100, -95], [113, -60], [120, -15]], 'weiss']], [0, 0], 'weiss', 1],
   // PH Artichoke Ø 480 (Henningsen 1958): Ø 480, H 465, 72 Blätter in 12 Reihen zu je 6 (Reihenzahl angenommen).
   // Jede Reihe als geschlossener Lamellenring (die Lücken zwischen den 6 Blättern einer Reihe fehlen)
-  artichoke: ['PH Artichoke Ø 480 · Henningsen 1958', artiP(240, 248, 12, 90, 50), [0, 0], 'weiss', 1]
+  artichoke: ['PH Artichoke Ø 480 · Henningsen 1958', artiP(240, 248, 12, 90, 50), [0, 0], 'weiss', 1],
+  // Flowerpot VP1 (Verner Panton, 1968): Ø 230, H 160; große Halbkugel nach unten offen, darunter kleine Halbkugel nach oben offen
+  // (Ø 130 angenommen). Emaille farbig → weiß lackiert genähert
+  flowerpot: ['Flowerpot VP1 · Panton 1968', [[sphereOpen(115, 115, 0, 10), 'weiss'], [hemiUp(65, 8, 20), 'weiss']], [0, 40], 'weiss', 1],
+  // Panthella (Verner Panton, 1971): Schirm Ø 500, Halbkugel aus opalem Acryl
+  panthella: ['Panthella · Panton 1971', sphereOpen(250, 250, 0, 14), [0, 40], 'acryl', 1],
+  // Atollo 238 (Vico Magistretti, 1977): Kuppel Ø 380, Aluminium lackiert; Zylinderfuß fehlt
+  atollo:   ['Atollo · Magistretti 1977', sphereOpen(190, 190, 0, 12), [0, 40], 'weiss', 1],
+  // Mayday (Konstantin Grcic, 1999): Ø 220, H 530 mit Griff; Kegel aus Polypropylen, Kegelhöhe ≈ 330 angenommen
+  mayday:   ['Mayday · Grcic 1999', [[110, -160], [30, 170], [0, 170]], [0, 60], 'halb', 1],
+  // Glo-Ball S1 (Jasper Morrison, 1998): Ø 330, abgeflachte Opalglaskugel (Höhe ≈ 290 angenommen), oben Öffnung für die Fassung
+  globall:  ['Glo-Ball S1 · Morrison 1998', ellP(165, 145, 30, 16), [0, 0], 'opal', 1]
 };
 const M = (rd, rs, td, ts) => ({ in: { rd, rs }, out: { rd, rs }, td, ts });
 const MATS = {
@@ -907,14 +928,19 @@ function setMode(m) { S.mode = m; $('mDraw').classList.toggle('on', m === 'draw'
 $('mDraw').onclick = () => setMode('draw');
 $('mEdit').onclick = () => setMode('edit');
 $('sym').onclick = () => setSym(!S.sym);
-$('preset').innerHTML = '<option value="">Vorlage …</option>' + [['Grundformen', 0], ['Designklassiker', 1]].map(([t, g]) => `<optgroup label="${t}">` +
-  Object.entries(PRESETS).filter(([, v]) => (v[4] || 0) === g).map(([k, v]) => `<option value="${k}">${v[0]}</option>`).join('') + '</optgroup>').join('');
-$('preset').onchange = e => {
-  const v = PRESETS[e.target.value]; if (!v) return;
-  pushUndo(); const ps = (Array.isArray(v[1][0][0]) ? v[1] : [[v[1], v[3]]]).map(([p, m]) => part(toPts(p), m)); // ein Profil oder Liste [Profil, Material]
+// Vorlagen-Galerie: Prinzipien und Designklassiker (5. Feld = 1), Name „Titel · Entwurf Jahr“
+const PRINZIP = { kegel: 'Stoff, nach unten offen', zylinder: 'Papier, oben und unten offen', kugel: 'Opalglas: streut rundum', glocke: 'weiß lackiert: lenkt nach unten',
+  scheibe: 'Lampe frei unter der Scheibe: blendet', parabol: 'Lampe im Brennpunkt: gebündelt', uplight: 'Schale nach oben: indirektes Licht', tief: 'Lampe tief im Rohr: blendfrei, schluckt Licht' };
+const presetParts = v => Array.isArray(v[1][0][0]) ? v[1] : [[v[1], v[3]]]; // ein Profil oder Liste [Profil, Material]
+// Skizze: Schirme gespiegelt, Lampe als Punkt
+const presetSketch = v => presetParts(v).map(([p]) => ({ p: p.map(([r, z]) => [-r, z]).reverse().concat(p), w: 2 })).concat([{ p: [v[2]], r: 4, f: '--light', c: '--ink' }]);
+dpGallery($('preset'), [['Prinzipien', 0], ['Designklassiker', 1]].map(([t, g]) => [t, Object.entries(PRESETS).filter(([, v]) => (v[4] || 0) === g).map(([k, v]) => {
+  const [n, s] = v[0].split(' · '); return { k, n, s: s || PRINZIP[k], d: () => presetSketch(v) }; })]), k => {
+  const v = PRESETS[k];
+  pushUndo(); const ps = presetParts(v).map(([p, m]) => part(toPts(p), m));
   S.parts = S.sym ? ps : ps.flatMap(toExt); S.cur = 0; S.src = { x: v[2][0], z: v[2][1] }; S.sel = -1;
-  syncCtl(); fitView(); restart(); e.target.value = '';
-};
+  syncCtl(); fitView(); restart();
+});
 $('undo').onclick = undo;
 $('fitB').onclick = () => { fitView(); drawEditor(); };
 $('part').onchange = e => { S.cur = +e.target.value; S.sel = -1; syncCtl(); drawEditor(); };
