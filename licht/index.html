@@ -28,7 +28,7 @@ details summary{font-size:12.5px;cursor:pointer}
       <button id="sym" class="on" title="An: Profil wird um die Achse gedreht. Aus: Querschnitt frei zeichnen, entlang der Länge gezogen (Langfeldleuchte).">⟲ Symmetrie an</button>
       <span class="sep"></span>
       <select id="preset" aria-label="Vorlage"></select>
-      <button id="undo" title="Rückgängig (Strg+Z)">↶</button>
+      <button id="undo" title="Rückgängig (Strg+Z)">↶</button><button id="cmp"></button>
       <button id="fitB">Einpassen</button>
     </div>
     <canvas id="ed"></canvas>
@@ -447,6 +447,7 @@ const part = (pts, mat = 'stoff', raw = null) => ({ pts, mat, raw });
 const S = { parts: [part(toPts(PRESETS.kegel[1]))], cur: 0, sym: true, len: 1200, src: { x: 0, z: 0 }, phi: 806, type: 'iso', dist: 600,
   unit: 'klm', view: 'lvk', mode: 'edit', sel: -1, undo: [] };
 let G = {}, R = null; // G: Geometrie für den Kern, R: aktuelles Ergebnis
+let REF = null; // gemerkter Stand: {job, R, e0, rMax, sym, sh, phi, dist}; läuft mit, solange derselbe Rechenlauf noch ruhiger wird
 const cur = () => S.parts[S.cur];
 const matOf = pt => pt.raw || MATS[pt.mat][1];
 
@@ -561,6 +562,7 @@ function onChunk(m) {
   R = Core.normalize(J.acc, J.o);
   derive();
   if (R.prog >= 1 || R.N >= NMAX) { J.done = true; J.calm = performance.now() - J.t0; if (worker) worker.postMessage({ job: -J.id }); }
+  if (REF && REF.job === J.id) refSnap();
   if (!J.raf) J.raf = requestAnimationFrame(() => { J.raf = 0; drawAll(); });
 }
 
@@ -783,8 +785,9 @@ function drawLvk() {
   ctx.font = '11px Arial, sans-serif'; ctx.lineWidth = 1;
   const k = S.unit === 'klm' ? 1000 / S.phi : 1, u = S.unit === 'klm' ? 'cd/klm' : 'cd';
   if (!R) { ctx.fillStyle = css('--mut'); ctx.textAlign = 'center'; ctx.fillText(J.err ? '⚠ ' + J.err : 'rechnet …', cx, cy); ctx.textAlign = 'left'; return; }
-  const curves = [R.lv.A, R.lv.B].filter(Boolean);
+  const curves = [R.lv.A, R.lv.B].filter(Boolean), kr = REF ? (S.unit === 'klm' ? 1000 / REF.phi : 1) : 1;
   let mx = 0; curves.forEach(c => c.forEach(h2 => h2.forEach(v => mx = Math.max(mx, v * k))));
+  if (REF) REF.R.lv.A.forEach(h2 => h2.forEach(v => mx = Math.max(mx, v * kr)));
   const st = niceStep(Math.max(mx, 1e-9) / 4), top = Math.ceil(mx / st) * st || 1, sc = rad / top;
   const P = (g, r, side) => [cx + side * r * sc * Math.sin(g * D2R), cy + r * sc * Math.cos(g * D2R)];
   ctx.strokeStyle = css('--dot'); ctx.fillStyle = css('--ink2');
@@ -792,16 +795,18 @@ function drawLvk() {
   for (let g = 0; g < 180; g += 30) for (const sd of [1, -1]) { const [x, y] = P(g, top, sd); ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(x, y); ctx.stroke(); }
   ctx.textAlign = 'center'; ctx.fillText('0°', cx, cy + rad + 14); ctx.fillText('180°', cx, cy - rad - 6);
   ctx.fillText('90°', cx + rad + 14, cy + 4); ctx.fillText('90°', cx - rad - 14, cy + 4); ctx.textAlign = 'left';
-  const dG = R.dGamma, draw = (pair, col, dash) => {
+  const draw = (pair, col, dash, kk = k, dG = R.dGamma, lw) => {
     ctx.beginPath();
-    pair[0].forEach((v, g) => { const [x, y] = P(g * dG, v * k, 1); g ? ctx.lineTo(x, y) : ctx.moveTo(x, y); });
-    for (let g = pair[1].length - 1; g >= 0; g--) { const [x, y] = P(g * dG, pair[1][g] * k, -1); ctx.lineTo(x, y); }
-    ctx.closePath(); ctx.strokeStyle = col; ctx.lineWidth = dash.length ? 1.5 : 2.5; ctx.setLineDash(dash); ctx.stroke(); ctx.setLineDash([]);
+    pair[0].forEach((v, g) => { const [x, y] = P(g * dG, v * kk, 1); g ? ctx.lineTo(x, y) : ctx.moveTo(x, y); });
+    for (let g = pair[1].length - 1; g >= 0; g--) { const [x, y] = P(g * dG, pair[1][g] * kk, -1); ctx.lineTo(x, y); }
+    ctx.closePath(); ctx.strokeStyle = col; ctx.lineWidth = lw || (dash.length ? 1.5 : 2.5); ctx.setLineDash(dash); ctx.stroke(); ctx.setLineDash([]);
   };
+  if (REF) draw(REF.R.lv.A, css('--mut'), [], kr, REF.R.dGamma, 1.5); // Geist: gemerkter Stand, Hauptebene
   draw(R.lv.A, css('--light'), []);
   if (R.lv.B) draw(R.lv.B, css('--ink'), [5, 4]);
   ctx.fillStyle = css('--mut'); ctx.fillText(u, 8, 16);
   if (R.lv.B) ctx.fillText('C180 ← → C0', 8, h - 8);
+  if (REF) { ctx.textAlign = 'right'; ctx.fillText('dünn grau: gemerkt', w - 8, 16); ctx.textAlign = 'left'; }
 }
 
 // ---- Lichtfeld: Raumbeleuchtungsstärke E0 im Schnitt, Helligkeit ~ (E0/Bezug)^0,4 (wie das Auge, zeigt auch 1/1000), dunkel → --light → hell ----
@@ -843,12 +848,30 @@ function drawE() {
   if (!R) { prep(cv); return; }
   const n = R.E.length, x0 = S.sym ? 0 : -G.rMax, dr = (G.rMax - x0) / n, E = Array.from(R.E), sg = E.map((e, i) => e * rel(R.ring[i]));
   const pts = E.map((e, i) => [x0 + (i + 0.5) * dr, e]), hi = pts.map(([r], i) => [r, E[i] + (isFinite(sg[i]) ? sg[i] : 0)]), lo = pts.map(([r], i) => [r, Math.max(0, E[i] - (isFinite(sg[i]) ? sg[i] : 0))]);
-  let ym = 1; hi.forEach(p => ym = Math.max(ym, p[1]));
+  // Geist: gemerkter Stand, auf den aktuellen Bereich beschnitten
+  const gE = REF ? (() => { const F = REF.R, n2 = F.E.length, a0 = REF.sym ? 0 : -REF.rMax, d2 = (REF.rMax - a0) / n2;
+    return [{ pts: Array.from(F.E, (e, i) => [a0 + (i + 0.5) * d2, e]).filter(p => p[0] >= x0 && p[0] <= G.rMax), color: css('--mut'), width: 1.5 }]; })() : [];
+  let ym = 1; hi.forEach(p => ym = Math.max(ym, p[1])); gE.forEach(g => g.pts.forEach(p => ym = Math.max(ym, p[1])));
   chart(cv, { x0, x1: G.rMax, y0: 0, y1: ym * 1.08, xl: S.sym ? 'Abstand von der Achse [mm]' : 'Abstand quer zur Leuchte [mm]', yl: 'Beleuchtungsstärke [lx]',
-    series: [{ pts, color: css('--light'), fill: css('--light-a'), width: 2.5 }, { pts: hi, color: css('--mut'), width: 1, dash: [3, 4] }, { pts: lo, color: css('--mut'), width: 1, dash: [3, 4] }] });
+    series: [...gE, { pts, color: css('--light'), fill: css('--light-a'), width: 2.5 }, { pts: hi, color: css('--mut'), width: 1, dash: [3, 4] }, { pts: lo, color: css('--mut'), width: 1, dash: [3, 4] }] });
   $('eNote').innerHTML = (G.cut ? '<span style="color:var(--warn)">⚠ Die Tischebene schneidet den Schirm; Abschattung durch den Tisch ist nicht gerechnet.</span> ' : '') +
-    (S.sym ? 'Mittelwert je Ring (Breite ' : 'Mittelwert je Streifen quer zur Leuchte, gemittelt über ihre Länge (Breite ') + nf0.format(dr) + ' mm), gestrichelt ±σ. Nur direktes Licht der Leuchte, Raum schwarz.';
+    (S.sym ? 'Mittelwert je Ring (Breite ' : 'Mittelwert je Streifen quer zur Leuchte, gemittelt über ihre Länge (Breite ') + nf0.format(dr) + ' mm), gestrichelt ±σ' + (REF ? ', dünn grau: gemerkt' : '') + '. Nur direktes Licht der Leuchte, Raum schwarz.';
 }
+
+// ---- Urteil & Vergleich ----
+function refSnap() { REF = { job: J.id, R, e0: G.e0, rMax: G.rMax, sym: S.sym, sh: J.sh, phi: S.phi, dist: S.dist, done: J.done }; }
+// Urteil in Designsprache: [Stufe, Text] aus Ergebnis r, Abschirmwinkel sh, Leuchtdichtegrenze LIM
+function verdict(r, sh, e0, dist, done) {
+  const st = r.st, E = r.E[e0], c = [], k = [];
+  if (st.Li >= 0 && st.Lm >= LIM) c.push(`blendet: Schirm leuchtet stellenweise zu hell (${nf0.format(st.Lm)} cd/m²)`);
+  if (sh < 15) k.push(sh <= 0 ? 'Lampe ist von der Seite direkt sichtbar' : `Lampe ist schon flach von unten sichtbar (Abschirmwinkel ${nf0.format(sh)}°, Richtwert ≥ 15°)`);
+  if (st.dn > 0.3 && E < 150) k.push(`Tisch wird kaum hell: ${nf0.format(E)} lx in ${nf0.format(dist)} mm (Essen ca. 200, Lesen ca. 500 lx)`);
+  if (r.eta < 0.4) k.push(`schluckt viel Licht: nur ${nf0.format(100 * r.eta)} % kommen heraus`);
+  const t = a => a.join(' · ').replace(/^./, x => x.toUpperCase()), pre = done ? '' : 'Vorläufig: ';
+  if (c.length) return [2, pre + t(c.concat(k))]; if (k.length) return [1, pre + t(k)];
+  return [0, pre + (st.dn > 0.3 ? `Tisch ${nf0.format(E)} lx, ` : '') + `${nf0.format(100 * r.eta)} % Licht kommen heraus, Lampe ${sh >= 90 ? 'verdeckt' : 'ab ' + nf0.format(sh) + '° sichtbar'}, blendet nicht`];
+}
+dpCompare($('cmp'), () => ({}), ref => { if (ref && R) refSnap(); else REF = null; drawAll(); });
 
 // ---- Kennwerte ----
 const pct = v => nf1.format(100 * v) + ' %', pm = s => !isFinite(s) ? '' : s < 5e-4 ? ' ±<0,1 %' : ' ±' + (s < 0.1 ? nf1.format(100 * s) : nf0.format(100 * s)) + ' %';
@@ -860,15 +883,17 @@ function drawStats() {
   const sh = J.sh, st = R.st;
   const hidden = S.parts.some(pt => { const m = matOf(pt); return m.ts > 0 || m.in.rs + m.out.rs > 0; }); // nur klare Durchsicht und Spiegel zeigen ein Bild der Lampe
   const where = st.Li >= 0 && S.parts.length > 1 ? 'Schirm ' + (partOfSeg(st.Li) + 1) + ' ' : '';
+  const V = verdict(R, sh, G.e0, S.dist, J.done), F = REF && REF.R, VR = F && verdict(F, REF.sh, REF.e0, REF.dist, REF.done);
+  const vs = (cur, ref, fmt) => F && isFinite(ref) ? ` · gemerkt ${fmt(ref)} (${dpDelta(cur, ref)})` : '';
   const items = [
-    ['Wirkungsgrad η', pct(R.eta), 'Leuchte gibt ' + nf0.format(R.eta * S.phi) + ' lm ab' + pm(st.sEta / Math.max(R.eta, 1e-9))],
-    ['Nach unten / oben', nf0.format(100 * st.dn) + ' / ' + nf0.format(100 * st.up) + ' %', 'des austretenden Lichts'],
-    [S.sym ? 'Abschirmwinkel' : 'Abschirmwinkel quer', nf1.format(sh) + '°', sh >= 90 ? 'Lampe von unten nicht sichtbar' : sh <= 0 ? 'Lampe seitlich direkt sichtbar' : 'Lampe direkt sichtbar ab ' + nf1.format(sh) + '° unter der Horizontalen' + (hidden ? '; Durchsicht/Spiegelbild nicht erfasst' : '')],
-    st.Li >= 0 ? ['Max. Leuchtdichte', (st.Lm >= LIM ? '⚠ ' : '') + nf0.format(st.Lm) + ' cd/m²', where + (st.Li % 2 ? 'außen' : 'innen') + pm(st.sL) + (st.Lm >= LIM ? ' · blendet ohne Abschirmung' : ''), st.Lm >= LIM] : ['Max. Leuchtdichte', '–', G.diff ? 'noch zu wenig Treffer' : 'keine streuende Fläche'],
-    ['E unter der Leuchte', nf0.format(R.E[G.e0]) + ' lx', 'Tisch ' + nf0.format(S.dist) + ' mm tiefer' + (S.sym ? '' : ', unter der Mittelachse') + pm(st.sE)]
+    ['Wirkungsgrad η', pct(R.eta), 'Leuchte gibt ' + nf0.format(R.eta * S.phi) + ' lm ab' + pm(st.sEta / Math.max(R.eta, 1e-9)) + vs(R.eta, F && F.eta, pct)],
+    ['Nach unten / oben', nf0.format(100 * st.dn) + ' / ' + nf0.format(100 * st.up) + ' %', 'des austretenden Lichts' + (F ? ` · gemerkt ${nf0.format(100 * F.st.dn)} / ${nf0.format(100 * F.st.up)} %` : '')],
+    [S.sym ? 'Abschirmwinkel' : 'Abschirmwinkel quer', nf1.format(sh) + '°', (sh >= 90 ? 'Lampe von unten nicht sichtbar' : sh <= 0 ? 'Lampe seitlich direkt sichtbar' : 'Lampe direkt sichtbar ab ' + nf1.format(sh) + '° unter der Horizontalen' + (hidden ? '; Durchsicht/Spiegelbild nicht erfasst' : '')) + (F && isFinite(REF.sh) ? ` · gemerkt ${nf1.format(REF.sh)}°` : '')],
+    st.Li >= 0 ? ['Max. Leuchtdichte', (st.Lm >= LIM ? '⚠ ' : '') + nf0.format(st.Lm) + ' cd/m²', where + (st.Li % 2 ? 'außen' : 'innen') + pm(st.sL) + (st.Lm >= LIM ? ' · blendet ohne Abschirmung' : '') + vs(st.Lm, F && F.st.Li >= 0 ? F.st.Lm : NaN, v => nf0.format(v) + ' cd/m²'), st.Lm >= LIM] : ['Max. Leuchtdichte', '–', G.diff ? 'noch zu wenig Treffer' : 'keine streuende Fläche'],
+    ['E unter der Leuchte', nf0.format(R.E[G.e0]) + ' lx', 'Tisch ' + nf0.format(S.dist) + ' mm tiefer' + (S.sym ? '' : ', unter der Mittelachse') + pm(st.sE) + vs(R.E[G.e0], F && F.E[REF.e0], v => nf0.format(v) + ' lx' + (REF.dist !== S.dist ? ` in ${nf0.format(REF.dist)} mm` : ''))]
   ];
   if (R.lost > 1e-3 * R.N) items.push(['Nicht gerechnet', '⚠ ' + pct(R.lost / R.N), 'Licht nach 1000 Reflexionen abgebrochen', true]);
-  $('stats').innerHTML = items.map(([a, b, n, warn]) => `<div class="stat"><span>${a}</span><b${warn ? ' style="color:var(--warn)"' : ''}>${b}</b><span>${n}</span></div>`).join('');
+  $('stats').innerHTML = dpVerdict(V[0], V[1], VR && 'Gemerkt: ' + ['✓ passt', '⚠ knapp', '⚠ kritisch'][VR[0]] + ' – ' + VR[1]) + items.map(([a, b, n, warn]) => `<div class="stat"><span>${a}</span><b${warn ? ' style="color:var(--warn)"' : ''}>${b}</b><span>${n}</span></div>`).join('');
   prog.style.width = (100 * R.prog).toFixed(1) + '%';
   stt.textContent = nf1.format(R.N / 1e6) + ' Mio. Lichtteilchen · LVK ±' + nf1.format(100 * st.sP) + ' % · ' +
     (J.done ? 'ruhig nach ' + nf1.format(J.calm / 1000) + ' s' : 'wird ruhiger …') + (worker ? '' : ' · ohne Worker');

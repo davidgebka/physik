@@ -53,18 +53,18 @@ Bei Zielkonflikten entscheidet A.
 ## Module (Stand 21.11.2026; Details in `docs/<modul>.md`)
 | Modul | Key | Stand | Entwurfsfrage |
 |---|---|---|---|
-| Gefäß & Kippen | `gefaess` | v1.10 | Wie viel passt rein, wo sind Eichstriche, wann gießt es aus, kippt es um, schwappt es beim Tragen über? |
-| Licht / Lampenschirm | `licht` | v2.2 | Wie verteilt der Schirm das Licht, wird der Tisch hell genug, blendet es? |
+| Gefäß & Kippen | `gefaess` | v1.11 | Wie viel passt rein, wo sind Eichstriche, wann gießt es aus, kippt es um, schwappt es beim Tragen über? |
+| Licht / Lampenschirm | `licht` | v2.3 | Wie verteilt der Schirm das Licht, wird der Tisch hell genug, blendet es? |
 | Last / Statik | `last` | v1.4 | Hält das Brett/der Balken, wie stark hängt es durch, schwingt es? |
-| Mechanismen | `mechanismus` | v1.1 | Wie bewegt sich das Getriebe, wo klemmt es, welche Kraft braucht es? |
+| Mechanismen | `mechanismus` | v1.2 | Wie bewegt sich das Getriebe, wo klemmt es, welche Kraft braucht es? |
 
 ## Roadmap (21.11.2026, nach Persona A)
 **Moratorium auf Tiefe:** In Gefäß und Licht keine neuen Physik-Verfeinerungen, bis die Punkte „Jetzt“ erledigt sind. Fehlerbehebungen und Bedienung gehen immer.
 
 **Jetzt – Grundlage für Persona A (shared + Nachziehen der Module)**
-1. **Urteil/Ampel** nach Konvention „drei Ebenen“ in allen Modulen – shared `dpVerdict` fertig, Last v1.4 umgestellt; offen: Gefäß, Licht, Mechanismen.
-2. **Variantenvergleich:** „Stand merken“ → gemerkter Zustand als Geist (`--mut`) in Diagrammen (später Editor), Kennwerte mit Δ – shared `dpCompare`/`dpDelta` fertig, Pilot Last v1.4; offen: übrige Module.
-3. **Rückgängig** und **Vorlagen-Menü** nach shared – `dpHistory`/`dpOptions` fertig, Last umgestellt; offen: Gefäß und Licht von eigener Umsetzung umstellen, Mechanismen ergänzen.
+1. ~~**Urteil/Ampel**~~ – erledigt 21.11.2026 in allen vier Modulen (`dpVerdict`); Schwellen je Modul in `docs/<modul>.md`.
+2. ~~**Variantenvergleich**~~ – erledigt 21.11.2026 in allen vier Modulen (`dpCompare`/`dpDelta`): Last und Mechanismen rechnen den gemerkten Stand neu, Licht und Gefäß frieren Kennwerte und Kurven ein (Gefäß: globale Geometrie, Licht: Monte-Carlo-Lauf). Geist in den Diagrammen; offen: Geist im Editor.
+3. **Rückgängig** und **Vorlagen-Menü** – `dpHistory`/`dpOptions` in Last und Mechanismen (neu dort: Rückgängig). Gefäß und Licht behalten ihre eigene, geprüfte Umsetzung (Schnappschuss vor der Änderung, Ziehen als ein Schritt); Umstellen nur, wenn dort ohnehin umgebaut wird.
 4. **Glossar/Tooltips** für Fachbegriffe (shared-Helfer, Texte im Modul).
 5. **Startseite nach Fragen** („Hält es? Kippt es? Wie hell? Klemmt es?“) über den Modulkarten.
 
