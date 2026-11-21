@@ -67,3 +67,37 @@ function dpHashGet(key) {
   try { return JSON.parse(decodeURIComponent(m[1])); } catch { return null; }
 }
 function dpHashSet(key, obj) { history.replaceState(null, '', '#' + key + '=' + encodeURIComponent(JSON.stringify(obj))); return location.href; }
+
+// ---- Entwurfshilfen (konzept.md: Ergebnisse in drei Ebenen, Roadmap „Jetzt“) – arbeiten nur auf dem Exportobjekt ----
+// Urteil zuerst: level 0 passt, 1 knapp, 2 kritisch; text in Designsprache; extra z. B. Urteil des gemerkten Stands
+function dpVerdict(level, text, extra) {
+  return `<div class="stat verdict${level ? ' warn' : ''}" style="grid-column:1/-1"><b>${['✓ passt', '⚠ knapp', '⚠ kritisch'][level]}</b><span>${text}</span>${extra ? `<span>${extra}</span>` : ''}</div>`;
+}
+// Rückgängig: save(obj) nach jedem abgeschlossenen Schritt (gleicher Zustand → kein Schritt), Knopf und Strg+Z rufen apply(obj) mit dem Vorzustand
+function dpHistory(btn, apply, max = 50) {
+  const H = []; let last = null;
+  const h = {
+    save(o) { const j = JSON.stringify(o); if (j !== last) { if (last) H.push(last); if (H.length > max) H.shift(); last = j; } btn.disabled = !H.length; },
+    undo() { if (!H.length) return; last = H.pop(); btn.disabled = !H.length; apply(JSON.parse(last)); }
+  };
+  btn.onclick = h.undo;
+  window.addEventListener('keydown', e => { if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !/INPUT|TEXTAREA/.test(document.activeElement.tagName)) { e.preventDefault(); h.undo(); } });
+  return h;
+}
+// Variantenvergleich: Knopf merkt den aktuellen Zustand get() bzw. hebt den Vergleich auf; onChange(ref | null)
+function dpCompare(btn, get, onChange) {
+  let ref = null;
+  const set = r => { ref = r; btn.textContent = ref ? '✕ Vergleich' : '◫ Stand merken'; btn.classList.toggle('on', !!ref); onChange(ref); };
+  btn.textContent = '◫ Stand merken'; btn.title = 'Aktuellen Stand merken und Änderungen damit vergleichen';
+  btn.onclick = () => set(ref ? null : JSON.parse(JSON.stringify(get())));
+  return { get ref() { return ref; } };
+}
+// Abweichung zum gemerkten Wert: dpDelta(12, 10) → „+20 %“
+function dpDelta(v, r) {
+  if (!isFinite(v) || !isFinite(r) || r === 0) return '';
+  const p = (v / r - 1) * 100; return Math.abs(p) < 0.5 ? '±0 %' : (p > 0 ? '+' : '−') + nf0.format(Math.abs(p)) + ' %';
+}
+// Auswahlliste mit Gruppen (Vorlagen): groups = [[Gruppe, [[key, Name], …]], …]
+function dpOptions(groups, first = 'Vorlage …') {
+  return (first ? `<option value="">${first}</option>` : '') + groups.map(([g, a]) => `<optgroup label="${g}">${a.map(([k, n]) => `<option value="${k}">${n}</option>`).join('')}</optgroup>`).join('');
+}

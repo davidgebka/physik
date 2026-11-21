@@ -27,7 +27,7 @@ select{max-width:100%}
     <h2>Balken · Seitenansicht [mm]</h2>
     <div class="row">
       <span class="seg" id="tools"><button data-t="drag" class="on">Ziehen</button><button data-t="sup">+ Lager</button><button data-t="pl">+ Last</button><button data-t="ql">+ Strecke</button><button data-t="del">Löschen</button></span>
-      <select id="tpl" aria-label="Vorlage"></select><button id="undo" disabled>↶ Rückgängig</button>
+      <select id="tpl" aria-label="Vorlage"></select><button id="undo" disabled>↶ Rückgängig</button><button id="cmp"></button>
     </div>
     <canvas id="ed"></canvas>
     <div class="ctl"><label for="len">Länge L</label><input type="range" id="len" min="100" max="4000" step="10"><output id="lenO"></output></div>
@@ -411,19 +411,22 @@ const HINT = {
   ql: 'Tippen setzt eine Streckenlast (Strecke) 500 N/m.', del: 'Lager oder Last antippen, um es zu löschen.'
 };
 
-let S, R, SP, MOD = null;
+let S, R, SP, MOD = null, REF = null; // REF: gemerkter Stand {m, mt, sp, R}
 const UI = { tool: 'drag', sel: null, drag: null, G: null };
 const cv = $('ed'), sc = $('sc');
-const matOf = () => S.mat === 'eigen' ? S.cm : Core.MAT[S.mat];
+const matFor = m => m.mat === 'eigen' ? m.cm : Core.MAT[m.mat], matOf = () => matFor(S);
 const snap = x => { const s = niceStep(S.L / 200); return Math.min(S.L, Math.max(0, Math.round(x / s) * s)); };
 const letter = i => String.fromCharCode(65 + i);
 
 // ---- Rechnen ----
+function calc(m, modes) {
+  const mt = matFor(m), sp = Core.section(m.sec);
+  return { m, mt, sp, R: sp.err ? { err: 'Querschnitt: ' + sp.err } : Core.analyze({ L: m.L, E: mt.E, G: m.shear ? mt.G : 0, I: sp.I, A: sp.A, rhoA: mt.rho * 1e-12 * sp.A, sec: sp, sw: m.sw, orient: m.orient, N: m.N, kdef: mt.kdef,
+    sup: m.sup, pl: m.pl, ql: m.ql.map(q => ({ a: q.a, b: q.b, q: q.q / 1000, perm: q.perm })), modes }) };
+}
 function recompute(fast) {
-  const mt = matOf(), sp = Core.section(S.sec);
-  SP = sp.err ? null : sp;
-  R = sp.err ? { err: 'Querschnitt: ' + sp.err } : Core.analyze({ L: S.L, E: mt.E, G: S.shear ? mt.G : 0, I: sp.I, A: sp.A, rhoA: mt.rho * 1e-12 * sp.A, sec: sp, sw: S.sw, orient: S.orient, N: S.N, kdef: mt.kdef,
-    sup: S.sup, pl: S.pl, ql: S.ql.map(q => ({ a: q.a, b: q.b, q: q.q / 1000, perm: q.perm })), modes: !fast });
+  const c = calc(S, !fast), sp = c.sp;
+  SP = sp.err ? null : sp; R = c.R;
   if (!R.err && !fast) MOD = { f: R.f, modes: R.modes, x: R.x }; // beim Ziehen bleiben die letzten Eigenformen stehen
   if (R.err || R.buckled) MOD = null;
   drawAll();
@@ -551,24 +554,42 @@ function drawSec() {
   ctx.fillText(`${fv(sT)} N/mm²`, x0, top - 10); ctx.fillText(`${fv(sB)} N/mm²`, x0, top + Hd + 18);
   ctx.textAlign = 'left'; ctx.fillText(`Spannung bei x = ${nf0.format(R.x[j])} mm (− Druck, + Zug)`, 6, h - 6);
 }
-function stat(v, label, warn) { return `<div class="stat${warn ? ' warn' : ''}"><b>${v}</b><span>${label}</span></div>`; }
+function stat(v, label, warn, extra) { return `<div class="stat${warn ? ' warn' : ''}"><b>${v}</b><span>${label}</span>${extra ? `<span>${extra}</span>` : ''}</div>`; }
+// Urteil in Designsprache: [Stufe 0/1/2, Text]; f1 = erste Eigenfrequenz oder null
+function verdict(R, mt, lim, f1) {
+  if (R.err) return [2, R.err];
+  if (R.buckled) return [2, `Knickt aus – Längsdruck über der Knicklast (λ = ${nf2.format(R.lam)}): Querschnitt vergrößern, Länge kürzen oder Lager ergänzen`];
+  const Sb = mt.f / Math.abs(R.max.sig.v), Sv = mt.fv / R.max.tau.v, ok = R.lim.r * lim <= 1, c = [], k = [];
+  if (Sb < mt.S) c.push('kann brechen: Biegespannung zu hoch'); if (Sv < mt.S) c.push('kann an den Lagern versagen: Schub zu hoch');
+  if (isFinite(R.lam) && R.lam < 3) c.push('kann ausknicken');
+  if (R.lim.r * lim > 2) c.push(`hängt stark durch (l/${Math.round(1 / R.lim.r)}, Grenze l/${lim})`); // mehr als doppelt so viel wie erlaubt
+  else if (!ok) k.push(`hängt sichtbar durch (l/${Math.round(1 / R.lim.r)}, Grenze l/${lim})`);
+  if (f1 != null && f1 < 8) k.push('federt und schwingt spürbar');
+  if (R.R.some(r => r.F < -1e-9)) k.push('ein Lager wird abgehoben – Befestigung muss Zug halten');
+  if (R.imp.some(o => o.rigid)) k.push('Stoß auf starres Lager – Polster eintragen');
+  if (!c.length && (Sb < 1.25 * mt.S || Sv < 1.25 * mt.S || (isFinite(R.lam) && R.lam < 4))) k.push('hält, aber mit wenig Reserve');
+  const t = a => a.join(' · ').replace(/^./, x => x.toUpperCase());
+  if (c.length) return [2, t(c.concat(k))]; if (k.length) return [1, t(k)];
+  return [0, `Hält mit Reserve und biegt sich unauffällig (l/${R.lim.r > 0 ? Math.round(1 / R.lim.r) : '∞'}, Grenze l/${lim})`];
+}
 function renderStats() {
-  const mt = matOf(), h = [], notes = [];
-  if (R.err) { $('stats').innerHTML = stat('⚠', R.err, true); $('statN').textContent = ''; return; }
-  if (R.buckled) {
-    $('stats').innerHTML = stat('⚠ knickt', `Längsdruck über der Knicklast (λ = ${nf2.format(R.lam)}): Querschnitt vergrößern, Länge kürzen oder Lager ergänzen`, true);
-    $('statN').textContent = ''; return;
-  }
+  const mt = matOf(), h = [], notes = [], V = verdict(R, mt, S.lim, MOD && MOD.f.length ? MOD.f[0] : null);
+  // Vergleich mit dem gemerkten Stand: Urteil und Hauptwerte mit Abweichung
+  const RF = REF && !REF.R.err && !REF.R.buckled ? REF.R : null, rmt = REF && REF.mt;
+  const VR = REF && verdict(REF.R, rmt, REF.m.lim, REF.R.f && REF.R.f.length ? REF.R.f[0] : null);
+  const vs = (cur, ref, fmt) => RF && isFinite(ref) ? `gemerkt ${fmt(ref)} (${dpDelta(cur, ref)})` : '';
+  h.push(dpVerdict(V[0], V[1], VR && 'Gemerkt: ' + ['✓ passt', '⚠ knapp', '⚠ kritisch'][VR[0]] + ' – ' + VR[1]));
+  if (R.err || R.buckled) { $('stats').innerHTML = h.join(''); $('statN').textContent = ''; return; }
   const mm = v => fv(Math.abs(v)) + ' mm', creep = Math.abs(R.max.wFin.v - R.max.wInst.v) > 1e-9 * Math.abs(R.max.wInst.v) + 1e-12;
   const okL = R.lim.r * S.lim <= 1;
   const sg = R.max.sig, Sb = mt.f / Math.abs(sg.v), t = R.max.tau, Sv = mt.fv / t.v;
   // zuerst das Urteil (bestanden / ⚠), dann die Einzelwerte
-  h.push(stat(mm(R.max.wFin.v), (creep ? 'Durchbiegung Endzustand' : 'Durchbiegung max.') + ` (x = ${nf0.format(R.max.wFin.x)} mm)`));
+  h.push(stat(mm(R.max.wFin.v), (creep ? 'Durchbiegung Endzustand' : 'Durchbiegung max.') + ` (x = ${nf0.format(R.max.wFin.x)} mm)`, false, RF && vs(Math.abs(R.max.wFin.v), Math.abs(RF.max.wFin.v), v => fv(v) + ' mm')));
   h.push(stat((okL ? '' : '⚠ ') + (R.lim.r > 0 ? 'l/' + Math.round(1 / R.lim.r) : '–'), `Verhältnis, Grenze l/${S.lim} (l = ${nf0.format(R.lim.ref)} mm)`, !okL));
-  h.push(stat((Sb < mt.S ? '⚠ ' : '') + fS(Sb), `Sicherheit Biegung f/σ (Ziel ≥ ${nf1.format(mt.S)})`, Sb < mt.S));
-  h.push(stat((Sv < mt.S ? '⚠ ' : '') + fS(Sv), `Sicherheit Schub fv/τ (Ziel ≥ ${nf1.format(mt.S)})`, Sv < mt.S));
+  h.push(stat((Sb < mt.S ? '⚠ ' : '') + fS(Sb), `Sicherheit Biegung f/σ (Ziel ≥ ${nf1.format(mt.S)})`, Sb < mt.S, RF && vs(Sb, rmt.f / Math.abs(RF.max.sig.v), fS)));
+  h.push(stat((Sv < mt.S ? '⚠ ' : '') + fS(Sv), `Sicherheit Schub fv/τ (Ziel ≥ ${nf1.format(mt.S)})`, Sv < mt.S, RF && vs(Sv, rmt.fv / RF.max.tau.v, fS)));
   if (isFinite(R.lam)) h.push(stat((R.lam < 3 ? '⚠ ' : '') + fS(R.lam), `Knicksicherheit λ (Ziel ≥ 3)${S.N > 0 ? ' · N_cr = ' + fv(R.lam * S.N) + ' N' : ''}`, R.lam < 3));
-  if (MOD && MOD.f.length) { const f1 = MOD.f[0]; h.push(stat((f1 < 8 ? '⚠ ' : '') + nf1.format(f1) + ' Hz', 'Eigenfrequenz f₁' + (f1 < 8 ? ' – federt spürbar (< 8 Hz)' : ''), f1 < 8)); }
+  if (MOD && MOD.f.length) { const f1 = MOD.f[0]; h.push(stat((f1 < 8 ? '⚠ ' : '') + nf1.format(f1) + ' Hz', 'Eigenfrequenz f₁' + (f1 < 8 ? ' – federt spürbar (< 8 Hz)' : ''), f1 < 8, RF && RF.f && RF.f.length && vs(f1, RF.f[0], v => nf1.format(v) + ' Hz'))); }
   if (R.imp.length) { const nmax = Math.max(...R.imp.map(o => o.n)), rg = R.imp.some(o => o.rigid); h.push(stat(rg ? '⚠ ∞' : '× ' + nf2.format(nmax), rg ? 'Stoßfaktor – Stoß auf starres Lager' : 'Stoßfaktor (fallende Last)', rg)); }
   if (creep) h.push(stat(mm(R.max.wInst.v), `Durchbiegung sofort (Kriechen ×${nf2.format(1 + mt.kdef)} auf Dauerlast)`));
   if (R.imp.length) h.push(stat(mm(R.max.wPeak.v), 'Durchbiegung beim Stoß'));
@@ -579,9 +600,10 @@ function renderStats() {
     const up = r.F < -1e-9;
     h.push(stat((up ? '⚠ ' : '') + fv(r.F) + ' N', `Lager ${letter(i)}${r.t === 'fix' ? ` · M = ${fv(r.M / 1000)} N·m` : ''}${r.t === 'spring' ? ` · federt ${fv(Math.abs(r.w))} mm` : ''}${up ? ' – zieht: muss abhebend halten' : ''}`, up));
   });
-  h.push(stat(fv(R.mass) + ' kg', `Gewicht Balken (${mt.name})`));
+  h.push(stat(fv(R.mass) + ' kg', `Gewicht Balken (${mt.name})`, false, RF && vs(R.mass, RF.mass, v => fv(v) + ' kg')));
   h.push(stat(nf0.format(SP.I) + ' mm⁴', `Flächenmoment I · W = ${nf0.format(SP.I / Math.max(SP.eT, SP.eB))} mm³ · A = ${nf0.format(SP.A)} mm²`));
   $('stats').innerHTML = h.join('');
+  if (REF && !RF) notes.push('Gemerkter Stand nicht berechenbar – nur sein Urteil wird gezeigt.');
   if (R.alpha > 1.0005) notes.push(`Längsdruck verstärkt Biegung und Durchbiegung um α = ${nf2.format(R.alpha)} (Theorie II. Ordnung genähert).`);
   if (R.imp.some(o => o.rigid)) notes.push('⚠ Stoß direkt über einem Lager ohne Polster: Stoßkraft unbegrenzt, nur statisch gerechnet – Polster eintragen.');
   if (R.imp.length) notes.push('Stoß: ' + R.imp.map(o => `${fv(o.F)} N aus ${nf0.format(o.h)} mm → × ${nf2.format(o.n)} (δ_st = ${fv(o.d)} mm${o.c ? ', davon Polster ' + fv(o.c) + ' mm' : ''})`).join(' · ') + '. Spannung, Moment, Querkraft und Lagerkräfte enthalten den Stoß; Grenze l/x gilt für die statische Last.');
@@ -596,17 +618,20 @@ function drawCharts() {
   const L = S.L, Ld = css('--load'), I = css('--ink'), Mu = css('--mut'), x = R.x, vl = R.sup.map(s => ({ x: s.x, color: Mu }));
   const rng = (arrs, extra = 0) => { let a = extra, b = extra; for (const r of arrs) for (const v of r) { if (v < a) a = v; if (v > b) b = v; } if (b - a < 1e-9) { a -= 1; b += 1; } const m = (b - a) * 0.08; return [a - m, b + m]; };
   const xy = arr => x.map((v, i) => [v, arr[i]]);
+  // Geist des gemerkten Stands: dünn, --mut, durchgezogen (gestrichelt sind sofort/Stoß)
+  const RF = REF && !REF.R.err && !REF.R.buckled ? REF.R : null, LX = RF ? Math.max(L, REF.m.L) : L, gn = RF ? ' · dünn grau: gemerkt' : '';
+  const ghost = f => RF ? [{ pts: RF.x.map((v, i) => [v, f(i)]), color: Mu, width: 1.5 }] : [];
   const creep = R.wFin.some((v, i) => Math.abs(v - R.wInst[i]) > 1e-9);
-  const sw = [{ pts: xy(R.wFin), color: Ld }]; if (creep) sw.push({ pts: xy(R.wInst), color: I, dash: [4, 4] }); if (R.imp.length) sw.push({ pts: xy(R.wPeak), color: Mu, dash: [3, 4] });
+  const sw = [...ghost(i => RF.wFin[i]), { pts: xy(R.wFin), color: Ld }]; if (creep) sw.push({ pts: xy(R.wInst), color: I, dash: [4, 4] }); if (R.imp.length) sw.push({ pts: xy(R.wPeak), color: Mu, dash: [3, 4] });
   let [y0, y1] = rng(sw.map(s => s.pts.map(p => p[1])));
-  chart($('c1'), { x0: 0, x1: L, y0, y1, xl: 'x [mm]' + (creep ? ' · Endzustand / sofort (gestrichelt)' : '') + (R.imp.length ? ' / Stoß (grau)' : ''), yl: 'w [mm]', series: sw, vlines: vl, points: [[R.max.wFin.x, R.max.wFin.v, Ld]] });
-  const Mn = R.M.map(v => v / 1000); [y0, y1] = rng([Mn]);
-  chart($('c2'), { x0: 0, x1: L, y0, y1, xl: 'x [mm]', yl: 'M [N·m]', series: [{ pts: xy(Mn), color: Ld }, { pts: [[0, 0], [L, 0]], color: Mu, width: 1, dash: [3, 4] }], vlines: vl, points: [[R.max.M.x, R.max.M.v / 1000, Ld]] });
-  [y0, y1] = rng([R.V]);
-  chart($('c3'), { x0: 0, x1: L, y0, y1, xl: 'x [mm]', yl: 'V [N]', series: [{ pts: xy(R.V), color: Ld }, { pts: [[0, 0], [L, 0]], color: Mu, width: 1, dash: [3, 4] }], vlines: vl });
+  chart($('c1'), { x0: 0, x1: LX, y0, y1, xl: 'x [mm]' + (creep ? ' · Endzustand / sofort (gestrichelt)' : '') + (R.imp.length ? ' / Stoß (grau)' : '') + gn, yl: 'w [mm]', series: sw, vlines: vl, points: [[R.max.wFin.x, R.max.wFin.v, Ld]] });
+  const Mn = R.M.map(v => v / 1000), gM = ghost(i => RF.M[i] / 1000); [y0, y1] = rng([Mn, ...gM.map(g => g.pts.map(p => p[1]))]);
+  chart($('c2'), { x0: 0, x1: LX, y0, y1, xl: 'x [mm]' + gn, yl: 'M [N·m]', series: [...gM, { pts: xy(Mn), color: Ld }, { pts: [[0, 0], [LX, 0]], color: Mu, width: 1, dash: [3, 4] }], vlines: vl, points: [[R.max.M.x, R.max.M.v / 1000, Ld]] });
+  const gV = ghost(i => RF.V[i]); [y0, y1] = rng([R.V, ...gV.map(g => g.pts.map(p => p[1]))]);
+  chart($('c3'), { x0: 0, x1: LX, y0, y1, xl: 'x [mm]' + gn, yl: 'V [N]', series: [...gV, { pts: xy(R.V), color: Ld }, { pts: [[0, 0], [LX, 0]], color: Mu, width: 1, dash: [3, 4] }], vlines: vl });
   const mt = matOf(), zul = mt.f / mt.S;
-  [y0, y1] = rng([R.sig, [zul]], 0); y0 = 0;
-  chart($('c4'), { x0: 0, x1: L, y0, y1, xl: 'x [mm] · gestrichelt: f / Zielsicherheit', yl: '|σ| [N/mm²]', series: [{ pts: xy(R.sig), color: Ld }, { pts: [[0, zul], [L, zul]], color: css('--warn'), width: 1, dash: [4, 4] }], vlines: vl, points: [[R.max.sig.x, R.max.sig.v, R.max.sig.v > zul ? css('--warn') : Ld]] });
+  const gS = ghost(i => RF.sig[i]); [y0, y1] = rng([R.sig, [zul], ...gS.map(g => g.pts.map(p => p[1]))], 0); y0 = 0;
+  chart($('c4'), { x0: 0, x1: LX, y0, y1, xl: 'x [mm] · gestrichelt: f / Zielsicherheit' + gn, yl: '|σ| [N/mm²]', series: [...gS, { pts: xy(R.sig), color: Ld }, { pts: [[0, zul], [LX, zul]], color: css('--warn'), width: 1, dash: [4, 4] }], vlines: vl, points: [[R.max.sig.x, R.max.sig.v, R.max.sig.v > zul ? css('--warn') : Ld]] });
   if (MOD && MOD.modes.length) {
     const st = [{ color: Ld }, { color: I, dash: [4, 4] }, { color: Mu, dash: [3, 4] }];
     chart($('c5'), { x0: 0, x1: L, y0: -1.15, y1: 1.15, xl: 'x [mm]', yl: 'Auslenkung (normiert)', series: MOD.modes.map((m, i) => ({ pts: MOD.x.map((v, j) => [v, m[j]]), ...st[i] })), vlines: vl });
@@ -703,14 +728,14 @@ cv.addEventListener('pointermove', e => {
 });
 function endDrag() { const d = UI.drag; if (!d) return; UI.drag = null; if (d.moved) recompute(); else drawEd(); }
 cv.addEventListener('pointerup', endDrag); cv.addEventListener('pointercancel', endDrag);
-window.addEventListener('keydown', e => { if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !/INPUT/.test(document.activeElement.tagName)) { e.preventDefault(); undo(); return; }
+window.addEventListener('keydown', e => {
   if ((e.key === 'Delete' || e.key === 'Backspace') && UI.sel && !/INPUT|SELECT/.test(document.activeElement.tagName)) { del(UI.sel.t, UI.sel.i); recompute(); } });
 function setTool(t) { UI.tool = t; document.querySelectorAll('#tools button').forEach(b => b.classList.toggle('on', b.dataset.t === t)); $('hint').textContent = HINT[t]; }
 document.querySelectorAll('#tools button').forEach(b => b.onclick = () => setTool(b.dataset.t));
 
 // ---- Querschnitt, Material, Optionen ----
 $('secT').innerHTML = Object.entries(SECS).map(([k, v]) => `<option value="${k}">${v[0]}</option>`).join('');
-$('tpl').innerHTML = '<option value="">Vorlage …</option>' + TPLS.map(([g, a]) => `<optgroup label="${g}">${a.map(([k, n]) => `<option value="${k}">${n}</option>`).join('')}</optgroup>`).join('');
+$('tpl').innerHTML = dpOptions(TPLS);
 { const gr = {}; for (const [k, m] of Object.entries(Core.MAT)) (gr[m.grp] = gr[m.grp] || []).push(`<option value="${k}">${m.name}</option>`);
   $('mat').innerHTML = Object.entries(gr).map(([g, o]) => `<optgroup label="${g}">${o.join('')}</optgroup>`).join('') + '<option value="eigen">Eigenes Material …</option>'; }
 function renderSecIn() {
@@ -755,10 +780,10 @@ function exportObj() { const o = { type: TYPE, version: 1, L: S.L, orient: S.ori
     sup: S.sup.map(s => s.t === 'spring' ? { x: s.x, t: s.t, k: s.k } : { x: s.x, t: s.t }), pl: S.pl.map(p => ({ x: p.x, F: p.F, perm: p.perm, h: p.h, c: p.c || 0 })), ql: S.ql.map(q => ({ a: q.a, b: q.b, q: q.q, perm: q.perm })) };
   if (S.mat === 'eigen') o.cm = { E: S.cm.E, G: S.cm.G, rho: S.cm.rho, f: S.cm.f, fv: S.cm.fv, kdef: S.cm.kdef, S: S.cm.S }; return o; }
 // Rückgängig: jeder abgeschlossene Zustand (nicht jedes Zieh-Bild) als Schnappschuss
-const HIST = []; let last = null;
-function save() { const o = exportObj(), j = JSON.stringify(o); if (j !== last) { if (last) HIST.push(last); if (HIST.length > 50) HIST.shift(); last = j; } $('undo').disabled = !HIST.length; dpHashSet('b', o); }
-function undo() { if (!HIST.length) return; last = HIST.pop(); const m = parse(JSON.parse(last)); if (m) load(m); }
-$('undo').onclick = undo;
+const HIST = dpHistory($('undo'), o => { const m = parse(o); if (m) load(m); });
+function save() { const o = exportObj(); HIST.save(o); dpHashSet('b', o); }
+// Vergleich: gemerkter Stand wird einmal vollständig gerechnet, als Geist in den Diagrammen und mit Abweichung in den Kennwerten
+dpCompare($('cmp'), exportObj, ref => { const m = ref && parse(ref); REF = m ? calc(m, true) : null; drawAll(); });
 // Eingang prüfen (Datei/Link sind fremd)
 function parse(o) {
   if (!o || o.type !== TYPE) return null;

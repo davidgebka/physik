@@ -35,7 +35,7 @@ Bei Zielkonflikten entscheidet A.
 ## Konventionen (verbindlich)
 - **Struktur:** `index.html` (Startseite) · `shared/` (style.css, util.js, chart.js) · `tools/` (load-core.js, check.js) · `_vorlage/` · `<modul>/index.html` + `<modul>/test.js` · `docs/` (konzept, styleguide, historie, `<modul>.md`)
 - **Modul-Registry:** `DP_MODULES` in `shared/util.js` – einzige Stelle; Kopfzeile per `dpHeader(key, titel)`
-- **Shared-Globale:** `$`, `nf0`, `nf1`, `css` (Token-Werte gecacht in `dpCss`), `prep`, `polyPath`, `dpDots`, `dpMq`, `dpDownload`, `dpHashGet/Set`, `niceStep`, `chart`
+- **Shared-Globale:** `$`, `nf0`, `nf1`, `css` (Token-Werte gecacht in `dpCss`), `prep`, `polyPath`, `dpDots`, `dpMq`, `dpDownload`, `dpHashGet/Set`, `niceStep`, `chart`; Entwurfshilfen `dpVerdict` (Urteil), `dpHistory` (Rückgängig, Strg+Z), `dpCompare` + `dpDelta` (Variantenvergleich), `dpOptions` (Vorlagen-Auswahl) – Vorbild Last v1.4
 - **Links** immer explizit auf `…/index.html` (damit file:// funktioniert)
 - **Technik:** Vanilla JS, Canvas 2D (WebGL/WebGPU nur, wo nötig), keine CDNs
 - **Einheiten:** mm, ml, g, N, lm/cd/lx, Winkel in Grad in der UI; deutsche Zahlenformatierung; Alltagsbezug mitgeben, wo er hilft (N ≈ kg)
@@ -55,16 +55,16 @@ Bei Zielkonflikten entscheidet A.
 |---|---|---|---|
 | Gefäß & Kippen | `gefaess` | v1.10 | Wie viel passt rein, wo sind Eichstriche, wann gießt es aus, kippt es um, schwappt es beim Tragen über? |
 | Licht / Lampenschirm | `licht` | v2.2 | Wie verteilt der Schirm das Licht, wird der Tisch hell genug, blendet es? |
-| Last / Statik | `last` | v1.3.1 | Hält das Brett/der Balken, wie stark hängt es durch, schwingt es? |
+| Last / Statik | `last` | v1.4 | Hält das Brett/der Balken, wie stark hängt es durch, schwingt es? |
 | Mechanismen | `mechanismus` | v1.1 | Wie bewegt sich das Getriebe, wo klemmt es, welche Kraft braucht es? |
 
 ## Roadmap (21.11.2026, nach Persona A)
 **Moratorium auf Tiefe:** In Gefäß und Licht keine neuen Physik-Verfeinerungen, bis die Punkte „Jetzt“ erledigt sind. Fehlerbehebungen und Bedienung gehen immer.
 
 **Jetzt – Grundlage für Persona A (shared + Nachziehen der Module)**
-1. **Urteil/Ampel** nach Konvention „drei Ebenen“ in allen Modulen; Last als Vorbild.
-2. **Variantenvergleich:** „Stand merken“ → gemerkter Zustand als Geist (`--mut`) in Editor und Diagrammen, Kennwerte mit Δ. Generisch über das Exportobjekt; Pilot Last.
-3. **Rückgängig** und **Vorlagen-Menü** nach shared (heute je eigene Umsetzung in Gefäß, Licht, Last).
+1. **Urteil/Ampel** nach Konvention „drei Ebenen“ in allen Modulen – shared `dpVerdict` fertig, Last v1.4 umgestellt; offen: Gefäß, Licht, Mechanismen.
+2. **Variantenvergleich:** „Stand merken“ → gemerkter Zustand als Geist (`--mut`) in Diagrammen (später Editor), Kennwerte mit Δ – shared `dpCompare`/`dpDelta` fertig, Pilot Last v1.4; offen: übrige Module.
+3. **Rückgängig** und **Vorlagen-Menü** nach shared – `dpHistory`/`dpOptions` fertig, Last umgestellt; offen: Gefäß und Licht von eigener Umsetzung umstellen, Mechanismen ergänzen.
 4. **Glossar/Tooltips** für Fachbegriffe (shared-Helfer, Texte im Modul).
 5. **Startseite nach Fragen** („Hält es? Kippt es? Wie hell? Klemmt es?“) über den Modulkarten.
 
@@ -86,4 +86,4 @@ Bei Zielkonflikten entscheidet A.
 (Modul-Chats tragen hier ein; der zentrale Chat bzw. der Style-Chat arbeitet sie ab. Erledigtes wandert nach `docs/historie.md`.)
 
 Offen:
-- (keine)
+- **Style-Chat** (zentraler Chat, Urteil): Klasse `.verdict` gestalten – heute `.stat` über die ganze Breite per Inline-`grid-column:1/-1` aus `dpVerdict`; Vorschlag: Urteil größer bzw. abgesetzt, Zusatzzeile (gemerkter Stand) in `--ink2`. Danach Inline-Stil in `dpVerdict` entfernen.
