@@ -55,8 +55,11 @@ Nur diese Farben sind erlaubt. Module definieren **keine eigenen Farben** in `:r
 | Licht & Strahlung | `--light` `#d48a00` | `--light-a` `rgba(212,138,0,.28)` | Lampenschirm; ★ Sonnenstand, Lichtleiter | 2,8:1 → Linien ≥ 2,5 px |
 | Bewegung | `--mech` `#12994a` | `--mech-a` `rgba(18,153,74,.25)` | Mechanismen; ★ Tasten-Haptik, Federn | 3,7:1 |
 | Kraft & Festigkeit | `--load` `#7b3fbf` | `--load-a` `rgba(123,63,191,.22)` | Last; ★ Schnapphaken, Festkörpergelenk, Holz | 6,4:1 |
+| Elektrik | `--elec` `#c0189a` | `--elec-a` `rgba(192,24,154,.22)` | Elektronik; ★ Energiebudget | 5,5:1 |
 
 `--load` wurde am 21.11.2026 von `#5b55c9` (Farbton ~244°) nach `#7b3fbf` (~268°) verschoben: Abstand zu `--water` (~215°) vorher knapp 30°, die Modulquadrate in der Navigation waren kaum zu unterscheiden.
+
+`--elec` (21.11.2026, Wunsch Elektronik): Magenta ~314°, je 46° Abstand zu `--load` (268°) und `--warn` (0°); Türkis (~180°) verworfen, nur 35° zu `--water` und `--mech` und dort leicht verwechselbar. Nähe zu Rot ist vertretbar, weil Warnungen nie nur über Farbe laufen (⚠ + Text). Damit fünf von höchstens sechs Familien belegt.
 
 **Warum Familien statt Modulfarben:** Neue Module bekommen die Farbe ihrer Physik, nicht eine neue. So reichen wenige Farben für viele Module. Eine **neue Familie** nur per Styleguide-Eintrag durch den Style-Chat und nur wenn: Farbton ≥ 30° Abstand zu allen Familien und zu `--warn`, Linienkontrast ≥ 2,5:1, höchstens sechs Familien insgesamt.
 
@@ -100,8 +103,8 @@ Nur diese Farben sind erlaubt. Module definieren **keine eigenen Farben** in `:r
 - Canvas: `DP_CFONT` aus `chart.js` (12 px Systemschrift), `--ink2`; Kennwert im Canvas 700 18 px `--ink`.
 
 ## 6. Layout & Komponenten
-- `header`: 72 px, Wortmarke links, Navigation rechts, unten 1 px `--ink`. Das Modul steht nur einmal: als aktives Segment (`dpHeader(key)`). Telefon: Navigation volle Breite, vier gleich breite Segmente.
-- `nav`: Segmente in `--h` Höhe, 1 px `--ink`, ohne Lücke aneinander; aktiv `--ctl`. Jedes Segment mit Modulquadrat und dem einen Modulnamen aus `DP_MODULES[].name` (Gefäß · Licht · Mechanik · Last); nicht verfügbare Module `--ink2`, Quadrat nur als Umriss.
+- `header`: 72 px, Wortmarke links, Navigation rechts, unten 1 px `--ink`. Das Modul steht nur einmal: als aktives Segment (`dpHeader(key)`). Telefon: Navigation volle Breite, Segmente teilen die Breite nach Namenslänge; ab fünf Segmenten unter 480 px Namen 12 px und ohne Modulquadrat (passt bis 320 px).
+- `nav`: Segmente in `--h` Höhe, 1 px `--ink`, ohne Lücke aneinander; aktiv `--ctl`. Jedes Segment mit Modulquadrat und dem einen Modulnamen aus `DP_MODULES[].name` (Gefäß · Licht · Mechanik · Last · Elektronik); nicht verfügbare Module `--ink2`, Quadrat nur als Umriss.
 - `main`: 2 Spalten, Abstand 24 px, Rand 24 px, max. 1440 px; unter 860 px einspaltig.
 - `.panel`: **kein Kasten** – oben 1 px `--ink`, keine Seiten, kein Hintergrund (Punkte sichtbar), Abstand zwischen Inhalten 24 px. `h2` in der ersten Zeile.
 - `.row`: Werkzeugleiste; Abstand 12 px zwischen Gruppen, 24 px zwischen umbrochenen Zeilen, Segmente einer Gruppe ohne Lücke (`.seg`). `.sep` = 12 px Leerraum.

@@ -11,6 +11,7 @@
   --light:#d48a00;--light-a:rgba(212,138,0,.28);
   --mech:#12994a;--mech-a:rgba(18,153,74,.25);
   --load:#7b3fbf;--load-a:rgba(123,63,191,.22);
+  --elec:#c0189a;--elec-a:rgba(192,24,154,.22);
   --font:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif
 }
 @media(pointer:coarse){:root{--h:48px}}
@@ -114,7 +115,7 @@ table.kv tr.warn td:nth-child(2){color:var(--warn)}
   .two{grid-template-columns:1fr}
   header{margin:0 12px}
   nav{width:100%;margin-left:0}
-  nav a,nav span{flex:1;justify-content:center;padding:0 6px}
+  nav a,nav span{flex:1 1 auto;justify-content:center;padding:0 6px} /* Breite nach Namen: fünf Segmente passen auf 390 px */
   .row{row-gap:12px}
   .seg{flex-wrap:wrap}.seg>*+*{border-left:1px solid var(--ink)}.seg>*{margin:0 -1px -1px 0} /* lange Segmente umbrechen statt seitlich zu schieben */
   main>*{order:2} main>.panel:first-child{order:0} main>.kpi{order:1}
@@ -124,6 +125,8 @@ table.kv tr.warn td:nth-child(2){color:var(--warn)}
   #dp-bar[hidden]{display:none}
   #dp-bar .vt{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:700}
 }
+/* Ab fünf Modulen auf schmalen Telefonen: Namen 12 px, ohne Modulquadrat (aktiv bleibt schwarz) */
+@media(max-width:480px){nav:has(>:nth-child(5)) :is(a,span){font-size:12px}nav:has(>:nth-child(5)) .mq{display:none}}
 
 /* Startseite */
 .intro{max-width:1440px;margin:0 auto;padding:24px 24px 0}
