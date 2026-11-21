@@ -2,7 +2,7 @@
 
 Vom Modul-Chat gepflegt (Branch `modul/elektronik`). Verbindliche Konventionen stehen in `docs/konzept.md`.
 
-**Stand:** Konzept (21.11.2026), noch kein Code. Wünsche an shared (Registry, Farbe `--elec`) sind in `docs/konzept.md` eingetragen.
+**Stand:** v1 (21.11.2026), Key `elektronik`, Hash `#e=`. Noch nicht in `DP_MODULES` (Wunsch an shared, ebenso Farbe `--elec`); bis dahin direkt über `elektronik/index.html` erreichbar, Kopfzeile ohne aktives Segment.
 
 ## Entwurfsfrage
 „Hält der Akku lange genug, reicht der Strom, wird etwas zu heiß?“ – Persona A entscheidet Batterie/Akku (Laufzeit, Bauraum, Gewicht), Netzteil, Leitungen, ob ein Mikrocontroller einen Verbraucher direkt schalten kann. Kein Schaltungssimulator, kein Lehrbaukasten.
@@ -43,3 +43,12 @@ Spannungsteiler · Reihen-/Parallelschaltung · Innenwiderstand (Klemmenspannung
 
 ## Offene Punkte
 - Vorgabewerte gegen Datenblätter prüfen. Pin-Grenzen bisher nur aus Sekundärquellen: Uno R3 ~20 mA/Pin, Uno R4 Minima 8 mA (Handbuch ABX00080), Pi 4 16 mA max./8 mA empfohlen, ~50 mA gesamt, Pico offen (RP2040-Datenblatt).
+
+## Historie
+- **v1** (21.11.2026): Schaltplan-Editor auf dem Raster – Werkzeuge Ziehen / Leitung / Löschen, Bauteile Batterie, Schalter, Widerstand, LED, Lampe, Motor, Kabel (Länge 2 Raster, Drehen per Knopf oder R, Entf löscht). Leitungen ideal, verbinden nur an den Enden; Ziehen nimmt angeschlossene Leitungsenden mit; Schalter antippen schaltet; offene Anschlüsse als roter Ring, Knoten ab 3 Anschlüssen als Punkt. Beschriftung je Bauteil: Wert und Ergebnis (Strom, bei Batterie Klemmenspannung, bei Kabel ΔU); LED/Lampe leuchten in `--light-a` nach Helligkeit.
+  - Quellen: AA Alkali, AA NiMH, AAA, 9-V-Block, CR2032, 18650, LiPo 1000 mAh (Zellen 1–12 in Reihe), USB 5 V, Netzteil 12 V/24 V – Spannung, Ri, Kapazität, Dauerstrom, Gewicht, Volumen, Maße (Richtwerte).
+  - CORE: `netlist` (Rasterpunkte über Leitungen vereinigt → Knoten, offene Anschlüsse), `solve` (Knotenanalyse, Quellen als Norton-Ersatz, Newton; je Teilnetz ein Bezugsknoten, GMIN 1e-12), `analyze` (Urteil je Bauteil, Laufzeit = C/I, Anlauf mit Motoren als Ankerwiderstand, Batteriegewicht/-volumen). LED: v = I·Rs + n·U_T·ln(1 + I/Is), I(v) per Bisektion; Glühlampe I ∝ U^0,6, Licht ∝ U^3,4; Motor im Lauf R = Un/In (Last ∝ Drehzahl), Anlauf Un/Ia; Kabel ρ_Cu L/A; Schalter 10 mΩ. Schwellen im Abschnitt „Modell & Gültigkeit“.
+  - Kennwerte: Urteil, Laufzeit (gegen „Laufzeit soll“), Strom aus der Quelle, Leistung, Batterien (g, cm³, Maße); „Alle Werte“: U · I · P je Bauteil mit Helligkeit/Drehzahl/Anlaufstrom und Warnung. Vergleich (`dpCompare`, rechnet den gemerkten Stand neu), Rückgängig (`dpHistory`), Galerie mit 12 Vorlagen (Prinzipien: LED mit/ohne Vorwiderstand, zwei LEDs an einem Widerstand, Lampen in Reihe, langes dünnes Kabel, Knopfzelle + LED; Produkte: Taschenlampe, USB-Leuchte, Nachtlicht, USB-Leselampe 1 W, Ventilator, Spielzeugauto). Export/Link `{type:"designphysik/elektronik", version:1, parts:[{t,x,y,r,…}], wires:[[x1,y1,x2,y2]], soll?}`, Eingang validiert (unbekannte Bauteile verworfen, ungültige Werte → Vorgabe).
+  - test.js: 48 Prüfungen – Reihe, Spannungsteiler, Parallel, Innenwiderstand, Kurzschluss, LED I(Vf) = In je Farbe, LED + Vorwiderstand gegen unabhängige Bisektion (5 Fälle, auch ohne Widerstand), dI/dv gegen Differenzenquotient, Sperrrichtung, Glühlampe Nenn-/Halbspannung und Reihe, 4 × AA, Motor Lauf/Anlauf/Drehzahl, Kabelwiderstand, Schalter offen/zu, offener Anschluss, Urteile (LED 20 mA passt, ohne Widerstand kritisch, CR2032 überlastet, Kurzschluss, Lampe glimmt, Soll-Laufzeit), Laufzeit = C/I, 300 Zufallsnetze (alle konvergiert, Σ I je Knoten < 1e-9 A).
+  - Browser (Chrome headless, file://, 1280 px und 390 px Touch): alle Vorlagen, Bauteile setzen, Leitung ziehen und antippen, Verschieben mit Leitungsenden, Schalter, Farbe, Drehen, Strg+Z, Vergleich, Link-Rundreise identisch, kaputter/ungültiger Link; kein Überlaufen, Konsole fehlerfrei.
+  - Offen: Mikrocontroller-Blöcke, Transistor/MOSFET, Spannungswandler (v2) · Lastprofil, Bauraum im Vergleich (v3) · Leitungen mit Abzweig in der Mitte · Wechsel-/Taster · Vorgabewerte gegen Datenblätter prüfen.
