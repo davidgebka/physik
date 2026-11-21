@@ -6,7 +6,7 @@ const DP_MODULES = [
   { key: 'gefaess', name: 'Gefäß',  title: 'Gefäß & Kippen',  desc: 'Volumen, Eichstriche, Ausgießen über Neigung', ready: true, color: '--water' },
   { key: 'licht',   name: 'Licht',  title: 'Lampenschirm',    desc: 'Schirm zeichnen: Lichtverteilung, Beleuchtungsstärke, Leuchtdichte, Blendung', ready: true, color: '--light' },
   { key: 'mechanismus', name: 'Mechanik', title: 'Mechanismen', desc: 'Gelenkgetriebe skizzieren und bewegen: Bahnkurve, Totlagen, Übertragungswinkel, Haltemoment', ready: true, color: '--mech' },
-  { key: 'last',    name: 'Last',   title: 'Belastung',       desc: 'Durchbiegung, Spannung, Sicherheit', ready: false, color: '--load' }
+  { key: 'last',    name: 'Last',   title: 'Belastung',       desc: 'Balken: Durchbiegung, Spannung, Sicherheit, Knicken, Eigenfrequenz', ready: true, color: '--load' }
 ];
 
 // Kopfzeile mit Modulnavigation in <header id="dp-header"> rendern; Modulquadrat in der Familienfarbe (Styleguide § 4)

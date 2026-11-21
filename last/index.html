@@ -1,0 +1,790 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Designphysik · Belastung</title>
+<link rel="stylesheet" href="../shared/style.css">
+<style>
+#ed{--ar:2;aspect-ratio:2/1}
+#ed.v{--ar:1;aspect-ratio:1/1}
+@media(max-width:600px){#ed{--ar:calc(4/3);aspect-ratio:4/3}}
+#sc{--ar:calc(2/1);aspect-ratio:2/1}
+.fl{display:grid;grid-template-columns:repeat(auto-fill,minmax(168px,1fr));gap:0 12px}
+.fl label{display:flex;justify-content:space-between;align-items:center;gap:6px;font-size:12px;color:var(--ink2);min-height:var(--h)}
+.fl label.chk{justify-content:flex-start}
+.fl input[type=number],.sel input[type=number]{width:84px}
+.sel b{font-size:12px}
+sub,sup{line-height:0} /* sonst wächst die Textzeile über 24 px (Raster) */
+#tools button{white-space:nowrap;padding:0 9px}
+select{max-width:100%}
+</style>
+</head>
+<body>
+<header id="dp-header"></header>
+<main>
+  <section class="panel">
+    <h2>Balken · Seitenansicht [mm]</h2>
+    <div class="row">
+      <span class="seg" id="tools"><button data-t="drag" class="on">Ziehen</button><button data-t="sup">+ Lager</button><button data-t="pl">+ Last</button><button data-t="ql">+ Strecke</button><button data-t="del">Löschen</button></span>
+      <select id="tpl" aria-label="Vorlage"></select><button id="undo" disabled>↶ Rückgängig</button>
+    </div>
+    <canvas id="ed"></canvas>
+    <div class="ctl"><label for="len">Länge L</label><input type="range" id="len" min="100" max="4000" step="10"><output id="lenO"></output></div>
+    <div class="row sel" id="selp"></div>
+    <p class="note" id="hint"></p>
+  </section>
+  <section class="panel">
+    <h2>Querschnitt &amp; Material</h2>
+    <div class="row">
+      <select id="secT" aria-label="Querschnitt"></select>
+      <span class="seg"><button id="oH" class="on">liegend</button><button id="oV">stehend</button></span>
+    </div>
+    <div class="fl" id="secIn"></div>
+    <canvas id="sc"></canvas>
+    <div class="row"><select id="mat" aria-label="Material"></select></div>
+    <div class="fl" id="matIn"></div>
+    <p class="note" id="matN"></p>
+    <div class="fl">
+      <label class="chk"><input type="checkbox" id="sw"> Eigengewicht</label>
+      <label class="chk"><input type="checkbox" id="shr"> Schubverformung</label>
+      <label>Längsdruck [N] <input type="number" id="nax" step="10" min="0"></label>
+      <label>Durchbiegung max. <select id="lim"><option value="150">l/150</option><option value="200">l/200</option><option value="300">l/300</option><option value="500">l/500</option></select></label>
+    </div>
+  </section>
+  <section class="panel wide">
+    <h2>Kennwerte</h2>
+    <div class="stats" id="stats"></div>
+    <p class="note" id="statN"></p>
+  </section>
+  <section class="panel">
+    <h2>Durchbiegung</h2>
+    <canvas id="c1" class="ch"></canvas>
+    <h2>Biegemoment</h2>
+    <canvas id="c2" class="ch"></canvas>
+  </section>
+  <section class="panel">
+    <h2>Querkraft</h2>
+    <canvas id="c3" class="ch"></canvas>
+    <h2>Spannung (Randfaser)</h2>
+    <canvas id="c4" class="ch"></canvas>
+  </section>
+  <section class="panel">
+    <h2>Schwingung · Eigenformen</h2>
+    <canvas id="c5" class="ch"></canvas>
+    <p class="note" id="modeN"></p>
+  </section>
+  <section class="panel">
+    <h2>Datei</h2>
+    <div class="row">
+      <button id="exp">Export JSON</button><button id="imp">Import JSON</button><input type="file" id="impF" accept=".json,application/json" hidden>
+      <button id="share">Link kopieren</button>
+    </div>
+    <p class="note" id="fileN"></p>
+  </section>
+  <section class="panel wide">
+    <h2>Modell &amp; Gültigkeit</h2>
+    <p class="note"><b>Modell:</b> gerader, ebener Biegebalken nach Timoshenko (Biegung + Schubverformung; ohne Häkchen „Schubverformung“ Euler-Bernoulli), linear-elastisch, kleine Verformungen. Lasten wirken quer zur Balkenachse in der Zeichenebene; Querschnitt symmetrisch zur Lastebene, gerade Biegung um die waagrechte Schwerachse. Gelenkiges Lager hält die Querverschiebung, Einspannung zusätzlich die Verdrehung, federndes Lager gibt mit k [N/mm] nach (Konsole, Dübel, Gleiter, Wandanschluss; k ≈ Kraft / Einfederung aus Versuch oder Datenblatt). Längskräfte trägt ein beliebiges Lager.</p>
+    <p class="note"><b>Rechnung:</b> Finite Elemente mit verknüpften Ansätzen (Timoshenko, Φ = 12EI/(G·A<sub>s</sub>·h²); Schubfläche A<sub>s</sub>: Rechteck 5/6·A, Rundstab 0,9·A, Rohr A/2, Profile Steg bzw. Wände), Schubmodul G je Material (Holz G ≈ E/16 nach EN 338; Platten Querschub-Schätzwerte), Knoten an jedem Lager, Lastpunkt und Streckenlast-Ende, dazwischen 80 Elemente über die Länge. So sind Verschiebungen an den Knoten exakt, dazwischen ergänzt um die exakte Lösung der Streckenlast (Biegung und Schub). Biegemoment und Querkraft folgen aus dem Gleichgewicht von Auflagerkräften und Lasten. Geprüft gegen die Formeln der Baustatik (Einfeld-, Krag-, Zwei-Feld- und eingespannte Träger, Überstand, Teilstreckenlast; siehe <code>last/test.js</code>).</p>
+    <p class="note"><b>Spannung:</b> σ = N/A ± M·e/I an Ober- und Unterkante, τ = V·S/(I·b) in der Schwerachse. <i>Sicherheit</i> = Festigkeit f / größte Spannung; f ist der charakteristische Wert (Holz: Biegefestigkeit, Metall: Streckgrenze, Glas/Kunststoff: Biege- bzw. Zugfestigkeit). Die <i>Zielsicherheit</i> je Material ist ein Richtwert, der Lastfaktoren, Materialstreuung, Dauerlast und Feuchte pauschal abdeckt (Holz ≈ γ<sub>F</sub>·γ<sub>M</sub>/k<sub>mod</sub>) – kein Ersatz für einen Nachweis nach Eurocode. Werte aus EN 338, EN 10025, EN 755-2, EN 572; Platten und Kunststoffe Schätzwerte nach Norm-Mindestwerten bzw. Datenblättern (bei „Material“ angegeben).</p>
+    <p class="note"><b>Durchbiegung:</b> <i>sofort</i> unter allen Lasten; <i>Endzustand</i> mit Kriechen: Anteil aus Dauerlasten (Eigengewicht, „dauerhaft“) × (1 + k<sub>def</sub>), k<sub>def</sub> nach EN 1995 für Nutzungsklasse 1 (trocken innen), Kunststoffe geschätzt aus dem Kriechmodul nach 1000 h. Federnde Lager kriechen dabei mit (sichere Seite), ihre Einfederung zählt zur Durchbiegung. Grenze l/x bezogen auf die Stützweite des Feldes, bei Überständen auf die doppelte Kraglänge (EN 1995). Übliche Richtwerte: Regalboden l/200–l/300, Tisch und Bank l/300.</p>
+    <p class="note"><b>Knicken:</b> „Längsdruck“ wirkt am Ende x = L in Balkenachse (stehend: oben, plus Eigengewicht darüber). Knicksicherheit = kleinster Lastfaktor λ mit (K − λ·K<sub>G</sub>)·φ = 0 (Euler, geometrische Steifigkeit); geprüft an den vier Eulerfällen und der Kragstütze unter Eigengewicht; mit Schubverformung ≈ Engesser N<sub>E</sub>/(1 + N<sub>E</sub>/GA<sub>s</sub>) (auf 1 % bei N<sub>E</sub>/GA<sub>s</sub> ≤ 0,2, bei extrem schubweichen Querschnitten etwas zu niedrig). Querlasten werden mit α = 1/(1 − 1/λ) verstärkt (Theorie II. Ordnung genähert). Ohne Vorkrümmung und ohne Fließen: reale Stützen versagen deutlich vor λ = 1, daher Ziel λ ≥ 3.</p>
+    <p class="note"><b>Dynamik:</b> Eigenfrequenzen aus K·φ = ω²·M·φ mit konsistenter Massenmatrix (Drehträgheit vernachlässigt) (Balkenmasse, Dauerlasten liegend als mitschwingende Masse, Längsdruck senkt die Steifigkeit). Richtwert: unter ~8 Hz federt eine Sitz- oder Lauffläche spürbar (EN 1995 für Decken). <i>Stoß:</i> Last mit Fallhöhe h wirkt wie F·n mit n = 1 + √(1 + 2h/δ<sub>st</sub>) (Energieansatz, Balkenmasse und Dämpfung vernachlässigt → sicher). h = 0 heißt „plötzlich aufgesetzt“ und ist nur statisch gerechnet; für „plötzlich“ n = 2 eine kleine Fallhöhe setzen. <i>Polster</i> = Einfederung zwischen Last und Balken unter F (Sitzpolster, Gesäß und Beine einer Person ≈ 20–40 mm, Schätzung): wirkt als Feder in Reihe, δ<sub>st</sub> = Balken + Polster – ohne Polster ist ein Mensch als starre Masse stark übertrieben. Mehrere Stöße werden gleichzeitig angenommen. Prüfnormen für Möbel (EN 1728, EN 16139) arbeiten mit eigenen Prüflasten und Stoßkörpern.</p>
+    <p class="note"><b>Nicht enthalten:</b> Kippen/Biegedrillknicken hochkant stehender Bretter und schlanker Profile, örtliches Beulen dünner Wände, Lochleibung und Verbindungen (Dübel, Schrauben, Konsolen), Querdruck am Auflager, Drehfedern (teilweise Einspannung), Holz quer zur Faser, Ermüdung, Temperatur und Feuchte über Nutzungsklasse 1, schiefe Biegung (L-Winkel), nichtlineares Material.</p>
+  </section>
+</main>
+
+<script src="../shared/util.js"></script>
+<script src="../shared/chart.js"></script>
+<script>
+// === CORE START
+// Ebener gerader Biegebalken (Timoshenko; ohne G Euler-Bernoulli). Kein DOM.
+// Einheiten: mm, N, N/mm² (= MPa), Masse t (= N·s²/mm), Dichte kg/m³, g = 9810 mm/s².
+// Vorzeichen intern: Querkraft, Verschiebung w und Lasten positiv nach oben; Lasten werden „nach unten positiv“ übergeben (F, q).
+// Verfahren: FEM mit Hermite-Elementen, Knoten an allen Unstetigkeiten (Auflager, Lastpunkte, Streckenlast-Enden) →
+// Knotenverschiebungen exakt; zwischen den Knoten Hermite + Partikulärlösung der Streckenlast (exakt).
+// Schnittgrößen M, V aus Gleichgewicht der Auflagerkräfte und Lasten (exakt).
+const Core = (() => {
+  const G = 9810, NE = 80, SUB = 6;
+  // Richtwerte. E, f, fv [N/mm²], rho [kg/m³]; f = Biege- bzw. Streckgrenze (charakteristisch), fv = Schub;
+  // G = Schubmodul (Holz G ≈ E/16 nach EN 338; Platten: Rollschub/Querschub, Schätzwerte nach EN 12369 Größenordnung; sonst E/2(1+ν));
+  // kdef = Kriechzahl für Dauerlast (EN 1995 NKl 1 bzw. Schätzung Kriechmodul 1000 h); S = empfohlene Mindestsicherheit f/σ.
+  const MAT = {
+    c24:   { grp: 'Holz', name: 'Fichte/Kiefer C24', E: 11000, G: 690, rho: 420, f: 24, fv: 4.0, kdef: 0.6, S: 2.5, src: 'EN 338 (C24)' },
+    d30:   { grp: 'Holz', name: 'Eiche D30', E: 11000, G: 690, rho: 640, f: 30, fv: 4.0, kdef: 0.6, S: 2.5, src: 'EN 338 (D30)' },
+    d40:   { grp: 'Holz', name: 'Buche ≈ D40', E: 13000, G: 810, rho: 700, f: 40, fv: 4.0, kdef: 0.6, S: 2.5, src: 'EN 338 (D40)' },
+    bsp:   { grp: 'Platten', name: 'Multiplex Birke', E: 9000, G: 150, rho: 680, f: 35, fv: 1.5, kdef: 0.8, S: 2.5, src: 'Schätzwert nach Herstellerangaben, parallel zur Decklage; kdef EN 1995' },
+    mdf:   { grp: 'Platten', name: 'MDF', E: 3000, G: 200, rho: 750, f: 20, fv: 1.0, kdef: 2.25, S: 3, src: 'EN 622-5 Mindestwerte ≈, kdef EN 1995' },
+    span:  { grp: 'Platten', name: 'Spanplatte (Möbel)', E: 2500, G: 200, rho: 650, f: 11, fv: 0.8, kdef: 2.25, S: 3, src: 'EN 312 P2 ≈ Mindestwerte; kdef wie P4 (EN 1995)' },
+    s235:  { grp: 'Metall', name: 'Stahl S235', E: 210000, G: 81000, rho: 7850, f: 235, fv: 136, kdef: 0, S: 1.5, src: 'EN 10025' },
+    a2:    { grp: 'Metall', name: 'Edelstahl 1.4301', E: 200000, G: 77000, rho: 7900, f: 230, fv: 133, kdef: 0, S: 1.5, src: 'EN 10088 (lösungsgeglüht)' },
+    al6060:{ grp: 'Metall', name: 'Aluminium 6060 T6', E: 70000, G: 26000, rho: 2700, f: 140, fv: 81, kdef: 0, S: 1.65, src: 'EN 755-2 (Strangpressprofil)' },
+    al6082:{ grp: 'Metall', name: 'Aluminium 6082 T6', E: 70000, G: 26000, rho: 2700, f: 250, fv: 144, kdef: 0, S: 1.65, src: 'EN 755-2 (Strangpressprofil)' },
+    glas:  { grp: 'Glas & Kunststoff', name: 'Floatglas', E: 70000, G: 29000, rho: 2500, f: 45, fv: 45, kdef: 0, S: 5, src: 'EN 572-1; S hoch wegen Dauerlast und Sprödbruch' },
+    pmma:  { grp: 'Glas & Kunststoff', name: 'Acryl (PMMA)', E: 3200, G: 1200, rho: 1190, f: 70, fv: 35, kdef: 0.9, S: 5, src: 'Datenblatt typisch; kdef Schätzung; S hoch wegen Spannungsrissen' },
+    abs:   { grp: 'Glas & Kunststoff', name: 'ABS', E: 2300, G: 850, rho: 1040, f: 40, fv: 20, kdef: 0.5, S: 3, src: 'Datenblatt typisch; kdef Schätzung' },
+    pp:    { grp: 'Glas & Kunststoff', name: 'Polypropylen (PP)', E: 1300, G: 450, rho: 905, f: 30, fv: 15, kdef: 2.2, S: 3, src: 'Datenblatt typisch; kdef Schätzung' },
+    pagf:  { grp: 'Glas & Kunststoff', name: 'PA6 GF30 (konditioniert)', E: 6500, G: 2400, rho: 1360, f: 110, fv: 55, kdef: 0.6, S: 3, src: 'Datenblatt typisch; kdef Schätzung' }
+  };
+
+  // Querschnitt {type, b, h, t, d, tw, tf} [mm]; h = Höhe in Lastrichtung. Liefert A, I (um die Schwerachse),
+  // yc (Schwerpunkt ab Unterkante), eT/eB (Randabstände oben/unten), S0 und b0 (statisches Moment und Breite in der Schwerachse, für τ),
+  // As = Schubfläche (Rechteck 5/6·A, Kreis 0,9·A, Rohr A/2, Profile Steg h·tw bzw. Wände 2·t·h).
+  function section(s) {
+    const p = v => isFinite(v) && v > 0, t = s.type;
+    let R = null; // Rechteckbänder [y0, y1, Breite], symmetrisch zur senkrechten Achse
+    if (t === 'rect') { if (!p(s.b) || !p(s.h)) return { err: 'Maße > 0 nötig' }; R = [[0, s.h, s.b]]; }
+    else if (t === 'rhs') { if (!p(s.b) || !p(s.h) || !p(s.t) || 2 * s.t >= Math.min(s.b, s.h)) return { err: 'Wand t < halbe Breite und Höhe' };
+      R = [[0, s.t, s.b], [s.t, s.h - s.t, 2 * s.t], [s.h - s.t, s.h, s.b]]; }
+    else if (t === 'I' || t === 'U') { if (!p(s.b) || !p(s.h) || !p(s.tw) || !p(s.tf) || 2 * s.tf >= s.h || s.tw > s.b) return { err: 'Gurt tf < h/2, Steg tw ≤ b' };
+      R = [[0, s.tf, s.b], [s.tf, s.h - s.tf, s.tw], [s.h - s.tf, s.h, s.b]]; }
+    else if (t === 'T') { if (!p(s.b) || !p(s.h) || !p(s.tw) || !p(s.tf) || s.tf >= s.h || s.tw > s.b) return { err: 'Gurt tf < h, Steg tw ≤ b' };
+      R = [[0, s.h - s.tf, s.tw], [s.h - s.tf, s.h, s.b]]; }
+    else if (t === 'circ' || t === 'tube') {
+      const d = s.d, di = t === 'tube' ? d - 2 * s.t : 0;
+      if (!p(d) || (t === 'tube' && !(p(s.t) && di > 0))) return { err: t === 'tube' ? 'Wand t < d/2' : 'Durchmesser > 0' };
+      const A = Math.PI / 4 * (d * d - di * di), I = Math.PI / 64 * (d ** 4 - di ** 4);
+      return { A, I, yc: d / 2, h: d, eT: d / 2, eB: d / 2, S0: (d ** 3 - di ** 3) / 12, b0: d - di, As: t === 'tube' ? A / 2 : 0.9 * A };
+    } else return { err: 'Querschnitt unbekannt' };
+    let A = 0, Sy = 0, Iy = 0;
+    for (const [y0, y1, w] of R) { A += w * (y1 - y0); Sy += w * (y1 * y1 - y0 * y0) / 2; Iy += w * (y1 ** 3 - y0 ** 3) / 3; }
+    const yc = Sy / A, h = R[R.length - 1][1];
+    let S0 = 0, b0 = Infinity;
+    for (const [y0, y1, w] of R) {
+      if (y1 > yc) { const lo = Math.max(y0, yc); S0 += w * ((y1 - yc) ** 2 - (lo - yc) ** 2) / 2; }
+      if (y0 <= yc && yc <= y1) b0 = Math.min(b0, w);
+    }
+    const As = t === 'rect' ? 5 / 6 * A : t === 'rhs' ? 2 * s.t * h : s.tw * h;
+    return { A, I: Iy - A * yc * yc, yc, h, eT: h - yc, eB: yc, S0, b0, As };
+  }
+
+  // ---- dichte lineare Algebra (n ≤ ~250) ----
+  function chol(A, n) { // A = L·Lᵀ; null, wenn nicht positiv definit (geknickt). Pivot relativ zur eigenen Diagonale:
+    const L = new Float64Array(n * n); // Verschiebungs- und Drehfreiheitsgrade unterscheiden sich um ~1/h² (globaler Maßstab verwarf stabile Balken)
+    for (let j = 0; j < n; j++) {
+      let s = A[j * n + j]; for (let k = 0; k < j; k++) s -= L[j * n + k] * L[j * n + k];
+      if (!(s > 1e-13 * Math.abs(A[j * n + j]))) return null;
+      const d = Math.sqrt(s); L[j * n + j] = d;
+      for (let i = j + 1; i < n; i++) { let v = A[i * n + j]; for (let k = 0; k < j; k++) v -= L[i * n + k] * L[j * n + k]; L[i * n + j] = v / d; }
+    }
+    return L;
+  }
+  function cholSolve(L, n, b) {
+    const x = Float64Array.from(b);
+    for (let i = 0; i < n; i++) { let s = x[i]; for (let k = 0; k < i; k++) s -= L[i * n + k] * x[k]; x[i] = s / L[i * n + i]; }
+    for (let i = n - 1; i >= 0; i--) { let s = x[i]; for (let k = i + 1; k < n; k++) s -= L[k * n + i] * x[k]; x[i] = s / L[i * n + i]; }
+    return x;
+  }
+  const mv = (A, n, x) => { const y = new Float64Array(n); for (let i = 0; i < n; i++) { let s = 0; for (let j = 0; j < n; j++) s += A[i * n + j] * x[j]; y[i] = s; } return y; };
+  const dot = (a, b) => { let s = 0; for (let i = 0; i < a.length; i++) s += a[i] * b[i]; return s; };
+  // Jacobi-Verfahren für kleine symmetrische Matrizen: Eigenwerte d, Eigenvektoren als Spalten von V
+  function jacobi(A, n) {
+    const a = Float64Array.from(A), V = new Float64Array(n * n);
+    for (let i = 0; i < n; i++) V[i * n + i] = 1;
+    for (let sw = 0; sw < 60; sw++) {
+      let off = 0, dg = 0;
+      for (let p = 0; p < n; p++) { dg += a[p * n + p] ** 2; for (let q = p + 1; q < n; q++) off += a[p * n + q] ** 2; }
+      if (off <= 1e-30 * dg) break;
+      for (let p = 0; p < n; p++) for (let q = p + 1; q < n; q++) {
+        const apq = a[p * n + q]; if (apq === 0) continue;
+        const th = (a[q * n + q] - a[p * n + p]) / (2 * apq), t = (th >= 0 ? 1 : -1) / (Math.abs(th) + Math.sqrt(th * th + 1));
+        const c = 1 / Math.sqrt(t * t + 1), s = t * c;
+        for (let k = 0; k < n; k++) { const kp = a[k * n + p], kq = a[k * n + q]; a[k * n + p] = c * kp - s * kq; a[k * n + q] = s * kp + c * kq; }
+        for (let k = 0; k < n; k++) { const pk = a[p * n + k], qk = a[q * n + k]; a[p * n + k] = c * pk - s * qk; a[q * n + k] = s * pk + c * qk; }
+        for (let k = 0; k < n; k++) { const kp = V[k * n + p], kq = V[k * n + q]; V[k * n + p] = c * kp - s * kq; V[k * n + q] = s * kp + c * kq; }
+      }
+    }
+    return { d: Array.from({ length: n }, (_, i) => a[i * n + i]), V };
+  }
+  // Unterraum-Iteration: kleinste Eigenwerte von K φ = λ M φ (K über Cholesky-Faktor LK). Ritz-Schritt über die reduzierte
+  // Steifigkeit (immer positiv definit): Mr q = μ Kr q, λ = 1/μ – robust auch bei fast masselosem Balken mit Punktmassen.
+  function subspace(LK, Mf, n, X0, want) {
+    let X = X0, lam = null;
+    for (let it = 0; it < 100; it++) {
+      const p = X.length, MX = X.map(v => mv(Mf, n, v)), Y = MX.map(v => cholSolve(LK, n, v)), MY = Y.map(v => mv(Mf, n, v));
+      const Kr = new Float64Array(p * p), Mr = new Float64Array(p * p);
+      for (let i = 0; i < p; i++) for (let j = 0; j < p; j++) { Kr[i * p + j] = (dot(Y[i], MX[j]) + dot(Y[j], MX[i])) / 2; Mr[i * p + j] = (dot(Y[i], MY[j]) + dot(Y[j], MY[i])) / 2; }
+      // Basis T = U·Λ^(−1/2) aus Kr = U Λ Uᵀ; linear abhängige Richtungen (Rangabfall bei Punktmassen) fallen weg
+      const ek = jacobi(Kr, p), km = Math.max(...ek.d), keep = ek.d.map((_, i) => i).filter(i => ek.d[i] > 1e-12 * km), k = keep.length;
+      if (!k) break;
+      const T = keep.map(c => Float64Array.from({ length: p }, (_, i) => ek.V[i * p + c] / Math.sqrt(ek.d[c])));
+      const C = new Float64Array(k * k);
+      for (let i = 0; i < k; i++) for (let j = 0; j < k; j++) { let s = 0; for (let r = 0; r < p; r++) for (let c = 0; c < p; c++) s += T[i][r] * Mr[r * p + c] * T[j][c]; C[i * k + j] = s; }
+      const { d, V } = jacobi(C, k), ord = d.map((_, i) => i).sort((a, b) => d[b] - d[a]); // größtes μ = kleinstes λ
+      X = ord.map(c => { const z = new Float64Array(p); for (let j = 0; j < k; j++) for (let r = 0; r < p; r++) z[r] += T[j][r] * V[j * k + c];
+        const x = new Float64Array(n); for (let r = 0; r < p; r++) for (let i = 0; i < n; i++) x[i] += Y[r][i] * z[r]; return x; });
+      const nl = ord.map(c => d[c] > 0 ? 1 / d[c] : Infinity);
+      const done = lam && nl.length === lam.length && nl.slice(0, want).every((v, i) => Math.abs(v - lam[i]) <= 1e-10 * Math.abs(v));
+      lam = nl; if (done) break;
+    }
+    return lam ? { lam: lam.slice(0, want), vec: X.slice(0, want) } : null;
+  }
+
+  // Modell m: {L, E, G (Schubmodul; fehlt → ohne Schubverformung), I, A, rhoA [t/mm], sec: {eT, eB, S0, b0, As}, sw (Eigengewicht), orient: 'h' liegend | 'v' stehend,
+  //   N (Längsdruck am Ende x = L [N], Druck positiv), kdef, sup: [{x, t: 'pin'|'fix'|'spring', k [N/mm] bei Feder}],
+  //   pl: [{x, F [N] nach unten, perm, h (Fallhöhe [mm]), c (Einfederung von Polster/Körper unter F [mm], in Reihe zum Balken)}], ql: [{a, b, q [N/mm] nach unten, perm}], modes (Standard true)}
+  function analyze(m) {
+    const L = +m.L, E = +m.E, I = +m.I, A = +m.A, EI = E * I, sec = m.sec, v = m.orient === 'v';
+    const GAs = m.G > 0 && sec.As > 0 ? m.G * sec.As : Infinity; // Schubsteifigkeit (Timoshenko); ∞ = Euler-Bernoulli
+    if (!(L > 0 && EI > 0 && A > 0 && m.rhoA >= 0)) return { err: 'Querschnitt oder Material ungültig' };
+    const cl = x => Math.min(L, Math.max(0, +x || 0)), tol = 1e-9 * L;
+    const sup = [];
+    const rank = { spring: 0, pin: 1, fix: 2 }; // gleiche Stelle: Einspannung vor Gelenk vor Feder
+    for (const s of m.sup || []) {
+      const t = s.t === 'fix' ? 'fix' : s.t === 'spring' && s.k > 0 ? 'spring' : s.t === 'spring' ? null : 'pin', x = cl(s.x); if (!t) continue; // Feder ohne Steifigkeit trägt nicht
+      const o = sup.find(q => Math.abs(q.x - x) < tol), n = { x, t, k: t === 'spring' ? +s.k : 0 };
+      if (!o) sup.push(n); else if (rank[t] > rank[o.t]) Object.assign(o, n); else if (t === 'spring' && o.t === 'spring') o.k += n.k;
+    }
+    sup.sort((a, b) => a.x - b.x);
+    if (!sup.length) return { err: 'Kein Auflager' };
+    // starre Bewegung (Verschieben, Drehen) ist nur gesperrt mit zwei Lagerstellen oder einer Einspannung – geometrisch, nicht über Rundung
+    if (sup.length < 2 && sup[0].t !== 'fix') return { err: 'Lagerung beweglich: mindestens zwei Auflager oder eine Einspannung nötig' };
+    const pl = (m.pl || []).map(p => ({ x: cl(p.x), F: +p.F || 0, perm: !!p.perm, h: p.perm ? 0 : Math.max(0, +p.h || 0), c: Math.max(0, +p.c || 0) }));
+    const ql = (m.ql || []).map(q => ({ a: cl(Math.min(q.a, q.b)), b: cl(Math.max(q.a, q.b)), q: +q.q || 0, perm: !!q.perm })).filter(q => q.b - q.a > tol);
+    const selfQ = m.sw && !v ? m.rhoA * G : 0; // Eigengewicht quer (liegend) [N/mm]
+    // Knoten
+    const ks = [0, L, ...sup.map(s => s.x), ...pl.map(p => p.x), ...ql.flatMap(q => [q.a, q.b])].sort((a, b) => a - b), kx = [];
+    for (const x of ks) if (!kx.length || x - kx[kx.length - 1] > tol) kx.push(x);
+    kx[kx.length - 1] = L;
+    const X = [0];
+    for (let i = 1; i < kx.length; i++) { const a = kx[i - 1], b = kx[i], k = Math.max(1, Math.ceil((b - a) / (L / NE) - 1e-9)); for (let j = 1; j <= k; j++) X.push(j === k ? b : a + (b - a) * j / k); }
+    const nn = X.length, nd = 2 * nn, ne = nn - 1;
+    const node = x => { let b = 0; for (let i = 1; i < nn; i++) if (Math.abs(X[i] - x) < Math.abs(X[b] - x)) b = i; return b; };
+    // Längsdruck je Element (Druck positiv): liegend konstant, stehend zusätzlich Eigengewicht oberhalb
+    const Nat = x => (+m.N || 0) + (v && m.sw ? m.rhoA * G * (L - x) : 0);
+    // Steifigkeit, geometrische Steifigkeit, Masse
+    const K = new Float64Array(nd * nd), Kg = new Float64Array(nd * nd), M = new Float64Array(nd * nd);
+    const add = (T, e, k) => { for (let i = 0; i < 4; i++) for (let j = 0; j < 4; j++) T[(2 * e + i) * nd + 2 * e + j] += k[i][j]; };
+    let axial = false;
+    const permLine = x => !v ? ql.reduce((s, q) => s + (q.perm && q.a < x && x < q.b ? Math.max(0, q.q) : 0), 0) / G : 0; // nach oben wirkende Dauerlast ist keine Masse
+    for (let e = 0; e < ne; e++) {
+      const h = X[e + 1] - X[e], c = EI / h ** 3, xm = (X[e] + X[e + 1]) / 2, Ne = Nat(xm), g = Ne / (30 * h), mu = (m.rhoA + permLine(xm)) * h / 420;
+      const P = 12 * EI / (GAs * h * h), cp = c / (1 + P); // Timoshenko-Element (verknüpfte Ansätze), Φ = 0 → Euler-Bernoulli
+      add(K, e, [[12 * cp, 6 * h * cp, -12 * cp, 6 * h * cp], [6 * h * cp, (4 + P) * h * h * cp, -6 * h * cp, (2 - P) * h * h * cp], [-12 * cp, -6 * h * cp, 12 * cp, -6 * h * cp], [6 * h * cp, (2 - P) * h * h * cp, -6 * h * cp, (4 + P) * h * h * cp]]);
+      if (Ne > 0) axial = true;
+      if (Ne) add(Kg, e, [[36 * g, 3 * h * g, -36 * g, 3 * h * g], [3 * h * g, 4 * h * h * g, -3 * h * g, -h * h * g], [-36 * g, -3 * h * g, 36 * g, -3 * h * g], [3 * h * g, -h * h * g, -3 * h * g, 4 * h * h * g]]);
+      add(M, e, [[156 * mu, 22 * h * mu, 54 * mu, -13 * h * mu], [22 * h * mu, 4 * h * h * mu, 13 * h * mu, -3 * h * h * mu], [54 * mu, 13 * h * mu, 156 * mu, -22 * h * mu], [-13 * h * mu, -3 * h * h * mu, -22 * h * mu, 4 * h * h * mu]]);
+    }
+    if (!v) for (const p of pl) if (p.perm && p.F > 0) M[2 * node(p.x) * (nd + 1)] += p.F / G; // Dauerlast als Punktmasse
+    const fixd = new Set(); for (const s of sup) { const i = node(s.x); if (s.t === 'spring') K[2 * i * (nd + 1)] += s.k; else fixd.add(2 * i); if (s.t === 'fix') fixd.add(2 * i + 1); }
+    const free = []; for (let d = 0; d < nd; d++) if (!fixd.has(d)) free.push(d);
+    const nf = free.length, red = T => { const R = new Float64Array(nf * nf); for (let i = 0; i < nf; i++) for (let j = 0; j < nf; j++) R[i * nf + j] = T[free[i] * nd + free[j]]; return R; };
+    const Kf = red(K), LK = chol(Kf, nf);
+    if (!LK) return { err: 'Lagerung beweglich: mindestens zwei Auflager oder eine Einspannung nötig' };
+
+    // Lastfall lösen. pts: [{x, F}], lns: [{a, b, q}] (nach unten positiv)
+    function solve(pts, lns) {
+      const f = new Float64Array(nd), qe = new Float64Array(ne);
+      for (const p of pts) f[2 * node(p.x)] -= p.F;
+      for (let e = 0; e < ne; e++) {
+        const h = X[e + 1] - X[e], xm = (X[e] + X[e + 1]) / 2; let q = 0;
+        for (const l of lns) if (l.a < xm && xm < l.b) q -= l.q;
+        qe[e] = q; f[2 * e] += q * h / 2; f[2 * e + 1] += q * h * h / 12; f[2 * e + 2] += q * h / 2; f[2 * e + 3] -= q * h * h / 12;
+      }
+      const uf = cholSolve(LK, nf, free.map(d => f[d])), u = new Float64Array(nd);
+      free.forEach((d, i) => u[d] = uf[i]);
+      const row = d => { let s = -f[d]; for (let j = 0; j < nd; j++) s += K[d * nd + j] * u[j]; return s; };
+      const R = sup.map(s => { const i = node(s.x); return { x: s.x, t: s.t, F: s.t === 'spring' ? -s.k * u[2 * i] : row(2 * i), M: s.t === 'fix' ? row(2 * i + 1) : 0, w: u[2 * i] }; });
+      return { u, qe, R, pts, lns };
+    }
+    // Biegemoment (Durchhang positiv) und Querkraft aus dem Gleichgewicht links vom Schnitt; side +1 = rechts einer Sprungstelle
+    function MV(c, x, side) {
+      let V = 0, Mo = 0; const inc = xi => xi < x - tol || (Math.abs(xi - x) <= tol && side > 0);
+      for (const r of c.R) if (inc(r.x)) { V += r.F; Mo += r.F * (x - r.x) - r.M; }
+      for (const p of c.pts) if (inc(p.x)) { V -= p.F; Mo -= p.F * (x - p.x); }
+      for (const l of c.lns) { const b = Math.min(l.b, x); if (b > l.a) { const d = b - l.a; V -= l.q * d; Mo -= l.q * d * (x - (l.a + b) / 2); } }
+      return [Mo, V];
+    }
+    // Biegelinie im Element: verknüpfte Ansätze (Timoshenko, exakt für Knotenlasten) + Partikulärlösung der Streckenlast (Biegung + Schub)
+    const herm = (u, e, xi, bub) => { const h = X[e + 1] - X[e], i = 2 * e, P = 12 * EI / (GAs * h * h), r = 1 / (1 + P), z = xi - xi * xi;
+      return r * (u[i] * (1 - 3 * xi * xi + 2 * xi ** 3 + P * (1 - xi)) + u[i + 1] * h * (xi - 2 * xi * xi + xi ** 3 + P / 2 * z) + u[i + 2] * (3 * xi * xi - 2 * xi ** 3 + P * xi) + u[i + 3] * h * (xi ** 3 - xi * xi - P / 2 * z))
+        + (bub ? bub[e] * (h ** 4 / (24 * EI) * z * z + h * h / (2 * GAs) * z) : 0); };
+    // Stützstellen: je Element SUB + 1 (Enden doppelt → Sprünge der Querkraft sichtbar)
+    const smp = [];
+    for (let e = 0; e < ne; e++) for (let j = 0; j <= SUB; j++) smp.push({ e, xi: j / SUB, x: j === SUB ? X[e + 1] : X[e] + (X[e + 1] - X[e]) * j / SUB, side: j === 0 ? 1 : -1 });
+    const evalCase = c => ({ w: smp.map(s => herm(c.u, s.e, s.xi, c.qe)), mv: smp.map(s => MV(c, s.x, s.side)), R: c.R });
+
+    // Lastfälle: ständig (P), veränderlich statisch (V), Stoßanteil (D)
+    const lnsP = ql.filter(q => q.perm); if (selfQ) lnsP.push({ a: 0, b: L, q: selfQ });
+    const cP = solve(pl.filter(p => p.perm), lnsP), cV = solve(pl.filter(p => !p.perm), ql.filter(q => !q.perm));
+    const imp = pl.map((p, i) => ({ p, i })).filter(o => o.p.h > 0 && o.p.F > 0).map(({ p, i }) => {
+      const d = -solve([{ x: p.x, F: p.F }], []).u[2 * node(p.x)] + p.c, rigid = !(d > 1e-9 * L); // Federn in Reihe: δ_st = Balken + Polster
+      return { i, x: p.x, F: p.F, h: p.h, c: p.c, d, n: rigid ? 1 : 1 + Math.sqrt(1 + 2 * p.h / d), rigid }; // starr (über Lager, ohne Polster): unbegrenzt, gemeldet statt gerechnet
+    });
+    const cD = solve(imp.map(o => ({ x: o.x, F: (o.n - 1) * o.F })), []);
+    const P = evalCase(cP), Vr = evalCase(cV), D = evalCase(cD);
+
+    // Knicken: kleinstes positives λ mit (K − λ·Kg)φ = 0 = größtes μ = 1/λ von K⁻¹Kg (Potenzmethode, Rayleigh-Quotient).
+    // Kg indefinit (stehend, Zug oben, Eigengewicht unten): Lauf 1 findet evtl. das negative μ, Lauf 2 mit Verschiebung |μ| das größte positive.
+    let lam = Infinity, alpha = 1, buck = null, Kgf = null, bv = null;
+    if (axial) {
+      Kgf = red(Kg);
+      const pow = sh => { let z = new Float64Array(nf).map((_, i) => 1 + 0.3 * Math.sin(1.7 * i)), mu = 0, m0 = NaN;
+        for (let it = 0; it < 2000; it++) {
+          const y = cholSolve(LK, nf, mv(Kgf, nf, z)); for (let i = 0; i < nf; i++) y[i] += sh * z[i];
+          const nr = Math.sqrt(dot(y, y)); if (!(nr > 0)) return { mu: 0, z };
+          z = y.map(t => t / nr); mu = dot(z, mv(Kgf, nf, z)) / dot(z, mv(Kf, nf, z));
+          if (Math.abs(mu - m0) <= 1e-12 * Math.abs(mu) && it > 3) break; m0 = mu;
+        }
+        return { mu, z }; };
+      let r = pow(0); if (r.mu < 0) r = pow(-r.mu);
+      if (r.mu > 0) { lam = 1 / r.mu; bv = r.z; }
+      if (bv) { const u = new Float64Array(nd); free.forEach((d, i) => u[d] = bv[i]); buck = smp.map(s => herm(u, s.e, s.xi)); }
+      alpha = lam > 1 ? 1 / (1 - 1 / lam) : Infinity; // Verstärkung II. Ordnung (Dischinger)
+    }
+
+    // Eigenschwingungen mit wirksamer Steifigkeit K − Kg
+    let f = [], modes = [];
+    if (m.modes !== false && nf >= 1 && lam > 1) {
+      const Ke = axial ? Kf.map((k, i) => k - Kgf[i]) : Kf, LKe = axial ? chol(Ke, nf) : LK;
+      if (LKe) {
+        const p = Math.min(6, nf), want = Math.min(3, nf);
+        const X0 = Array.from({ length: p }, (_, j) => Float64Array.from(free, d => { const x = X[d >> 1] / L; return d & 1 ? (j + 1) * Math.PI / L * Math.cos((j + 1) * Math.PI * x) + 0.01 / L : Math.sin((j + 1) * Math.PI * x) + 0.1 * (1 - x) * (j + 1); }));
+        const r = subspace(LKe, red(M), nf, X0, want);
+        if (r) { f = r.lam.filter(isFinite).map(l => Math.sqrt(Math.max(0, l)) / (2 * Math.PI));
+          modes = r.vec.map(vf => { const u = new Float64Array(nd); free.forEach((d, i) => u[d] = vf[i]); const w = smp.map(s => herm(u, s.e, s.xi));
+            const k = w.reduce((b, t) => Math.abs(t) > Math.abs(b) ? t : b, 0) || 1; return w.map(t => t / k); }); }
+      }
+    }
+
+    // Kombination
+    const kd = Math.max(0, +m.kdef || 0), al = isFinite(alpha) ? alpha : 1, n = smp.length;
+    const x = smp.map(s => s.x), wInst = [], wFin = [], wPeak = [], Mo = [], V = [], Nc = [], sT = [], sB = [], tau = [], sig = [];
+    for (let i = 0; i < n; i++) {
+      wInst[i] = al * (P.w[i] + Vr.w[i]); wFin[i] = al * (P.w[i] * (1 + kd) + Vr.w[i]); wPeak[i] = al * (P.w[i] + Vr.w[i] + D.w[i]);
+      Mo[i] = al * (P.mv[i][0] + Vr.mv[i][0] + D.mv[i][0]); V[i] = P.mv[i][1] + Vr.mv[i][1] + D.mv[i][1]; Nc[i] = Nat(x[i]);
+      sT[i] = -Nc[i] / A - Mo[i] * sec.eT / I; sB[i] = -Nc[i] / A + Mo[i] * sec.eB / I; sig[i] = Math.max(Math.abs(sT[i]), Math.abs(sB[i]));
+      tau[i] = Math.abs(V[i]) * sec.S0 / (I * sec.b0);
+    }
+    const arg = (a, f) => { let b = 0; for (let i = 1; i < a.length; i++) if (f(a[i]) > f(a[b])) b = i; return b; };
+    const mx = a => { const i = arg(a, Math.abs); return { v: a[i], x: x[i] }; };
+    // Durchbiegungsgrenze: Feld zwischen Auflagern (Bezug = Stützweite), Überstand (Bezug = 2 × Kraglänge)
+    const xs = sup.map(s => s.x), fields = [];
+    if (xs[0] > tol) fields.push([0, xs[0], 2 * xs[0]]);
+    for (let i = 1; i < xs.length; i++) fields.push([xs[i - 1], xs[i], xs[i] - xs[i - 1]]);
+    if (L - xs[xs.length - 1] > tol) fields.push([xs[xs.length - 1], L, 2 * (L - xs[xs.length - 1])]);
+    let lim = { r: 0, x: 0, ref: 0, w: 0 };
+    for (const [a, b, ref] of fields) for (let i = 0; i < n; i++) if (x[i] >= a - tol && x[i] <= b + tol) { // ungünstigerer Zustand: Dauerlast nach oben kann durch Kriechen entlasten
+      const w = Math.abs(wFin[i]) >= Math.abs(wInst[i]) ? wFin[i] : wInst[i], r = Math.abs(w) / ref; if (r > lim.r || isNaN(r)) lim = { r, x: x[i], ref, w }; }
+    const RS = cP.R.map((r, i) => ({ x: r.x, t: r.t, F: r.F + cV.R[i].F, M: r.M + cV.R[i].M, w: r.w * (1 + kd) + cV.R[i].w /* Einfederung Endzustand */, Fpk: r.F + cV.R[i].F + cD.R[i].F, Mpk: r.M + cV.R[i].M + cD.R[i].M }));
+    return {
+      x, buckled: !isFinite(alpha), wInst, wFin, wPeak, M: Mo, V, Nc, sT, sB, sig, tau, R: RS, imp, lam, alpha, buck, f, modes, lim, nodes: X, sup,
+      mass: m.rhoA * L * 1000, // kg
+      max: { wInst: mx(wInst), wFin: mx(wFin), wPeak: mx(wPeak), M: mx(Mo), V: mx(V), sig: mx(sig), tau: mx(tau) }
+    };
+  }
+  return { G, MAT, section, analyze, chol, cholSolve, jacobi };
+})();
+if (typeof module !== 'undefined') module.exports = Core;
+// === CORE END
+
+// ---- UI ----
+const nf2 = new Intl.NumberFormat('de-DE', { maximumFractionDigits: 2, minimumFractionDigits: 2 });
+const fv = v => { const a = Math.abs(v); return a >= 100 ? nf0.format(v) : a >= 10 ? nf1.format(v) : nf2.format(v); };
+const fS = v => !isFinite(v) || v >= 100 ? '> 99' : nf1.format(v);
+const SECS = {
+  rect: ['Rechteck (Brett, Flachstahl)', ['b', 'h'], { b: 100, h: 20 }], rhs: ['Rechteckrohr', ['b', 'h', 't'], { b: 20, h: 40, t: 2 }],
+  circ: ['Rundstab', ['d'], { d: 20 }], tube: ['Rundrohr', ['d', 't'], { d: 25, t: 1.5 }],
+  I: ['I-Profil', ['b', 'h', 'tw', 'tf'], { b: 50, h: 100, tw: 4, tf: 6 }], T: ['T-Profil (Gurt oben)', ['b', 'h', 'tw', 'tf'], { b: 50, h: 50, tw: 5, tf: 5 }],
+  U: ['U-Profil', ['b', 'h', 'tw', 'tf'], { b: 30, h: 60, tw: 3, tf: 4 }]
+};
+const FLAB = { b: 'Breite b', h: 'Höhe h', t: 'Wand t', d: 'Durchmesser d', tw: 'Steg tw', tf: 'Gurt tf' };
+const MATF = [['E', 'E-Modul [N/mm²]'], ['G', 'Schubmodul G [N/mm²]'], ['rho', 'Dichte [kg/m³]'], ['f', 'Festigkeit f [N/mm²]'], ['fv', 'Schub fv [N/mm²]'], ['kdef', 'Kriechzahl kdef'], ['S', 'Zielsicherheit']];
+const base = o => Object.assign({ orient: 'h', mat: 'c24', cm: null, sw: true, shear: true, N: 0, lim: 300, sup: [], pl: [], ql: [] }, o);
+const TPL = {
+  regal: () => base({ L: 800, sec: { type: 'rect', b: 250, h: 18 }, sup: [{ x: 120, t: 'pin' }, { x: 680, t: 'pin' }], ql: [{ a: 0, b: 800, q: 245, perm: true }] }),
+  regalF: () => base({ L: 800, sec: { type: 'rect', b: 250, h: 18 }, sup: [{ x: 120, t: 'spring', k: 150 }, { x: 680, t: 'spring', k: 150 }], ql: [{ a: 0, b: 800, q: 245, perm: true }] }),
+  mdf: () => base({ L: 800, sec: { type: 'rect', b: 300, h: 19 }, mat: 'mdf', sup: [{ x: 0, t: 'pin' }, { x: 800, t: 'pin' }], ql: [{ a: 0, b: 800, q: 343, perm: true }] }),
+  glas: () => base({ L: 600, sec: { type: 'rect', b: 300, h: 8 }, mat: 'glas', sup: [{ x: 30, t: 'pin' }, { x: 570, t: 'pin' }], ql: [{ a: 0, b: 600, q: 196, perm: true }] }),
+  alu: () => base({ L: 2400, sec: { type: 'rhs', b: 30, h: 50, t: 2 }, mat: 'al6060', sup: [{ x: 200, t: 'pin' }, { x: 1200, t: 'pin' }, { x: 2200, t: 'pin' }], ql: [{ a: 0, b: 2400, q: 300, perm: true }] }),
+  bank: () => base({ L: 1600, sec: { type: 'rect', b: 350, h: 40 }, mat: 'd30', sup: [{ x: 150, t: 'pin' }, { x: 1450, t: 'pin' }], pl: [{ x: 800, F: 981, perm: false, h: 50, c: 25 }] }),
+  tisch: () => base({ L: 1800, sec: { type: 'rect', b: 800, h: 25 }, mat: 'bsp', sup: [{ x: 350, t: 'pin' }, { x: 1450, t: 'pin' }], pl: [{ x: 0, F: 600, perm: false, h: 0 }] }),
+  konsole: () => base({ L: 300, sec: { type: 'rhs', b: 20, h: 40, t: 2 }, mat: 's235', lim: 200, sup: [{ x: 0, t: 'fix' }], pl: [{ x: 300, F: 500, perm: false, h: 0 }] }),
+  stuetze: () => base({ L: 720, orient: 'v', sec: { type: 'tube', d: 25, t: 1.5 }, mat: 'al6060', N: 2000, sup: [{ x: 0, t: 'pin' }, { x: 720, t: 'pin' }], pl: [{ x: 360, F: 50, perm: false, h: 0 }] })
+};
+const TPLS = [['Regal', [['regal', 'Regalbrett auf Konsolen'], ['regalF', 'Regalbrett auf nachgiebigen Konsolen'], ['mdf', 'Regalboden MDF zwischen Seiten'], ['glas', 'Glasboden'], ['alu', 'Wandregal Alu, drei Konsolen']]],
+  ['Sitzen & Tisch', [['bank', 'Sitzbank Eiche (Person setzt sich)'], ['tisch', 'Tischplatte, Abstützen am Überstand']]],
+  ['Konstruktion', [['konsole', 'Wandkonsole (Kragarm Stahl)'], ['stuetze', 'Stütze / Tischbein (stehend)']]]];
+const HINT = {
+  drag: 'Lager und Lasten entlang des Balkens ziehen; antippen zum Bearbeiten. Streckenlast an den Enden ziehen ändert die Länge.',
+  sup: 'Tippen setzt ein gelenkiges Lager (unten umstellbar: eingespannt, federnd).', pl: 'Tippen setzt eine Einzellast 500 N (≈ 51 kg).',
+  ql: 'Tippen setzt eine Streckenlast (Strecke) 500 N/m.', del: 'Lager oder Last antippen, um es zu löschen.'
+};
+
+let S, R, SP, MOD = null;
+const UI = { tool: 'drag', sel: null, drag: null, G: null };
+const cv = $('ed'), sc = $('sc');
+const matOf = () => S.mat === 'eigen' ? S.cm : Core.MAT[S.mat];
+const snap = x => { const s = niceStep(S.L / 200); return Math.min(S.L, Math.max(0, Math.round(x / s) * s)); };
+const letter = i => String.fromCharCode(65 + i);
+
+// ---- Rechnen ----
+function recompute(fast) {
+  const mt = matOf(), sp = Core.section(S.sec);
+  SP = sp.err ? null : sp;
+  R = sp.err ? { err: 'Querschnitt: ' + sp.err } : Core.analyze({ L: S.L, E: mt.E, G: S.shear ? mt.G : 0, I: sp.I, A: sp.A, rhoA: mt.rho * 1e-12 * sp.A, sec: sp, sw: S.sw, orient: S.orient, N: S.N, kdef: mt.kdef,
+    sup: S.sup, pl: S.pl, ql: S.ql.map(q => ({ a: q.a, b: q.b, q: q.q / 1000, perm: q.perm })), modes: !fast });
+  if (!R.err && !fast) MOD = { f: R.f, modes: R.modes, x: R.x }; // beim Ziehen bleiben die letzten Eigenformen stehen
+  if (R.err || R.buckled) MOD = null;
+  drawAll();
+  if (!fast) save();
+}
+
+// ---- Editor-Geometrie: lokale Koordinaten X entlang des Balkens [px], Y quer (+ = Lastrichtung) ----
+function geo(w, h) {
+  const v = S.orient === 'v', k = (v ? h * 0.74 : w * 0.84) / S.L, ox = v ? w * 0.5 : w * 0.08, oy = v ? h * 0.9 : h * 0.5; // stehend: oben Platz für den Längsdruck
+  return { v, k, ox, oy, w, h,
+    tf: (X, Y) => v ? [ox + Y, oy - X] : [ox + X, oy + Y],
+    inv: (sx, sy) => v ? [oy - sy, sx - ox] : [sx - ox, sy - oy],
+    m: v ? [0, -1, 1, 0, ox, oy] : [1, 0, 0, 1, ox, oy] };
+}
+const thick = g => Math.max(6, Math.min(30, (SP ? SP.h : 20) * g.k));
+function qBands(g) { // gestapelte Streckenlasten: [{i, Y0 (Unterkante), hq}]
+  const th = thick(g), qm = Math.max(1, ...S.ql.map(q => Math.abs(q.q))), out = [];
+  S.ql.forEach((q, i) => {
+    const a = Math.min(q.a, q.b), b = Math.max(q.a, q.b), hq = 10 + 22 * Math.abs(q.q) / qm;
+    let Y0 = -th / 2 - 6;
+    for (const o of out) { const p = S.ql[o.i]; if (Math.min(p.a, p.b) < b && Math.max(p.a, p.b) > a) Y0 = Math.min(Y0, o.Y0 - o.hq - 4); }
+    out.push({ i, Y0, hq, a, b });
+  });
+  return out;
+}
+
+// ---- Zeichnen ----
+function drawAll() { drawEd(); drawSec(); renderStats(); drawCharts(); renderSel(); }
+function drawEd() {
+  const { ctx, w, h } = prep(cv), g = geo(w, h); UI.G = g;
+  const dpr = window.devicePixelRatio || 1, loc = () => ctx.setTransform(dpr * g.m[0], dpr * g.m[1], dpr * g.m[2], dpr * g.m[3], dpr * g.m[4], dpr * g.m[5]), scr = () => ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const f = dpDots(ctx, w, h, g.k, g.ox, g.oy), I = css('--ink'), I2 = css('--ink2'), C = css('--ctl'), th = thick(g), k = g.k, L = S.L;
+  ctx.font = '11px Arial, sans-serif'; ctx.fillStyle = I2; ctx.fillText(`1 Punkt = ${nf0.format(f)} mm`, 6, h - 6);
+  const sel = (t, i) => UI.sel && UI.sel.t === t && UI.sel.i === i;
+  const handle = (X, Y, on) => { const s = on ? 10 : 8; loc(); ctx.fillStyle = on ? C : css('--bg'); ctx.fillRect(X - s / 2, Y - s / 2, s, s); if (!on) { ctx.strokeStyle = I; ctx.lineWidth = 1.5; ctx.strokeRect(X - s / 2, Y - s / 2, s, s); } };
+  const text = (X, Y, t, al) => { scr(); const [x, y] = g.tf(X, Y); ctx.fillStyle = I2; ctx.textAlign = al || 'left'; ctx.fillText(t, x, y); ctx.textAlign = 'left'; };
+  // Streckenlasten
+  for (const o of qBands(g)) {
+    const q = S.ql[o.i], X0 = o.a * k, X1 = o.b * k, top = o.Y0 - o.hq, up = q.q < 0; loc();
+    ctx.fillStyle = css('--fill'); ctx.fillRect(X0, top, X1 - X0, o.hq); ctx.strokeStyle = I; ctx.lineWidth = 1; ctx.strokeRect(X0, top, X1 - X0, o.hq);
+    const n = Math.max(1, Math.round((X1 - X0) / 18)); ctx.beginPath();
+    for (let j = 0; j <= n; j++) { const X = X0 + (X1 - X0) * j / n, ya = up ? top : o.Y0, yb = up ? o.Y0 : top, d = up ? -4 : 4;
+      ctx.moveTo(X, yb); ctx.lineTo(X, ya); ctx.moveTo(X - 3, ya - d); ctx.lineTo(X, ya); ctx.lineTo(X + 3, ya - d); }
+    ctx.stroke();
+    handle(X0, top, sel('q', o.i) && UI.drag && UI.drag.mode === 'a'); handle(X1, top, sel('q', o.i) && UI.drag && UI.drag.mode === 'b'); handle((X0 + X1) / 2, top, sel('q', o.i));
+    text((X0 + X1) / 2 + 8, top - 6, `${fv(q.q)} N/m${q.perm ? ' dauerhaft' : ''}`, g.v ? 'right' : 'left');
+  }
+  // Balken
+  loc(); ctx.fillStyle = css('--bg'); ctx.fillRect(0, -th / 2, L * k, th); ctx.strokeStyle = I; ctx.lineWidth = 2; ctx.strokeRect(0, -th / 2, L * k, th);
+  // Lager
+  S.sup.forEach((s, i) => {
+    const X = s.x * k, Y = th / 2; loc(); ctx.strokeStyle = I; ctx.lineWidth = 1.5; ctx.beginPath();
+    if (s.t === 'fix') { ctx.rect(X - 6, -th / 2 - 10, 12, th + 20); for (let y = -th / 2 - 10; y < th / 2 + 10; y += 5) { ctx.moveTo(X - 6, y + 5); ctx.lineTo(X + 6, y); } }
+    else if (s.t === 'spring') { ctx.moveTo(X, Y); for (let j = 1; j <= 6; j++) ctx.lineTo(X + (j === 6 ? 0 : j % 2 ? 5 : -5), Y + j * 14 / 6); ctx.moveTo(X - 12, Y + 14); ctx.lineTo(X + 12, Y + 14);
+      for (let x = -12; x < 12; x += 5) { ctx.moveTo(X + x + 5, Y + 14); ctx.lineTo(X + x, Y + 19); } }
+    else { ctx.moveTo(X, Y); ctx.lineTo(X - 8, Y + 14); ctx.lineTo(X + 8, Y + 14); ctx.closePath(); ctx.moveTo(X - 12, Y + 14); ctx.lineTo(X + 12, Y + 14);
+      for (let x = -12; x < 12; x += 5) { ctx.moveTo(X + x + 5, Y + 14); ctx.lineTo(X + x, Y + 19); } }
+    ctx.stroke(); handle(X, Y + 26, sel('s', i));
+    text(X, Y + 44, letter(i), 'center');
+  });
+  // Einzellasten
+  S.pl.forEach((p, i) => {
+    const X = p.x * k, Y1 = -th / 2 - 2, Y0 = Y1 - 46, up = p.F < 0, tip = up ? Y0 : Y1, d = up ? -8 : 8; loc();
+    ctx.strokeStyle = ctx.fillStyle = sel('p', i) ? C : I; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(X, Y0); ctx.lineTo(X, Y1); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(X, tip); ctx.lineTo(X - 5, tip - d); ctx.lineTo(X + 5, tip - d); ctx.closePath(); ctx.fill();
+    handle(X, Y0, sel('p', i));
+    text(X + 8, Y0 + 4, `${fv(Math.abs(p.F))} N${p.perm ? ' dauerhaft' : ''}${p.h > 0 && !p.perm ? ' · fällt ' + nf0.format(p.h) + ' mm' : ''}`, g.v ? 'right' : 'left');
+  });
+  // Längsdruck am Ende x = L
+  if (S.N) { const X = L * k, d = S.N > 0 ? 1 : -1, t0 = X + 4 + (d > 0 ? 40 : 0), tip = d > 0 ? X + 4 : X + 44; loc();
+    ctx.strokeStyle = ctx.fillStyle = I; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(X + 4, 0); ctx.lineTo(X + 44, 0); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(tip, 0); ctx.lineTo(tip + 8 * d, -5); ctx.lineTo(tip + 8 * d, 5); ctx.closePath(); ctx.fill();
+    text(X + 24, g.v ? -10 : -10, `N = ${fv(Math.abs(S.N))} N${d < 0 ? ' Zug' : ''}`, g.v ? 'right' : 'center'); }
+  // Biegelinie (Endzustand), überhöht
+  if (!R.err && !R.buckled) {
+    const wm = Math.max(1e-9, Math.abs(R.max.wFin.v), Math.abs(R.max.wPeak.v)), tgt = 0.16 * (g.v ? w : h), s = wm * k >= tgt ? k : tgt / wm;
+    loc(); ctx.strokeStyle = css('--load'); ctx.lineWidth = 2.5; ctx.lineJoin = 'round'; ctx.beginPath();
+    R.x.forEach((x, i) => { const X = x * k, Y = -R.wFin[i] * s; i ? ctx.lineTo(X, Y) : ctx.moveTo(X, Y); }); ctx.stroke();
+    const mX = R.max.wFin.x * k, mY = -R.max.wFin.v * s; ctx.fillStyle = css('--load'); ctx.beginPath(); ctx.arc(mX, mY, 3.5, 0, 7); ctx.fill();
+    if (Math.abs(R.max.wFin.v) > 0) { scr(); const [px, py] = g.tf(mX, mY), t = `w = ${fv(Math.abs(R.max.wFin.v))} mm`, tw = ctx.measureText(t).width; // freigestellt über der Biegelinie
+      ctx.fillStyle = css('--bg'); ctx.fillRect(px + 6, py - 9, tw + 6, 15); ctx.fillStyle = I2; ctx.fillText(t, px + 9, py + 3); }
+    scr(); ctx.fillStyle = I2; ctx.textAlign = 'right';
+    ctx.fillText(s > k * 1.01 ? `Biegelinie ${nf0.format(s / k)}-fach überhöht` : 'Biegelinie maßstäblich', w - 6, h - 6); ctx.textAlign = 'left';
+  }
+  // Maßkette unter den Lagern
+  const xs = [...new Set([0, ...S.sup.map(s => s.x), L].map(x => +x.toFixed(1)))].sort((a, b) => a - b), Yd = th / 2 + 58;
+  loc(); ctx.strokeStyle = I2; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(0, Yd); ctx.lineTo(L * k, Yd);
+  xs.forEach(x => { ctx.moveTo(x * k, Yd - 4); ctx.lineTo(x * k, Yd + 4); }); ctx.stroke();
+  for (let i = 1; i < xs.length; i++) if ((xs[i] - xs[i - 1]) * k > 30) text((xs[i] + xs[i - 1]) / 2 * k, Yd + 14, nf0.format(xs[i] - xs[i - 1]), 'center');
+  scr();
+}
+function secPath(ctx, s, P) { // Querschnittsumriss; P(x, y) in mm (x quer, y ab Unterkante) → Bildschirm
+  const poly = pts => { pts.forEach(([x, y], i) => { const [a, b] = P(x, y); i ? ctx.lineTo(a, b) : ctx.moveTo(a, b); }); ctx.closePath(); };
+  const rect = (x0, y0, x1, y1) => poly([[x0, y0], [x1, y0], [x1, y1], [x0, y1]]);
+  const circ = r => { const [cx, cy] = P(0, s.d / 2), [ex] = P(r, 0); ctx.moveTo(cx + ex - P(0, 0)[0], cy); ctx.arc(cx, cy, ex - P(0, 0)[0], 0, 2 * Math.PI); };
+  ctx.beginPath(); const b = s.b / 2, h = s.h;
+  if (s.type === 'rect') rect(-b, 0, b, h);
+  else if (s.type === 'rhs') { rect(-b, 0, b, h); rect(-b + s.t, s.t, b - s.t, h - s.t); }
+  else if (s.type === 'circ') circ(s.d / 2);
+  else if (s.type === 'tube') { circ(s.d / 2); circ(s.d / 2 - s.t); }
+  else if (s.type === 'I') poly([[-b, 0], [b, 0], [b, s.tf], [s.tw / 2, s.tf], [s.tw / 2, h - s.tf], [b, h - s.tf], [b, h], [-b, h], [-b, h - s.tf], [-s.tw / 2, h - s.tf], [-s.tw / 2, s.tf], [-b, s.tf]]);
+  else if (s.type === 'T') poly([[-s.tw / 2, 0], [s.tw / 2, 0], [s.tw / 2, h - s.tf], [b, h - s.tf], [b, h], [-b, h], [-b, h - s.tf], [-s.tw / 2, h - s.tf]]);
+  else if (s.type === 'U') poly([[-b, 0], [b, 0], [b, s.tf], [-b + s.tw, s.tf], [-b + s.tw, h - s.tf], [b, h - s.tf], [b, h], [-b, h]]);
+}
+function drawSec() {
+  const { ctx, w, h } = prep(sc), I2 = css('--ink2');
+  ctx.font = '11px Arial, sans-serif';
+  if (!SP) { ctx.fillStyle = css('--warn'); ctx.textAlign = 'center'; ctx.fillText('⚠ ' + (R.err || ''), w / 2, h / 2); return; }
+  const s = S.sec, B = s.type === 'circ' || s.type === 'tube' ? s.d : s.b, H = SP.h, k = Math.min(w * 0.4 / B, h * 0.62 / H);
+  const cx = w * 0.25, by = h / 2 + H * k / 2, P = (x, y) => [cx + x * k, by - y * k];
+  secPath(ctx, s, P); ctx.fillStyle = css('--fill'); ctx.fill('evenodd'); ctx.strokeStyle = css('--ink'); ctx.lineWidth = 1.5; ctx.stroke();
+  const yna = by - SP.yc * k;
+  ctx.fillStyle = I2; ctx.textAlign = 'center'; ctx.fillText(`${s.type === 'circ' || s.type === 'tube' ? 'd' : 'b'} = ${fv(B)} mm`, cx, by + 16);
+  ctx.textAlign = 'right'; ctx.fillText(`h = ${fv(H)}`, cx - B * k / 2 - 8, by - H * k / 2 + 4);
+  // Spannungsverlauf an der Stelle der größten Spannung (eigene Höhe, mind. 72 px)
+  const Hd = Math.max(H * k, 72), top = h / 2 - Hd / 2, x0 = w * 0.78, yN = top + Hd * (1 - SP.yc / H);
+  ctx.strokeStyle = css('--mut'); ctx.lineWidth = 1; ctx.setLineDash([2, 4]); ctx.beginPath(); ctx.moveTo(cx - B * k / 2 - 6, yna); ctx.lineTo(cx + B * k / 2 + 6, yna); ctx.moveTo(x0 - w * 0.17, yN); ctx.lineTo(x0 + w * 0.17, yN); ctx.stroke(); ctx.setLineDash([]);
+  ctx.textAlign = 'left'; ctx.fillStyle = I2; ctx.fillText('Schwerachse', cx + B * k / 2 + 8, yna - 4);
+  if (R.err || R.buckled) return;
+  const j = R.sig.indexOf(Math.max(...R.sig)), sT = R.sT[j], sB = R.sB[j], sm = Math.max(Math.abs(sT), Math.abs(sB), 1e-9), ws = w * 0.16 / sm;
+  ctx.beginPath(); ctx.moveTo(x0, top); ctx.lineTo(x0 + sT * ws, top); ctx.lineTo(x0 + sB * ws, top + Hd); ctx.lineTo(x0, top + Hd); ctx.closePath();
+  ctx.fillStyle = css('--load-a'); ctx.fill(); ctx.strokeStyle = css('--load'); ctx.lineWidth = 2; ctx.stroke();
+  ctx.strokeStyle = css('--ink'); ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(x0 + .5, top - 6); ctx.lineTo(x0 + .5, top + Hd + 6); ctx.stroke();
+  ctx.fillStyle = I2; ctx.textAlign = 'center';
+  ctx.fillText(`${fv(sT)} N/mm²`, x0, top - 10); ctx.fillText(`${fv(sB)} N/mm²`, x0, top + Hd + 18);
+  ctx.textAlign = 'left'; ctx.fillText(`Spannung bei x = ${nf0.format(R.x[j])} mm (− Druck, + Zug)`, 6, h - 6);
+}
+function stat(v, label, warn) { return `<div class="stat${warn ? ' warn' : ''}"><b>${v}</b><span>${label}</span></div>`; }
+function renderStats() {
+  const mt = matOf(), h = [], notes = [];
+  if (R.err) { $('stats').innerHTML = stat('⚠', R.err, true); $('statN').textContent = ''; return; }
+  if (R.buckled) {
+    $('stats').innerHTML = stat('⚠ knickt', `Längsdruck über der Knicklast (λ = ${nf2.format(R.lam)}): Querschnitt vergrößern, Länge kürzen oder Lager ergänzen`, true);
+    $('statN').textContent = ''; return;
+  }
+  const mm = v => fv(Math.abs(v)) + ' mm', creep = Math.abs(R.max.wFin.v - R.max.wInst.v) > 1e-9 * Math.abs(R.max.wInst.v) + 1e-12;
+  const okL = R.lim.r * S.lim <= 1;
+  const sg = R.max.sig, Sb = mt.f / Math.abs(sg.v), t = R.max.tau, Sv = mt.fv / t.v;
+  // zuerst das Urteil (bestanden / ⚠), dann die Einzelwerte
+  h.push(stat(mm(R.max.wFin.v), (creep ? 'Durchbiegung Endzustand' : 'Durchbiegung max.') + ` (x = ${nf0.format(R.max.wFin.x)} mm)`));
+  h.push(stat((okL ? '' : '⚠ ') + (R.lim.r > 0 ? 'l/' + Math.round(1 / R.lim.r) : '–'), `Verhältnis, Grenze l/${S.lim} (l = ${nf0.format(R.lim.ref)} mm)`, !okL));
+  h.push(stat((Sb < mt.S ? '⚠ ' : '') + fS(Sb), `Sicherheit Biegung f/σ (Ziel ≥ ${nf1.format(mt.S)})`, Sb < mt.S));
+  h.push(stat((Sv < mt.S ? '⚠ ' : '') + fS(Sv), `Sicherheit Schub fv/τ (Ziel ≥ ${nf1.format(mt.S)})`, Sv < mt.S));
+  if (isFinite(R.lam)) h.push(stat((R.lam < 3 ? '⚠ ' : '') + fS(R.lam), `Knicksicherheit λ (Ziel ≥ 3)${S.N > 0 ? ' · N_cr = ' + fv(R.lam * S.N) + ' N' : ''}`, R.lam < 3));
+  if (MOD && MOD.f.length) { const f1 = MOD.f[0]; h.push(stat((f1 < 8 ? '⚠ ' : '') + nf1.format(f1) + ' Hz', 'Eigenfrequenz f₁' + (f1 < 8 ? ' – federt spürbar (< 8 Hz)' : ''), f1 < 8)); }
+  if (R.imp.length) { const nmax = Math.max(...R.imp.map(o => o.n)), rg = R.imp.some(o => o.rigid); h.push(stat(rg ? '⚠ ∞' : '× ' + nf2.format(nmax), rg ? 'Stoßfaktor – Stoß auf starres Lager' : 'Stoßfaktor (fallende Last)', rg)); }
+  if (creep) h.push(stat(mm(R.max.wInst.v), `Durchbiegung sofort (Kriechen ×${nf2.format(1 + mt.kdef)} auf Dauerlast)`));
+  if (R.imp.length) h.push(stat(mm(R.max.wPeak.v), 'Durchbiegung beim Stoß'));
+  h.push(stat(fv(Math.abs(sg.v)) + ' N/mm²', `Spannung max. (x = ${nf0.format(sg.x)} mm, f = ${fv(mt.f)})`));
+  h.push(stat(fv(t.v) + ' N/mm²', `Schubspannung max. (fv = ${fv(mt.fv)})`));
+  h.push(stat(fv(Math.abs(R.max.M.v) / 1000) + ' N·m', `Biegemoment max. (x = ${nf0.format(R.max.M.x)} mm)`));
+  R.R.forEach((r, i) => {
+    const up = r.F < -1e-9;
+    h.push(stat((up ? '⚠ ' : '') + fv(r.F) + ' N', `Lager ${letter(i)}${r.t === 'fix' ? ` · M = ${fv(r.M / 1000)} N·m` : ''}${r.t === 'spring' ? ` · federt ${fv(Math.abs(r.w))} mm` : ''}${up ? ' – zieht: muss abhebend halten' : ''}`, up));
+  });
+  h.push(stat(fv(R.mass) + ' kg', `Gewicht Balken (${mt.name})`));
+  h.push(stat(nf0.format(SP.I) + ' mm⁴', `Flächenmoment I · W = ${nf0.format(SP.I / Math.max(SP.eT, SP.eB))} mm³ · A = ${nf0.format(SP.A)} mm²`));
+  $('stats').innerHTML = h.join('');
+  if (R.alpha > 1.0005) notes.push(`Längsdruck verstärkt Biegung und Durchbiegung um α = ${nf2.format(R.alpha)} (Theorie II. Ordnung genähert).`);
+  if (R.imp.some(o => o.rigid)) notes.push('⚠ Stoß direkt über einem Lager ohne Polster: Stoßkraft unbegrenzt, nur statisch gerechnet – Polster eintragen.');
+  if (R.imp.length) notes.push('Stoß: ' + R.imp.map(o => `${fv(o.F)} N aus ${nf0.format(o.h)} mm → × ${nf2.format(o.n)} (δ_st = ${fv(o.d)} mm${o.c ? ', davon Polster ' + fv(o.c) + ' mm' : ''})`).join(' · ') + '. Spannung, Moment, Querkraft und Lagerkräfte enthalten den Stoß; Grenze l/x gilt für die statische Last.');
+  if (R.imp.length) notes.push('Lagerkräfte statisch; beim Stoß: ' + R.R.map((r, i) => `${letter(i)} ${fv(r.Fpk)} N`).join(' · ') + '.');
+  if (!S.shear && (S.sec.h / S.L > 0.1 || (S.sec.d || 0) / S.L > 0.1)) notes.push('⚠ Kurzer, hoher Balken (h/L > 1/10) ohne Schubverformung: Durchbiegung zu klein.');
+  $('statN').textContent = notes.join(' ');
+}
+function blank(c, txt) { const { ctx, w, h } = prep(c); ctx.font = '11px Arial, sans-serif'; ctx.fillStyle = css('--mut'); ctx.textAlign = 'center'; ctx.fillText(txt, w / 2, h / 2); }
+function drawCharts() {
+  const ids = ['c1', 'c2', 'c3', 'c4', 'c5'];
+  if (R.err || R.buckled) { ids.forEach(id => blank($(id), R.err || '⚠ knickt')); $('modeN').textContent = ''; return; }
+  const L = S.L, Ld = css('--load'), I = css('--ink'), Mu = css('--mut'), x = R.x, vl = R.sup.map(s => ({ x: s.x, color: Mu }));
+  const rng = (arrs, extra = 0) => { let a = extra, b = extra; for (const r of arrs) for (const v of r) { if (v < a) a = v; if (v > b) b = v; } if (b - a < 1e-9) { a -= 1; b += 1; } const m = (b - a) * 0.08; return [a - m, b + m]; };
+  const xy = arr => x.map((v, i) => [v, arr[i]]);
+  const creep = R.wFin.some((v, i) => Math.abs(v - R.wInst[i]) > 1e-9);
+  const sw = [{ pts: xy(R.wFin), color: Ld }]; if (creep) sw.push({ pts: xy(R.wInst), color: I, dash: [4, 4] }); if (R.imp.length) sw.push({ pts: xy(R.wPeak), color: Mu, dash: [3, 4] });
+  let [y0, y1] = rng(sw.map(s => s.pts.map(p => p[1])));
+  chart($('c1'), { x0: 0, x1: L, y0, y1, xl: 'x [mm]' + (creep ? ' · Endzustand / sofort (gestrichelt)' : '') + (R.imp.length ? ' / Stoß (grau)' : ''), yl: 'w [mm]', series: sw, vlines: vl, points: [[R.max.wFin.x, R.max.wFin.v, Ld]] });
+  const Mn = R.M.map(v => v / 1000); [y0, y1] = rng([Mn]);
+  chart($('c2'), { x0: 0, x1: L, y0, y1, xl: 'x [mm]', yl: 'M [N·m]', series: [{ pts: xy(Mn), color: Ld }, { pts: [[0, 0], [L, 0]], color: Mu, width: 1, dash: [3, 4] }], vlines: vl, points: [[R.max.M.x, R.max.M.v / 1000, Ld]] });
+  [y0, y1] = rng([R.V]);
+  chart($('c3'), { x0: 0, x1: L, y0, y1, xl: 'x [mm]', yl: 'V [N]', series: [{ pts: xy(R.V), color: Ld }, { pts: [[0, 0], [L, 0]], color: Mu, width: 1, dash: [3, 4] }], vlines: vl });
+  const mt = matOf(), zul = mt.f / mt.S;
+  [y0, y1] = rng([R.sig, [zul]], 0); y0 = 0;
+  chart($('c4'), { x0: 0, x1: L, y0, y1, xl: 'x [mm] · gestrichelt: f / Zielsicherheit', yl: '|σ| [N/mm²]', series: [{ pts: xy(R.sig), color: Ld }, { pts: [[0, zul], [L, zul]], color: css('--warn'), width: 1, dash: [4, 4] }], vlines: vl, points: [[R.max.sig.x, R.max.sig.v, R.max.sig.v > zul ? css('--warn') : Ld]] });
+  if (MOD && MOD.modes.length) {
+    const st = [{ color: Ld }, { color: I, dash: [4, 4] }, { color: Mu, dash: [3, 4] }];
+    chart($('c5'), { x0: 0, x1: L, y0: -1.15, y1: 1.15, xl: 'x [mm]', yl: 'Auslenkung (normiert)', series: MOD.modes.map((m, i) => ({ pts: MOD.x.map((v, j) => [v, m[j]]), ...st[i] })), vlines: vl });
+    const nm = ['durchgezogen', 'gestrichelt', 'grau gestrichelt'];
+    $('modeN').textContent = MOD.f.map((f, i) => `f${'₁₂₃'[i]} = ${nf1.format(f)} Hz (${nm[i]})`).join(' · ') + '. ' + (S.orient === 'h' ? 'Mitschwingend: Balken und Dauerlasten.' : 'Mitschwingend: nur der Balken; Längsdruck senkt die Frequenzen.');
+  } else { blank($('c5'), 'keine Eigenformen'); $('modeN').textContent = ''; }
+}
+
+// ---- Auswahl ----
+function renderSel() {
+  const el = $('selp'), s = UI.sel; $('hint').textContent = HINT[UI.tool];
+  const o = s ? ({ s: S.sup, p: S.pl, q: S.ql })[s.t][s.i] : S, key = s ? s.t + (o.perm ? 'd' : '') + (o.t || '') : 'L';
+  // nur bei anderer Auswahl neu aufbauen – sonst gingen Fokus und Tab-Reihenfolge nach jeder Eingabe verloren
+  if (o !== UI.selObj || key !== UI.selKey) { UI.selObj = o; UI.selKey = key; renderSelIn(el, s); return; }
+  const val = { eL: S.L, ex: o.x, et: o.t, ek: o.k, eF: o.F, eh: o.h, ec: o.c || 0, ea: o.a, eb: o.b, eq: o.q };
+  for (const [id, v] of Object.entries(val)) { const e = $(id); if (e && e !== document.activeElement && v != null) e.value = typeof v === 'number' ? +v.toFixed(2) : v; }
+  if ($('eK')) $('eK').textContent = s.t === 'p' ? `≈ ${fv(o.F / 9.81)} kg` : `≈ ${fv(o.q / 9.81)} kg/m`;
+}
+function renderSelIn(el, s) {
+  const num = (id, v, st = 1) => `<input type="number" id="${id}" step="${st}" value="${+(+v).toFixed(2)}">`;
+  if (!s) { el.innerHTML = `<b>Balken</b> L ${num('eL', S.L, 10)} mm <span class="note">Lager oder Last antippen zum Bearbeiten.</span>`;
+    $('eL').onchange = e => setL(+e.target.value); return; }
+  if (s.t === 's') { const o = S.sup[s.i];
+    el.innerHTML = `<b>Lager ${letter(s.i)}</b> x ${num('ex', o.x)} mm <select id="et"><option value="pin">gelenkig</option><option value="fix">eingespannt</option><option value="spring">federnd</option></select>`
+      + (o.t === 'spring' ? ` k ${num('ek', o.k, 10)} N/mm` : '') + `<button id="edel">✕ löschen</button>`;
+    $('et').value = o.t; $('et').onchange = e => { o.t = e.target.value; if (o.t === 'spring' && !(o.k > 0)) o.k = 100; recompute(); };
+    if ($('ek')) $('ek').onchange = e => { const v = +e.target.value; if (v > 0) { o.k = v; recompute(); } };
+  } else if (s.t === 'p') { const o = S.pl[s.i];
+    el.innerHTML = `<b>Last</b> x ${num('ex', o.x)} mm F ${num('eF', o.F, 10)} N <span class="note" id="eK">≈ ${fv(o.F / 9.81)} kg</span>
+      <label class="chk"><input type="checkbox" id="ep" ${o.perm ? 'checked' : ''}> dauerhaft</label>
+      <label class="chk">Fallhöhe ${num('eh', o.h, 10)} mm</label><label class="chk">Polster ${num('ec', o.c || 0, 1)} mm</label><button id="edel">✕ löschen</button>`;
+    $('eF').onchange = e => { if (isFinite(+e.target.value)) { o.F = +e.target.value; recompute(); } };
+    $('ep').onchange = e => { o.perm = e.target.checked; if (o.perm) o.h = 0; recompute(); };
+    $('eh').disabled = $('ec').disabled = o.perm; $('eh').onchange = e => { o.h = Math.max(0, +e.target.value || 0); recompute(); };
+    $('ec').onchange = e => { o.c = Math.max(0, +e.target.value || 0); recompute(); };
+  } else { const o = S.ql[s.i];
+    el.innerHTML = `<b>Streckenlast</b> von ${num('ea', o.a)} bis ${num('eb', o.b)} mm q ${num('eq', o.q, 10)} N/m <span class="note" id="eK">≈ ${fv(o.q / 9.81)} kg/m</span>
+      <label class="chk"><input type="checkbox" id="ep" ${o.perm ? 'checked' : ''}> dauerhaft</label><button id="edel">✕ löschen</button>`;
+    const ab = () => { const a = +$('ea').value, b = +$('eb').value; if (isFinite(a) && isFinite(b)) { o.a = Math.min(S.L, Math.max(0, a)); o.b = Math.min(S.L, Math.max(0, b)); recompute(); } };
+    $('ea').onchange = ab; $('eb').onchange = ab;
+    $('eq').onchange = e => { if (isFinite(+e.target.value)) { o.q = +e.target.value; recompute(); } };
+    $('ep').onchange = e => { o.perm = e.target.checked; recompute(); };
+  }
+  const ox = (s.t === 's' ? S.sup : S.pl)[s.i];
+  if ($('ex')) $('ex').onchange = e => { const v = +e.target.value; if (isFinite(v)) { ox.x = Math.min(S.L, Math.max(0, v)); recompute(); } };
+  $('edel').onclick = () => { del(s.t, s.i); recompute(); };
+}
+function del(t, i) { ({ s: S.sup, p: S.pl, q: S.ql })[t].splice(i, 1); UI.sel = null; }
+function setL(v) {
+  if (!(v >= 10 && v <= 20000)) return;
+  const f = v / S.L, r = x => +(x * f).toFixed(1);
+  S.sup.forEach(o => o.x = r(o.x)); S.pl.forEach(o => o.x = r(o.x)); S.ql.forEach(o => { o.a = r(o.a); o.b = r(o.b); });
+  S.L = v; syncInputs(); recompute();
+}
+
+// ---- Zeiger ----
+const TOUCH = matchMedia('(pointer: coarse)').matches; // Finger: Trefferzone ~ halbe Bedienhöhe (48 px)
+function hit(X, Y) {
+  const g = UI.G, k = g.k, th = thick(g), r = TOUCH ? 24 : 14;
+  for (let i = S.pl.length - 1; i >= 0; i--) if (Math.abs(X - S.pl[i].x * k) < r && Y > -th / 2 - 46 - r && Y < -th / 2 + 4) return { t: 'p', i, mode: 'x' };
+  for (const o of qBands(g).reverse()) { const X0 = o.a * k, X1 = o.b * k, top = o.Y0 - o.hq;
+    if (Y > top - r && Y < o.Y0 + 4 && X > X0 - r && X < X1 + r) return { t: 'q', i: o.i, mode: Math.abs(X - X0) < r && X - X0 < X1 - X ? 'a' : Math.abs(X - X1) < r ? 'b' : 'm' }; }
+  for (let i = S.sup.length - 1; i >= 0; i--) if (Math.abs(X - S.sup[i].x * k) < r + 2 && Y > -th / 2 - 12 && Y < th / 2 + 26 + r) return { t: 's', i, mode: 'x' };
+  return null;
+}
+function evLocal(e) { const r = cv.getBoundingClientRect(); return UI.G.inv(e.clientX - r.left, e.clientY - r.top); }
+cv.addEventListener('pointerdown', e => {
+  if (R.err && R.err.startsWith('Querschnitt')) return;
+  const [X, Y] = evLocal(e), x = X / UI.G.k, hh = hit(X, Y); cv.setPointerCapture(e.pointerId);
+  if (UI.tool === 'del') { if (hh) { del(hh.t, hh.i); recompute(); } return; }
+  if (UI.tool !== 'drag') {
+    if (x < -0.02 * S.L || x > 1.02 * S.L) return;
+    const xs = snap(x);
+    if (UI.tool === 'sup') { S.sup.push({ x: xs, t: 'pin' }); UI.sel = { t: 's', i: S.sup.length - 1 }; }
+    if (UI.tool === 'pl') { S.pl.push({ x: xs, F: 500, perm: false, h: 0, c: 0 }); UI.sel = { t: 'p', i: S.pl.length - 1 }; }
+    if (UI.tool === 'ql') { const d = S.L / 8; S.ql.push({ a: snap(x - d), b: snap(x + d), q: 500, perm: false }); UI.sel = { t: 'q', i: S.ql.length - 1 }; }
+    setTool('drag'); recompute(); return;
+  }
+  UI.sel = hh ? { t: hh.t, i: hh.i } : null;
+  if (hh) { const o = ({ s: S.sup, p: S.pl, q: S.ql })[hh.t][hh.i];
+    if (hh.t === 'q' && o.a > o.b) { [o.a, o.b] = [o.b, o.a]; hh.mode = hh.mode === 'a' ? 'b' : hh.mode === 'b' ? 'a' : 'm'; } // Enden ordnen, sonst springt das Verschieben
+    UI.drag = { ...hh, x0: x, a: o.a, b: o.b, ox: o.x, moved: false }; }
+  drawAll();
+});
+let raf = 0;
+cv.addEventListener('pointermove', e => {
+  const d = UI.drag; if (!d) return;
+  const x = evLocal(e)[0] / UI.G.k, dx = x - d.x0; d.moved = true;
+  if (d.t === 'q') { const o = S.ql[d.i];
+    if (d.mode === 'a') o.a = snap(d.a + dx); else if (d.mode === 'b') o.b = snap(d.b + dx);
+    else { const len = d.b - d.a, a = Math.min(S.L - len, Math.max(0, d.a + dx)); o.a = snap(a); o.b = snap(a + len); } }
+  else ({ s: S.sup, p: S.pl })[d.t][d.i].x = snap(d.ox + dx);
+  if (!raf) raf = requestAnimationFrame(() => { raf = 0; recompute(true); });
+});
+function endDrag() { const d = UI.drag; if (!d) return; UI.drag = null; if (d.moved) recompute(); else drawEd(); }
+cv.addEventListener('pointerup', endDrag); cv.addEventListener('pointercancel', endDrag);
+window.addEventListener('keydown', e => { if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !/INPUT/.test(document.activeElement.tagName)) { e.preventDefault(); undo(); return; }
+  if ((e.key === 'Delete' || e.key === 'Backspace') && UI.sel && !/INPUT|SELECT/.test(document.activeElement.tagName)) { del(UI.sel.t, UI.sel.i); recompute(); } });
+function setTool(t) { UI.tool = t; document.querySelectorAll('#tools button').forEach(b => b.classList.toggle('on', b.dataset.t === t)); $('hint').textContent = HINT[t]; }
+document.querySelectorAll('#tools button').forEach(b => b.onclick = () => setTool(b.dataset.t));
+
+// ---- Querschnitt, Material, Optionen ----
+$('secT').innerHTML = Object.entries(SECS).map(([k, v]) => `<option value="${k}">${v[0]}</option>`).join('');
+$('tpl').innerHTML = '<option value="">Vorlage …</option>' + TPLS.map(([g, a]) => `<optgroup label="${g}">${a.map(([k, n]) => `<option value="${k}">${n}</option>`).join('')}</optgroup>`).join('');
+{ const gr = {}; for (const [k, m] of Object.entries(Core.MAT)) (gr[m.grp] = gr[m.grp] || []).push(`<option value="${k}">${m.name}</option>`);
+  $('mat').innerHTML = Object.entries(gr).map(([g, o]) => `<optgroup label="${g}">${o.join('')}</optgroup>`).join('') + '<option value="eigen">Eigenes Material …</option>'; }
+function renderSecIn() {
+  $('secIn').innerHTML = SECS[S.sec.type][1].map(f => `<label>${FLAB[f]} [mm] <input type="number" data-f="${f}" min="0.1" step="${f === 't' || f === 'tw' || f === 'tf' ? 0.5 : 1}" value="${S.sec[f]}"></label>`).join('');
+  const sec = S.sec; // Feld behält beim Neuaufbau den Fokus und feuert change danach: nur auf das eigene Objekt schreiben
+  $('secIn').querySelectorAll('input').forEach(i => i.onchange = () => { const v = +i.value; if (v > 0 && sec === S.sec) { sec[i.dataset.f] = v; recompute(); } });
+}
+function renderMatIn() {
+  const m = matOf();
+  if (S.mat === 'eigen') {
+    $('matIn').innerHTML = MATF.map(([k, l]) => `<label>${l} <input type="number" data-k="${k}" step="any" min="0" value="${m[k]}"></label>`).join('');
+    const cm = S.cm;
+    $('matIn').querySelectorAll('input').forEach(i => i.onchange = () => { const v = +i.value; if (cm === S.cm && S.mat === 'eigen' && v >= 0 && (v > 0 || i.dataset.k === 'kdef')) { cm[i.dataset.k] = v; recompute(); } });
+    $('matN').textContent = 'Eigene Werte: f charakteristisch (Biegefestigkeit bzw. Streckgrenze), Zielsicherheit nach Materialstreuung und Dauerlast.';
+  } else {
+    $('matIn').innerHTML = '';
+    $('matN').textContent = `E ${nf0.format(m.E)} N/mm² · G ${nf0.format(m.G)} N/mm² · ρ ${nf0.format(m.rho)} kg/m³ · f ${nf0.format(m.f)} N/mm² · fv ${fv(m.fv)} N/mm² · kdef ${nf2.format(m.kdef)} · Ziel S ≥ ${nf1.format(m.S)} · Quelle: ${m.src}`;
+  }
+}
+function syncInputs() {
+  $('secT').value = S.sec.type; $('mat').value = S.mat; $('sw').checked = S.sw; $('shr').checked = S.shear; $('nax').value = S.N; $('lim').value = S.lim;
+  $('len').value = Math.min(4000, S.L); $('lenO').textContent = nf0.format(S.L) + ' mm';
+  $('oH').classList.toggle('on', S.orient === 'h'); $('oV').classList.toggle('on', S.orient === 'v'); cv.classList.toggle('v', S.orient === 'v');
+  renderSecIn(); renderMatIn();
+}
+$('secT').onchange = e => { S.sec = { type: e.target.value, ...SECS[e.target.value][2] }; syncInputs(); recompute(); };
+$('mat').onchange = e => { if (e.target.value === 'eigen') S.cm = { ...matOf(), name: 'Eigenes Material', grp: '', src: 'eigene Angabe' }; S.mat = e.target.value; renderMatIn(); recompute(); };
+$('sw').onchange = e => { S.sw = e.target.checked; recompute(); };
+$('shr').onchange = e => { S.shear = e.target.checked; recompute(); };
+$('nax').onchange = e => { S.N = +e.target.value || 0; recompute(); };
+$('lim').onchange = e => { S.lim = +e.target.value; recompute(); };
+$('len').oninput = e => { $('lenO').textContent = nf0.format(+e.target.value) + ' mm'; };
+$('len').onchange = e => setL(+e.target.value);
+$('oH').onclick = () => { S.orient = 'h'; syncInputs(); recompute(); };
+$('oV').onclick = () => { S.orient = 'v'; syncInputs(); recompute(); };
+function load(m) { S = m; UI.sel = null; UI.drag = null; setTool('drag'); syncInputs(); recompute(); }
+$('tpl').onchange = e => { if (TPL[e.target.value]) load(TPL[e.target.value]()); e.target.value = ''; };
+
+// ---- Datei & Teilen ----
+const TYPE = 'designphysik/last';
+function exportObj() { const o = { type: TYPE, version: 1, L: S.L, orient: S.orient, sec: S.sec, mat: S.mat, sw: S.sw, shear: S.shear, N: S.N, lim: S.lim, // Felder wie parse() liefert, sonst legt Rückgängig einen leeren Schritt an
+    sup: S.sup.map(s => s.t === 'spring' ? { x: s.x, t: s.t, k: s.k } : { x: s.x, t: s.t }), pl: S.pl.map(p => ({ x: p.x, F: p.F, perm: p.perm, h: p.h, c: p.c || 0 })), ql: S.ql.map(q => ({ a: q.a, b: q.b, q: q.q, perm: q.perm })) };
+  if (S.mat === 'eigen') o.cm = { E: S.cm.E, G: S.cm.G, rho: S.cm.rho, f: S.cm.f, fv: S.cm.fv, kdef: S.cm.kdef, S: S.cm.S }; return o; }
+// Rückgängig: jeder abgeschlossene Zustand (nicht jedes Zieh-Bild) als Schnappschuss
+const HIST = []; let last = null;
+function save() { const o = exportObj(), j = JSON.stringify(o); if (j !== last) { if (last) HIST.push(last); if (HIST.length > 50) HIST.shift(); last = j; } $('undo').disabled = !HIST.length; dpHashSet('b', o); }
+function undo() { if (!HIST.length) return; last = HIST.pop(); const m = parse(JSON.parse(last)); if (m) load(m); }
+$('undo').onclick = undo;
+// Eingang prüfen (Datei/Link sind fremd)
+function parse(o) {
+  if (!o || o.type !== TYPE) return null;
+  const num = (v, a, b) => v !== null && v !== '' && isFinite(v) && +v >= a && +v <= b ? +v : null, arr = a => Array.isArray(a) ? a.slice(0, 50) : [];
+  const L = num(o.L, 10, 20000); if (L == null || !o.sec || !SECS[o.sec.type]) return null;
+  const sec = { type: o.sec.type };
+  for (const f of SECS[sec.type][1]) { const v = num(o.sec[f], 0.01, 5000); if (v == null) return null; sec[f] = v; }
+  if (o.mat !== 'eigen' && !Core.MAT[o.mat]) return null;
+  const cm = { ...Core.MAT.c24, name: 'Eigenes Material', grp: '', src: 'eigene Angabe' };
+  if (o.cm) for (const [k, a, b] of [['E', 1, 1e6], ['G', 1, 1e6], ['rho', 1, 3e4], ['f', 0.01, 1e5], ['fv', 0.01, 1e5], ['kdef', 0, 20], ['S', 1, 100]]) { const v = num(o.cm[k], a, b); if (v != null) cm[k] = v; }
+  if (o.cm && num(o.cm.G, 1, 1e6) == null) cm.G = cm.E / 2.6; // ältere Links ohne G: isotrop
+  return { L, orient: o.orient === 'v' ? 'v' : 'h', sec, mat: o.mat, cm, sw: o.sw !== false, shear: o.shear !== false, N: num(o.N, -1e7, 1e7) || 0, lim: [150, 200, 300, 500].includes(+o.lim) ? +o.lim : 300,
+    sup: arr(o.sup).filter(s => s && num(s.x, 0, L) != null).map(s => s.t === 'spring' && num(s.k, 1e-6, 1e9) ? { x: +s.x, t: 'spring', k: +s.k } : { x: +s.x, t: s.t === 'fix' ? 'fix' : 'pin' }),
+    pl: arr(o.pl).filter(p => p && num(p.x, 0, L) != null && num(p.F, -1e7, 1e7) != null).map(p => ({ x: +p.x, F: +p.F, perm: !!p.perm, h: p.perm ? 0 : num(p.h, 0, 1e4) || 0, c: num(p.c, 0, 1e4) || 0 })),
+    ql: arr(o.ql).filter(q => q && num(q.a, 0, L) != null && num(q.b, 0, L) != null && num(q.q, -1e7, 1e7) != null).map(q => ({ a: +q.a, b: +q.b, q: +q.q, perm: !!q.perm })) };
+}
+$('exp').onclick = () => dpDownload(exportObj(), 'last.json');
+$('imp').onclick = () => $('impF').click();
+$('impF').onchange = e => { const f = e.target.files[0]; if (!f) return; f.text().then(t => { let m = null; try { m = parse(JSON.parse(t)); } catch {}
+  $('fileN').textContent = m ? 'Geladen: ' + f.name : '⚠ Keine gültige Last-Datei'; if (m) load(m); }); e.target.value = ''; };
+$('share').onclick = () => { save(); const u = location.href; (navigator.clipboard ? navigator.clipboard.writeText(u) : Promise.reject()).then(() => $('fileN').textContent = 'Link kopiert', () => $('fileN').textContent = 'Link steht in der Adresszeile'); };
+window.addEventListener('hashchange', () => { const m = parse(dpHashGet('b')); if (m) load(m); }); // eingefügter Link im selben Tab (dpHashSet löst kein hashchange aus)
+
+dpHeader('last', 'Belastung');
+load(parse(dpHashGet('b')) || TPL.regal());
+window.addEventListener('resize', drawAll);
+</script>
+</body>
+</html>
