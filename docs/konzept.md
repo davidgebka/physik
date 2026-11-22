@@ -1,3 +1,4 @@
+| Fertigung | `fertigung` | v1 | Lässt sich das so herstellen und verbinden, wie ich es gezeichnet habe? |
 # Designphysik – Konzept, Architektur, Konventionen
 
 Zentrales Dokument, kurz gehalten. Jede Sitzung liest es zuerst (siehe `CLAUDE.md`). Hier stehen nur Ziel, Regeln und Planung; Modulstände in `docs/<modul>.md`, Integrations-Historie in `docs/historie.md`.
@@ -95,3 +96,5 @@ Offen:
 - **Style-Chat:** eigene Familienfarbe für Material (bis dahin `--load` in `DP_MODULES`); sechste und letzte Familie nach Styleguide § 3.
 - **Material → andere Module** (später): Datensatz nach `shared/materials.js`, sobald ein zweites Modul ihn liest (Statik „In Statik verwenden“, Berührtemperatur, Gewicht/CO₂).
 - **Style-Chat** (Ergonomie, 22.11.2026): Modul nutzt vorerst Familie Bewegung `--mech` (Biomechanik). Prüfen, ob eine eigene Familie „Körper“ sinnvoll ist (sechste und letzte Familie nach § 3; Farbton-Lücke 312°…26° bzw. 72°…150°, Abstand zu `--warn` beachten) – sonst bei `--mech` bleiben und im Styleguide § 3 bei Bewegung eintragen.
+- **Style-Chat:** Farbtoken für Fertigung (`--fab`/`--fab-a`), zusammen mit der noch offenen Familie für Material. Achtung Styleguide §3: höchstens sechs Familien (heute fünf); freie Farbtöne mit ≥ 30° Abstand etwa bei 110° (Oliv) und 350°. Entweder Grenze auf sieben anheben oder Material und Fertigung teilen sich eine Familie „Werkstoff“.
+- **Materialschlüssel in `shared/`** (Fertigung ist der zweite Nutzer nach Material): nur Schlüssel, Name, Familie, mit Werkstoffzustand im Schlüssel (z. B. `alu-6061-t6`); modulspezifische Werte bleiben im jeweiligen CORE. Mit dem Material-Chat abstimmen.

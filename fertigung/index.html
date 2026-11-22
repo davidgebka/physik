@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Designphysik · Fertigung</title>
+<link rel="stylesheet" href="../shared/style.css">
+<!-- Farbe vorläufig --load, bis der Style-Chat eine eigene Familie festlegt (Wunsch in docs/konzept.md). Blech = Medium. -->
+<style>
+#ed{--ar:calc(4/3)}
+#flat{--ar:3}
+@media(max-width:860px){#flat{--ar:1.5}}
+[hidden]{display:none!important}
+.pair input{width:72px}
+#legs .pair input{width:64px}
+select{max-width:100%}
+</style>
+</head>
+<body>
+<header id="dp-header"></header>
+<main>
+  <section class="panel">
+    <h2>Werkstück</h2>
+    <div class="row">
+      <label class="pair note">Material <select id="mat"></select></label>
+      <label class="pair note">Dicke <input type="number" id="s" min="0.3" max="12" step="0.1"> mm</label>
+    </div>
+    <div class="row"><span class="seg" id="tool"><button data-t="bend">Biegen</button><button data-t="thr">Gewinde</button></span></div>
+    <div class="row" id="bendC">
+      <span class="seg" id="prof"><button data-p="L">L-Winkel</button><button data-p="U">U-Profil</button><button data-p="Z">Z-Profil</button><button data-p="H">Hut</button></span>
+      <label class="pair note">Winkel <input type="number" id="ang" min="15" max="135" step="5"> °</label>
+      <label class="pair note">Innenradius <input type="number" id="r" min="0.1" max="100" step="0.1"> mm</label>
+      <label class="pair note">Breite <input type="number" id="B" min="1" max="3000" step="1"> mm</label>
+      <span class="row" id="legs"></span>
+    </div>
+    <div class="row" id="thrC" hidden>
+      <label class="pair note">Gewinde <select id="d"></select></label>
+    </div>
+    <canvas id="ed" role="img"></canvas>
+    <p class="note" id="hint"></p>
+  </section>
+  <section class="panel kpi">
+    <h2>Kennwerte</h2>
+    <div class="stats" id="stats"></div>
+  </section>
+  <section class="panel wide" id="flatP">
+    <h2>Abwicklung <small>Zuschnitt vor dem Biegen</small></h2>
+    <canvas id="flat"></canvas>
+    <p class="note">Gestrichelt: Biegebereich, Strichpunkt: Biegelinie, grau: hier keine Löcher oder Schlitze (verziehen sich beim Biegen).</p>
+  </section>
+  <section class="panel wide" id="altP" hidden>
+    <h2>Alternativen <small>wenn das Material zu dünn ist</small></h2>
+    <table class="kv" id="alts"></table>
+  </section>
+  <section class="panel wide">
+    <h2>Datei</h2>
+    <div class="row">
+      <button id="exp" class="q" data-i="down">Export</button><button id="imp" class="q" data-i="up">Import</button><input type="file" id="impF" accept=".json,application/json" hidden>
+      <button id="share" class="q" data-i="link">Link kopieren</button><button id="svg" class="q" data-i="down">Abwicklung als SVG</button><span class="note" id="fileN"></span>
+    </div>
+  </section>
+  <section class="panel wide model">
+    <h2>Modell &amp; Gültigkeit</h2>
+    <details data-k="model"><summary>Wie gerechnet wird, woher die Werte kommen, Grenzen und weiterführende Werkzeuge</summary><div class="txt">
+    <h3>Was das ist</h3><p>Ein Nachschlagewerk mit Urteil, keine Simulation. Es beantwortet, ob sich ein Blechteil so <a href="https://de.wikipedia.org/wiki/Biegen_(Fertigungsverfahren)" target="_blank" rel="noopener">biegen</a> (abkanten) und ob sich ein <a href="https://de.wikipedia.org/wiki/Gewinde" target="_blank" rel="noopener">Gewinde</a> so einschneiden lässt, wie es gezeichnet ist. Alle Werkstoffwerte sind <b>Richtwerte</b>; endgültige Radien, Bohrer und Toleranzen legt der Fertiger fest.</p>
+    <h3>Biegen</h3><p>Schenkel werden als Außenmaß angegeben (bis zum gedachten Schnittpunkt der Außenflächen, wie in technischen Zeichnungen). Die <i>Zuschnittlänge</i> ist die Länge der Mittelschicht, die sich beim Biegen nicht dehnt (<a href="https://de.wikipedia.org/wiki/Neutrale_Faser" target="_blank" rel="noopener">neutrale Faser</a>). Bei engen Radien rückt sie nach innen; das beschreibt der Korrekturfaktor nach DIN 6935. <i>Kleinster Innenradius</i> je Werkstoff und Zustand für Biegen quer zur Walzrichtung (längs dazu reißt es eher). <i>Kürzester Schenkel</i>: Das Blech muss beim Abkanten auf beiden Kanten der Matrize aufliegen. <i>Rückfederung</i>: Nach dem Biegen federt das Blech etwas auf; man biegt um diesen Winkel weiter.</p>
+    <p class="note">Für Fachleute: k = 0,65 + 0,5·lg(r/s) für r/s &lt; 5, sonst 1 (DIN 6935); Bogen der neutralen Faser b = π·β/180·(r + k·s/2); K-Faktor im CAD = k/2. Zuschnitt L = Σ Außenmaße − Σ 2·(r + s)·tan(β/2) + Σ b (gedachte scharfe Kante außen; für β = 90° identisch mit DIN 6935). Rückfederung ≈ Tabellenwert bei r ≤ s, proportional zu r/s darüber (elastische Theorie, Gardiner: Rückfederung wächst etwa linear mit r·Rp/(E·s)).</p>
+    <h3>Gewinde</h3><p><i>Kernloch</i>: Bohrer vor dem <a href="https://de.wikipedia.org/wiki/Gewindebohrer" target="_blank" rel="noopener">Gewindebohren</a>. Geschnittene Gewinde: etwa Nenndurchmesser minus Steigung, auf den nächsten Normbohrer gerundet (DIN 336); Gewindeformer drücken das Material und brauchen ein größeres Loch (etwa Nenndurchmesser minus halbe Steigung). <i>Durchgangsloch</i> fein, mittel, grob nach ISO 273, <i>Senkung</i> für Senkschrauben nach ISO 15065. <i>Einschraubtiefe</i>: so lang muss das Gewinde sein, damit es so viel hält wie eine Schraube der Festigkeitsklasse 8.8 – in weichen Werkstoffen länger als in Stahl.</p>
+    <h3>Urteilsschwellen</h3><p>Biegen kritisch: Radius unter dem kleinsten Innenradius, Schenkel kürzer als r + 4·s, Schenkel zu kurz für Radius und Winkel. Knapp: Radius unter dem 1,25-fachen des kleinsten. Gewinde passt: Gewindelänge ≥ nötige Einschraubtiefe. Knapp: mindestens 3 Gewindegänge (hält weniger als die Schraube). Kritisch: weniger als 3 Gänge. Kunststoff: geschnittenes Gewinde höchstens knapp (nutzt sich beim wiederholten Schrauben ab). Herkunft in docs/fertigung.md.</p>
+    <h3>Nicht enthalten</h3><p>Biegen mit Gesenk oder Walzen, Rohre und Profile, Holz und Kunststoff biegen (warm) · Toleranzen der Abwicklung · Festigkeit der Verschraubung, Anzugsmoment, Lockern · Feingewinde, Zollgewinde.</p>
+    <h3>Weiterführende Werkzeuge</h3><p><a href="https://sendcutsend.com/bending-calculator/" target="_blank" rel="noopener">SendCutSend Biegerechner</a> – Radien und Mindestschenkel eines Lohnfertigers (Englisch, Zoll)<br><a href="https://www.trumpf.com/filestorage/TRUMPF_Master/Products/Services/Bending_tools/Manuals/TRUMPF-bending-tools-manual-DE.pdf" target="_blank" rel="noopener">TRUMPF Biegewerkzeug-Handbuch</a> – Matrizen, Schenkellängen, Biegeradien im Detail<br><a href="https://rechner-portal.de/bau-handwerk/holz-statik/gewinderechner" target="_blank" rel="noopener">Gewinderechner DIN 13</a> – alle Maße metrischer Gewinde<br><a href="https://de.wikipedia.org/wiki/Einpressmutter" target="_blank" rel="noopener">Einpressmutter</a> – Prinzip; Mindestblechdicken stehen in den Datenblättern der Hersteller</p>
+    </div></details>
+  </section>
+</main>
+
+<script src="../shared/util.js"></script>
+<script src="../shared/chart.js"></script>
+<script>
+// === CORE START
+// Nachschlagen Fertigung: Biegen (Abwicklung, Mindestradius, Rückfederung) und Gewinde (Kernloch, Durchgangsloch, Einschraubtiefe). Kein DOM.
+// Einheiten: mm, Grad, N/mm².
+const Core = (() => {
+  // Werkstoffe (Richtwerte, Zustand im Schlüssel). E, Rp: Elastizitätsmodul, Dehngrenze (EN 10130, 10088, 485, 1652, typisch);
+  // rmin: kleinster Innenradius / Dicke beim Luftbiegen quer zur Walzrichtung (Heuristik nach Fertigertabellen);
+  // sb: Rückfederung in Grad bei 90° und r ≤ s (Heuristik); ein: Einschraubtiefe / d für Schraube 8.8 (Richtwerte Schraubenhersteller);
+  // kind: metall | kunst (Kunststoff: nicht abkanten)
+  const MAT = {
+    'dc01':          { n: 'Stahlblech DC01',        kind: 'metall', E: 210000, Rp: 220, rmin: 0.5, sb: 1,   ein: 1.0 },
+    'edelstahl-1.4301': { n: 'Edelstahl 1.4301',    kind: 'metall', E: 200000, Rp: 300, rmin: 1.0, sb: 2.5, ein: 1.0 },
+    'alu-5754-h111': { n: 'Alu 5754 weich (H111)',  kind: 'metall', E: 70000,  Rp: 100, rmin: 1.0, sb: 1.5, ein: 2.0 },
+    'alu-6061-t6':   { n: 'Alu 6061 hart (T6)',     kind: 'metall', E: 69000,  Rp: 275, rmin: 2.5, sb: 3,   ein: 1.5 },
+    'messing-cuzn37': { n: 'Messing CuZn37 halbhart', kind: 'metall', E: 110000, Rp: 250, rmin: 1.0, sb: 1.5, ein: 1.25 },
+    'kupfer-cu-etp': { n: 'Kupfer weich',           kind: 'metall', E: 120000, Rp: 100, rmin: 0.5, sb: 0.5, ein: 2.0 },
+    'abs':           { n: 'ABS',                    kind: 'kunst',  E: 2300,   Rp: 40,  rmin: NaN, sb: NaN, ein: 2.5 },
+    'pa6':           { n: 'PA6 (Nylon)',            kind: 'kunst',  E: 2500,   Rp: 60,  rmin: NaN, sb: NaN, ein: 2.5 }
+  };
+  const rad = a => a * Math.PI / 180;
+  // Korrekturfaktor der neutralen Faser nach DIN 6935 (r/s < 0,1 begrenzt)
+  const kDin = (r, s) => { const q = Math.max(r / s, 0.1); return q >= 5 ? 1 : 0.65 + 0.5 * Math.log10(q); };
+  const arc = (r, s, a) => rad(a) * (r + kDin(r, s) * s / 2);           // Bogenlänge der neutralen Faser
+  const setback = (r, s, a) => (r + s) * Math.tan(rad(a) / 2);          // Außenmaß bis gedachte Kante − Ende des geraden Stücks
+  // Abwicklung: legs = Außenmaße, Winkel a für alle Biegungen
+  function unfold(legs, a, r, s) {
+    const sb = setback(r, s, a), b = arc(r, s, a), n = legs.length;
+    const straight = legs.map((l, i) => l - (i > 0 ? sb : 0) - (i < n - 1 ? sb : 0));
+    const L = straight.reduce((x, y) => x + y, 0) + (n - 1) * b;
+    return { L, straight, arc: b, k: kDin(r, s), K: kDin(r, s) / 2, v: b - 2 * sb };
+  }
+  const rMin = (m, s) => MAT[m].rmin * s;
+  const flangeMin = (r, s) => r + 4 * s;                                 // Heuristik: Auflage auf Matrize V ≈ 8·s
+  const holeMin = (r, s) => r + 2 * s;                                   // Heuristik: Lochrand bis Innenseite des Nachbarschenkels
+  const springback = (m, r, s, a) => MAT[m].sb * Math.max(1, r / s) * a / 90;
+  // Gewinde: [d, Steigung] Regelgewinde DIN 13; Durchgangslöcher ISO 273 [fein, mittel, grob]; Senkung ISO 15065
+  const THR = [[2, .4], [2.5, .45], [3, .5], [4, .7], [5, .8], [6, 1], [8, 1.25], [10, 1.5], [12, 1.75]];
+  const CLR = { 2: [2.2, 2.4, 2.6], 2.5: [2.7, 2.9, 3.1], 3: [3.2, 3.4, 3.6], 4: [4.3, 4.5, 4.8], 5: [5.3, 5.5, 5.8], 6: [6.4, 6.6, 7], 8: [8.4, 9, 10], 10: [10.5, 11, 12], 12: [13, 13.5, 14.5] };
+  const CSK = { 2: 4.4, 2.5: 5.5, 3: 6.3, 4: 9.4, 5: 10.4, 6: 12.6, 8: 17.3, 10: 20, 12: 24 };
+  const pitch = d => (THR.find(t => t[0] === d) || [d, NaN])[1];
+  const r2 = x => Math.round(x * 100 + 1e-9) / 100, r1 = x => Math.round(x * 10 + 1e-9) / 10;
+  // Kernlochbohrer für geschnittene Gewinde (DIN 336, Bohrer-Normmaß ≈ d − P)
+  const KERN = { 2: 1.6, 2.5: 2.05, 3: 2.5, 4: 3.3, 5: 4.2, 6: 5, 8: 6.8, 10: 8.5, 12: 10.2 };
+  const coreCut = d => KERN[d] ?? r2(d - pitch(d));
+  const coreForm = d => r1(d - pitch(d) / 2);
+  const coreScrewPlastic = d => r1(0.8 * d);                             // Gewindeformschraube in Kunststoff (Richtwert 0,75–0,85·d)
+  const engage = (m, d) => MAT[m].ein * d;
+  // Urteil Gewinde: 0 hält wie die Schraube, 1 hält weniger (≥ 3 Gänge), 2 zu dünn; Kunststoff höchstens 1
+  function thrLevel(m, d, t) {
+    const lv = t >= engage(m, d) ? 0 : t >= 3 * pitch(d) ? 1 : 2;
+    return MAT[m].kind === 'kunst' ? Math.max(lv, 1) : lv;
+  }
+  // Alternativen: Anwendbarkeit nach Werkstoff und Dicke (Richtwerte, Herstellerangaben streuen)
+  const pressMin = d => d <= 5 ? 0.8 : d <= 8 ? 1.4 : 2.3;
+  const ALTS = [
+    { n: 'Durchgangsloch und Mutter', w: 'Rückseite zugänglich; immer möglich', ok: () => true },
+    { n: 'Durchzug mit Gewinde', w: 'Kragen aus dem Blech gezogen, ≈ 2–3 Gänge mehr; Blech 0,5–2,5 mm', ok: (m, d, t) => MAT[m].kind === 'metall' && t >= 0.5 && t <= 2.5 && d <= 8 },
+    { n: 'Einpressmutter', w: d => `Blech ab ${String(pressMin(d)).replace('.', ',')} mm; Mutter härter als Blech (Edelstahl: Sondertyp)`, ok: (m, d, t) => MAT[m].kind === 'metall' && t >= pressMin(d) },
+    { n: 'Nietmutter', w: 'von einer Seite setzbar; Blech ≈ 0,5–4 mm', ok: (m, d, t) => t >= 0.5 && t <= 4 },
+    { n: 'Gewindeeinsatz (Drahtgewinde)', w: 'macht Gewinde in Alu und Kupfer so fest wie in Stahl; Wand ≥ 1,5·d', ok: (m, d, t) => MAT[m].kind === 'metall' && MAT[m].ein > 1 && t >= 1.5 * d },
+    { n: 'Einschmelzmutter', w: 'Messingmutter warm in Kunststoff eingesetzt; Wand bzw. Dom ≥ 1,2·d tief', ok: (m, d, t) => MAT[m].kind === 'kunst' && t >= 1.2 * d },
+    { n: 'Gewindeformschraube', w: d => `für Kunststoff: Loch ≈ ${String(coreScrewPlastic(d)).replace('.', ',')} mm, Dom außen 2–2,5·d, Tiefe ≥ 2·d`, ok: (m, d, t) => MAT[m].kind === 'kunst' && t >= 2 * d }
+  ];
+  const alts = (m, d, t) => ALTS.map(a => ({ n: a.n, w: typeof a.w === 'function' ? a.w(d) : a.w, ok: a.ok(m, d, t) }));
+  return { MAT, THR, CLR, CSK, kDin, arc, setback, unfold, rMin, flangeMin, holeMin, springback, pitch, coreCut, coreForm, coreScrewPlastic, engage, thrLevel, pressMin, alts };
+})();
+if (typeof module !== 'undefined') module.exports = Core;
+// === CORE END
+
+// ---- UI ----
+const FAM = '--load'; // vorläufig, eigene Familie folgt (Style-Chat)
+const PROF = { L: { legs: [30, 20], dir: [1] }, U: { legs: [20, 40, 20], dir: [1, 1] }, Z: { legs: [20, 30, 20], dir: [1, -1] }, H: { legs: [15, 20, 30, 20, 15], dir: [1, -1, -1, 1] } };
+const LEG = 'abcde';
+const S = { tool: 'bend', mat: 'dc01', s: 1.5, prof: 'U', legs: PROF.U.legs.slice(), ang: 90, r: 1.5, B: 50, d: 4 };
+const fmt = (x, n = 1) => isFinite(x) ? new Intl.NumberFormat('de-DE', { maximumFractionDigits: n }).format(x) : '–';
+let G = {};
+
+function recompute() {
+  const M = Core.MAT[S.mat], s = S.s;
+  if (S.tool === 'bend') {
+    const u = Core.unfold(S.legs, S.ang, S.r, s), rmin = Core.rMin(S.mat, s), fmin = Core.flangeMin(S.r, s);
+    const legMin = Math.min(...S.legs), short = S.legs.map(l => l < fmin), neg = u.straight.map(x => x < 0);
+    let lv = 0, txt = 'Lässt sich so kanten.';
+    if (M.kind !== 'metall') { lv = 1; txt = `${M.n} wird nicht abgekantet, sondern warm gebogen – diese Regeln gelten dafür nicht.`; }
+    else if (neg.some(Boolean)) { lv = 2; txt = `Schenkel ${LEG[neg.indexOf(true)]} ist zu kurz für Radius und Winkel – geht geometrisch nicht.`; }
+    else if (S.r < rmin * (1 - 1e-9)) { lv = 2; txt = `Radius ${fmt(S.r)} mm in ${M.n} reißt außen. Mindestens ${fmt(rmin)} mm${M.rmin > 1 ? ' oder weicheres Material' : ''}.`; }
+    else if (short.some(Boolean)) { lv = 2; txt = `Schenkel ${LEG[short.indexOf(true)]} zu kurz für die Abkantbank, mindestens ${fmt(fmin)} mm.`; }
+    else if (S.r < 1.25 * rmin) { lv = 1; txt = 'Radius an der Grenze – Biegung quer zur Walzrichtung legen.'; }
+    G = { u, rmin, fmin, legMin, short, neg, lv, txt, sb: Core.springback(S.mat, S.r, s, S.ang), hole: Core.holeMin(S.r, s) };
+  } else {
+    const d = S.d, P = Core.pitch(d), need = Core.engage(S.mat, d), lv = Core.thrLevel(S.mat, d, s), A = Core.alts(S.mat, d, s);
+    const better = A.filter(a => a.ok && a.n !== 'Durchgangsloch und Mutter').map(a => a.n);
+    let txt;
+    if (M.kind === 'kunst') txt = lv === 1 && s >= need ? `Geschnittenes Gewinde in ${M.n} nutzt sich beim wiederholten Schrauben ab – besser ${better[0] || 'Einschmelzmutter'}.`
+      : `${M.n} zu dünn für M${fmt(d)} (${fmt(s / P)} Gänge). Besser: ${better.slice(0, 2).join(' oder ') || 'Durchgangsloch und Mutter'}.`;
+    else txt = lv === 0 ? 'Gewinde hält so viel wie die Schraube.'
+      : lv === 1 ? `Gewinde hält, aber weniger als die Schraube (${fmt(s)} von ${fmt(need)} mm). Für kleine Kräfte genügt das.`
+      : `Zu dünn für ein geschnittenes M${fmt(d)} (nur ${fmt(s / P)} Gänge). Besser: ${better.slice(0, 2).join(' oder ') || 'Durchgangsloch und Mutter'}.`;
+    G = { d, P, need, lv, txt, A };
+  }
+}
+
+// ---- Zeichnen ----
+// Profil als Mittellinie (gerade Stücke + Bögen) → Blechumriss durch Versatz ±s/2; Bildschirm: ox + x·k, oy − y·k
+function profileShape() {
+  const s = S.s, rm = S.r + s / 2, dir = PROF[S.prof].dir, a = S.ang * Math.PI / 180;
+  let p = [0, 0], th = 0; const mid = [], segs = [];
+  const add = (q, t) => mid.push([q[0], q[1], t]);
+  add(p, th);
+  G.u.straight.forEach((st, i) => {
+    const q = [p[0] + Math.cos(th) * Math.max(st, 0), p[1] + Math.sin(th) * Math.max(st, 0)];
+    segs.push({ a: p, b: q, th, i }); add(q, th); p = q;
+    if (i < dir.length) {
+      const dd = dir[i], c = [p[0] - Math.sin(th) * rm * dd, p[1] + Math.cos(th) * rm * dd];
+      for (let j = 1; j <= 12; j++) {
+        const t = th + dd * a * j / 12; const q2 = [c[0] + Math.sin(t) * rm * dd, c[1] - Math.cos(t) * rm * dd]; add(q2, t);
+      }
+      th += dd * a; p = mid[mid.length - 1];
+      segs.push({ bend: true, i, c, dd });
+    }
+  });
+  const L = mid.map(([x, y, t]) => [x - Math.sin(t) * s / 2, y + Math.cos(t) * s / 2]);
+  const R = mid.map(([x, y, t]) => [x + Math.sin(t) * s / 2, y - Math.cos(t) * s / 2]);
+  return { poly: L.concat(R.reverse()), segs, mid };
+}
+function fit(cv, pts, m = 36) {
+  const { ctx, w, h } = prep(cv);
+  const xs = pts.map(p => p[0]), ys = pts.map(p => p[1]), x0 = Math.min(...xs), x1 = Math.max(...xs), y0 = Math.min(...ys), y1 = Math.max(...ys);
+  let k = Math.min((w - 2 * m) / Math.max(x1 - x0, 1e-6), (h - 2 * m) / Math.max(y1 - y0, 1e-6));
+  let ox = w / 2 - (x0 + x1) / 2 * k, oy = h / 2 + (y0 + y1) / 2 * k;
+  [k, ox, oy] = dpSnap(cv, k, ox, oy);
+  const f = dpDots(ctx, w, h, k, ox, oy);
+  return { ctx, w, h, k, T: p => [ox + p[0] * k, oy - p[1] * k], f };
+}
+function label(ctx, x, y, t, col = '--ink') { ctx.font = DP_CFONT; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = css(col); ctx.fillText(t, x, y); }
+
+function drawBend() {
+  const cv = $('ed'), sh = profileShape(), V = fit(cv, sh.poly, 48), { ctx, T } = V;
+  polyPath(ctx, sh.poly, T); ctx.closePath(); ctx.fillStyle = css(FAM + '-a'); ctx.fill();
+  ctx.strokeStyle = css(FAM); ctx.lineWidth = 1.5; ctx.lineJoin = 'round'; ctx.stroke();
+  const cs = sh.poly.map(T), cx = cs.reduce((a, p) => a + p[0], 0) / cs.length, cy = cs.reduce((a, p) => a + p[1], 0) / cs.length;
+  const tooTight = Core.MAT[S.mat].kind === 'metall' && S.r < G.rmin * (1 - 1e-9);
+  for (const g of sh.segs) {
+    if (g.bend) {
+      if (tooTight) { const [x, y] = T(g.c); ctx.beginPath(); ctx.arc(x, y, (S.r + S.s) * V.k + 3, 0, 7); ctx.strokeStyle = css('--warn'); ctx.lineWidth = 2; ctx.setLineDash([4, 3]); ctx.stroke(); ctx.setLineDash([]); }
+      continue;
+    }
+    const bad = G.short[g.i] || G.neg[g.i], [ax, ay] = T(g.a), [bx, by] = T(g.b), off = 14 + S.s * V.k / 2;
+    let nx = -Math.sin(g.th), ny = -Math.cos(g.th); // Bildschirm-Normale, nach außen (weg von der Profilmitte)
+    if (((ax + bx) / 2 - cx) * nx + ((ay + by) / 2 - cy) * ny < 0) { nx = -nx; ny = -ny; }
+    if (bad) { ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(bx, by); ctx.strokeStyle = css('--warn'); ctx.lineWidth = 3; ctx.stroke(); }
+    label(ctx, (ax + bx) / 2 + nx * (off + 8 * Math.abs(nx)), (ay + by) / 2 + ny * off, `${LEG[g.i]} = ${fmt(S.legs[g.i])}`, bad ? '--warn' : '--ink');
+  }
+  $('hint').textContent = `${dpScale(V.f)} · Schenkel als Außenmaß · Innenradius ${fmt(S.r)} mm, Winkel ${fmt(S.ang, 0)}° an jeder Biegung`;
+}
+function drawFlat() {
+  const u = G.u, s = S.s, B = S.B, cv = $('flat');
+  const box = [[0, 0], [u.L, 0], [u.L, B], [0, B]], V = fit(cv, box.concat([[0, -B * 0.25], [0, B * 1.2]]), 24), { ctx, T } = V;
+  // Sperrzonen und Biegebereiche
+  let x = 0; const bends = [];
+  u.straight.forEach((st, i) => { x += Math.max(st, 0); if (i < u.straight.length - 1) { bends.push([x, x + u.arc]); x += u.arc; } });
+  const hz = G.hole - S.r - s / 2; // Sperrzone neben dem Biegebereich (≈ 1,5·s)
+  for (const [a, b] of bends) {
+    const r1 = [T([a - hz, B]), T([b + hz, 0])]; ctx.fillStyle = css('--fill'); ctx.fillRect(r1[0][0], r1[0][1], r1[1][0] - r1[0][0], r1[1][1] - r1[0][1]);
+  }
+  polyPath(ctx, box, T); ctx.closePath(); ctx.fillStyle = css(FAM + '-a'); ctx.fill(); ctx.strokeStyle = css(FAM); ctx.lineWidth = 1.5; ctx.stroke();
+  for (const [a, b] of bends) {
+    for (const [xx, dash, col] of [[a, [4, 3], '--mut'], [b, [4, 3], '--mut'], [(a + b) / 2, [8, 3, 2, 3], '--ink']]) {
+      const [p0, p1] = [T([xx, 0]), T([xx, B])]; ctx.beginPath(); ctx.moveTo(p0[0], p0[1]); ctx.lineTo(p1[0], p1[1]); ctx.setLineDash(dash); ctx.strokeStyle = css(col); ctx.lineWidth = 1; ctx.stroke(); ctx.setLineDash([]);
+    }
+  }
+  // Maße: gerade Stücke oben, Gesamtlänge unten
+  x = 0; u.straight.forEach((st, i) => { const [px, py] = T([x + Math.max(st, 0) / 2, B]); label(ctx, px, py - 12, fmt(st), st < 0 ? '--warn' : '--ink2'); x += Math.max(st, 0) + (i < bends.length ? u.arc : 0); });
+  const [qx, qy] = T([u.L / 2, 0]); label(ctx, qx, qy + 14, `Zuschnitt ${fmt(u.L)} × ${fmt(B, 0)} mm`);
+}
+function drawThr() {
+  const cv = $('ed'), d = S.d, t = S.s, need = G.need, W = Math.max(6 * d, 3 * t), top = Math.max(need, t) + 1.2 * d;
+  const V = fit(cv, [[-W / 2, -Math.max(need, t) - 0.3 * d], [W / 2, top]], 36), { ctx, T } = V;
+  const rect = (x0, y0, x1, y1) => { const [a, b] = T([x0, y1]), [c, e] = T([x1, y0]); return [a, b, c - a, e - b]; };
+  const core = Core.coreCut(d) / 2, hd = d / 2;
+  // Wand bzw. Blech im Schnitt (beide Seiten der Bohrung)
+  for (const sg of [-1, 1]) { const r = rect(sg < 0 ? -W / 2 : core, -t, sg < 0 ? -core : W / 2, 0); ctx.fillStyle = css(FAM + '-a'); ctx.fillRect(...r); ctx.strokeStyle = css(FAM); ctx.lineWidth = 1.5; ctx.strokeRect(...r); }
+  // Gewindezähne in der Wand
+  const P = G.P; ctx.beginPath();
+  for (const sg of [-1, 1]) for (let y = 0; y > -t + 1e-9; y -= P) { const y2 = Math.max(y - P, -t); const [a1, b1] = T([sg * core, y]), [a2, b2] = T([sg * hd, (y + y2) / 2]), [a3, b3] = T([sg * core, y2]); ctx.moveTo(a1, b1); ctx.lineTo(a2, b2); ctx.lineTo(a3, b3); }
+  ctx.strokeStyle = css('--ink'); ctx.lineWidth = 1; ctx.stroke();
+  // Schraube (Schaft und Kopf), gestrichelt bis zur nötigen Einschraubtiefe
+  ctx.strokeStyle = css('--ink'); ctx.lineWidth = 1.5; ctx.setLineDash([]); ctx.strokeRect(...rect(-hd, -Math.min(need, t), hd, 0.8 * d));
+  ctx.strokeRect(...rect(-0.85 * d, 0.8 * d, 0.85 * d, 0.8 * d + 0.6 * d));
+  if (need > t) {
+    ctx.setLineDash([4, 3]); ctx.strokeStyle = css('--warn'); ctx.strokeRect(...rect(-hd, -need, hd, -t)); ctx.setLineDash([]);
+    const [lx, ly] = T([hd + 0.2 * d, -(t + need) / 2]); ctx.textAlign = 'left'; ctx.font = DP_CFONT; ctx.fillStyle = css('--warn'); ctx.textBaseline = 'middle';
+    ctx.fillText(`⚠ fehlt ${fmt(need - t)} mm Gewinde`, lx, ly);
+  }
+  const [mx, my] = T([-W / 2, -t / 2]); ctx.textAlign = 'left'; ctx.font = DP_CFONT; ctx.fillStyle = css('--ink2'); ctx.fillText(`${fmt(t)} mm`, mx + 6, my);
+  $('hint').textContent = `${dpScale(V.f)} · Schnitt durch die Wand: M${fmt(d)} × ${fmt(G.P, 2)}, nötige Einschraubtiefe ${fmt(need)} mm`;
+}
+
+function stats() {
+  const M = Core.MAT[S.mat];
+  if (S.tool === 'bend') {
+    const u = G.u, met = M.kind === 'metall';
+    $('stats').innerHTML = dpStats(dpVerdict(G.lv, G.txt), [
+      { l: 'Zuschnitt', v: fmt(u.L) + ' mm', n: `× ${fmt(S.B, 0)} mm Breite`, t: 'Länge des flachen Blechs vor dem Biegen (Abwicklung)' },
+      { l: 'Innenradius', v: fmt(S.r) + ' mm', n: met ? `mind. ${fmt(G.rmin)} mm` : '–', w: met && S.r < G.rmin * (1 - 1e-9), t: 'Radius an der Innenseite der Biegung; zu eng → außen Risse' },
+      { l: 'Kürzester Schenkel', v: fmt(G.legMin) + ' mm', n: `mind. ${fmt(G.fmin)} mm`, w: G.short.some(Boolean), t: 'Das Blech muss beim Abkanten auf beiden Kanten der Matrize aufliegen' },
+      { l: 'Überbiegen', v: met ? '≈ ' + fmt(G.sb) + ' °' : '–', n: 'Rückfederung', t: 'Das Blech federt nach dem Biegen auf; so viel weiter biegen' }
+    ], [
+      { l: 'K-Faktor (CAD)', v: fmt(u.K, 2), n: 'Lage der neutralen Faser / Dicke', t: 'Diesen Wert im CAD-Blechmodul eintragen' },
+      { l: 'Korrekturfaktor k', v: fmt(u.k, 2), n: 'DIN 6935' },
+      { l: 'Bogen je Biegung', v: fmt(u.arc, 2) + ' mm', n: 'neutrale Faser' },
+      { l: 'Ausgleichswert v', v: fmt(u.v, 2) + ' mm', n: 'je Biegung, zur Summe der Außenmaße' },
+      { l: 'Lochabstand', v: '≥ ' + fmt(G.hole) + ' mm', n: 'Lochrand bis Innenseite des Nachbarschenkels' },
+      { l: 'Gerade Stücke', v: G.u.straight.map(x => fmt(x)).join(' · ') + ' mm', n: 'in der Abwicklung' },
+      { l: 'Dehngrenze Rp0,2', v: fmt(M.Rp, 0) + ' N/mm²', n: 'Richtwert' }
+    ], 'more-b');
+  } else {
+    const d = S.d, c = Core.CLR[d], met = M.kind === 'metall';
+    $('stats').innerHTML = dpStats(dpVerdict(G.lv, G.txt), [
+      met ? { l: 'Kernloch', v: fmt(Core.coreCut(d), 2) + ' mm', n: `formen: ${fmt(Core.coreForm(d), 2)} mm`, t: 'Bohrer vor dem Gewindebohren; Gewindeformer brauchen ein größeres Loch' }
+          : { l: 'Loch für Formschraube', v: fmt(Core.coreScrewPlastic(d), 1) + ' mm', n: 'Richtwert, je Kunststoff 0,75–0,85·d', t: 'Gewindeformende Schraube für Kunststoff (z. B. für Thermoplaste)' },
+      { l: 'Durchgangsloch', v: fmt(c[1], 1) + ' mm', n: `fein ${fmt(c[0], 1)} · grob ${fmt(c[2], 1)}`, t: 'Loch im Gegenstück, durch das die Schraube nur hindurchgeht (ISO 273)' },
+      { l: 'Einschraubtiefe', v: fmt(G.need) + ' mm', n: `vorhanden ${fmt(S.s)} mm`, w: S.s < G.need, t: 'So lang muss das Gewinde sein, damit es so viel hält wie die Schraube (8.8)' },
+      { l: 'Gewindegänge', v: fmt(S.s / G.P), n: 'mind. 3', w: S.s < 3 * G.P }
+    ], [
+      { l: 'Steigung', v: fmt(G.P, 2) + ' mm', n: 'Regelgewinde DIN 13' },
+      { l: 'Senkung 90°', v: fmt(Core.CSK[d], 1) + ' mm', n: 'Ø für Senkschrauben (ISO 15065)' },
+      { l: 'Kernloch geformt', v: fmt(Core.coreForm(d), 2) + ' mm', n: 'Gewindeformer (Metall)' },
+      { l: 'Einschraubtiefe / d', v: fmt(M.ein, 2), n: 'Richtwert für Schraube 8.8' }
+    ], 'more-t');
+    $('alts').innerHTML = '<tr><td><b>Lösung</b></td><td><b>bei ' + fmt(S.s) + ' mm</b></td><td><b>Wann</b></td></tr>' +
+      G.A.map(a => `<tr${a.ok ? '' : ' style="color:var(--mut)"'}><td>${a.n}</td><td>${a.ok ? '✓ geht' : '–'}</td><td>${a.w}</td></tr>`).join('');
+  }
+}
+
+// ---- Bedienung ----
+function legsUi() {
+  $('legs').innerHTML = S.legs.map((l, i) => `<label class="pair note">${LEG[i]} <input type="number" data-l="${i}" min="1" max="3000" step="1" value="${l}"> mm</label>`).join('');
+}
+function syncUi() {
+  $('mat').value = S.mat; $('s').value = S.s; $('ang').value = S.ang; $('r').value = S.r; $('B').value = S.B; $('d').value = S.d;
+  document.querySelectorAll('#tool button').forEach(b => b.classList.toggle('on', b.dataset.t === S.tool));
+  document.querySelectorAll('#prof button').forEach(b => b.classList.toggle('on', b.dataset.p === S.prof));
+  const bend = S.tool === 'bend';
+  $('bendC').hidden = !bend; $('thrC').hidden = bend; $('flatP').hidden = !bend; $('altP').hidden = bend; $('svg').hidden = !bend;
+  legsUi();
+}
+function update() {
+  recompute(); stats();
+  if (S.tool === 'bend') { drawBend(); drawFlat(); } else drawThr();
+}
+const num = (v, lo, hi, def) => { v = +v; return isFinite(v) && v >= lo && v <= hi ? v : def; };
+function parse(o) {
+  if (!o || o.type !== 'designphysik/fertigung') return null;
+  const p = PROF[o.prof] ? o.prof : 'U', legs = Array.isArray(o.legs) && o.legs.length === PROF[p].legs.length ? o.legs.map(x => num(x, 1, 3000, 20)) : PROF[p].legs.slice();
+  return { tool: o.tool === 'thr' ? 'thr' : 'bend', mat: Core.MAT[o.mat] ? o.mat : 'dc01', s: num(o.s, 0.3, 12, 1.5), prof: p, legs, ang: num(o.ang, 15, 135, 90),
+    r: num(o.r, 0.1, 100, 1.5), B: num(o.B, 1, 3000, 50), d: Core.THR.some(t => t[0] === +o.d) ? +o.d : 4 };
+}
+const exportObj = () => ({ type: 'designphysik/fertigung', version: 1, ...S });
+
+$('mat').innerHTML = Object.entries(Core.MAT).map(([k, m]) => `<option value="${k}">${m.n}</option>`).join('');
+$('d').innerHTML = Core.THR.map(([d, p]) => `<option value="${d}">M${fmt(d)} × ${fmt(p, 2)}</option>`).join('');
+$('tool').onclick = e => { const b = e.target.closest('button'); if (!b) return; S.tool = b.dataset.t; syncUi(); update(); };
+$('prof').onclick = e => { const b = e.target.closest('button'); if (!b) return; S.prof = b.dataset.p; S.legs = PROF[S.prof].legs.slice(); syncUi(); update(); };
+$('mat').onchange = () => { S.mat = $('mat').value; const M = Core.MAT[S.mat]; if (M.kind === 'metall' && S.r < 1.25 * Core.rMin(S.mat, S.s)) S.r = Math.max(Math.ceil(2.5 * Core.rMin(S.mat, S.s)) / 2, S.s); syncUi(); update(); }; // Radius auf die sichere Seite, halbe mm
+for (const [id, lo, hi] of [['s', 0.3, 12], ['ang', 15, 135], ['r', 0.1, 100], ['B', 1, 3000]]) $(id).oninput = () => { const v = num($(id).value, lo, hi, NaN); if (isFinite(v)) { S[id] = v; update(); } };
+$('d').onchange = () => { S.d = +$('d').value; update(); };
+$('legs').oninput = e => { const i = e.target.dataset.l; if (i == null) return; const v = num(e.target.value, 1, 3000, NaN); if (isFinite(v)) { S.legs[i] = v; update(); } };
+$('exp').onclick = () => dpDownload(exportObj(), 'fertigung.json');
+$('imp').onclick = () => $('impF').click();
+$('impF').onchange = e => { const f = e.target.files[0]; if (!f) return; f.text().then(t => { let m = null; try { m = parse(JSON.parse(t)); } catch {} if (m) { Object.assign(S, m); syncUi(); update(); $('fileN').textContent = f.name; } else $('fileN').textContent = 'Datei nicht erkannt'; }); e.target.value = ''; };
+$('share').onclick = () => { const u = dpHashSet('f', exportObj()); (navigator.clipboard ? navigator.clipboard.writeText(u) : Promise.reject()).then(() => $('fileN').textContent = 'Link kopiert', () => $('fileN').textContent = 'Link steht in der Adresszeile'); };
+// Abwicklung als SVG in mm: Umriss (Schneiden) und Biegelinien (gestrichelt) für Laser, Plotter oder Fertiger
+$('svg').onclick = () => {
+  const u = G.u, B = S.B, f = x => +x.toFixed(3); let x = 0, lines = '';
+  u.straight.forEach((st, i) => { x += st; if (i < u.straight.length - 1) { const c = x + u.arc / 2; lines += `<line x1="${f(c)}" y1="0" x2="${f(c)}" y2="${f(B)}" stroke="#d00" stroke-dasharray="4 2" stroke-width="0.2"/>`; x += u.arc; } });
+  const svg = `<?xml version="1.0" encoding="UTF-8"?>\n<svg xmlns="http://www.w3.org/2000/svg" width="${f(u.L)}mm" height="${f(B)}mm" viewBox="0 0 ${f(u.L)} ${f(B)}">\n<!-- Designphysik Fertigung: ${Core.MAT[S.mat].n}, s = ${S.s} mm, r = ${S.r} mm, ${S.ang}°, K = ${u.K.toFixed(3)}. Richtwerte – Endmaße beim Fertiger prüfen. Rot gestrichelt: Biegelinien. -->\n<rect x="0" y="0" width="${f(u.L)}" height="${f(B)}" fill="none" stroke="#000" stroke-width="0.2"/>\n${lines}\n</svg>\n`;
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([svg], { type: 'image/svg+xml' })); a.download = 'abwicklung.svg'; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+};
+
+dpHeader('fertigung'); dpIcons();
+{ const h = parse(dpHashGet('f')); if (h) Object.assign(S, h); }
+syncUi(); update();
+window.addEventListener('resize', update);
+</script>
+</body>
+</html>

@@ -48,7 +48,9 @@ const SK = {
     return [{ p: [[-150, 0], [1100, 0]], c: '--mut', w: 1 }, { p: [[-10, 460], [-35, 880]], w: 2 }, { p: [[0, 430], [420, 430], [420, 460], [0, 460]], z: true, f: '--fill', w: 1.5 },
       { p: [[25, 430], [25, 0]], w: 1.5 }, { p: [[395, 430], [395, 0]], w: 1.5 }, { p: [[330, 725], [1100, 725], [1100, 750], [330, 750]], z: true, f: '--fill', w: 1.5 }, { p: [[1060, 725], [1060, 0]], w: 2 },
       { p: [[120, 540], [560, 535]], c: '--mech', w: 2.5 }, { p: [[560, 535], [600, 75]], c: '--mech', w: 2.5 }, { p: [[560, 35], [770, 30]], c: '--mech', w: 2.5 },
-      { p: [[120, 540], [100, 1040]], c: '--mech', w: 2.5 }, { p: [[100, 1040], [115, 700], [420, 775]], c: '--mech', w: 2.5 }, { p: head, c: '--mech', w: 2.5 }]; }
+      { p: [[120, 540], [100, 1040]], c: '--mech', w: 2.5 }, { p: [[100, 1040], [115, 700], [420, 775]], c: '--mech', w: 2.5 }, { p: head, c: '--mech', w: 2.5 }]; },
+  fertigung: () => { const a = Array.from({ length: 10 }, (_, i) => [60 - 40 * Math.cos(i * Math.PI / 18), 60 - 40 * Math.sin(i * Math.PI / 18)]); // L-Winkel mit Biegeradius, darunter Abwicklung
+    return [{ p: [[20, 220], ...a, [300, 20]], c: '--load', w: 3 }, { p: [[0, -40], [340, -40]], w: 1.5 }, { p: [[150, -25], [150, -55]], c: '--mut', w: 1, dash: [3, 3] }]; }
 };
 const draw = () => document.querySelectorAll('.card canvas').forEach(c => SK[c.dataset.k] && dpSketch(c, SK[c.dataset.k]()));
 draw(); window.addEventListener('resize', draw);
