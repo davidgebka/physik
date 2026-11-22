@@ -559,7 +559,8 @@ function drawEd() {
   // Rasterpunkte
   const [gx0, gy0] = TT.inv(0, 0), [gx1, gy1] = TT.inv(w, h);
   ctx.fillStyle = css('--dot'); ctx.beginPath();
-  for (let x = Math.ceil(gx0); x <= gx1; x++) for (let y = Math.ceil(gy0); y <= gy1; y++) { const [sx, sy] = T([x, y]); ctx.moveTo(sx + 1.5, sy); ctx.arc(sx, sy, 1.5, 0, 7); }
+  const st = k >= 12 ? 1 : !dpPinching ? Math.round(DP_U / k) : k >= 8 ? 1 : k >= 4 ? 2 : 5; // klein: nur jeder 5. Schritt (= Seitenpunkt), beim Zoomen ausgedünnt (≥ 8 px)
+  for (let x = Math.ceil(gx0 / st) * st; x <= gx1; x += st) for (let y = Math.ceil(gy0 / st) * st; y <= gy1; y += st) { const [sx, sy] = T([x, y]); ctx.moveTo(sx + 1.5, sy); ctx.arc(sx, sy, 1.5, 0, 7); }
   ctx.fill();
   ctx.lineCap = ctx.lineJoin = 'round';
   // Leitungen
