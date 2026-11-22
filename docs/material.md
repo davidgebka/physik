@@ -36,6 +36,10 @@ Verbindliche Konventionen stehen in `docs/konzept.md`.
 - Netz: MakeItFrom sperrt automatische Abrufe (403), daher Abgleich über Websuche und frei zugängliche Seiten; für diese Sitzung eigene Umgebung „physik“ mit freigegebenen Quellseiten.
 - test.js 33 Prüfungen (+1: Prüfvermerke gültig). Browser 1280/390 px, Konsole fehlerfrei.
 
+## v0.5 (22.11.2026, Werkstoffliste; zentraler Chat)
+- Datensatz ist Quelle für `shared/materials.js` (Schlüssel, Name, Kategorie; `tools/test.js` prüft die Übereinstimmung).
+- **103 Materialien:** neu Stahlblech DC01, Aluminium 5754, Aluminium 6061 (Grundwerkstoffe für Fertigung), Werte nach EN 10130, EN 485-2, EN 573-3 – **nicht gegen externe Quellen abgeglichen** (kein `chk`, in der Karte als ungeprüft markiert). test.js: 103 Materialien.
+
 ## Urteilsschwellen (Herkunft)
 - passt, wenn kein Material das Ziel um mehr als Faktor 1,5 besser erreicht; sonst knapp mit dem besten Material und Ersparnis in % (Heuristik).
 - Berührgefühl: ≥ 28 °C „warm“, 24–28 °C „neutral bis kühl“, < 24 °C „kalt“ (Heuristik); Haut 33 °C, b_Haut = 1000 W·s½/(m²·K) (Literatur etwa 1000–1500).

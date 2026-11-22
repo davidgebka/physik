@@ -2,7 +2,7 @@
 
 Vom Modul-Chat gepflegt (Branch `modul/fertigung`). Verbindliche Konventionen stehen in `docs/konzept.md`.
 
-**Stand:** v1 (22.11.2026), Key `fertigung`, Hash `#f=`. Noch nicht in `DP_MODULES` (Wunsch an den zentralen Chat); Farbe vorläufig `--load`, eigene Familie Wunsch an den Style-Chat.
+**Stand:** v1.1 (22.11.2026), Key `fertigung`, Hash `#f=`. In `DP_MODULES`, Familie Werkstoff `--mat`; Werkstoffe mit `base` auf `shared/materials.js`.
 
 ## Entwurfsfrage
 „Lässt sich das so herstellen und verbinden, wie ich es gezeichnet habe?“ – Persona A legt im Entwurf Biegeradien, Schenkellängen, Lochabstände, Wanddicken und Verschraubungen fest; falsch gewählt fällt das erst beim Fertiger auf. Nachschlagewerk mit Urteil, keine Umform- oder Festigkeitssimulation.
@@ -87,8 +87,11 @@ Faustregeln für Luftbiegen auf der Abkantbank und für Standardgewinde; keine B
 - **Browser** (Chromium headless, file://, 1280 und 390 px): beide Werkzeuge, Materialwechsel, Urteile, Link; kein Überlaufen, Konsole fehlerfrei.
 - **Datei:** `{type:"designphysik/fertigung", version:1, tool, mat, s, prof, legs, ang, r, B, d}`, Eingang validiert.
 
+## v1.1 (22.11.2026, Werkstoffe; zentraler Chat)
+- je Werkstoff `base` auf `shared/materials.js` (`alu-5754-h111` → `al5754`, `alu-6061-t6` → `al6061`, `dc01` → `dc01`, übrige nach Grundwerkstoff); Werte unverändert.
+
 ## Offen (Pareto)
-1. Registry-Eintrag, eigene Farbe (Wünsche an shared), gemeinsame Materialschlüssel mit Material.
+1. ~~Registry-Eintrag, eigene Farbe, gemeinsame Materialschlüssel~~ – erledigt 22.11.2026 (v1.1, Familie Werkstoff `--mat`).
 2. Werte einzeln gegen Quellen prüfen (Mindestradien, Rückfederung, Einschraubtiefe), Quelle je Wert.
 3. Vorlagen-Galerie, Rückgängig, Stand merken (`dpGallery`, `dpHistory`, `dpCompare`).
 4. Editor direkt: Schenkel ziehen, Löcher auf der Abwicklung setzen und gegen die Sperrzone prüfen; Winkel je Biegung.

@@ -1,4 +1,4 @@
-| Fertigung | `fertigung` | v1 | Lässt sich das so herstellen und verbinden, wie ich es gezeichnet habe? |
+| Fertigung | `fertigung` | v1.1 | Lässt sich das so herstellen und verbinden, wie ich es gezeichnet habe? |
 # Designphysik – Konzept, Architektur, Konventionen
 
 Zentrales Dokument, kurz gehalten. Jede Sitzung liest es zuerst (siehe `CLAUDE.md`). Hier stehen nur Ziel, Regeln und Planung; Modulstände in `docs/<modul>.md`, Integrations-Historie in `docs/historie.md`.
@@ -57,12 +57,12 @@ Bei Zielkonflikten entscheidet A.
 ## Module (Stand 22.11.2026; Details in `docs/<modul>.md`; Spalte Modul = `name` in `DP_MODULES`)
 | Modul | Key | Stand | Entwurfsfrage |
 |---|---|---|---|
-| Gefäß | `gefaess` | v1.18 | Wie viel passt rein, wo sind Eichstriche, wann gießt es aus, kippt es um, schwappt es beim Tragen über? |
-| Licht | `licht` | v2.10 | Wie verteilt der Schirm das Licht, wird der Tisch hell genug, blendet es? |
-| Statik | `last` | v1.11 | Hält das Brett/der Balken, wie stark hängt es durch, schwingt es? |
+| Gefäß | `gefaess` | v1.19 | Wie viel passt rein, wo sind Eichstriche, wann gießt es aus, kippt es um, schwappt es beim Tragen über? |
+| Licht | `licht` | v2.11 | Wie verteilt der Schirm das Licht, wird der Tisch hell genug, blendet es? |
+| Statik | `last` | v1.12 | Hält das Brett/der Balken, wie stark hängt es durch, schwingt es? |
 | Mechanik | `mechanismus` | v1.9 | Wie bewegt sich das Getriebe, wo klemmt es, welche Kraft braucht es? |
 | Elektronik | `elektronik` | v3.3 | Hält der Akku lange genug, reicht der Strom, wird etwas zu heiß? |
-| Material | `material` | v0.4 | Welches Material macht das Brett, den Balken, den Stab leichter, günstiger, klimafreundlicher, und wie fühlt es sich an? |
+| Material | `material` | v0.5 | Welches Material macht das Brett, den Balken, den Stab leichter, günstiger, klimafreundlicher, und wie fühlt es sich an? |
 | Ergonomie | `ergonomie` | v1 | Für wie viele Menschen passt Sitz, Tisch, Arbeitsfläche, Fach oder Durchgang – fest oder verstellbar? |
 
 ## Roadmap (21.11.2026, nach Persona A)
@@ -94,10 +94,4 @@ Bei Zielkonflikten entscheidet A.
 (Modul-Chats tragen hier ein; der zentrale Chat bzw. der Style-Chat arbeitet sie ab. Erledigtes wandert nach `docs/historie.md`.)
 
 Offen:
-- **Werkstoffe an `shared/materials.js` anbinden** (22.11.2026, Konvention „Werkstoffe“; `node tools/test.js` zeigt den Stand je Modul):
-  - Statik: `base` an alle 15 Einträge (`c24` → `fichte`, `d30` → `eiche`, `d40` → `buche`, `bsp` → `multiplex`, `a2` → `edelstahl`, übrige gleichnamig).
-  - Fertigung: `base` an die 8 Einträge (`dc01` → noch keiner, `edelstahl-1.4301` → `edelstahl`, `messing-cuzn37` → `messing`, `kupfer-cu-etp` → `kupfer`, `abs`, `pa6`); für `dc01`, `alu-5754-h111`, `alu-6061-t6` fehlt der Grundwerkstoff → Material-Chat.
-  - Material: Karte um Stahlblech DC01, Aluminium 5754 und 6061 ergänzen; danach zentral in `shared/materials.js`.
-  - Gefäß: Tabelle `MATS` aus `app.js` in den CORE (`Core.MAT`, `rho` in kg/m³), alle fünf Schlüssel gibt es schon in der Liste.
-  - Licht: Tabelle in den CORE (`Core.MAT`), `base` + `finish` (z. B. Alu gebürstet → `al6060`, `gebürstet`; Opalglas, Klarglas → `glas`; Acryl satiniert → `pmma`; Filz → `wollfilz`; Papier → `papier`; Stoff hell, Kunststoff halbopak → `null`).
-  - Danach (eigener Schritt, Prüffrage: ja – Werkstoffwahl im Entwurf): Querverweise „Material wechseln“ (Karte gefiltert auf die Werkstoffe des Moduls) und auf der Karte „In Statik/Gefäß/Licht/Fertigung öffnen“, nur wo das Modul den Werkstoff führt.
+- **Querverweise Werkstoffe** (alle Werkstofftabellen angebunden 22.11.2026, siehe Historie; Prüffrage: ja – Werkstoffwahl im Entwurf): „Material wechseln“ in Gefäß, Licht, Statik, Fertigung (Karte gefiltert auf die Werkstoffe des Moduls) und auf der Karte „In Statik/Gefäß/Licht/Fertigung öffnen“, nur wo das Modul den Werkstoff führt.

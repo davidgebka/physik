@@ -936,7 +936,10 @@ const Core = (() => {
   // a = horizontal distance centre of gravity → stand edge. m in g → N
   const pushForce = (m, a, h) => m / 1000 * 9.81 * a / h;
 
-  return { sampled, trimLip, interiorPolygon, sectionPolygon, intervalsAt, buildSlices, segArea, volBelow, barrier, yRange, solveL, tiltCurve, cumTable, heightForVolume, clip, distSeg, rdp,
+  // Gefäßwerkstoffe: Dichte [kg/m³] für das Leergewicht; base = Schlüssel in shared/materials.js (Konvention „Werkstoffe“)
+  const MAT = { glas: { base: 'glas', n: 'Glas', rho: 2500 }, porzellan: { base: 'porzellan', n: 'Porzellan', rho: 2400 }, steinzeug: { base: 'steinzeug', n: 'Steinzeug', rho: 2300 },
+    pp: { base: 'pp', n: 'PP', rho: 900 }, edelstahl: { base: 'edelstahl', n: 'Edelstahl', rho: 7900 } };
+  return { MAT, sampled, trimLip, interiorPolygon, sectionPolygon, intervalsAt, buildSlices, segArea, volBelow, barrier, yRange, solveL, tiltCurve, cumTable, heightForVolume, clip, distSeg, rdp,
     momentsBelow, shell, cog, tipMargin, tipAngle, pushForce,
     geoRot, spoutLevel, tube, solveLG, tiltCurveG, cogG, tipAngleG, prism, prismShell, closedSmooth, selfCross,
     pocketGraph, tubeGraph, resample, tubeShell, smoothOpen, segMxx, settle, fillLakes, basins, fillCurve, tiltRun, lakeMoments, lakeSum, cogLakes, tipAngleP,

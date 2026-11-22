@@ -403,7 +403,22 @@ const Core = (() => {
     return { alpha, c: cw };
   }
 
-  return { trace, normalize, shield };
+  // Schirmwerkstoffe = Oberflächen: rd/rs diffus/spiegelnd reflektiert, td/ts diffus/gerichtet durchgelassen (Anteile).
+  // base = Schlüssel in shared/materials.js, null wenn kein bestimmter Werkstoff gemeint ist; finish = Oberfläche (Konvention „Werkstoffe“)
+  const M = (rd, rs, td, ts) => ({ in: { rd, rs }, out: { rd, rs }, td, ts });
+  const MAT = {
+    opal: { base: 'glas', finish: 'opal', n: 'Opalglas', m: M(0.40, 0, 0.50, 0), note: 'streuend, τ 30–65 % (IES)' },
+    acryl: { base: 'pmma', finish: 'satiniert', n: 'Acryl satiniert', m: M(0.15, 0, 0.70, 0), note: 'streuend, hell, Schätzwert' },
+    klar: { base: 'glas', finish: 'klar', n: 'Klarglas', m: M(0, 0.08, 0, 0.88), note: 'durchsichtig, τ 80–90 % (IES)' },
+    papier: { base: 'papier', finish: 'hell', n: 'Papier hell', m: M(0.45, 0, 0.40, 0), note: 'durchscheinend, Schätzwert' },
+    stoff: { base: null, finish: 'hell', n: 'Stoff hell', m: M(0.50, 0, 0.25, 0), note: 'weich, Schätzwert' },
+    halb: { base: null, finish: 'halbopak', n: 'Kunststoff halbopak', m: M(0.60, 0, 0.15, 0), note: 'halb opak, Schätzwert' },
+    filz: { base: 'wollfilz', finish: 'hellgrau', n: 'Filz hellgrau', m: M(0.45, 0, 0.03, 0), note: 'weich, fast opak, Schätzwert' },
+    weiss: { base: null, finish: 'weiß lackiert', n: 'Metall weiß lackiert', m: M(0.80, 0, 0, 0), note: 'opak, ρ 75–90 % (IES)' },
+    alu: { base: 'al5754', finish: 'gebürstet', n: 'Aluminium gebürstet', m: M(0.30, 0.26, 0, 0), note: 'halbglänzend, ρ 55–58 % (IES)' },
+    spiegel: { base: null, finish: 'spiegelnd', n: 'Spiegel', m: M(0.02, 0.88, 0, 0), note: 'spiegelnd, ρ 75–95 % (IES)' }
+  };
+  return { MAT, trace, normalize, shield };
 })();
 if (typeof module !== 'undefined') module.exports = Core;
 // === CORE END
@@ -479,19 +494,7 @@ const PRESETS = { // Profile rotationssymmetrisch (r ≥ 0); bei Symmetrie aus w
   // Glo-Ball S1 (Jasper Morrison, 1998): Ø 330, abgeflachte Opalglaskugel (Höhe ≈ 290 angenommen), oben Öffnung für die Fassung
   globall:  ['Glo-Ball S1 · Morrison 1998', ellP(165, 145, 30, 16), [0, 0], 'opal', 1]
 };
-const M = (rd, rs, td, ts) => ({ in: { rd, rs }, out: { rd, rs }, td, ts });
-const MATS = {
-  opal:    ['Opalglas', M(0.40, 0, 0.50, 0), 'streuend, τ 30–65 % (IES)'],
-  acryl:   ['Acryl satiniert', M(0.15, 0, 0.70, 0), 'streuend, hell, Schätzwert'],
-  klar:    ['Klarglas', M(0, 0.08, 0, 0.88), 'durchsichtig, τ 80–90 % (IES)'],
-  papier:  ['Papier hell', M(0.45, 0, 0.40, 0), 'durchscheinend, Schätzwert'],
-  stoff:   ['Stoff hell', M(0.50, 0, 0.25, 0), 'weich, Schätzwert'],
-  halb:    ['Kunststoff halbopak', M(0.60, 0, 0.15, 0), 'halb opak, Schätzwert'],
-  filz:    ['Filz hellgrau', M(0.45, 0, 0.03, 0), 'weich, fast opak, Schätzwert'],
-  weiss:   ['Metall weiß lackiert', M(0.80, 0, 0, 0), 'opak, ρ 75–90 % (IES)'],
-  alu:     ['Aluminium gebürstet', M(0.30, 0.26, 0, 0), 'halbglänzend, ρ 55–58 % (IES)'],
-  spiegel: ['Spiegel', M(0.02, 0.88, 0, 0), 'spiegelnd, ρ 75–95 % (IES)']
-};
+const MATS = Object.fromEntries(Object.entries(Core.MAT).map(([k, v]) => [k, [v.n, v.m, v.note]])); // [Name, Optik, Hinweis]
 const PHI = [[470, '470 lm (≈ 40 W Glühlampe)'], [806, '806 lm (≈ 60 W)'], [1521, '1521 lm (≈ 100 W)'], [2452, '2452 lm (≈ 150 W)']];
 const toPts = a => a.map(([x, z]) => ({ x, z }));
 const part = (pts, mat = 'stoff', raw = null) => ({ pts, mat, raw });

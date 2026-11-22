@@ -39,6 +39,9 @@ const DP_MATERIALS = {
   zamak: ['Zinkdruckguss', 'Metall'],
   titan: ['Titan (Grade 5)', 'Metall'],
   al6082: ['Aluminium 6082', 'Metall'],
+  dc01: ['Stahlblech DC01', 'Metall'],
+  al5754: ['Aluminium 5754', 'Metall'],
+  al6061: ['Aluminium 6061', 'Metall'],
   al7075: ['Aluminium 7075', 'Metall'],
   alguss: ['Aluminium-Druckguss', 'Metall'],
   grauguss: ['Grauguss', 'Metall'],
@@ -113,4 +116,4 @@ const DP_MATERIALS = {
   eva: ['EVA-Schaum', 'Schaumstoff'],
   peschaum: ['PE-Schaum', 'Schaumstoff']
 };
-if (typeof module !== 'undefined') module.exports = DP_MATERIALS;
+if (typeof module !== "undefined") module.exports = DP_MATERIALS;
