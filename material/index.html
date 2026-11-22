@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Designphysik · Material</title>
+<link rel="stylesheet" href="../shared/style.css">
+<!-- Farbe: vorläufig --load (Kraft & Festigkeit); eigene Familie entscheidet der Style-Chat -->
+<style>
+#map{--ar:calc(5/4);aspect-ratio:5/4;touch-action:manipulation}
+@media(max-width:600px){#map{--ar:1;aspect-ratio:1/1}}
+select{max-width:100%}
+.rk tr{cursor:pointer}
+.rk tr:hover td,.rk tr.on td{background:var(--fill)}
+.rk tr.on td:first-child{font-weight:700}
+</style>
+</head>
+<body>
+<header id="dp-header"></header>
+<main>
+  <section class="panel">
+    <h2>Karte <small>logarithmisch, Ellipse = Spanne</small></h2>
+    <div class="row">
+      <span class="pair"><select id="ax-y" aria-label="Achse oben"></select> über <select id="ax-x" aria-label="Achse rechts"></select></span>
+    </div>
+    <canvas id="map" role="img"></canvas>
+    <div class="row"><select id="mat" aria-label="Material"></select><button id="cmp" class="ico"></button></div>
+    <p class="note" id="mapN"></p>
+  </section>
+  <section class="panel">
+    <h2>Ziel <small>was soll das Bauteil können?</small></h2>
+    <div class="row"><span class="seg" id="part"><button data-v="brett">Brett</button><button data-v="balken">Balken</button><button data-v="stab">Stab</button></span></div>
+    <div class="row"><span class="seg" id="prop"><button data-v="steif">steif</button><button data-v="fest">fest</button></span>
+      <span class="seg" id="by"><button data-v="mass">leicht</button><button data-v="eur">günstig</button><button data-v="co2">wenig CO₂</button></span></div>
+    <p class="note" id="rkN"></p>
+    <table class="kv rk" id="rk"></table>
+  </section>
+  <section class="panel wide kpi">
+    <h2>Kennwerte</h2>
+    <div class="stats" id="stats"></div>
+  </section>
+  <section class="panel wide">
+    <h2>Datei</h2>
+    <div class="row"><button id="exp" class="q" data-i="down">Export</button><button id="imp" class="q" data-i="up">Import</button><button id="share" class="q" data-i="link">Link kopieren</button><input type="file" id="file" accept=".json,application/json" hidden></div>
+  </section>
+  <section class="panel wide model">
+    <h2>Modell &amp; Gültigkeit</h2>
+    <details data-k="model"><summary>Modell und Grenzen lesen</summary><div class="txt">
+      <h3>Wozu</h3><p>Die Karte zeigt, wo ein Material im Vergleich zu anderen liegt, z. B. Steifigkeit über Dichte: oben links ist steif und leicht, unten rechts weich und schwer. Jede Ellipse reicht über die übliche Spanne des Materials; Holz und Kunststoffe streuen stark, Metalle kaum. Die Darstellung folgt den Material-Karten von Michael Ashby (<a href="https://de.wikipedia.org/wiki/Werkstoffauswahl" target="_blank" rel="noopener">Werkstoffauswahl</a>).</p>
+      <h3>Ziel und Rangliste</h3><p>Die Rangliste beantwortet: Wie schwer (teuer, CO₂-lastig) wird das Bauteil, wenn es aus einem anderen Material genauso steif oder fest sein soll? Die Form bleibt gleich, nur die Dicke ändert sich. Beim <i>Brett</i> ändert sich nur die Dicke, beim <i>Balken</i> der ganze Querschnitt, beim <i>Stab</i> (auf Zug) die Querschnittsfläche. Deshalb gewinnen beim Brett leichte Materialien wie Holz, beim Stab die steifen wie Stahl. Die gestrichelte Linie in der Karte verbindet alle Materialien, die für das gewählte Ziel gleich gut sind wie das ausgewählte; alles darüber ist besser.</p>
+      <h3>Berührgefühl</h3><p>Ob sich etwas warm oder kalt anfühlt, hängt nicht von der Temperatur ab (alles hat Raumtemperatur), sondern davon, wie schnell es der Haut Wärme entzieht: dem <a href="https://de.wikipedia.org/wiki/Wärmeeindringkoeffizient" target="_blank" rel="noopener">Wärmeeindringkoeffizienten</a>. Angegeben ist die Temperatur, die die Haut (33 °C) im ersten Moment an einem 20 °C warmen Teil annimmt. Dünne Teile und Schichten (Folie, Lack auf Metall) erwärmen sich schneller und fühlen sich mit der Zeit wärmer an.</p>
+      <h3>Werte</h3><p>Richtwerte für den Entwurf, als Spanne typischer Werte, nicht als Mindestwerte für einen Nachweis. Holz längs zur Faser bei etwa 12 % Holzfeuchte, quer zur Faser ist es rund 20-mal weicher. Festigkeit: Biegefestigkeit bei Holz, Platten und Glas, Streckgrenze bei Metall, Zugfestigkeit bei Kunststoff. Preise grob (Handel, kleine Mengen, 2026). CO₂ von der Herstellung bis zum Werktor, ohne den im Holz gespeicherten Kohlenstoff; bei Aluminium entscheidet der Recyclinganteil (die Spanne reicht von viel Recycling bis Neumetall). Für Statik und Nachweise gelten die Normwerte im Modul Statik bzw. das Datenblatt des Herstellers.</p>
+      <h3>Für Fachleute</h3><p>Massenminimierung bei vorgegebener Steifigkeit bzw. Festigkeit und fester Form: Kennzahl P<sup>n</sup>/ρ, Brett (Breite fest, Dicke frei) n = 1/3 für E, 1/2 für Festigkeit; Balken (Querschnitt ähnlich skaliert) 1/2 bzw. 2/3; Stab auf Zug 1 bzw. 1. Kosten bzw. CO₂: Kennzahl zusätzlich durch Preis bzw. CO₂ je kg. Die Linie gleicher Kennzahl hat in der Karte E über ρ die Steigung 1/n. Mittelwert einer Spanne = geometrisches Mittel. Berührtemperatur zweier halbunendlicher Körper: T = (b₁T₁ + b₂T₂)/(b₁ + b₂), b = √(λρc), Haut b ≈ 1000 W·s½/(m²·K) (Heuristik, Literatur 1000–1500).</p>
+      <h3>Grenzen</h3><p>Keine Verarbeitung, Oberfläche, Alterung, Feuchte, Kriechen, Brandverhalten oder Lebensmittel-Eignung bewertet. Kunststoffe gibt es in vielen Sorten mit stark abweichenden Werten. Vor der Festlegung: Datenblatt der konkreten Sorte, für tragende Teile Nachweis.</p>
+      <h3>Weiterführende Werkzeuge</h3><p><a href="https://www.ansys.com/products/materials/granta-edupack" target="_blank" rel="noopener">Ansys Granta EduPack</a> – Hochschullizenz: Tausende Materialien, Material-Karten, CO₂-Abschätzung<br><a href="https://www.makeitfrom.com/" target="_blank" rel="noopener">MakeItFrom</a> – englisch, kostenlos: zwei Materialien nebeneinander vergleichen<br><a href="https://matmatch.com/" target="_blank" rel="noopener">Matmatch</a> – englisch, kostenlos: Datenblätter konkreter Sorten mit Lieferanten<br><a href="https://materialarchiv.ch/" target="_blank" rel="noopener">Materialarchiv</a> – Schweizer Hochschulen: Anmutung, Verarbeitung, Muster<br><a href="https://www.wood-database.com/" target="_blank" rel="noopener">The Wood Database</a> – englisch: Holzarten mit Fotos und Kennwerten</p>
+    </div></details>
+  </section>
+</main>
+
+<script src="../shared/util.js"></script>
+<script src="../shared/chart.js"></script>
+<script>
+// === CORE START
+// Werkstoffauswahl nach Ashby: Datensatz (Richtwerte als Spanne) und Kennzahlen. Kein DOM.
+const Core = (() => {
+  // Spannen [von, bis], typische Werte. rho kg/m³ · E N/mm² · f N/mm² (Biegefestigkeit Holz/Platten/Glas, Streckgrenze Metall,
+  // Zugfestigkeit Kunststoff/Elastomer) · lam W/(m·K) · c J/(kg·K) · tmax °C (Dauergebrauch) · eur €/kg · co2 kg CO₂e/kg (bis Werktor)
+  const MAT = [
+    { k: 'fichte', n: 'Fichte', fam: 'Massivholz', rho: [400, 480], E: [9000, 12000], f: [50, 80], lam: [0.11, 0.14], c: [1600, 1700], tmax: [80, 120], eur: [1, 2], co2: [0.2, 0.4],
+      proc: 'sägen, hobeln, fräsen, leimen; weich, druckempfindlich', src: 'Wood Handbook (USDA FPL), EN 338 (C24); Preis und CO₂ geschätzt (ICE, Univ. Bath)' },
+    { k: 'eiche', n: 'Eiche', fam: 'Massivholz', rho: [650, 760], E: [10000, 13000], f: [80, 110], lam: [0.16, 0.21], c: [1600, 1700], tmax: [80, 120], eur: [2.5, 5], co2: [0.3, 0.6],
+      proc: 'sägen, fräsen, dämpfbiegen, ölen; hart, gerbstoffhaltig (färbt mit Eisen)', src: 'Wood Handbook (USDA FPL), EN 338 (D30); Preis und CO₂ geschätzt' },
+    { k: 'multiplex', n: 'Multiplex Birke', fam: 'Holzwerkstoff', rho: [650, 720], E: [7000, 11000], f: [40, 70], lam: [0.13, 0.17], c: [1500, 1700], tmax: [80, 100], eur: [2, 4], co2: [0.5, 0.9],
+      proc: 'Platte bis 3 × 1,5 m, CNC-fräsen, sichtbare Kante; Werte parallel zur Decklage', src: 'Herstellerangaben (typisch), Modul Statik; CO₂ ICE (Sperrholz)' },
+    { k: 'mdf', n: 'MDF', fam: 'Holzwerkstoff', rho: [700, 800], E: [2500, 4000], f: [20, 40], lam: [0.10, 0.14], c: [1600, 1700], tmax: [70, 90], eur: [0.6, 1.2], co2: [0.4, 0.8],
+      proc: 'fräsen, lackieren, glatte Kante; quillt bei Nässe, kriecht unter Dauerlast', src: 'EN 622-5 (Mindestwerte) bis typisch; CO₂ ICE' },
+    { k: 's235', n: 'Stahl S235', fam: 'Metall', rho: [7800, 7900], E: [200000, 212000], f: [235, 300], lam: [45, 55], c: [450, 500], tmax: [350, 450], eur: [1, 2], co2: [1.0, 2.3],
+      proc: 'schweißen, biegen, lasern, kanten; rostet ohne Schutz', src: 'EN 10025; CO₂ ICE (Recyclinganteil bestimmt die Spanne)' },
+    { k: 'al6060', n: 'Aluminium 6060', fam: 'Metall', rho: [2690, 2710], E: [68000, 71000], f: [150, 200], lam: [200, 220], c: [880, 920], tmax: [120, 180], eur: [3, 6], co2: [2, 12],
+      proc: 'strangpressen (Profile), fräsen, eloxieren; schweißen schwächt die Festigkeit', src: 'EN 755-2 (T6); CO₂ ICE und Branchenangaben (viel Recycling bis Neumetall)' },
+    { k: 'pp', n: 'Polypropylen (PP)', fam: 'Kunststoff', rho: [900, 910], E: [1100, 1600], f: [25, 35], lam: [0.20, 0.24], c: [1700, 1900], tmax: [80, 100], eur: [1.2, 2.5], co2: [1.5, 2.0],
+      proc: 'spritzgießen, Filmscharnier, schwer zu kleben; kriecht', src: 'Datenblätter typisch; CO₂ PlasticsEurope/ICE' },
+    { k: 'pmma', n: 'Acryl (PMMA)', fam: 'Kunststoff', rho: [1180, 1190], E: [2900, 3300], f: [60, 75], lam: [0.18, 0.20], c: [1400, 1500], tmax: [70, 90], eur: [3, 5], co2: [3, 7],
+      proc: 'lasern, fräsen, polieren, warm biegen; klar, spannungsrissempfindlich', src: 'Datenblätter typisch; CO₂ geschätzt' },
+    { k: 'glas', n: 'Floatglas', fam: 'Glas', rho: [2490, 2520], E: [70000, 74000], f: [40, 90], lam: [0.9, 1.05], c: [720, 840], tmax: [100, 250], eur: [1, 2.5], co2: [0.9, 1.4], brittle: true,
+      proc: 'schneiden, Kante schleifen, härten (ESG); bricht spröde, Temperaturschock begrenzt', src: 'EN 572-1; Festigkeit streut mit Kante und Kratzern; CO₂ ICE' },
+    { k: 'silikon', n: 'Silikon', fam: 'Elastomer', rho: [1100, 1250], E: [1, 8], f: [5, 10], lam: [0.2, 0.3], c: [1100, 1300], tmax: [180, 230], eur: [5, 15], co2: [3, 7],
+      proc: 'gießen, spritzgießen; lebensmitteltauglich erhältlich, griffig', src: 'Datenblätter typisch (Shore 30–70 A); Preis und CO₂ geschätzt' }
+  ];
+  const gm = r => Math.sqrt(r[0] * r[1]); // Mittelwert einer Spanne (geometrisch)
+  // Wärmeeindringkoeffizient b = √(λρc) [W·s½/(m²·K)], Spanne aus den Spannen
+  const bOf = (lam, rho, c) => Math.sqrt(lam * rho * c);
+  MAT.forEach(m => { m.b = [bOf(m.lam[0], m.rho[0], m.c[0]), bOf(m.lam[1], m.rho[1], m.c[1])]; });
+  // Berührtemperatur zweier halbunendlicher Körper
+  const contact = (b1, T1, b2, T2) => (b1 * T1 + b2 * T2) / (b1 + b2);
+  const SKIN = { b: 1000, T: 33 }, ROOM = 20;
+  const touch = b => contact(SKIN.b, SKIN.T, b, ROOM);
+  // Kennzahl-Exponent n (Masse ∝ ρ·P^−n) und Maß-Exponent (Dicke, Kantenlänge bzw. Durchmesser ∝ P^d)
+  const EXP = { brett: { steif: 1 / 3, fest: 1 / 2 }, balken: { steif: 1 / 2, fest: 2 / 3 }, stab: { steif: 1, fest: 1 } };
+  const PROP = { steif: 'E', fest: 'f' };
+  const nOf = (part, prop) => EXP[part][prop];
+  const dOf = (part, prop) => part === 'brett' ? -nOf(part, prop) : -nOf(part, prop) / 2;
+  // Aufwand für gleiche Steifigkeit/Festigkeit (relativ, nur Verhältnisse sind aussagekräftig): Masse bzw. Masse·€/kg bzw. Masse·CO₂/kg
+  function effort(m, part, prop, by) {
+    const P = gm(m[PROP[prop]]), w = by === 'mass' ? 1 : gm(m[by]);
+    return gm(m.rho) * Math.pow(P, -nOf(part, prop)) * w;
+  }
+  const size = (m, part, prop) => Math.pow(gm(m[PROP[prop]]), dOf(part, prop));
+  // Rangliste relativ zum Bezugsmaterial ref: rel = Aufwand / Aufwand(ref), dim = Maß / Maß(ref); aufsteigend (bestes zuerst)
+  function rank(mats, part, prop, by, ref) {
+    const e0 = effort(ref, part, prop, by), s0 = size(ref, part, prop);
+    return mats.map(m => ({ k: m.k, rel: effort(m, part, prop, by) / e0, dim: size(m, part, prop) / s0 })).sort((a, b) => a.rel - b.rel);
+  }
+  return { MAT, gm, bOf, contact, SKIN, ROOM, touch, EXP, PROP, nOf, dOf, effort, size, rank };
+})();
+if (typeof module !== 'undefined') module.exports = Core;
+// === CORE END
+
+// ---- UI ----
+const MAT = Core.MAT, byK = k => MAT.find(m => m.k === k);
+// Achsen: [Name, Einheit, Erklärung]
+const AX = {
+  rho: ['Dichte', 'kg/m³', 'Masse je Volumen: wie schwer das Material ist'],
+  E: ['Steifigkeit', 'N/mm²', 'Elastizitätsmodul: wie stark es unter Last nachgibt; groß = steif'],
+  f: ['Festigkeit', 'N/mm²', 'Spannung, bei der es bricht bzw. sich bleibend verformt'],
+  lam: ['Wärmeleitung', 'W/(m·K)', 'Wärmeleitfähigkeit λ: wie gut es Wärme durchlässt'],
+  b: ['Berührgefühl', 'W·s½/(m²·K)', 'Wärmeeindringkoeffizient: groß = entzieht der Hand schnell Wärme, fühlt sich kalt an'],
+  tmax: ['Höchsttemperatur', '°C', 'Grenze für dauernden Gebrauch'],
+  eur: ['Preis', '€/kg', 'grob, Handel, kleine Mengen'],
+  co2: ['CO₂', 'kg/kg', 'CO₂-Äquivalent je kg Material, Herstellung bis Werktor']
+};
+// Bauteil: [Name, Maß in der Rangliste]; Ziel: [Größe, Komparativ, Wendung]
+const PART = { brett: ['Brett', 'Dicke'], balken: ['Balken', 'Kante'], stab: ['Stab', 'Durchmesser'] };
+const BY = { mass: ['Gewicht', 'leichter', 'mit wenig Gewicht'], eur: ['Kosten', 'günstiger', 'zu geringen Kosten'], co2: ['CO₂', 'weniger CO₂', 'mit wenig CO₂'] };
+// „ein steifes Brett“ / „einen steifen Balken“ (Akkusativ) bzw. „ein gleich steifer Balken“ (Nominativ)
+const acc = a => S.part === 'brett' ? `ein ${a}es Brett` : `einen ${a}en ${PART[S.part][0]}`;
+const nom = a => S.part === 'brett' ? `Ein ${a}es Brett` : `Ein ${a}er ${PART[S.part][0]}`;
+const DEF = { k: 'fichte', part: 'brett', prop: 'steif', by: 'mass', x: 'rho', y: 'E' };
+let S = Object.assign({}, DEF), hits = [];
+
+const sig = new Intl.NumberFormat('de-DE', { maximumSignificantDigits: 2 }), sig3 = new Intl.NumberFormat('de-DE', { maximumSignificantDigits: 3 });
+const fv = v => (v >= 100 ? sig3 : sig).format(v); // keine Scheinpräzision
+const fr = r => fv(r[0]) + '–' + fv(r[1]);
+const fx = v => '×' + (v >= 100 ? '> 99' : sig.format(v));
+const feel = t => t >= 28 ? 'fühlt sich warm an' : t >= 24 ? 'neutral bis kühl' : 'fühlt sich kalt an';
+
+function parse(o) {
+  const s = Object.assign({}, DEF);
+  if (!o || typeof o !== 'object') return s;
+  if (byK(o.k)) s.k = o.k;
+  if (Core.EXP[o.part]) s.part = o.part;
+  if (Core.PROP[o.prop]) s.prop = o.prop;
+  if (BY[o.by]) s.by = o.by;
+  if (AX[o.x]) s.x = o.x;
+  if (AX[o.y]) s.y = o.y;
+  return s;
+}
+const exportObj = () => ({ type: 'designphysik/material', version: 1, k: S.k, part: S.part, prop: S.prop, by: S.by, x: S.x, y: S.y });
+
+// ---- Karte (log-log) ----
+function range(p) {
+  let a = Infinity, b = 0; for (const m of MAT) { a = Math.min(a, m[p][0]); b = Math.max(b, m[p][1]); }
+  let l0 = Math.log10(a), l1 = Math.log10(b); const pad = Math.max(0.12 * (l1 - l0), (1 - (l1 - l0)) / 2, 0.1);
+  return [l0 - pad, l1 + pad];
+}
+function ticks(l0, l1) {
+  const out = [], mult = l1 - l0 > 4 ? [1] : l1 - l0 > 2 ? [1, 3] : [1, 2, 5];
+  for (let e = Math.floor(l0); e <= Math.ceil(l1); e++) for (const k of mult) { const v = k * 10 ** e, l = Math.log10(v); if (l >= l0 - 1e-9 && l <= l1 + 1e-9) out.push(v); }
+  return out;
+}
+const tl = v => v >= 1000 ? nf0.format(v) : new Intl.NumberFormat('de-DE', { maximumSignificantDigits: 3 }).format(v);
+
+function drawMap(ref) {
+  const cv = $('map'), { ctx, w, h } = prep(cv), M = { l: 60, r: 12, t: 12, b: 36 };
+  const [x0, x1] = range(S.x), [y0, y1] = range(S.y);
+  const X = v => M.l + (Math.log10(v) - x0) / (x1 - x0) * (w - M.l - M.r);
+  const Y = v => h - M.b - (Math.log10(v) - y0) / (y1 - y0) * (h - M.t - M.b);
+  ctx.font = DP_CFONT; ctx.lineWidth = 1;
+  // Achsen mit Teilstrichen (wie chart())
+  ctx.strokeStyle = css('--ink'); ctx.fillStyle = css('--ink2'); ctx.beginPath();
+  ctx.moveTo(M.l + .5, M.t); ctx.lineTo(M.l + .5, h - M.b + .5); ctx.lineTo(w - M.r, h - M.b + .5);
+  ctx.textAlign = 'center';
+  for (const v of ticks(x0, x1)) { const px = Math.round(X(v)) + .5; ctx.moveTo(px, h - M.b + .5); ctx.lineTo(px, h - M.b + 4.5); ctx.fillText(tl(v), px, h - M.b + 17); }
+  ctx.textAlign = 'right';
+  for (const v of ticks(y0, y1)) { const py = Math.round(Y(v)) + .5; ctx.moveTo(M.l + .5, py); ctx.lineTo(M.l - 3.5, py); ctx.fillText(tl(v), M.l - 6, py + 4); }
+  ctx.stroke();
+  ctx.textAlign = 'center'; ctx.fillText(`${AX[S.x][0]} [${AX[S.x][1]}]`, (M.l + w - M.r) / 2, h - 3);
+  ctx.save(); ctx.translate(12, (M.t + h - M.b) / 2); ctx.rotate(-Math.PI / 2); ctx.fillText(`${AX[S.y][0]} [${AX[S.y][1]}]`, 0, 0); ctx.restore();
+  ctx.save(); ctx.beginPath(); ctx.rect(M.l + 1, M.t, w - M.l - M.r, h - M.t - M.b); ctx.clip();
+  // Linie gleicher Kennzahl durch das gewählte Material (nur Karte P über Dichte, Ziel Gewicht)
+  const sel = byK(S.k), guide = S.x === 'rho' && S.y === Core.PROP[S.prop] && S.by === 'mass';
+  if (guide) {
+    const n = Core.nOf(S.part, S.prop), lx = Math.log10(Core.gm(sel.rho)), ly = Math.log10(Core.gm(sel[S.y]));
+    const at = l => 10 ** (ly + (l - lx) / n);
+    ctx.strokeStyle = css('--ink'); ctx.setLineDash([4, 4]); ctx.beginPath(); ctx.moveTo(X(10 ** x0), Y(at(x0))); ctx.lineTo(X(10 ** x1), Y(at(x1))); ctx.stroke(); ctx.setLineDash([]);
+  }
+  // Ellipsen: Spanne in beiden Richtungen, mindestens 5 px Halbachse
+  hits = [];
+  for (const m of MAT) {
+    const cx = X(Core.gm(m[S.x])), cy = Y(Core.gm(m[S.y])), rx = Math.max(5, (X(m[S.x][1]) - X(m[S.x][0])) / 2), ry = Math.max(5, (Y(m[S.y][0]) - Y(m[S.y][1])) / 2);
+    hits.push({ k: m.k, cx, cy, rx, ry });
+    ctx.beginPath(); ctx.ellipse(cx, cy, rx, ry, 0, 0, 7); ctx.fillStyle = css('--load-a'); ctx.fill();
+    const on = m.k === S.k, isRef = ref && m.k === ref.k;
+    ctx.strokeStyle = css(on || isRef ? '--ink' : '--load'); ctx.lineWidth = on ? 2 : 1; ctx.setLineDash(isRef && !on ? [4, 4] : []); ctx.stroke(); ctx.setLineDash([]);
+  }
+  ctx.restore();
+  // Beschriftung: rechts, links, darüber oder darunter – die erste Lage ohne Überschneidung (gewähltes Material zuerst)
+  const boxes = [], over = (a, b) => a[0] < b[2] && b[0] < a[2] && a[1] < b[3] && b[1] < a[3];
+  for (const p of hits.slice().sort((a, b) => (b.k === S.k) - (a.k === S.k))) {
+    const m = byK(p.k), on = m.k === S.k; ctx.font = (on ? '700 ' : '') + DP_CFONT; ctx.fillStyle = css(on ? '--ink' : '--ink2');
+    const tw = ctx.measureText(m.n).width, cand = [[p.cx + p.rx + 4, p.cy - 8], [p.cx - p.rx - 4 - tw, p.cy - 8], [p.cx - tw / 2, p.cy - p.ry - 18], [p.cx - tw / 2, p.cy + p.ry + 2]]
+      .map(([x, y]) => [x, y, x + tw, y + 16]).filter(b => b[0] >= M.l + 2 && b[2] <= w - M.r && b[1] >= 0 && b[3] <= h - M.b);
+    const b = cand.find(c => !boxes.some(o => over(c, o))) || cand[0]; if (!b) continue;
+    boxes.push(b); ctx.textAlign = 'left'; ctx.fillText(m.n, b[0], b[1] + 12);
+  }
+  ctx.font = DP_CFONT;
+  $('mapN').textContent = guide ? `Gestrichelt: gleich gut wie ${sel.n} für ${acc(S.prop)} ${BY.mass[2]}; alles darüber ist besser. Material antippen zum Auswählen.`
+    : 'Material antippen zum Auswählen. Die Linie gleicher Eignung erscheint bei Steifigkeit bzw. Festigkeit über Dichte und dem Ziel „leicht“.';
+}
+function pick(e) {
+  const r = $('map').getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top;
+  let best = null, bd = Infinity;
+  for (const p of hits) {
+    const d = Math.hypot((x - p.cx) / p.rx, (y - p.cy) / p.ry), px = Math.hypot(x - p.cx, y - p.cy);
+    const s = d <= 1 ? d : px <= DP_HIT ? 1 + px / 1000 : Infinity; // innen zuerst, sonst Nähe zur Mitte
+    if (s < bd) { bd = s; best = p.k; }
+  }
+  if (best) { S.k = best; update(); }
+}
+
+// ---- Rangliste, Urteil, Kennwerte ----
+function update() {
+  const sel = byK(S.k), ref = cmp.ref ? byK(cmp.ref.k) : null;
+  $('mat').value = S.k;
+  $('ax-x').value = S.x; $('ax-y').value = S.y;
+  for (const id of ['part', 'prop', 'by']) $(id).querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.v === S[id]));
+  drawMap(ref);
+  const R = Core.rank(MAT, S.part, S.prop, S.by, sel), dn = PART[S.part][1];
+  $('rkN').textContent = `${BY[S.by][0]} für ${acc('gleich ' + S.prop)} im Vergleich zu ${sel.n}; daneben das nötige Maß.`;
+  $('rk').innerHTML = R.map(r => `<tr data-k="${r.k}"${r.k === S.k ? ' class="on"' : ''}><td>${byK(r.k).n}${byK(r.k).brittle ? ' <span class="note">spröde</span>' : ''}</td><td>${fx(r.rel)}</td><td>${dn} ${fx(r.dim)}</td></tr>`).join('');
+  // Urteil (Heuristik): passt, wenn kein Material das Ziel um mehr als Faktor 1,5 besser erreicht
+  const best = R[0], bm = byK(best.k), extra = ref && ref.k !== S.k ? `Gemerkt: ${ref.n}` : '';
+  const verdict = best.k === S.k ? dpVerdict(0, `${sel.n} ist hier die beste Wahl für ${acc(S.prop)} ${BY[S.by][2]}.`, extra)
+    : best.rel > 1 / 1.5 ? dpVerdict(0, `${sel.n} liegt nahe am besten Material (${bm.n}: ${fx(best.rel)}).`, extra)
+    : dpVerdict(1, `${nom('gleich ' + S.prop)} aus ${bm.n}: ${nf0.format((1 - best.rel) * 100)} % ${BY[S.by][1]} (${dn} ${fx(best.dim)}).`, extra);
+  const T = Core.touch(Core.gm(sel.b)), Tr = ref ? Core.touch(Core.gm(ref.b)) : NaN;
+  const d = (p, v) => ref && ref.k !== S.k ? ' · ' + dpDelta(v, p === 'T' ? Tr : Core.gm(ref[p])) : '';
+  const main = [
+    { l: 'Dichte', v: fv(Core.gm(sel.rho)) + ' kg/m³', n: fr(sel.rho) + d('rho', Core.gm(sel.rho)), t: AX.rho[2] },
+    { l: 'Steifigkeit', v: fv(Core.gm(sel.E)) + ' N/mm²', n: fr(sel.E) + d('E', Core.gm(sel.E)), t: AX.E[2] },
+    { l: 'Festigkeit', v: fv(Core.gm(sel.f)) + ' N/mm²', n: fr(sel.f) + d('f', Core.gm(sel.f)), t: AX.f[2] },
+    { l: 'Berührung', v: nf0.format(T) + ' °C', n: feel(T), t: 'Hauttemperatur im ersten Moment an einem 20 °C warmen Teil (Haut 33 °C)' },
+    { l: 'Preis', v: fv(Core.gm(sel.eur)) + ' €/kg', n: fr(sel.eur) + d('eur', Core.gm(sel.eur)), t: AX.eur[2] }
+  ];
+  const more = [
+    { l: 'Familie', v: sel.fam },
+    { l: 'Wärmeleitung', v: fr(sel.lam) + ' W/(m·K)', t: AX.lam[2] },
+    { l: 'Wärmekapazität', v: fr(sel.c) + ' J/(kg·K)', t: 'Energie, um 1 kg um 1 K zu erwärmen' },
+    { l: 'Wärmeeindringkoeffizient', v: fr(sel.b) + ' W·s½/(m²·K)', t: AX.b[2] },
+    { l: 'Höchsttemperatur', v: fr(sel.tmax) + ' °C', t: AX.tmax[2] },
+    { l: 'CO₂', v: fr(sel.co2) + ' kg/kg', n: 'bis Werktor', t: AX.co2[2] },
+    { l: 'Verarbeitung', v: '', n: sel.proc },
+    { l: 'Quelle', v: '', n: sel.src }
+  ];
+  $('stats').innerHTML = dpStats(verdict, main, more);
+  dpHashSet('w', exportObj());
+}
+
+// ---- Bedienung ----
+dpHeader('material'); dpIcons();
+const opts = o => Object.entries(o).map(([k, v]) => `<option value="${k}">${v[0]}</option>`).join('');
+$('ax-x').innerHTML = opts(AX); $('ax-y').innerHTML = opts(AX);
+$('mat').innerHTML = [...new Set(MAT.map(m => m.fam))].map(f => `<optgroup label="${f}">${MAT.filter(m => m.fam === f).map(m => `<option value="${m.k}">${m.n}</option>`).join('')}</optgroup>`).join('');
+$('ax-x').onchange = e => { S.x = e.target.value; update(); };
+$('ax-y').onchange = e => { S.y = e.target.value; update(); };
+$('mat').onchange = e => { S.k = e.target.value; update(); };
+for (const id of ['part', 'prop', 'by']) $(id).onclick = e => { const b = e.target.closest('button'); if (!b) return;
+  S[id] = b.dataset.v; if (id === 'prop' && S.x === 'rho' && (S.y === 'E' || S.y === 'f')) S.y = Core.PROP[S.prop]; update(); };
+$('rk').onclick = e => { const tr = e.target.closest('tr[data-k]'); if (tr) { S.k = tr.dataset.k; update(); } };
+$('map').addEventListener('click', pick);
+const cmp = dpCompare($('cmp'), () => ({ k: S.k }), () => update());
+$('exp').onclick = () => dpDownload(exportObj(), 'material.json');
+$('imp').onclick = () => $('file').click();
+$('file').onchange = e => { const f = e.target.files[0]; if (!f) return; f.text().then(t => { try { S = parse(JSON.parse(t)); update(); } catch { alert('Datei nicht lesbar'); } }); e.target.value = ''; };
+$('share').onclick = () => { const u = dpHashSet('w', exportObj()); (navigator.clipboard ? navigator.clipboard.writeText(u) : Promise.reject()).catch(() => prompt('Link kopieren:', u)); };
+S = parse(dpHashGet('w'));
+update();
+window.addEventListener('resize', () => drawMap(cmp.ref ? byK(cmp.ref.k) : null));
+</script>
+</body>
+</html>
