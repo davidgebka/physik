@@ -284,3 +284,27 @@ check('T15 Scheibe unter der Quelle: 0° (seitlich sichtbar)', sh(disc, iso), 0,
   let t = 0; try { Core.trace({ N: 1, profile: [], source: iso, mat: black, field: { ...fRot, x0: -10 } }); } catch (e) { t = 1; }
   check('T20e wirft: rot mit x0 < 0', t, 1, 0);
 }
+
+// T21 Lampenkörper, Bild der Lampe (gerichtet), Leuchtdichte je Sektor (Audit 22.11.2026)
+// Geschlossene Kugel R, innen ρd, Durchlass τd; Lampe als Kugel r mit Schluckgrad a: Sichtfaktor Schale → Lampe F = (r/R)²
+// → η = τ / (1 − ρ(1 − a·F)); ohne Lampenkörper τ / (1 − ρ)
+{ const R = 50, rho = 0.5, tau = 0.4, rl = 20, a = 1, F = (rl / R) ** 2, e = tau / (1 - rho * (1 - a * F));
+  r = run({ name: 'T21a', profile: sphere(R, Math.PI, 120), source: { ...iso, r: rl, a }, mat: mat(rho, 0, tau, 0) });
+  check('T21a Kugel mit Lampenkörper: η = τ/(1 − ρ(1 − aF))', r.eta, e, 4 * Math.sqrt(e * (1 - e) / N) / e);
+  r = run({ name: 'T21a0', profile: sphere(R, Math.PI, 120), source: iso, mat: mat(rho, 0, tau, 0) });
+  check('T21a ohne Lampenkörper: η = τ/(1 − ρ)', r.eta, tau / (1 - rho), 4 * Math.sqrt(0.8 * 0.2 / N) / 0.8); }
+// Klarer Zylinder (Radius a, Höhe 2h, offen), τs = 0,9: Anteil, der als Bild der Lampe austritt = τs · h/√(h² + a²)
+{ const A = 40, h = 60, p = h / Math.hypot(h, A), cyl = [[A, -h], [A, h]];
+  r = run({ name: 'T21b', profile: cyl, source: iso, mat: mat(0, 0, 0, 0.9) });
+  const im = r.img.reduce((s, v) => s + v, 0) / N; check('T21b Klarglas: Bildanteil = τs·h/√(h²+a²)', im, 0.9 * p, 4 * Math.sqrt(0.9 * p * (1 - 0.9 * p) / N) / (0.9 * p));
+  check('T21b Bildfaktor = τs', Math.max(...r.imgK), 0.9, 1e-12);
+  r = run({ name: 'T21c', profile: cyl, source: iso, mat: mat(0, 1, 0, 0) });
+  const im2 = r.img.reduce((s, v) => s + v, 0) / N; check('T21c Spiegelrohr: Bildanteil = h/√(h²+a²)', im2, p, 4 * Math.sqrt(p * (1 - p) / N) / p);
+  r = run({ name: 'T21d', profile: cyl, source: iso, mat: mat(0.5, 0, 0.4, 0) });
+  check('T21d streuend: kein Bild der Lampe', r.img.reduce((s, v) => s + v, 0), 0, 0); }
+// Sektoren: Lampe 20 mm neben der Achse im Opalzylinder; Summe der Sektoren = Segment, Mittel der Sektor-Leuchtdichte = L, nahe Seite heller
+{ const nL = 12; r = run({ name: 'T21e', profile: [[40, -60], [40, 0], [40, 60]], source: { ...iso, x: 20 }, mat: mat(0.5, 0, 0.4, 0), nL });
+  let ds = 0, dl = 0, pk = 0; for (let i = 0; i < r.leave.length; i++) { let s = 0, l = 0; for (let k = 0; k < nL; k++) { s += r.leaveC[i * nL + k]; l += r.Lsec[i * nL + k]; pk = Math.max(pk, r.Lsec[i * nL + k] / Math.max(r.L[i], 1e-9)); } ds = Math.max(ds, Math.abs(s - r.leave[i])); dl = Math.max(dl, Math.abs(l / nL - r.L[i]) / Math.max(r.L[i], 1e-9)); }
+  check('T21e Σ Sektoren = Segment (Zähler)', ds, 0, 0); check('T21e Mittel der Sektoren = L', dl, 0, 1e-9);
+  check('T21e Lampe außermittig: hellster Sektor > 1,5 × Mittel', pk > 1.5 ? 1 : 0, 1, 0); }
+check('T21 Eingabe: Lampenkörper ungültig wirft', (() => { try { Core.trace({ N: 1, profile: [], source: { ...iso, r: -1, a: 0.5 }, mat: black }); return 0; } catch (e) { return 1; } })(), 1, 0);
