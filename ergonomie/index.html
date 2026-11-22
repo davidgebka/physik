@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Designphysik · Ergonomie</title>
+<link rel="stylesheet" href="../shared/style.css">
+<style>
+#ed{--ar:1;aspect-ratio:1/1}
+.fl{display:grid;grid-template-columns:repeat(auto-fill,minmax(216px,1fr));gap:0 12px}
+.fl label{display:flex;justify-content:space-between;align-items:center;gap:6px;white-space:nowrap;font-size:12px;color:var(--ink2);min-height:var(--h)}
+.fl label.chk{font-size:14px;color:var(--ink);justify-content:flex-start}
+.fl input[type=number]{width:72px}
+.fl select{max-width:132px}
+.fl label.off{display:none}
+#ed.st{--ar:calc(4/5);aspect-ratio:4/5}
+#figO{min-width:120px}
+/* Wer passt: Zeilen wählen das Diagramm; Balken = Anteil, der passt */
+table.crit tr{cursor:pointer}
+table.crit tr.on td{background:var(--fill)}
+table.crit td:first-child{white-space:nowrap}
+.bar{display:inline-block;width:72px;height:6px;box-shadow:inset 0 0 0 1px var(--ink);vertical-align:middle;margin-right:6px;position:relative}
+.bar i{position:absolute;left:0;top:0;bottom:0;background:var(--mech)}
+/* Nachschlagetabellen: Zahlen rechtsbündig, auf dem Telefon seitlich scrollbar */
+.tw{overflow-x:auto}
+table.bt{border-collapse:collapse;width:100%;font-size:14px;line-height:24px;font-variant-numeric:tabular-nums}
+.bt td,.bt th{padding:0 6px;box-shadow:inset 0 1px var(--dot);text-align:right;white-space:nowrap;font-weight:400;vertical-align:top}
+.bt td:first-child,.bt th:first-child{text-align:left}
+.bt thead th{font-size:12px;color:var(--ink2);box-shadow:none}
+.bt th.g{font-size:13px;text-transform:uppercase;letter-spacing:.06em;font-weight:700;box-shadow:inset 0 1px var(--ink);color:var(--ink);text-align:left}
+.bt td.u{font-weight:700}
+.bt.rw td{text-align:left;white-space:normal}
+.bt.rw td:first-child{width:30%}
+.bt.rw td:nth-child(2){font-weight:700}
+.bt.rw td:nth-child(3){font-size:12px;color:var(--ink2);width:30%}
+@media(max-width:600px){.bt.rw td:first-child,.bt.rw td:nth-child(3){width:auto}}
+</style>
+</head>
+<body>
+<header id="dp-header"></header>
+<main>
+  <section class="panel">
+    <h2>Seitenansicht <small>mm</small></h2>
+    <div class="row">
+      <span class="seg" id="scene"><button data-s="sit" class="on">Sitzen</button><button data-s="stand">Stehen</button></span>
+    </div>
+    <div class="row">
+      <button id="tpl" class="ico"></button><button id="cmp" class="ico"></button><button id="undo" class="q ico" data-i="undo" disabled>Rückgängig</button>
+    </div>
+    <canvas id="ed" role="img"></canvas>
+    <div class="row"><span class="seg" id="sex"><button data-x="f" class="on">Frau</button><button data-x="m">Mann</button></span></div>
+    <div class="ctl"><label for="pp" title="Perzentil: so viele Prozent ihres Geschlechts sind in diesem Maß kleiner">Figur, Perzentil</label><input type="range" id="pp" min="1" max="99" step="1"><output id="figO"></output></div>
+    <p class="note" id="hint">Griffe ziehen: Höhen, Sitztiefe, Unterkante. Grau gestrichelt: kleine Frau (P5) und großer Mann (P95).</p>
+  </section>
+  <section class="panel">
+    <h2>Maße <small>Produkt, mm</small></h2>
+    <div class="fl" id="dims"></div>
+    <h2>Nutzer</h2>
+    <div class="row">
+      <span class="seg" id="pop"><button data-p="mix" class="on">gemischt</button><button data-p="f">Frauen</button><button data-p="m">Männer</button></span>
+      <span class="seg" id="shoe"><button data-h="0">barfuß</button><button data-h="25" class="on">Schuhe</button><button data-h="50">Absatz</button></span>
+    </div>
+    <p class="note" id="popN"></p>
+  </section>
+  <section class="panel wide kpi">
+    <h2>Kennwerte</h2>
+    <div class="stats" id="stats"></div>
+  </section>
+  <section class="panel">
+    <h2>Wer passt <small>Zeile wählen: Verteilung daneben</small></h2>
+    <table class="kv crit" id="crit"></table>
+    <p class="note" id="critN"></p>
+  </section>
+  <section class="panel">
+    <h2>Verteilung <small id="distT"></small></h2>
+    <canvas id="dist" class="ch"></canvas>
+    <p class="note" id="distN"></p>
+  </section>
+  <section class="panel wide">
+    <h2>Körpermaße <small>Erwachsene 18–65 Jahre, ohne Schuhe und Kleidung</small></h2>
+    <div class="row"><label class="pair">Perzentil für „Nutzer“ <input type="number" id="pq" min="1" max="99" step="1" value="50"></label><span class="note" id="pqN"></span></div>
+    <div class="tw"><table class="bt" id="body"></table></div>
+  </section>
+  <section class="panel wide">
+    <h2>Richtwerte <small>berechnete Zeilen gelten für die gewählten Nutzer</small></h2>
+    <div class="tw"><table class="bt rw" id="rw"></table></div>
+  </section>
+  <section class="panel wide">
+    <h2>Datei</h2>
+    <div class="row">
+      <button id="exp" class="q" data-i="down">Export</button><button id="imp" class="q" data-i="up">Import</button><input type="file" id="impF" accept=".json,application/json" hidden>
+      <button id="share" class="q" data-i="link">Link kopieren</button>
+    </div>
+    <p class="note" id="fileN"></p>
+  </section>
+  <section class="panel wide model">
+    <h2>Modell &amp; Gültigkeit</h2>
+    <details data-k="model"><summary>Woher die Zahlen kommen, wie gerechnet wird, Grenzen und weiterführende Werkzeuge</summary><div class="txt">
+    <h3>Was gerechnet wird</h3><p>Menschen sind verschieden groß. Für ein festes Maß – Sitzhöhe, Tischhöhe, Arbeitsfläche, oberstes Fach, Türhöhe – rechnet das Modul aus, <i>für wie viele</i> Erwachsene es passt, und für wen nicht (zu klein oder zu groß). Das ist die zentrale Entscheidung im Entwurf: für die Mitte entwerfen, für ein Extrem (die Kleinsten erreichen das Fach, die Größten stoßen nicht an) oder verstellbar machen. Ein „Durchschnittsmensch“ passt fast nie überall: Wer bei der Körperhöhe genau in der Mitte liegt, hat deshalb noch lange nicht mittellange Beine.</p>
+    <h3>Körpermaße und Perzentile</h3><p>Ein <a href="https://de.wikipedia.org/wiki/Perzentil" target="_blank" rel="noopener">Perzentil</a> sagt, wie viel Prozent kleiner sind: P5 Frau = nur 5&nbsp;% der Frauen sind kleiner, P95 Mann = 95&nbsp;% der Männer sind kleiner. Üblich ist, für den Bereich P5 Frau bis P95 Mann zu entwerfen; bei Sicherheit (Kopfstoß, Durchgänge) für P99. Die Werte sind gerundete Richtwerte für Erwachsene in Deutschland von 18 bis 65 Jahren, ohne Schuhe und Kleidung, zusammengestellt nach <a href="https://de.wikipedia.org/wiki/Anthropometrie" target="_blank" rel="noopener">anthropometrischen</a> Tabellen (DIN 33402-2, Pheasant &amp; Haslegrave „Bodyspace“). Sie weichen von der aktuellen Norm um einige Millimeter ab – für eine Serie mit der Norm bzw. dem KAN-Leitfaden abgleichen. Kinder, Ältere über 65, Schwangere und Menschen im Rollstuhl sind nicht abgebildet. Schuhe: +25&nbsp;mm, Absatz +50&nbsp;mm auf alle Höhen über dem Boden (Annahme).</p>
+    <h3>Rechenweg</h3><p>Je Geschlecht ist jedes Maß eine Glockenkurve (<a href="https://de.wikipedia.org/wiki/Normalverteilung" target="_blank" rel="noopener">Normalverteilung</a>) durch die Tabellenwerte P5, P50 und P95; ist die Verteilung schief (Körpermasse), bekommen beide Seiten eine eigene Breite. „Gemischt“ heißt je zur Hälfte Frauen und Männer. Ein Kriterium legt fest, zwischen welchen Körpermaßen jemand passt; der Anteil ist die Fläche unter der Kurve in diesem Band (siehe „Verteilung“). Bei Tisch und Beinfreiheit hängt das Ergebnis davon ab, wie jeder einstellt: Ein verstellbarer Stuhl wird so hoch gestellt, wie der Tisch es verlangt, solange die Füße noch aufstehen; ein verstellbarer Tisch folgt dem Ellenbogen. Gemittelt wird über alle Unterschenkellängen und Ellenbogenhöhen, beide innerhalb eines Geschlechts unabhängig angenommen. Geprüft gegen geschlossene Lösungen in <code>ergonomie/test.js</code>. Für Fachleute: zweiseitige Normalverteilung, σ<sub>links</sub> = (P50 − P5)/1,645, σ<sub>rechts</sub> = (P95 − P50)/1,645.</p>
+    <h3>Kriterien</h3><p><i>Sitzhöhe</i>: Füße stehen auf, die Kniekehle wird nicht gedrückt – Sitz zwischen 87 und 100&nbsp;% der Kniekehlenhöhe (Parcells u.&nbsp;a. 1999); eine Fußstütze zählt wie ein höherer Boden. <i>Sitztiefe</i>: höchstens 95&nbsp;% der Gesäß-Kniekehlen-Länge, sonst drückt die Vorderkante in die Kniekehle (Parcells); dass Stühle mit Lehne für langes Sitzen mindestens 80&nbsp;% tief sein sollten, steht nur in der Empfehlung – Hocker und Bänke dürfen kürzer sein. <i>Sitzbreite</i>: mindestens Hüftbreite, zwischen Armlehnen 1,1-fach. <i>Tischhöhe</i>: Platte 30&nbsp;mm unter bis 70&nbsp;mm über dem entspannten Ellenbogen (Heuristik für Schreiben, Essen, Tastatur). <i>Beinfreiheit</i>: unter Platte bzw. Zarge mindestens Oberschenkeldicke + 20&nbsp;mm. <i>Arbeitshöhe stehend</i> nach Grandjean: feine Arbeit 50–100&nbsp;mm über, leichte 100–150&nbsp;mm und schwere 150–400&nbsp;mm unter dem Ellenbogen, je ±25&nbsp;mm Toleranz. <i>Oberes Fach</i>: Griff 50&nbsp;mm über dem Fachboden muss erreichbar sein, über eine Arbeitsplatte hinweg 150&nbsp;mm weniger (Heuristik). <i>Einsicht</i>: Fachboden unter Augenhöhe. <i>Kopffreiheit</i>: Körperhöhe mit Schuhen.</p>
+    <h3>Urteil</h3><p>Komfort: passt, wenn mindestens 90&nbsp;% passen (P5 bis P95), knapp ab einem Drittel, darunter kritisch. Sicherheit (Kopffreiheit): passt ab 99&nbsp;%, knapp ab 95&nbsp;%. „Einsicht ins Fach“ ist ein Hinweis: steht unter dem Urteil, ändert es aber nicht. Feste Maße erreichen 90&nbsp;% oft gar nicht – dann sagt die Empfehlung, welcher Verstellbereich nötig wäre. „Alle Kriterien zugleich: höchstens …“ ist der kleinste Einzelwert – wie viele wirklich überall passen, lässt sich aus Einzelmaßen nicht genau sagen, es sind eher weniger. Niedrige Sitze (Sofa, Lounge) liegen außerhalb der Regeln für aufrechtes Sitzen: dann höchstens „knapp“.</p>
+    <h3>Nicht enthalten</h3><p>Körperhaltung über Zeit (Ermüdung, Sitzwechsel), Polster und Neigung von Sitz und Lehne, Lendenstütze, Sicht und Blickwinkel, Kräfte beim Bedienen, Heben und Tragen (nur Richtwert), Greifen nach vorn und zur Seite, Kleidung im Winter, Kinder und Ältere, Rollstuhl. Für Arbeitsplätze, öffentliche Möbel, Kindermöbel und Barrierefreiheit gelten Normen (z.&nbsp;B. DIN EN 1335, DIN EN 527, DIN EN 1729, DIN 18040) – dort entscheidet die Norm, nicht dieses Modul.</p>
+    <h3>Weiterführende Werkzeuge</h3><p><a href="https://koerpermass.kan-praxis.de/" target="_blank" rel="noopener">KANPraxis Körpermaße</a> – woher Daten kommen und wie man sie richtig verwendet<br><a href="https://www.dined.io/" target="_blank" rel="noopener">DINED</a> – englisch, TU Delft: Körpermaße vieler Länder, Perzentile, Vergleich<br><a href="https://www.peoplesize.com/" target="_blank" rel="noopener">PeopleSize</a> – Körpermaße mit Bildern, viele Bevölkerungen (kostenpflichtig)<br><a href="https://www.human-solutions.com/de/produkte/ramsis-allgemein/" target="_blank" rel="noopener">RAMSIS</a> – 3D-Menschmodell für Fahrzeug- und Arbeitsplatzgestaltung<br><a href="https://www.baua.de/DE/Themen/Arbeitsgestaltung/Physische-Belastung/Leitmerkmalmethode/_functions/Leitmerkmalmethoden.html" target="_blank" rel="noopener">Leitmerkmalmethode (BAuA)</a> – Heben, Halten, Tragen am Arbeitsplatz bewerten</p>
+    </div></details>
+  </section>
+</main>
+
+<script src="../shared/util.js"></script>
+<script src="../shared/chart.js"></script>
+<script>
+// === CORE START
+// Körpermaße als Verteilung und Anteil der Nutzer, für die ein Produktmaß passt. Kein DOM.
+// Einheiten: mm, Masse kg. Bevölkerung pop = {w: Frauenanteil 0…1, shoe: Schuhzuschlag mm}.
+// Je Geschlecht zweiseitige Normalverteilung durch P5, P50, P95 (links σ = (P50 − P5)/1,645, rechts σ = (P95 − P50)/1,645):
+// trifft die drei Tabellenwerte exakt und bildet Schiefe ab (Körpermasse). Bevölkerung = Mischung beider Geschlechter.
+// Kriterium: ein Mensch passt, wenn sein Körpermaß x im Band [fLo(Produkt), fHi(Produkt)] liegt; Anteil = F(fHi) − F(fLo).
+const Core = (() => {
+  const Z95 = 1.6448536269514722, RAD = Math.PI / 180, C5 = Math.cos(5 * RAD), C30 = Math.cos(30 * RAD);
+  // Richtwerte Erwachsene 18–65 Jahre, Deutschland, ohne Schuhe und Kleidung, gerundet auf 5 mm – zusammengestellt nach
+  // DIN 33402-2 (Größenordnung der Ausgaben 2005/2020) und Pheasant & Haslegrave „Bodyspace“; Ankerwert KAN-Leitfaden
+  // Anthropometrie 2013: Sitzflächenhöhe P5 ♀ … P95 ♂ = 375 … 490 mm. f/m = [P5, P50, P95] Frauen/Männer; sh = Schuhe zählen mit.
+  const BODY = {
+    stature:  { g: 'Stehen', n: 'Körperhöhe', f: [1535, 1625, 1720], m: [1650, 1750, 1855], sh: 1, t: 'Scheitel über dem Boden, aufrecht stehend' },
+    eye:      { g: 'Stehen', n: 'Augenhöhe', f: [1430, 1515, 1605], m: [1535, 1630, 1735], sh: 1, t: 'Augen über dem Boden, stehend' },
+    shoulder: { g: 'Stehen', n: 'Schulterhöhe', f: [1260, 1345, 1425], m: [1350, 1450, 1550], sh: 1, t: 'Schulterdach (Akromion) über dem Boden' },
+    elbow:    { g: 'Stehen', n: 'Ellenbogenhöhe', f: [965, 1035, 1100], m: [1025, 1100, 1175], sh: 1, t: 'Unterseite des Ellenbogens bei hängendem Oberarm, Unterarm waagerecht' },
+    crotch:   { g: 'Stehen', n: 'Schritthöhe', f: [700, 765, 830], m: [755, 820, 890], sh: 1, t: 'Schritt über dem Boden (Beinlänge innen)' },
+    reach:    { g: 'Stehen', n: 'Reichweite nach oben', f: [1805, 1925, 2050], m: [1940, 2075, 2210], sh: 1, t: 'Griffachse der nach oben gestreckten Hand, auf ganzer Sohle stehend' },
+    sitH:     { g: 'Sitzen', n: 'Sitzhöhe (Scheitel)', f: [810, 860, 910], m: [860, 910, 965], sh: 0, t: 'Scheitel über der Sitzfläche, aufrecht sitzend' },
+    eyeS:     { g: 'Sitzen', n: 'Augenhöhe sitzend', f: [700, 750, 800], m: [750, 800, 855], sh: 0, t: 'Augen über der Sitzfläche' },
+    shoulderS:{ g: 'Sitzen', n: 'Schulterhöhe sitzend', f: [520, 565, 610], m: [560, 605, 655], sh: 0, t: 'Schulterdach über der Sitzfläche' },
+    elbowS:   { g: 'Sitzen', n: 'Ellenbogenhöhe sitzend', f: [185, 230, 275], m: [195, 240, 285], sh: 0, t: 'Unterseite des Ellenbogens über der Sitzfläche, Oberarm hängend' },
+    thigh:    { g: 'Sitzen', n: 'Oberschenkeldicke', f: [125, 145, 170], m: [135, 160, 185], sh: 0, t: 'höchste Stelle des Oberschenkels über der Sitzfläche' },
+    kneeS:    { g: 'Sitzen', n: 'Kniehöhe sitzend', f: [470, 505, 545], m: [510, 550, 595], sh: 1, t: 'Oberkante Knie über dem Boden, Unterschenkel senkrecht' },
+    popl:     { g: 'Sitzen', n: 'Kniekehlenhöhe', f: [375, 410, 445], m: [415, 450, 490], sh: 1, t: 'Unterschenkellänge: Kniekehle über dem Boden – bestimmt die passende Sitzhöhe' },
+    bkl:      { g: 'Sitzen', n: 'Gesäß-Knie-Länge', f: [545, 590, 640], m: [565, 615, 665], sh: 0, t: 'Gesäßrückseite bis Vorderkante Knie' },
+    bpl:      { g: 'Sitzen', n: 'Gesäß-Kniekehlen-Länge', f: [450, 490, 535], m: [455, 500, 545], sh: 0, t: 'Gesäßrückseite bis Kniekehle – bestimmt die passende Sitztiefe' },
+    hipS:     { g: 'Breiten & Reichweiten', n: 'Hüftbreite sitzend', f: [345, 390, 460], m: [335, 365, 405], sh: 0, t: 'breiteste Stelle an Hüfte und Oberschenkeln, sitzend – bei Frauen größer' },
+    shoulderB:{ g: 'Breiten & Reichweiten', n: 'Schulterbreite', f: [375, 415, 460], m: [435, 475, 520], sh: 0, t: 'über die Oberarme gemessen (bideltoid), ohne Kleidung' },
+    forearm:  { g: 'Breiten & Reichweiten', n: 'Ellenbogen–Griffachse', f: [305, 335, 365], m: [335, 365, 395], sh: 0, t: 'Unterarm mit Hand bis zur Mitte der geschlossenen Faust' },
+    reachF:   { g: 'Breiten & Reichweiten', n: 'Reichweite nach vorn', f: [640, 695, 750], m: [700, 760, 820], sh: 0, t: 'Griffachse vor der Rückenlehne bzw. Wand, Arm waagerecht gestreckt' },
+    handL:    { g: 'Hand & Fuß', n: 'Handlänge', f: [160, 175, 190], m: [175, 190, 205], sh: 0, t: 'Handgelenkfalte bis Spitze Mittelfinger' },
+    handB:    { g: 'Hand & Fuß', n: 'Handbreite', f: [70, 75, 85], m: [80, 85, 95], sh: 0, t: 'über die Fingergrundgelenke, ohne Daumen' },
+    footL:    { g: 'Hand & Fuß', n: 'Fußlänge', f: [220, 240, 260], m: [245, 265, 285], sh: 0, t: 'Ferse bis längste Zehe, ohne Schuh' },
+    mass:     { g: 'Gewicht', n: 'Körpermasse', f: [52, 66, 92], m: [64, 84, 112], sh: 0, u: 'kg', t: 'Gewicht ohne Kleidung; nach oben breit gestreut' }
+  };
+  // Standardnormalverteilung: erfc nach Numerical Recipes (rel. Fehler < 1,2·10⁻⁷), Quantil nach Acklam (< 1,2·10⁻⁹)
+  function erfc(x) { const z = Math.abs(x), t = 1 / (1 + 0.5 * z);
+    const r = t * Math.exp(-z * z - 1.26551223 + t * (1.00002368 + t * (0.37409196 + t * (0.09678418 + t * (-0.18628806 + t * (0.27886807 + t * (-1.13520398 + t * (1.48851587 + t * (-0.82215223 + t * 0.17087277)))))))));
+    return x >= 0 ? r : 2 - r; }
+  const ncdf = z => 0.5 * erfc(-z / Math.SQRT2);
+  function nq(p) {
+    if (p <= 0) return -Infinity; if (p >= 1) return Infinity;
+    const a = [-39.69683028665376, 220.9460984245205, -275.9285104469687, 138.3577518672690, -30.66479806614716, 2.506628277459239],
+      b = [-54.47609879822406, 161.5858368580409, -155.6989798598866, 66.80131188771972, -13.28068155288572],
+      c = [-0.007784894002430293, -0.3223964580411365, -2.400758277161838, -2.549732539343734, 4.374664141464968, 2.938163982698783],
+      d = [0.007784695709041462, 0.3224671290700398, 2.445134137142996, 3.754408661907416], pl = 0.02425;
+    if (p < pl) { const q = Math.sqrt(-2 * Math.log(p)); return (((((c[0] * q + c[1]) * q + c[2]) * q + c[3]) * q + c[4]) * q + c[5]) / ((((d[0] * q + d[1]) * q + d[2]) * q + d[3]) * q + 1); }
+    if (p > 1 - pl) { const q = Math.sqrt(-2 * Math.log(1 - p)); return -(((((c[0] * q + c[1]) * q + c[2]) * q + c[3]) * q + c[4]) * q + c[5]) / ((((d[0] * q + d[1]) * q + d[2]) * q + d[3]) * q + 1); }
+    const q = p - 0.5, r = q * q;
+    return (((((a[0] * r + a[1]) * r + a[2]) * r + a[3]) * r + a[4]) * r + a[5]) * q / (((((b[0] * r + b[1]) * r + b[2]) * r + b[3]) * r + b[4]) * r + 1);
+  }
+  // eine Gruppe q = [P5, P50, P95]
+  const sig = q => [(q[1] - q[0]) / Z95, (q[2] - q[1]) / Z95];
+  const cdfQ = (q, x) => { const s = sig(q); return ncdf((x - q[1]) / (x < q[1] ? s[0] : s[1])); };
+  const pdfQ = (q, x) => { const s = sig(q)[x < q[1] ? 0 : 1], z = (x - q[1]) / s; return Math.exp(-z * z / 2) / (s * Math.sqrt(2 * Math.PI)); };
+  const quantQ = (q, p) => { const z = nq(p), s = sig(q); return q[1] + z * (z < 0 ? s[0] : s[1]); };
+  const shoeOf = (id, pop) => BODY[id].sh ? (pop.shoe || 0) : 0;
+  // Bevölkerung: Mischung Frauen/Männer, Schuhzuschlag bei Höhen über dem Boden
+  function cdf(id, pop, x) { const d = BODY[id], s = shoeOf(id, pop), w = pop.w;
+    if (x === -Infinity) return 0; if (x === Infinity) return 1;
+    return (w > 0 ? w * cdfQ(d.f, x - s) : 0) + (w < 1 ? (1 - w) * cdfQ(d.m, x - s) : 0); }
+  function pdf(id, pop, x) { const d = BODY[id], s = shoeOf(id, pop), w = pop.w; return w * pdfQ(d.f, x - s) + (1 - w) * pdfQ(d.m, x - s); }
+  function quant(id, pop, p) {
+    const d = BODY[id], s = shoeOf(id, pop);
+    if (pop.w >= 1) return quantQ(d.f, p) + s; if (pop.w <= 0) return quantQ(d.m, p) + s;
+    let lo = Math.min(quantQ(d.f, p), quantQ(d.m, p)) + s, hi = Math.max(quantQ(d.f, p), quantQ(d.m, p)) + s; // Mischquantil liegt zwischen beiden
+    for (let i = 0; i < 60; i++) { const m = (lo + hi) / 2; if (cdf(id, pop, m) < p) lo = m; else hi = m; }
+    return (lo + hi) / 2;
+  }
+  // Wert für ein Geschlecht und Perzentil p [%] (Typfigur)
+  const val = (id, sex, p, shoe = 0) => quantQ(BODY[id][sex], p / 100) + (BODY[id].sh ? shoe : 0);
+
+  // ---- Kriterien ----
+  // Urteilsschwellen je Art (Heuristik, docs/ergonomie.md): komfort ≥ 90 % passt (P5–P95), ab einem Drittel knapp; sicher ≥ 99 % / ≥ 95 %; hinweis nie kritisch
+  const KIND = { komfort: [0.9, 1 / 3], sicher: [0.99, 0.95], hinweis: [0.9, 0] };
+  const level = (kind, s) => s >= KIND[kind][0] - 1e-9 ? 0 : s >= KIND[kind][1] - 1e-9 ? 1 : 2;
+  // Arbeitshöhe stehend: Ellenbogenhöhe minus Arbeitshöhe [mm] nach Grandjean, je 25 mm Toleranz (fein: Fläche über dem Ellenbogen)
+  const WORK = { fein: [-125, -25], leicht: [75, 175], schwer: [125, 425] };
+  const TAB = [-30, 70];   // Tischplatte 30 mm unter bis 70 mm über dem entspannten Ellenbogen (Heuristik: Schreiben, Essen, Tastatur)
+  const LEG = 20;          // Bewegungsraum über dem Oberschenkel [mm]
+  const GRIP = 50, OVER = 150; // Gegenstand ≈ 50 mm über dem Fachboden greifen; über eine Arbeitsplatte hinweg ≈ 150 mm weniger Reichweite (Heuristik)
+  const SEAT_SET = 0.95;   // verstellbarer Sitz: Nutzer stellt Sitzhöhe ≈ 0,95 × Kniekehlenhöhe (Mitte des Bands cos 30° … cos 5°) ein
+  const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+  // Zielanteil für Empfehlungen: beidseitig P5–P95, einseitig P5 bzw. P95, Sicherheit P1 bzw. P99
+  const tgt = kind => kind === 'sicher' ? 0.01 : 0.05;
+  // spec = {k, kind, dim, fLo(v), fHi(v), iLo(x), iHi(x)} – iLo/iHi Umkehrungen; Produkt lo…hi (fest: lo = hi)
+  function evalSpec(sp, lo, hi, pop) {
+    const xlo = sp.fLo ? sp.fLo(lo) : -Infinity, xhi = sp.fHi ? sp.fHi(hi) : Infinity, a = cdf(sp.dim, pop, xlo), b = cdf(sp.dim, pop, xhi);
+    const r = { k: sp.k, kind: sp.kind, dim: sp.dim, band: [xlo, xhi], ok: Math.max(0, b - a), lo: a, hi: 1 - b };
+    r.lv = level(sp.kind, r.ok); r.rec = recSpec(sp, pop); return r;
+  }
+  // Empfehlung: beidseitig Verstellbereich für P5–P95 und bester fester Wert; einseitig Grenzwert
+  function recSpec(sp, pop) {
+    const t = tgt(sp.kind), q0 = quant(sp.dim, pop, t), q1 = quant(sp.dim, pop, 1 - t);
+    if (!sp.fLo) return { min: sp.iHi(q1), p: 1 - t };        // nur obere Grenze am Körper: Produkt mindestens …
+    if (!sp.fHi) return { max: sp.iLo(q0), p: 1 - t };        // nur untere Grenze: Produkt höchstens …
+    const r = { range: [sp.iLo(q0), sp.iHi(q1)], p: 1 - 2 * t };
+    // bester fester Wert: Anteil über v abtasten (unimodal), dann fein
+    const a = sp.iLo(quant(sp.dim, pop, 0.001)), b = sp.iHi(quant(sp.dim, pop, 0.999)), f = v => cdf(sp.dim, pop, sp.fHi(v)) - cdf(sp.dim, pop, sp.fLo(v));
+    let best = a, bs = -1; for (let i = 0; i <= 200; i++) { const v = a + (b - a) * i / 200, s = f(v); if (s > bs) { bs = s; best = v; } }
+    let l = best - (b - a) / 200, h = best + (b - a) / 200;
+    for (let i = 0; i < 40; i++) { const m1 = l + (h - l) / 3, m2 = h - (h - l) / 3; if (f(m1) < f(m2)) l = m1; else h = m2; }
+    r.fixed = (l + h) / 2; r.fixedOk = f(r.fixed); return r;
+  }
+  const rng = v => Array.isArray(v) ? [Math.min(v[0], v[1]), Math.max(v[0], v[1])] : [v, v];
+  // Sitzplatz P = {sh: [lo, hi] Sitzhöhe, fr: Fußstütze über Boden, sd: Sitztiefe, sw: Sitzbreite, arm: Armlehnen, table, th: [lo, hi] Tischhöhe, tu: Platte + Zarge}
+  function specsSit(P) {
+    const fr = P.fr || 0, ka = P.arm ? 1.1 : 1;
+    return [
+      // Sitzhöhe (Parcells u. a. 1999): Kniekehlenhöhe·cos 30° ≤ Sitzhöhe ≤ Kniekehlenhöhe·cos 5° – Füße stehen, Kniekehle frei
+      { k: 'sh', kind: 'komfort', dim: 'popl', fLo: v => (v - fr) / C5, fHi: v => (v - fr) / C30, iLo: x => x * C5 + fr, iHi: x => x * C30 + fr },
+      // Sitztiefe (Parcells): höchstens 0,95 × Gesäß-Kniekehlen-Länge, sonst drückt die Vorderkante in die Kniekehle. Die Untergrenze 0,80 ×
+      // (Oberschenkel liegen auf) gilt nur für Stühle mit Lehne und langes Sitzen – nicht für Hocker und Bänke, daher nicht im Urteil
+      { k: 'sd', kind: 'komfort', dim: 'bpl', fLo: v => v / 0.95, iLo: x => x * 0.95 },
+      // Sitzbreite: mindestens Hüftbreite (mit Armlehnen 1,1 × Hüftbreite, Parcells)
+      { k: 'sw', kind: 'komfort', dim: 'hipS', fHi: v => v / ka, iHi: x => x * ka }
+    ];
+  }
+  // Einstellung des Einzelnen (Kniekehlenhöhe PHs mit Schuhen, Ellenbogen über Sitz E): verstellbarer Sitz so, dass die Füße stehen
+  // (Band cos 30° … cos 5°); bei festem Tisch darin so nah wie möglich an „Tisch passt zum Ellenbogen“, sonst 0,95 × Kniekehle.
+  // Verstellbarer Tisch folgt dem Ellenbogen (+20 mm, Mitte des Tischbands). Liefert {SH, T}.
+  function choose(P, PHs, E) {
+    const fr = P.fr || 0, [slo, shi] = rng(P.sh), [tlo, thi] = rng(P.th), mid = (TAB[0] + TAB[1]) / 2;
+    let a = Math.max(slo, fr + PHs * C30), b = Math.min(shi, fr + PHs * C5);
+    if (a > b) a = b = clamp(fr + SEAT_SET * PHs, slo, shi);           // Füße erreichen den Boden in keiner Stellung
+    const SH = tlo === thi ? clamp(tlo - E - mid, a, b) : clamp(fr + SEAT_SET * PHs, a, b);
+    return { SH, T: clamp(SH + E + mid, tlo, thi) };
+  }
+  // Tisch und Beinfreiheit hängen von den Einstellungen des Einzelnen ab → Mittelung über Kniekehlen- und Ellenbogenhöhe je Geschlecht
+  // (innerhalb eines Geschlechts Ellenbogen, Oberschenkel und Kniekehle unabhängig angenommen); alles fest → geschlossene Lösung
+  function tableEval(P, pop) {
+    const [slo, shi] = rng(P.sh), [tlo, thi] = rng(P.th), tu = P.tu || 0, s = pop.shoe || 0, fixed = slo === shi && tlo === thi;
+    const tab = { ok: 0, lo: 0, hi: 0 }, leg = { ok: 0, lo: 0, hi: 0 };
+    for (const [sex, w] of [['f', pop.w], ['m', 1 - pop.w]]) {
+      if (w <= 0) continue;
+      const ph = BODY.popl[sex], eh = BODY.elbowS[sex], th = BODY.thigh[sex];
+      if (fixed) { // Tisch passt, wenn TAB[0] ≤ d − Ellenbogen ≤ TAB[1] mit d = Tisch − Sitz; Beine: d − Zarge ≥ Oberschenkel + Spiel
+        const d = tlo - slo, a = cdfQ(eh, d - TAB[1]), b = cdfQ(eh, d - TAB[0]), pl = cdfQ(th, d - tu - LEG);
+        tab.ok += w * Math.max(0, b - a); tab.lo += w * a; tab.hi += w * (1 - b); leg.ok += w * pl; leg.hi += w * (1 - pl); continue;
+      }
+      const N = 64, M = 96, wi = w / (N * M);
+      for (let i = 0; i < N; i++) { const PHs = quantQ(ph, (i + 0.5) / N) + s;
+        for (let j = 0; j < M; j++) { const E = quantQ(eh, (j + 0.5) / M), c = choose(P, PHs, E), x = c.T - c.SH - E, pl = cdfQ(th, c.T - c.SH - tu - LEG);
+          if (x > TAB[1] + 1e-9) tab.lo += wi; else if (x < TAB[0] - 1e-9) tab.hi += wi; else tab.ok += wi;
+          leg.ok += wi * pl; leg.hi += wi * (1 - pl); } }
+    }
+    return { tab, leg };
+  }
+  function evalSit(P, pop) {
+    const [slo, shi] = rng(P.sh), out = specsSit(P).map(sp => evalSpec(sp, sp.k === 'sh' ? slo : sp.k === 'sd' ? P.sd : P.sw, sp.k === 'sh' ? shi : sp.k === 'sd' ? P.sd : P.sw, pop));
+    if (P.table) {
+      const t = tableEval(P, pop), q = p => quant('thigh', pop, p);
+      const ct = { k: 'tab', kind: 'komfort', dim: 'elbowS', ...t.tab }, cl = { k: 'leg', kind: 'komfort', dim: 'thigh', ...t.leg };
+      ct.lv = level('komfort', ct.ok); cl.lv = level('komfort', cl.ok);
+      // Empfehlungen bei festem Sitz: Tischhöhe = Sitz + Ellenbogen P5 … P95 im Band; Unterkante für P95 Oberschenkel
+      const SH = slo, e0 = quant('elbowS', pop, 0.05), e1 = quant('elbowS', pop, 0.95);
+      ct.rec = { range: [SH + e0 + TAB[0], SH + e1 + TAB[1]], p: 0.9, fixed: SH + quant('elbowS', pop, 0.5) + (TAB[0] + TAB[1]) / 2 };
+      if (ct.rec.range[0] <= ct.rec.range[1]) ct.rec.fixedOk = tableEval({ ...P, sh: [SH, SH], th: [ct.rec.fixed, ct.rec.fixed] }, pop).tab.ok;
+      cl.rec = { min: SH + q(0.95) + LEG, p: 0.95, under: q(0.95) + LEG }; // Unterkante über dem Boden bzw. über dem Sitz
+      out.push(ct, cl);
+    }
+    return out;
+  }
+  // Steharbeitsplatz P = {wh: [lo, hi] Arbeitshöhe | null, work: fein|leicht|schwer, shelf: Höhe oberer Fachboden | null, over: über Arbeitsplatte, head: Kopffreiheit | null}
+  function specsStand(P) {
+    const [a, b] = WORK[P.work] || WORK.leicht, e = GRIP + (P.over ? OVER : 0), out = [];
+    if (P.wh) out.push({ k: 'ah', kind: 'komfort', dim: 'elbow', fLo: v => v + a, fHi: v => v + b, iLo: x => x - a, iHi: x => x - b });
+    if (P.shelf != null) out.push(
+      { k: 'reach', kind: 'komfort', dim: 'reach', fLo: v => v + e, iLo: x => x - e },
+      { k: 'eye', kind: 'hinweis', dim: 'eye', fLo: v => v, iLo: x => x });
+    if (P.head != null) out.push({ k: 'head', kind: 'sicher', dim: 'stature', fHi: v => v, iHi: x => x });
+    return out;
+  }
+  function evalStand(P, pop) {
+    const [lo, hi] = P.wh ? rng(P.wh) : [0, 0];
+    return specsStand(P).map(sp => sp.k === 'ah' ? evalSpec(sp, lo, hi, pop) : evalSpec(sp, sp.k === 'head' ? P.head : P.shelf, sp.k === 'head' ? P.head : P.shelf, pop));
+  }
+  return { BODY, ncdf, nq, cdfQ, quantQ, cdf, pdf, quant, val, level, KIND, WORK, TAB, LEG, GRIP, OVER, SEAT_SET, C5, C30, evalSit, evalStand, tableEval, choose, rng };
+})();
+if (typeof module !== 'undefined') module.exports = Core;
+// === CORE END
+
+// ---- UI ----
+const B = Core.BODY, RAD = Math.PI / 180;
+const SIT0 = { sh: 460, shHi: 510, shA: false, fr: 0, sd: 420, sw: 460, arm: false, table: true, th: 750, thHi: 850, thA: false, tu: 100 };
+const STAND0 = { workOn: true, wh: 900, whHi: 1000, whA: false, work: 'leicht', shelfOn: true, shelf: 1750, over: true, headOn: false, head: 2000 };
+let S = { scene: 'sit', pop: 'mix', shoe: 25, sex: 'f', p: 50, sit: { ...SIT0 }, stand: { ...STAND0 } };
+let R = [], REF = null;                 // Kriterien des Stands, des gemerkten Stands
+const UI = { crit: null, drag: null, handles: [], G: null, hov: null };
+const cv = $('ed'), TX = 330, CX = 300, WALL = 900; // Tischvorderkante, Arbeitsplatte vorn, Wand (mm)
+
+const POP = (s = S) => ({ w: s.pop === 'f' ? 1 : s.pop === 'm' ? 0 : 0.5, shoe: s.shoe });
+const sitP = s => ({ sh: [s.sh, s.shA ? s.shHi : s.sh], fr: s.fr, sd: s.sd, sw: s.sw, arm: s.arm, table: s.table, th: [s.th, s.thA ? s.thHi : s.th], tu: s.tu });
+const standP = s => ({ wh: s.workOn ? [s.wh, s.whA ? s.whHi : s.wh] : null, work: s.work, shelf: s.shelfOn ? s.shelf : null, over: s.over, head: s.headOn ? s.head : null });
+const evalAll = s => s.scene === 'sit' ? Core.evalSit(sitP(s.sit), POP(s)) : Core.evalStand(standP(s.stand), POP(s));
+const mm = v => nf0.format(Math.round(v / 5) * 5) + ' mm';
+const pc = x => nf0.format(Math.floor(Math.max(0, x) * 100 + 1e-6)) + ' %'; // abgerundet: 89,9 % zeigt nie „90 %“
+const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+
+// Kriterien in Designsprache: Name, Erklärung, Seite „Körpermaß zu klein“ (lo) bzw. „zu groß“ (hi)
+const CN = {
+  sh: { n: 'Sitzhöhe', t: 'Füße stehen flach auf, die Kniekehle wird nicht gedrückt', lo: 'zu hoch', hi: 'zu niedrig', vlo: 'Sitz zu hoch für %: Füße hängen, Kniekehle drückt', vhi: 'Sitz zu niedrig für %: Knie kommen hoch' },
+  sd: { n: 'Sitztiefe', t: 'Oberschenkel liegen auf, die Vorderkante drückt nicht in die Kniekehle', lo: 'zu tief', hi: 'zu kurz', vlo: 'Sitz zu tief für %: Vorderkante drückt in die Kniekehle', vhi: 'Sitzfläche zu kurz für %: Oberschenkel liegen nicht auf' },
+  sw: { n: 'Sitzbreite', t: 'Hüfte und Oberschenkel passen auf die Sitzfläche bzw. zwischen die Armlehnen', hi: 'zu schmal', vhi: 'Sitz zu schmal für %' },
+  tab: { n: 'Tischhöhe', t: 'Tischplatte etwa auf Höhe des entspannten Ellenbogens (−30 … +70 mm)', lo: 'zu hoch', hi: 'zu niedrig', vlo: 'Tisch zu hoch für %: Schultern ziehen hoch', vhi: 'Tisch zu niedrig für %: Rücken beugt sich vor' },
+  leg: { n: 'Beinfreiheit', t: 'Oberschenkel passen unter Platte bzw. Zarge (+20 mm Spiel)', hi: 'stößt an', vhi: 'Oberschenkel stoßen an die Zarge bei %' },
+  ah: { n: 'Arbeitshöhe', t: 'Arbeitsfläche passend zum Ellenbogen und zur Tätigkeit (Grandjean)', lo: 'zu hoch', hi: 'zu niedrig', vlo: 'Arbeitsfläche zu hoch für %: Schultern ziehen hoch', vhi: 'Arbeitsfläche zu niedrig für %: Rücken krumm' },
+  reach: { n: 'Oberes Fach', t: 'Gegenstand 50 mm über dem Fachboden mit der Hand erreichbar, ohne Zehenspitzen', lo: 'nicht erreichbar', vlo: 'Oberstes Fach für % nicht erreichbar' },
+  eye: { n: 'Einsicht ins Fach', t: 'Fachboden unter Augenhöhe: der Inhalt ist zu sehen', lo: 'über Augenhöhe', vlo: 'Fach über Augenhöhe für %: Inhalt nicht zu sehen' },
+  head: { n: 'Kopffreiheit', t: 'Körperhöhe mit Schuhen passt darunter', hi: 'stößt an', vhi: 'Kopfstoß für %' }
+};
+const sideTxt = c => { const n = CN[c.k], a = []; if (n.lo && c.lo >= 0.005) a.push(`${n.lo} für ${pc(c.lo)}`); if (n.hi && c.hi >= 0.005) a.push(`${n.hi} für ${pc(c.hi)}`); return a.join(' · '); };
+const worstSide = c => (CN[c.k].lo && (!CN[c.k].hi || c.lo >= c.hi)) ? 'lo' : 'hi';
+
+// ---- Figur (Seitenansicht, blickt nach rechts) aus den Körpermaßen eines Perzentils; Segmente [Punkt, Punkt, Dicke] in mm ----
+function figSit(sx, p, shoe, s, SH, TH) {
+  const v = id => Core.val(id, sx, p, shoe), st = Core.val('stature', sx, p, 0), bkl = v('bkl'), tt = v('thigh'), fr = s.fr || 0, out = { segs: [] };
+  const H = [0.2 * bkl, SH + 0.55 * tt]; let K = [bkl - 55, SH + 0.5 * tt];
+  const Lt = Math.hypot(K[0] - H[0], K[1] - H[1]), Ls = v('popl') + 0.5 * tt, yF = fr, mx = Ls * Math.cos(20 * RAD); let F;
+  if (K[1] - yF < mx) { const dy = Math.min(0.9 * Lt, yF + mx - H[1]); K = [H[0] + Math.sqrt(Lt * Lt - dy * dy), H[1] + dy]; out.rise = true; } // Sitz zu niedrig: Knie steigt
+  const drop = K[1] - yF;
+  if (drop <= Ls) F = [K[0] + Math.sqrt(Ls * Ls - drop * drop), yF]; else { F = [K[0], K[1] - Ls]; out.gap = F[1] - yF; } // sonst hängen die Füße
+  const A = [F[0], F[1] + 75], fl = v('footL'), r = 0.062 * st, S0 = [H[0] - 15, SH + v('shoulderS') - 45], C = [S0[0] + 25, SH + v('sitH') - r];
+  const E = [S0[0] + 15, SH + v('elbowS')], Lf = v('forearm'), dy = clamp(TH != null ? TH + 0.02 * st - E[1] : -0.35 * Lf, -0.7 * Lf, 0.7 * Lf), Hd = [E[0] + Math.sqrt(Lf * Lf - dy * dy), E[1] + dy];
+  out.segs.push([[F[0] - 40, F[1] + 35], [F[0] + 0.72 * fl, F[1] + 30], 0.045 * st], [K, A, 0.06 * st], [H, K, tt], [H, [S0[0], S0[1] - 0.03 * st], 0.145 * st],
+    [[S0[0] + 10, S0[1]], [C[0] - 10, C[1] - 0.6 * r], 0.07 * st], [S0, E, 0.055 * st], [E, Hd, 0.042 * st]);
+  out.head = { c: C, r }; out.eye = [C[0] + 0.62 * r, SH + v('eyeS')]; out.foot = F; out.hand = Hd; return out;
+}
+function figStand(sx, p, shoe, s, WH) {
+  const v = id => Core.val(id, sx, p, shoe), b = Core.val('stature', sx, p, 0), st = v('stature'), out = { segs: [] };
+  const A = [0, shoe + 75], K = [10, shoe + 0.285 * b], H = [0, v('crotch') + 0.045 * b], S0 = [-5, v('shoulder') - 45], r = 0.062 * b, C = [15, st - r];
+  const E = [25, v('elbow')], Lf = v('forearm'), dy = WH == null ? -0.97 * Lf : clamp(WH + 0.02 * b - E[1], -0.8 * Lf, 0.8 * Lf), Hd = [E[0] + Math.sqrt(Lf * Lf - dy * dy), E[1] + dy];
+  // zweiter Arm greift zum oberen Fach (über der Arbeitsplatte nach vorn, sonst senkrecht wie bei der Messung)
+  if (s.shelfOn) {
+    const Lr = v('reach') - S0[1], Lu = S0[1] - E[1], L2 = Lr - Lu, T = s.over ? [WALL - 300, s.shelf + Core.GRIP] : [S0[0] + 20, s.shelf + Core.GRIP];
+    const dx = T[0] - S0[0], dyy = T[1] - S0[1], d = Math.hypot(dx, dyy), u = [dx / d, dyy / d];
+    // Fehlbetrag wie im Kriterium (Reichweite nach oben gegen Fach + Griff, über der Platte − 150 mm), Arm zeigt zum Fach
+    const short = s.shelf + Core.GRIP + (s.over ? Core.OVER : 0) - v('reach'); let Hr, El;
+    if (short > 0) { const L = Math.max(Lu, d - short); Hr = [S0[0] + u[0] * L, S0[1] + u[1] * L]; El = [S0[0] + u[0] * Lu, S0[1] + u[1] * Lu]; out.short = short; }
+    else { Hr = T; const l2 = Math.min(L2, d + Lu - 1), a = Math.acos(clamp((Lu * Lu + d * d - l2 * l2) / (2 * Lu * d), -1, 1)), ang = Math.atan2(dyy, dx) - a; El = [S0[0] + Lu * Math.cos(ang), S0[1] + Lu * Math.sin(ang)]; }
+    out.arm2 = [[S0, El, 0.055 * b], [El, Hr, 0.042 * b]]; out.hand2 = Hr; out.target = T;
+  }
+  out.segs.push([[-45, shoe + 35], [0.72 * v('footL'), shoe + 30], 0.045 * b], [A, K, 0.06 * b], [K, H, 0.09 * b], [H, [S0[0], S0[1] - 0.03 * b], 0.145 * b],
+    [[S0[0] + 10, S0[1]], [C[0] - 10, C[1] - 0.6 * r], 0.07 * b], [S0, E, 0.055 * b], [E, Hd, 0.042 * b]);
+  out.head = { c: C, r }; out.eye = [C[0] + 0.62 * r, v('eye')]; out.top = st; out.hand = Hd; return out;
+}
+// Einstellung des Einzelnen bei verstellbaren Maßen (wie im Rechenkern)
+function setting(sx, p, s) {
+  const shoe = S.shoe;
+  if (S.scene === 'sit') { const c = Core.choose(sitP(s.sit), Core.val('popl', sx, p, shoe), Core.val('elbowS', sx, p)); return { SH: c.SH, TH: c.T }; }
+  const q = s.stand, [a, b] = Core.WORK[q.work]; return { WH: !q.workOn ? null : q.whA ? clamp(Core.val('elbow', sx, p, shoe) - (a + b) / 2, q.wh, q.whHi) : q.wh };
+}
+const figure = (sx, p, s = S) => { const st = setting(sx, p, s); return S.scene === 'sit' ? figSit(sx, p, S.shoe, s.sit, st.SH, s.sit.table ? st.TH : null) : figStand(sx, p, S.shoe, s.stand, st.WH); };
+
+// ---- Produkt als Linien in mm (Editor und Vorlagen-Skizzen) ----
+function prodShapes(scene, q, set) {
+  const o = [];
+  if (scene === 'sit') {
+    const SH = set.SH, TH = set.TH, sd = q.sd;
+    o.push({ p: [[-10, SH], [-35, SH + 420]], w: 3 }, { p: [[0, SH - 30], [sd, SH - 30], [sd, SH], [0, SH]], z: true, f: '--fill', w: 2 },
+      { p: [[25, SH - 30], [25, 0]], w: 2 }, { p: [[sd - 25, SH - 30], [sd - 25, 0]], w: 2 });
+    if (q.fr > 0) o.push({ p: [[sd - 90, q.fr], [sd + 320, q.fr]], w: 3 }, { p: [[sd - 25, q.fr], [sd - 25, q.fr]], w: 2 }); // Fußring/Fußstütze bis unter die Füße
+    if (q.table) { o.push({ p: [[TX, TH - 25], [TX + 800, TH - 25], [TX + 800, TH], [TX, TH]], z: true, f: '--fill', w: 2 }, { p: [[TX + 760, TH - 25], [TX + 760, 0]], w: 3 });
+      if (q.tu > 25) o.push({ p: [[TX + 60, TH - q.tu], [TX + 740, TH - q.tu], [TX + 740, TH - 25], [TX + 60, TH - 25]], z: true, w: 1.5 }); }
+  } else {
+    const WH = set.WH;
+    if (q.workOn) o.push({ p: [[CX, WH - 40], [WALL, WH - 40], [WALL, WH], [CX, WH]], z: true, f: '--fill', w: 2 }, { p: [[CX + 50, WH - 40], [CX + 50, 100], [WALL, 100]], w: 1.5 });
+    if (q.workOn || (q.shelfOn && q.over)) o.push({ p: [[WALL, 0], [WALL, Math.max(2300, (WH || 0) + 1300, q.shelfOn ? q.shelf + 650 : 0)]], c: '--mut', w: 1 });
+    if (q.shelfOn) {
+      if (q.over) o.push({ p: [[WALL - 350, q.shelf - 20], [WALL, q.shelf - 20], [WALL, q.shelf + 600], [WALL - 350, q.shelf + 600]], z: true, w: 1.5 }, { p: [[WALL - 350, q.shelf], [WALL, q.shelf]], w: 3 });
+      else { const top = q.shelf + 300; o.push({ p: [[-900, 0], [-900, top]], w: 2 }, { p: [[-560, 0], [-560, top]], w: 2 }, { p: [[-900, q.shelf], [-560, q.shelf]], w: 3 });
+        for (let y = q.shelf - 380; y > 80; y -= 380) o.push({ p: [[-900, y], [-560, y]], w: 1.5 }); }
+    }
+    if (q.headOn) o.push({ p: [[-250, q.head], [220, q.head], [220, q.head + 150], [-250, q.head + 150]], z: true, f: '--fill', w: 2 });
+  }
+  return o;
+}
+function viewBox() {
+  if (S.scene === 'sit') return [-350, 1150, 0, Math.max(1500, (S.sit.thA ? S.sit.thHi : S.sit.th) + 120, (S.sit.shA ? S.sit.shHi : S.sit.sh) + 1050)];
+  const q = S.stand; return [q.shelfOn && !q.over ? -950 : -450, 980, 0, Math.max(2250, q.headOn ? q.head + 220 : 0, q.shelfOn ? q.shelf + (q.over ? 650 : 360) : 0, q.workOn ? (q.whA ? q.whHi : q.wh) + 300 : 0)];
+}
+
+// ---- Editor zeichnen ----
+// Körper: Segmente als dicke runde Striche, Fläche in der Familie (halbdurchsichtig, ohne dunklere Überlappungen) mit Umriss
+let OFF1 = null, OFF2 = null;
+function drawBody(ctx, T, k, f, mode) {
+  const cvs = ctx.canvas, dpr = window.devicePixelRatio || 1, mk = o => { o = o || document.createElement('canvas'); if (o.width !== cvs.width || o.height !== cvs.height) { o.width = cvs.width; o.height = cvs.height; } return o; };
+  OFF1 = mk(OFF1); OFF2 = mk(OFF2);
+  const segs = f.segs.concat(f.arm2 || []), paint = (o, col, add, out) => { const c = o.getContext('2d'); c.setTransform(dpr, 0, 0, dpr, 0, 0); c.lineCap = 'round'; c.strokeStyle = c.fillStyle = col;
+    c.globalCompositeOperation = out ? 'destination-out' : 'source-over';
+    for (const [a, b, w] of segs) { c.lineWidth = Math.max(1, w * k + add); c.beginPath(); const [x1, y1] = T(a), [x2, y2] = T(b); c.moveTo(x1, y1); c.lineTo(x2, y2); c.stroke(); }
+    const [hx, hy] = T(f.head.c); c.beginPath(); c.arc(hx, hy, Math.max(1, f.head.r * k + add / 2), 0, 7); c.fill(); c.globalCompositeOperation = 'source-over'; };
+  const blit = (o, a) => { ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = a; ctx.drawImage(o, 0, 0); ctx.restore(); };
+  const ring = mode === 'main' ? 3 : 2, col = css(mode === 'main' ? '--mech' : '--mut');
+  OFF2.getContext('2d').clearRect(0, 0, OFF2.width, OFF2.height); OFF2.getContext('2d').setTransform(1, 0, 0, 1, 0, 0); OFF2.getContext('2d').clearRect(0, 0, OFF2.width, OFF2.height);
+  paint(OFF2, col, ring, false); paint(OFF2, col, 0, true); // Umriss = breiter Strich minus Körper
+  if (mode === 'main') { const c = OFF1.getContext('2d'); c.setTransform(1, 0, 0, 1, 0, 0); c.clearRect(0, 0, OFF1.width, OFF1.height); paint(OFF1, col, 0, false); blit(OFF1, 0.25); }
+  blit(OFF2, mode === 'main' ? 1 : 0.7);
+  if (mode === 'main') { const [ex, ey] = T(f.eye); ctx.beginPath(); ctx.arc(ex, ey, 2.5, 0, 7); ctx.fillStyle = css('--ink'); ctx.fill(); }
+}
+function drawEd() {
+  cv.classList.toggle('st', S.scene === 'stand'); const { ctx, w, h } = prep(cv), [x0, x1, y0, y1] = viewBox(), m = 24;
+  let k = Math.min((w - 2 * m) / (x1 - x0), (h - 2 * m - 12) / (y1 - y0)), ox = m + ((w - 2 * m) - (x1 - x0) * k) / 2 - x0 * k, oy = h - m - 12 + y0 * k;
+  [k, ox, oy] = dpSnap(cv, k, ox, oy);
+  const T = q => [ox + q[0] * k, oy - q[1] * k], I = css('--ink'), I2 = css('--ink2'); UI.G = { k, ox, oy, T, inv: (x, y) => [(x - ox) / k, (oy - y) / k] };
+  const f0 = dpDots(ctx, w, h, k, ox, oy); ctx.font = DP_CFONT; ctx.fillStyle = I2; ctx.fillText(dpScale(f0), 6, h - 6);
+  ctx.lineJoin = ctx.lineCap = 'round';
+  const set = setting(S.sex, S.p, S), q = S.scene === 'sit' ? S.sit : S.stand;
+  // Boden
+  ctx.strokeStyle = I; ctx.lineWidth = 1.5; ctx.beginPath(); const [fx0, fy] = T([x0, 0]), [fx1] = T([x1, 0]); ctx.moveTo(fx0, fy); ctx.lineTo(fx1, fy); ctx.stroke();
+  // Extremfiguren (P5 Frau, P95 Mann), dann die gewählte Figur
+  const ghosts = [['f', 5, 'Frau P5'], ['m', 95, 'Mann P95']];
+  for (const [sx, p] of ghosts) drawBody(ctx, T, k, figure(sx, p), 'ghost');
+  // Produkt
+  for (const sp of prodShapes(S.scene, q, set)) { polyPath(ctx, sp.p, T); if (sp.z) ctx.closePath(); if (sp.f) { ctx.fillStyle = css(sp.f); ctx.fill(); } ctx.strokeStyle = css(sp.c || '--ink'); ctx.lineWidth = sp.w || 1.5; ctx.stroke(); }
+  const F = figure(S.sex, S.p); drawBody(ctx, T, k, F, 'main');
+  // Beschriftung der Extremfiguren am Kopf
+  ctx.font = DP_CFONT; ctx.fillStyle = I2; ctx.textAlign = 'center';
+  for (const [sx, p, t] of ghosts) { const g = figure(sx, p), [hx, hy] = T([g.head.c[0], g.head.c[1] + g.head.r]); ctx.fillText(t, hx + (sx === 'f' ? -70 : 50), hy - 6); }
+  ctx.textAlign = 'left';
+  // Griffe und Maße
+  UI.handles = []; const label = (X, Y, t, al = 'left') => { ctx.fillStyle = I2; ctx.textAlign = al; ctx.fillText(t, X, Y); ctx.textAlign = 'left'; };
+  const handle = (key, pt, axis, txt, dx = 10, dy = -8, al) => { const [X, Y] = T(pt), on = UI.drag && UI.drag.key === key, hv = UI.hov === key, s = on ? 10 : hv ? 10 : 8;
+    ctx.fillStyle = on ? css('--ctl') : css('--bg'); ctx.fillRect(X - s / 2, Y - s / 2, s, s); if (!on) { ctx.strokeStyle = I; ctx.lineWidth = 1.5; ctx.strokeRect(X - s / 2, Y - s / 2, s, s); }
+    if (txt) label(X + dx, Y + dy, txt, al); UI.handles.push({ key, X, Y, axis }); };
+  const rangeBar = (x, lo, hi, kLo, kHi, name, al = 'left') => { const [X, Ya] = T([x, lo]), [, Yb] = T([x, hi]), dx = al === 'right' ? -10 : 10; ctx.strokeStyle = I; ctx.lineWidth = 1; ctx.setLineDash([2, 3]); ctx.beginPath(); ctx.moveTo(X, Ya); ctx.lineTo(X, Yb); ctx.stroke(); ctx.setLineDash([]);
+    handle(kLo, [x, lo], 'y', nf0.format(lo), dx, 4, al); handle(kHi, [x, hi], 'y', nf0.format(hi), dx, 4, al); label(X + dx, Yb - 12, name, al); };
+  if (S.scene === 'sit') {
+    if (q.shA) { rangeBar(-200, q.sh, q.shHi, 'shLo', 'shHi', 'Sitz verstellbar'); label(T([q.sd / 2, set.SH])[0], T([0, set.SH])[1] - 8, nf0.format(set.SH), 'center'); }
+    else handle('sh', [q.sd / 2, q.sh], 'y', 'Sitz ' + nf0.format(q.sh), 0, -10, 'center');
+    handle('sd', [q.sd, set.SH - 15], 'x', 'Tiefe ' + nf0.format(q.sd), 10, 18);
+    handle('fr', [q.sd - 90, q.fr], 'y', q.fr > 0 ? 'Fußstütze ' + nf0.format(q.fr) : '', -10, 4, 'right');
+    if (q.table) {
+      if (q.thA) { rangeBar(TX + 860, q.th, q.thHi, 'thLo', 'thHi', 'Tisch verstellbar', 'right'); label(T([TX + 400, 0])[0], T([0, set.TH])[1] - 8, nf0.format(set.TH), 'center'); }
+      else handle('th', [TX + 400, q.th], 'y', 'Tisch ' + nf0.format(q.th), 0, -10, 'center');
+      handle('tu', [TX + 400, set.TH - q.tu], 'y', 'Unterkante ' + nf0.format(set.TH - q.tu), 0, 20, 'center');
+    }
+    if (F.gap > 2) { const [X, Y] = T(F.foot); label(X + 10, Y + 18, `Füße hängen ${nf0.format(F.gap)} mm`); }
+    if (F.rise) { const [X, Y] = T(F.foot); label(X + 10, Y - 10, 'Knie hoch'); }
+  } else {
+    if (!q.workOn) ; else if (q.whA) { rangeBar(WALL + 50, q.wh, q.whHi, 'whLo', 'whHi', 'verstellbar', 'right'); label(T([(CX + WALL) / 2, 0])[0], T([0, set.WH])[1] - 8, nf0.format(set.WH), 'center'); }
+    else handle('wh', [(CX + WALL) / 2, q.wh], 'y', 'Arbeitsfläche ' + nf0.format(q.wh), 0, -10, 'center');
+    if (q.shelfOn) { const x = q.over ? WALL - 100 : -730; handle('shelf', [x, q.shelf], 'y', 'Fach ' + nf0.format(q.shelf), 0, q.over ? 20 : -10, 'center');
+      if (F.short > 2) { const [X, Y] = T(F.hand2); label(X - 8, Y + 4, `fehlen ${nf0.format(F.short)} mm`, 'right'); } }
+    if (q.headOn) { handle('head', [-15, q.head], 'y', 'Kopffreiheit ' + nf0.format(q.head), 0, 20, 'center');
+      if (F.top > q.head) { const [X, Y] = T([F.head.c[0], q.head]); label(X + 60, Y + 20, 'stößt an'); } }
+  }
+  if (DP_COARSE && UI.drag && UI.drag.tp) dpLoupe(ctx, ...UI.drag.tp);
+}
+
+// ---- Bedienung im Editor ----
+const LIM = { sh: [150, 1000], shLo: [150, 1000], shHi: [150, 1000], sd: [200, 800], fr: [0, 600], th: [300, 1300], thLo: [300, 1300], thHi: [300, 1300], tu: [20, 400], wh: [500, 1400], whLo: [500, 1400], whHi: [500, 1400], shelf: [500, 2700], head: [1400, 2700] };
+function applyDrag(key, X, Y) {
+  const [x, y] = UI.G.inv(X, Y), v5 = v => Math.round(v / 5) * 5, L = LIM[key], c = v => clamp(v5(v), L[0], L[1]), q = S.sit, t = S.stand;
+  switch (key) {
+    case 'sh': q.sh = c(y); break; case 'shLo': q.sh = c(y); break; case 'shHi': q.shHi = c(y); break;
+    case 'sd': q.sd = c(x); break; case 'fr': q.fr = c(y); break;
+    case 'th': q.th = c(y); break; case 'thLo': q.th = c(y); break; case 'thHi': q.thHi = c(y); break;
+    case 'tu': q.tu = c(setting(S.sex, S.p, S).TH - y); break;
+    case 'wh': t.wh = c(y); break; case 'whLo': t.wh = c(y); break; case 'whHi': t.whHi = c(y); break;
+    case 'shelf': t.shelf = c(y); break; case 'head': t.head = c(y); break;
+  }
+}
+// Bereiche ordnen: verstellbar → Grenzen tauschen; fest → Obergrenze (nur gemerkt für „verstellbar“) mitziehen
+function order() { const fix = (o, a, b, on) => { if (o[b] < o[a]) { if (o[on]) [o[a], o[b]] = [o[b], o[a]]; else o[b] = o[a]; } };
+  fix(S.sit, 'sh', 'shHi', 'shA'); fix(S.sit, 'th', 'thHi', 'thA'); fix(S.stand, 'wh', 'whHi', 'whA'); }
+const pos = e => { const r = cv.getBoundingClientRect(); return [e.clientX - r.left, e.clientY - r.top]; };
+const hitH = (X, Y) => { let best = null, bd = DP_HIT; for (const hd of UI.handles) { const d = Math.hypot(hd.X - X, hd.Y - Y); if (d < bd) { bd = d; best = hd; } } return best; };
+dpTouchGuard(cv, () => !!UI.drag);
+cv.addEventListener('pointerdown', e => { const [X, Y] = pos(e), hd = hitH(X, Y); if (!hd) return; cv.setPointerCapture(e.pointerId);
+  UI.drag = { key: hd.key, moved: false, tp: e.pointerType === 'touch' ? [X, Y] : null }; drawEd(); });
+let raf = 0;
+cv.addEventListener('pointermove', e => {
+  const [X, Y] = pos(e);
+  if (!UI.drag) { const hd = hitH(X, Y), k = hd ? hd.key : null; cv.style.cursor = hd ? (hd.axis === 'x' ? 'ew-resize' : 'ns-resize') : 'default'; if (k !== UI.hov) { UI.hov = k; drawEd(); } return; }
+  UI.drag.moved = true; if (UI.drag.tp) UI.drag.tp = [X, Y]; applyDrag(UI.drag.key, X, Y);
+  if (!raf) raf = requestAnimationFrame(() => { raf = 0; recompute(true); });
+});
+function endDrag() { const d = UI.drag; if (!d) return; UI.drag = null; order(); if (d.moved) recompute(); else drawEd(); }
+cv.addEventListener('pointerup', endDrag); cv.addEventListener('pointercancel', endDrag);
+cv.addEventListener('pointerleave', () => { if (UI.hov && !UI.drag) { UI.hov = null; drawEd(); } });
+
+// ---- Maße (Felder) ----
+const FIELDS = {
+  sit: [['sh', 'Sitzhöhe'], ['shA', 'verstellbar', 'chk'], ['shHi', 'bis', 'n', 'shA'], ['fr', 'Fußstütze'], ['sd', 'Sitztiefe'], ['sw', 'Sitzbreite'], ['arm', 'Armlehnen', 'chk'],
+    ['table', 'Tisch', 'chk'], ['th', 'Tischhöhe', 'n', 'table'], ['thA', 'verstellbar', 'chk', 'table'], ['thHi', 'bis', 'n', 'thA'], ['tu', 'Platte + Zarge', 'n', 'table']],
+  stand: [['workOn', 'Arbeitsfläche', 'chk'], ['wh', 'Arbeitshöhe', 'n', 'workOn'], ['whA', 'verstellbar', 'chk', 'workOn'], ['whHi', 'bis', 'n', 'whA'], ['work', 'Tätigkeit', 'sel', 'workOn'],
+    ['shelfOn', 'Oberes Fach', 'chk'], ['shelf', 'Fachhöhe', 'n', 'shelfOn'], ['over', 'über Arbeitsplatte', 'chk', 'shelfOn'], ['headOn', 'Kopffreiheit', 'chk'], ['head', 'Höhe', 'n', 'headOn']]
+};
+const FT = { fr: 'Höhe der Fußstütze bzw. des Fußrings über dem Boden; 0 = Füße auf dem Boden', tu: 'Abstand Tischoberkante bis Unterkante von Platte bzw. Zarge – darunter müssen die Oberschenkel passen',
+  sw: 'Breite der Sitzfläche bzw. lichte Weite zwischen den Armlehnen', arm: 'Armlehnen begrenzen die Breite: dann 10 % Zugabe zur Hüftbreite', over: 'Oberschrank über der Arbeitsplatte: man greift über die Platte hinweg und erreicht etwa 150 mm weniger',
+  head: 'Unterkante von Türsturz, Balken, Dachschräge oder Lampe über dem Weg', work: 'fein: Fläche über dem Ellenbogen (Uhrmacher, Zeichnen) · leicht: Küche, Montage · schwer: Kneten, Hobeln, Druck nach unten' };
+function renderDims() {
+  const sc = S.scene, q = S[sc];
+  $('dims').innerHTML = FIELDS[sc].map(([k, l, t, dep]) => {
+    const off = dep && (!q[dep] || (dep === 'whA' && !q.workOn) || (dep === 'thA' && !q.table)) ? ' off' : '', ti = FT[k] ? ` title="${FT[k]}"` : '';
+    if (t === 'chk') return `<label class="chk${off}"${ti}><input type="checkbox" data-k="${k}"${q[k] ? ' checked' : ''}> ${l}</label>`;
+    if (t === 'sel') return `<label class="${off.trim()}"${ti}>${l} <select data-k="${k}">${Object.keys(Core.WORK).map(w => `<option value="${w}"${q.work === w ? ' selected' : ''}>${{ fein: 'feine Arbeit', leicht: 'leichte Arbeit', schwer: 'schwere Arbeit' }[w]}</option>`).join('')}</select></label>`;
+    return `<label class="${off.trim()}"${ti}>${l} [mm] <input type="number" data-k="${k}" step="5" min="0" value="${q[k]}"></label>`;
+  }).join('');
+  $('dims').querySelectorAll('[data-k]').forEach(el => el.onchange = () => {
+    const k = el.dataset.k, qq = S[S.scene];
+    if (el.type === 'checkbox') { qq[k] = el.checked; if (k === 'shA' && qq.shHi <= qq.sh) qq.shHi = qq.sh + 100; if (k === 'thA' && qq.thHi <= qq.th) qq.thHi = qq.th + 150; if (k === 'whA' && qq.whHi <= qq.wh) qq.whHi = qq.wh + 150; renderDims(); }
+    else if (el.tagName === 'SELECT') qq[k] = el.value;
+    else { const v = +el.value, L = LIM[k] || [0, 3000]; if (!isFinite(v) || el.value === '') { el.value = qq[k]; return; } qq[k] = clamp(v, L[0], L[1]); order(); }
+    recompute();
+  });
+}
+function syncDims() { $('dims').querySelectorAll('input[type=number]').forEach(el => { if (document.activeElement !== el) el.value = S[S.scene][el.dataset.k]; }); }
+
+// ---- Ergebnisse ----
+function verdictOf(R, s) {
+  let worst = null; for (const c of R) if (c.lv > 0 && c.kind !== 'hinweis' && (!worst || c.lv > worst.lv || (c.lv === worst.lv && c.ok < worst.ok))) worst = c; // Hinweise zählen nicht
+  let lv = worst ? worst.lv : 0, txt = worst ? CN[worst.k]['v' + worstSide(worst)].replace('%', pc(worst[worstSide(worst)])) : 'Passt für mindestens 90 % der Nutzer in allen Punkten';
+  // Gültigkeitswächter: niedrige Sitze liegen außerhalb der Regeln für aufrechtes Sitzen
+  if (s.scene === 'sit' && s.sit.sh - (s.sit.fr || 0) < 380) { lv = 1; txt = 'Niedriger Sitz (Sofa, Lounge): Regeln gelten für aufrechtes Sitzen – nur Anhalt'; }
+  const crit = R.filter(c => c.kind !== 'hinweis'), hint = R.filter(c => c.kind === 'hinweis' && c.lv);
+  return { lv, txt, all: crit.length ? Math.min(...crit.map(c => c.ok)) : 1, hint: hint.map(c => CN[c.k]['v' + worstSide(c)].replace('%', pc(c[worstSide(c)]))).join(' · ') };
+}
+function recTxt(c) {
+  const r = c.rec; if (!r) return '';
+  if (c.k === 'tab') return (r.range[0] <= r.range[1] ? `für P5–P95 verstellbar ${mm(r.range[0])} bis ${mm(r.range[1])}` : `fest ${mm(r.range[1])} bis ${mm(r.range[0])} passt 90 %`) + ` · fest am besten ${mm(r.fixed)}` + (r.fixedOk != null ? ` (${pc(r.fixedOk)})` : '') + ` · bei Sitz ${mm(S.sit.sh)}`;
+  if (c.k === 'leg') return `Unterkante mindestens ${mm(r.under)} über dem Sitz (P95 Oberschenkel + 20 mm)`;
+  if (r.min != null) return `mindestens ${mm(r.min)} für ${pc(r.p)}`;
+  if (r.max != null) return `höchstens ${mm(r.max)} für ${pc(r.p)}`;
+  return (r.range[0] <= r.range[1] ? `für P5–P95 verstellbar ${mm(r.range[0])} bis ${mm(r.range[1])}` : `fest ${mm(r.range[1])} bis ${mm(r.range[0])} passt 90 %`) + ` · fest am besten ${mm(r.fixed)} (${pc(r.fixedOk)})`;
+}
+function renderStats() {
+  const V = verdictOf(R, S), VR = REF ? verdictOf(REF.R, REF.s) : null;
+  const extra = `Alle Kriterien zugleich: höchstens ${pc(V.all)}` + (V.hint ? ` · Hinweis: ${V.hint}` : '') + (VR ? ` · gemerkter Stand: ${DP_LV[VR.lv]}, höchstens ${pc(VR.all)}` : '');
+  const ref = k => REF && REF.R.find(c => c.k === k);
+  const main = R.map(c => { const r = ref(c.k), d = r ? Math.round((c.ok - r.ok) * 100) : null;
+    return { l: CN[c.k].n, v: pc(c.ok), n: (sideTxt(c) || 'passt für alle') + (r ? ` · gemerkt ${pc(r.ok)}${d ? ` (${d > 0 ? '+' : '−'}${Math.abs(d)} Pkt.)` : ''}` : ''), w: c.lv > 0, t: CN[c.k].t + ' – Anteil der Nutzer, für die es passt' }; });
+  const pop = POP(), more = R.map(c => ({ l: CN[c.k].n + ': Empfehlung', v: '', n: recTxt(c) }));
+  const fv = (id, p) => Core.val(id, S.sex, p, S.shoe), sx = S.sex === 'f' ? 'Frau' : 'Mann';
+  more.push({ l: `Figur ${sx} P${S.p}: Körperhöhe`, v: mm(fv('stature', S.p)), n: S.shoe ? 'mit Schuhen' : 'barfuß' });
+  if (S.scene === 'sit') more.push({ l: 'Figur: Kniekehlenhöhe', v: mm(fv('popl', S.p)), n: 'passt zu Sitzhöhe ' + mm(fv('popl', S.p) * Core.C30) + ' bis ' + mm(fv('popl', S.p) * Core.C5) },
+    { l: 'Figur: Ellenbogen über Sitz', v: mm(fv('elbowS', S.p)) });
+  else more.push({ l: 'Figur: Ellenbogenhöhe', v: mm(fv('elbow', S.p)) }, { l: 'Figur: Reichweite nach oben', v: mm(fv('reach', S.p)) });
+  const m99 = Core.quant('mass', pop, 0.99);
+  more.push({ l: 'Schwerste 1 % der Nutzer', v: `ab ${nf0.format(m99)} kg`, n: `für die Statik ≈ ${nf0.format(Math.round(m99 * 9.81 / 10) * 10)} N, beim Hinsetzen mehr (Stoß)`, t: 'Körpermasse P99 der gewählten Nutzer' });
+  $('stats').innerHTML = dpStats(dpVerdict(V.lv, V.txt, extra), main, more, 'more');
+}
+function renderCrit() {
+  if (!R.length) { $('crit').innerHTML = ''; $('critN').textContent = 'Nichts zu prüfen: Arbeitsfläche, Fach oder Kopffreiheit einschalten.'; return; }
+  if (!R.find(c => c.k === UI.crit)) { const V = R.slice().sort((a, b) => (b.kind !== 'hinweis') - (a.kind !== 'hinweis') || b.lv - a.lv || a.ok - b.ok); UI.crit = V[0].k; }
+  $('crit').innerHTML = R.map(c => `<tr data-k="${c.k}" class="${c.k === UI.crit ? 'on' : ''}${c.lv ? ' warn' : ''}" tabindex="0"><td>${dpTerm(CN[c.k].n, CN[c.k].t)}</td><td>${pc(c.ok)}</td><td><span class="bar"><i style="width:${(c.ok * 100).toFixed(1)}%"></i></span>${sideTxt(c) || 'passt für alle'}</td></tr>`).join('');
+  $('crit').querySelectorAll('tr').forEach(tr => { tr.onclick = () => { UI.crit = tr.dataset.k; renderCrit(); drawDist(); }; tr.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); tr.click(); } }; });
+  $('critN').textContent = `${POP().w === 0.5 ? 'Je zur Hälfte Frauen und Männer' : POP().w ? 'Nur Frauen' : 'Nur Männer'}, 18–65 Jahre${S.shoe ? ', mit Schuhen' : ', barfuß'}. Balken = Anteil, der passt.`;
+}
+// Band im Körpermaß für das Diagramm; Tisch und Beinfreiheit für die Sitzeinstellung der Figur
+function bandOf(c) {
+  if (c.band) return c.band;
+  const st = setting(S.sex, S.p, S), q = S.sit, tlo = q.th - st.SH, thi = (q.thA ? q.thHi : q.th) - st.SH;
+  if (c.k === 'tab') return [tlo - Core.TAB[1], thi - Core.TAB[0]];
+  return [-Infinity, st.TH - st.SH - q.tu - Core.LEG];
+}
+function drawDist() {
+  const c = R.find(x => x.k === UI.crit); if (!c) { prep($('dist')); $('distN').textContent = ''; $('distT').textContent = ''; return; }
+  const pop = POP(), id = c.dim, d = B[id], u = d.u || 'mm', both = pop.w > 0 && pop.w < 1;
+  const xa = Core.quant(id, { ...pop, w: 0.5 }, 0.002), xb = Core.quant(id, { ...pop, w: 0.5 }, 0.998), n = 160;
+  const hb = u === 'kg' ? 0.5 : 5, X = Array.from({ length: n + 1 }, (_, i) => xa + (xb - xa) * i / n), dens = (x, w) => (Core.cdf(id, { ...pop, w }, x + hb) - Core.cdf(id, { ...pop, w }, x - hb)) * 100; // Anteil je cm bzw. kg
+  const tot = X.map(x => [x, dens(x, pop.w)]), [b0, b1] = bandOf(c), inB = tot.filter(([x]) => x >= b0 && x <= b1);
+  if (inB.length && b0 > xa) inB.unshift([b0, dens(b0, pop.w)]); if (inB.length && b1 < xb) inB.push([b1, dens(b1, pop.w)]);
+  const series = [], ymax = Math.max(...tot.map(p => p[1])) * 1.1;
+  if (inB.length) series.push({ pts: inB, color: css('--mech'), width: 0.01, fill: css('--mech-a') });
+  if (both) series.push({ pts: X.map(x => [x, pop.w * dens(x, 1)]), color: css('--ink'), dash: [4, 4], width: 1.5 }, { pts: X.map(x => [x, (1 - pop.w) * dens(x, 0)]), color: css('--mut'), dash: [3, 4], width: 1.5 });
+  series.push({ pts: tot, color: css('--mech'), width: 2 });
+  const fig = (S.scene === 'sit' || id !== 'thigh') ? Core.val(id, S.sex, S.p, S.shoe) : null;
+  chart($('dist'), { x0: xa, x1: xb, y0: 0, y1: ymax, xl: `${d.n} [${u}]${d.sh && S.shoe ? ', mit Schuhen' : ''}`, yl: `Anteil [% je ${u === 'kg' ? 'kg' : 'cm'}]`, series,
+    vlines: fig != null ? [{ x: fig, color: css('--ink') }] : [], legend: [{ t: 'alle', color: css('--mech') }].concat(both ? [{ t: 'Frauen', color: css('--ink'), dash: [4, 4], width: 1.5 }, { t: 'Männer', color: css('--mut'), dash: [3, 4], width: 1.5 }] : []) });
+  $('distT').textContent = `${CN[c.k].n}: ${d.n}`;
+  const bt = isFinite(b0) && isFinite(b1) ? `zwischen ${nf0.format(b0)} und ${nf0.format(b1)} ${u}` : isFinite(b0) ? `ab ${nf0.format(b0)} ${u}` : `bis ${nf0.format(b1)} ${u}`;
+  $('distN').textContent = `Fläche = passt: ${d.n} ${bt}` + (c.k === 'tab' || c.k === 'leg' ? ' (für die Sitzeinstellung der Figur; der Anteil mittelt über alle Sitzeinstellungen)' : '') + `. Senkrechte Linie: Figur ${S.sex === 'f' ? 'Frau' : 'Mann'} P${S.p}.`;
+}
+// Körpermaße zum Nachschlagen
+function renderBody() {
+  const p = clamp(Math.round(+$('pq').value) || 50, 1, 99), pop = POP(), groups = [...new Set(Object.values(B).map(d => d.g))];
+  const f = (v, d) => nf0.format(v) + (d.u ? ' ' + d.u : '');
+  $('body').innerHTML = `<thead><tr><th>Maß</th><th>Frau P5</th><th>P50</th><th>P95</th><th>Mann P5</th><th>P50</th><th>P95</th><th>Nutzer P${p}</th></tr></thead><tbody>` +
+    groups.map(g => `<tr><th class="g" colspan="8">${g}</th></tr>` + Object.entries(B).filter(([, d]) => d.g === g).map(([id, d]) =>
+      `<tr><td>${dpTerm(d.n, d.t)}</td>${d.f.map(v => `<td>${f(v, d)}</td>`).join('')}${d.m.map(v => `<td>${f(v, d)}</td>`).join('')}<td class="u">${f(Core.quant(id, pop, p / 100), d)}</td></tr>`).join('')).join('') + '</tbody>';
+  $('pqN').textContent = `Nutzer: ${pop.w === 0.5 ? 'gemischt' : pop.w ? 'Frauen' : 'Männer'}${S.shoe ? `, Höhen mit Schuhen (+${S.shoe} mm)` : ''}`;
+}
+function renderRW() {
+  const pop = POP(), q = (id, p) => Core.quant(id, pop, p), sd = Core.evalSit({ ...sitP(SIT0), sh: [450, 450] }, pop), shR = sd[0].rec, sdR = sd[1].rec, rg = r => r.range[0] <= r.range[1] ? `verstellbar ${mm(r.range[0])} bis ${mm(r.range[1])}` : `fest ${mm(r.range[1])} bis ${mm(r.range[0])}`;
+  const W = Core.WORK, ah = k => `${mm(q('elbow', 0.05) - W[k][1])} bis ${mm(q('elbow', 0.95) - W[k][0])}`;
+  const rows = [
+    ['Sitzen'],
+    ['Stuhl am Esstisch', 'Sitzhöhe 440–470 mm, Sitztiefe 400–450 mm', 'üblich im Möbelhandel'],
+    ['Sitzhöhe für P5–P95', `${rg(shR)}; fest am besten ${mm(shR.fixed)} (${pc(shR.fixedOk)})`, 'berechnet: Kniekehlenhöhe, Parcells u. a. 1999'],
+    ['Bürostuhl', 'Sitzhöhe verstellbar etwa 400–510 mm', 'DIN EN 1335-1'],
+    ['Sitztiefe', `höchstens ${mm(sdR.max)} (Kniekehle frei für 95 %); Stuhl mit Lehne für langes Sitzen mindestens ${mm(0.8 * q('bpl', 0.95))}`, 'berechnet: Gesäß-Kniekehlen-Länge P5 bzw. P95, Parcells u. a. 1999'],
+    ['Sitzbreite', `mindestens ${mm(q('hipS', 0.95))}, zwischen Armlehnen ${mm(1.1 * q('hipS', 0.95))}`, 'berechnet: Hüftbreite P95'],
+    ['Barhocker', 'Sitzhöhe 750–800 mm an einer Theke von 1050–1100 mm, Fußstütze ≈ 300 mm unter dem Sitz', 'üblich'],
+    ['Sofa, Sessel', 'Sitzhöhe 380–450 mm, Sitztiefe 500–600 mm', 'üblich; Sitz geneigt, Lehne trägt mit'],
+    ['Tische'],
+    ['Esstisch', '720–760 mm', 'üblich'],
+    ['Schreibtisch', 'fest 740 mm, verstellbar etwa 650–850 mm', 'DIN EN 527-1'],
+    ['Tischplatte über dem Sitz', `${mm(q('elbowS', 0.05) + Core.TAB[0])} bis ${mm(q('elbowS', 0.95) + Core.TAB[1])}`, 'berechnet: Ellenbogenhöhe sitzend P5–P95, −30 … +70 mm'],
+    ['Beinfreiheit', `Unterkante von Platte bzw. Zarge mindestens ${mm(q('thigh', 0.95) + Core.LEG)} über dem Sitz`, 'berechnet: Oberschenkeldicke P95 + 20 mm'],
+    ['Couchtisch', '400–500 mm', 'üblich'],
+    ['Stehen und Greifen'],
+    ['Arbeitshöhe, leichte Arbeit', `${ah('leicht')} (P5–P95)`, 'berechnet: 100–150 mm unter dem Ellenbogen (Grandjean)'],
+    ['Arbeitshöhe, feine Arbeit', `${ah('fein')} (P5–P95)`, 'berechnet: 50–100 mm über dem Ellenbogen (Grandjean)'],
+    ['Arbeitshöhe, schwere Arbeit', `${ah('schwer')} (P5–P95)`, 'berechnet: 150–400 mm unter dem Ellenbogen (Grandjean)'],
+    ['Küchenarbeitsplatte', '850–950 mm, heute meist 900–950 mm', 'üblich im Möbelhandel'],
+    ['Oberstes Fach für 95 %', `höchstens ${mm(q('reach', 0.05) - Core.GRIP)}, über eine Arbeitsplatte ${mm(q('reach', 0.05) - Core.GRIP - Core.OVER)}`, 'berechnet: Reichweite nach oben P5'],
+    ['Fach noch einsehbar', `Fachboden unter ${mm(q('eye', 0.05))}`, 'berechnet: Augenhöhe P5'],
+    ['Schalter, Bedienelemente', 'Achshöhe 850 mm (850–1050 mm)', 'DIN 18040-2, barrierefrei'],
+    ['Durchgänge'],
+    ['Kopffreiheit für 99 %', `mindestens ${mm(q('stature', 0.99))}`, 'berechnet: Körperhöhe P99'],
+    ['Türen', 'lichte Höhe ≈ 2000 mm; Breite ≥ 800 mm, barrierefrei ≥ 900 mm', 'DIN 18100, DIN 18040'],
+    ['Durchgang für eine Person', `Schulterbreite P95 ${mm(q('shoulderB', 0.95))} + Kleidung ≈ ${mm(q('shoulderB', 0.95) + 100)}`, 'berechnet; Verkehrsweg ≥ 875 mm nach ASR A1.8'],
+    ['Treppe', 'Schrittmaß 2 × Steigung + Auftritt = 590–650 mm, Kopfhöhe ≥ 2000 mm', 'DIN 18065'],
+    ['Geländer, Brüstung', '900 mm, ab 12 m Absturzhöhe 1100 mm', 'Landesbauordnungen'],
+    ['Hand'],
+    ['Griff, lichte Breite', `mindestens ${mm(q('handB', 0.95) + 25)}, mit Handschuh mehr`, 'berechnet: Handbreite P95 + 25 mm'],
+    ['Griffdurchmesser', 'Kraftgriff etwa 30–40 mm', 'Richtwert aus der Literatur'],
+    ['Gewicht und Last'],
+    ['Schwere Person (P95 / P99)', `${nf0.format(q('mass', 0.95))} / ${nf0.format(q('mass', 0.99))} kg ≈ ${nf0.format(Math.round(q('mass', 0.99) * 9.81 / 10) * 10)} N`, 'berechnet; in der Statik plus Stoß beim Hinsetzen'],
+    ['Heben, gelegentlich', 'Frauen bis ≈ 15 kg, Männer bis ≈ 25 kg, körpernah', 'Richtwert; am Arbeitsplatz mit der Leitmerkmalmethode bewerten'],
+    ['Bildschirm', 'Sehabstand 500–750 mm, Oberkante nicht über Augenhöhe', 'üblich (ArbStättV Anhang 6)']
+  ];
+  $('rw').innerHTML = rows.map(r => r.length === 1 ? `<tr><th class="g" colspan="3">${r[0]}</th></tr>` : `<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td></tr>`).join('');
+}
+function syncCtl() {
+  document.querySelectorAll('#scene button').forEach(b => b.classList.toggle('on', b.dataset.s === S.scene));
+  document.querySelectorAll('#sex button').forEach(b => b.classList.toggle('on', b.dataset.x === S.sex));
+  document.querySelectorAll('#pop button').forEach(b => b.classList.toggle('on', b.dataset.p === S.pop));
+  document.querySelectorAll('#shoe button').forEach(b => b.classList.toggle('on', +b.dataset.h === S.shoe));
+  $('pp').value = S.p; figOut();
+  $('popN').textContent = 'Erwachsene 18–65 Jahre, Deutschland. Schuhe +25 mm, Absatz +50 mm auf alle Höhen über dem Boden (Annahme).';
+}
+const figOut = () => { $('figO').textContent = `P${S.p} · ${nf0.format(Core.val('stature', S.sex, S.p))} mm`; };
+function recompute(dragging) {
+  R = evalAll(S); syncDims(); drawEd();
+  if (dragging) { renderStats(); renderCrit(); drawDist(); return; }
+  renderStats(); renderCrit(); drawDist(); renderBody(); renderRW(); save();
+}
+function drawAll() { drawEd(); drawDist(); }
+
+// ---- Zustand, Vorlagen, Datei ----
+const TYPE = 'designphysik/ergonomie';
+const pick = (o, ks) => Object.fromEntries(ks.map(k => [k, o[k]]));
+function exportObj() { return { type: TYPE, version: 1, scene: S.scene, pop: S.pop, shoe: S.shoe, sex: S.sex, p: S.p, sit: pick(S.sit, Object.keys(SIT0)), stand: pick(S.stand, Object.keys(STAND0)) }; }
+// fremde Eingänge (Datei, Link) prüfen: fehlende Werte aus den Grundwerten, Zahlen in ihren Grenzen
+function parse(o) {
+  if (!o || o.type !== TYPE) return null;
+  const sub = (src, def) => { const r = { ...def }; if (src && typeof src === 'object') for (const k of Object.keys(def)) { const v = src[k];
+    if (typeof def[k] === 'boolean') { if (typeof v === 'boolean') r[k] = v; }
+    else if (k === 'work') { if (Core.WORK[v]) r[k] = v; }
+    else if (v !== null && v !== '' && isFinite(v)) { const L = LIM[k] || LIM[k + 'Lo'] || (k === 'sw' ? [200, 1200] : [0, 3000]); r[k] = clamp(+v, L[0], L[1]); } }
+    return r; };
+  return { scene: o.scene === 'stand' ? 'stand' : 'sit', pop: ['mix', 'f', 'm'].includes(o.pop) ? o.pop : 'mix', shoe: [0, 25, 50].includes(+o.shoe) ? +o.shoe : 25, sex: o.sex === 'm' ? 'm' : 'f',
+    p: isFinite(o.p) ? clamp(Math.round(+o.p), 1, 99) : 50, sit: sub(o.sit, SIT0), stand: sub(o.stand, STAND0) };
+}
+function load(m) { S = m; order(); UI.drag = null; UI.crit = null; syncCtl(); renderDims(); recompute(); }
+const HIST = dpHistory($('undo'), o => { const m = parse(o); if (m) { S = m; syncCtl(); renderDims(); R = evalAll(S); syncDims(); drawEd(); renderStats(); renderCrit(); drawDist(); renderBody(); renderRW(); dpHashSet('er', exportObj()); } });
+function save() { const o = exportObj(); HIST.save(o); dpHashSet('er', o); }
+dpCompare($('cmp'), exportObj, ref => { const m = ref && parse(ref); REF = m ? { s: m, R: evalAll(m) } : null; renderStats(); });
+const T0 = (scene, o) => () => parse({ type: TYPE, scene, pop: S.pop, shoe: S.shoe, sex: S.sex, p: S.p, sit: { ...SIT0, ...(scene === 'sit' ? o : {}) }, stand: { ...STAND0, ...(scene === 'stand' ? o : {}) } });
+const TPLS = [
+  ['Sitzen', [
+    ['esstisch', 'Stuhl und Esstisch', 'fest 460 / 750 mm', T0('sit', { sh: 460, sd: 420, sw: 440, th: 750, tu: 100 })],
+    ['niedrig', 'Niedriger Stuhl', '430 mm: passt Kleineren', T0('sit', { sh: 430, sd: 410, sw: 440, th: 720, tu: 90 })],
+    ['hoch', 'Hoher Stuhl', '490 mm: passt Größeren', T0('sit', { sh: 490, sd: 440, sw: 460, th: 780, tu: 100 })],
+    ['buero', 'Bürostuhl, Tisch fest', 'Sitz 400–510, Tisch 740 mm', T0('sit', { sh: 400, shHi: 510, shA: true, sd: 430, sw: 480, arm: true, th: 740, tu: 60 })],
+    ['buerov', 'Alles verstellbar', 'Sitz 400–510, Tisch 650–850 mm', T0('sit', { sh: 400, shHi: 510, shA: true, sd: 430, sw: 480, arm: true, th: 650, thHi: 850, thA: true, tu: 60 })],
+    ['zarge', 'Tisch mit hoher Zarge', 'Oberschenkel stoßen an', T0('sit', { sh: 460, sd: 420, sw: 440, th: 740, tu: 160 })],
+    ['bar', 'Barhocker mit Fußring', 'Sitz 750, Theke 1050 mm', T0('sit', { sh: 750, fr: 300, sd: 350, sw: 380, th: 1050, tu: 40 })],
+    ['barohne', 'Barhocker ohne Fußstütze', 'Füße hängen', T0('sit', { sh: 750, fr: 0, sd: 350, sw: 380, th: 1050, tu: 40 })],
+    ['sessel', 'Sessel mit Armlehnen', 'Breite zwischen den Lehnen', T0('sit', { sh: 440, sd: 480, sw: 470, arm: true, table: false })],
+    ['lounge', 'Lounge-Sessel', 'niedrig: außerhalb der Regeln', T0('sit', { sh: 380, sd: 540, sw: 520, arm: true, table: false })]]],
+  ['Stehen', [
+    ['kueche', 'Küche 900', 'leichte Arbeit, Oberschrank', T0('stand', { wh: 900, work: 'leicht', shelfOn: true, shelf: 1750, over: true })],
+    ['kueche95', 'Küche 950', 'leichte Arbeit, Oberschrank', T0('stand', { wh: 950, work: 'leicht', shelfOn: true, shelf: 1750, over: true })],
+    ['kuechev', 'Küche verstellbar', 'Arbeitsplatte 850–1050 mm', T0('stand', { wh: 850, whHi: 1050, whA: true, work: 'leicht', shelfOn: true, shelf: 1650, over: true })],
+    ['fein', 'Werkbank Feinarbeit', 'Fläche über dem Ellenbogen', T0('stand', { wh: 1180, work: 'fein', shelfOn: false })],
+    ['schwer', 'Werkbank schwere Arbeit', 'Fläche tief unter dem Ellenbogen', T0('stand', { wh: 850, work: 'schwer', shelfOn: false })],
+    ['regal', 'Regal', 'oberstes Fach 1900 mm', T0('stand', { workOn: false, shelfOn: true, shelf: 1900, over: false })],
+    ['regal17', 'Regal für alle', 'oberstes Fach 1700 mm', T0('stand', { workOn: false, shelfOn: true, shelf: 1700, over: false })],
+    ['tuer', 'Tür', 'lichte Höhe 1985 mm', T0('stand', { workOn: false, shelfOn: false, headOn: true, head: 1985 })],
+    ['dach', 'Dachschräge, Balken', 'Durchgang 1850 mm', T0('stand', { workOn: false, shelfOn: false, headOn: true, head: 1850 })],
+    ['lampe', 'Pendelleuchte über dem Weg', 'Unterkante 1900 mm', T0('stand', { workOn: false, shelfOn: false, headOn: true, head: 1900 })]]],
+  ['Designklassiker', [
+    ['ulmer', 'Ulmer Hocker', 'Max Bill, Hans Gugelot · 1954', T0('sit', { sh: 440, sd: 295, sw: 390, table: false })],
+    ['thonet', 'Stuhl Nr. 214', 'Michael Thonet · 1859', T0('sit', { sh: 460, sd: 410, sw: 420, th: 750, tu: 90 })],
+    ['serie7', 'Serie 7, Sitzhöhe 44', 'Arne Jacobsen · 1955', T0('sit', { sh: 440, sd: 420, sw: 460, th: 720, tu: 80 })],
+    ['serie7h', 'Serie 7, Sitzhöhe 46', 'Arne Jacobsen · 1955', T0('sit', { sh: 460, sd: 420, sw: 460, th: 740, tu: 80 })],
+    ['cesca', 'Cesca', 'Marcel Breuer · 1928', T0('sit', { sh: 460, sd: 430, sw: 460, th: 740, tu: 90 })],
+    ['bierbank', 'Bierzeltgarnitur', 'Festzeltmöbel', T0('sit', { sh: 470, sd: 250, sw: 600, th: 770, tu: 90 })]]]
+];
+const TPL = Object.fromEntries(TPLS.flatMap(([, a]) => a.map(([k, , , f]) => [k, f])));
+// Skizze: Produkt in --ink, Figur Mann P50 als Strichfigur in der Familie
+function tplSketch(m) {
+  const keep = S; S = m; const st = setting('m', 50, m), f = figure('m', 50, m); S = keep;
+  const sh = prodShapes(m.scene, m[m.scene], st).map(s => ({ ...s, w: (s.w || 1.5) * 0.8 }));
+  const [x0, x1] = m.scene === 'sit' ? [-200, 1150] : [m.stand.shelfOn && !m.stand.over ? -950 : -400, 950];
+  const circ = Array.from({ length: 17 }, (_, i) => [f.head.c[0] + f.head.r * Math.cos(i * Math.PI / 8), f.head.c[1] + f.head.r * Math.sin(i * Math.PI / 8)]);
+  return [{ p: [[x0, 0], [x1, 0]], c: '--mut', w: 1 }, ...sh, ...f.segs.concat(f.arm2 || []).map(([a, b]) => ({ p: [a, b], c: '--mech', w: 2 })), { p: circ, c: '--mech', w: 2 }];
+}
+dpGallery($('tpl'), TPLS.map(([g, a]) => [g, a.map(([k, n, s]) => ({ k, n, s, d: () => tplSketch(TPL[k]()) }))]), k => load(TPL[k]()));
+
+$('exp').onclick = () => dpDownload(exportObj(), 'ergonomie.json');
+$('imp').onclick = () => $('impF').click();
+$('impF').onchange = e => { const f = e.target.files[0]; if (!f) return; f.text().then(t => { let m = null; try { m = parse(JSON.parse(t)); } catch {}
+  $('fileN').textContent = m ? 'Geladen: ' + f.name : '⚠ Keine gültige Ergonomie-Datei'; if (m) load(m); }); e.target.value = ''; };
+$('share').onclick = () => { save(); const u = location.href; (navigator.clipboard ? navigator.clipboard.writeText(u) : Promise.reject()).then(() => $('fileN').textContent = 'Link kopiert', () => $('fileN').textContent = 'Link steht in der Adresszeile'); };
+window.addEventListener('hashchange', () => { const m = parse(dpHashGet('er')); if (m) load(m); });
+
+// ---- Bedienelemente ----
+document.querySelectorAll('#scene button').forEach(b => b.onclick = () => { S.scene = b.dataset.s; UI.crit = null; syncCtl(); renderDims(); recompute(); });
+document.querySelectorAll('#sex button').forEach(b => b.onclick = () => { S.sex = b.dataset.x; syncCtl(); recompute(); });
+document.querySelectorAll('#pop button').forEach(b => b.onclick = () => { S.pop = b.dataset.p; syncCtl(); recompute(); });
+document.querySelectorAll('#shoe button').forEach(b => b.onclick = () => { S.shoe = +b.dataset.h; syncCtl(); recompute(); });
+$('pp').oninput = e => { S.p = +e.target.value; figOut(); R = evalAll(S); drawEd(); drawDist(); };
+$('pp').onchange = () => recompute();
+$('pq').onchange = renderBody;
+
+dpHeader('ergonomie'); dpIcons();
+load(parse(dpHashGet('er')) || TPL.esstisch());
+window.addEventListener('resize', drawAll);
+</script>
+</body>
+</html>
