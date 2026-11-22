@@ -85,14 +85,14 @@ const Core = (() => {
   // sb: Rückfederung in Grad bei 90° und r ≤ s (Heuristik); ein: Einschraubtiefe / d für Schraube 8.8 (Richtwerte Schraubenhersteller);
   // kind: metall | kunst (Kunststoff: nicht abkanten)
   const MAT = {
-    'dc01':          { n: 'Stahlblech DC01',        kind: 'metall', E: 210000, Rp: 220, rmin: 0.5, sb: 1,   ein: 1.0 },
-    'edelstahl-1.4301': { n: 'Edelstahl 1.4301',    kind: 'metall', E: 200000, Rp: 300, rmin: 1.0, sb: 2.5, ein: 1.0 },
-    'alu-5754-h111': { n: 'Alu 5754 weich (H111)',  kind: 'metall', E: 70000,  Rp: 100, rmin: 1.0, sb: 1.5, ein: 2.0 },
-    'alu-6061-t6':   { n: 'Alu 6061 hart (T6)',     kind: 'metall', E: 69000,  Rp: 275, rmin: 2.5, sb: 3,   ein: 1.5 },
-    'messing-cuzn37': { n: 'Messing CuZn37 halbhart', kind: 'metall', E: 110000, Rp: 250, rmin: 1.0, sb: 1.5, ein: 1.25 },
-    'kupfer-cu-etp': { n: 'Kupfer weich',           kind: 'metall', E: 120000, Rp: 100, rmin: 0.5, sb: 0.5, ein: 2.0 },
-    'abs':           { n: 'ABS',                    kind: 'kunst',  E: 2300,   Rp: 40,  rmin: NaN, sb: NaN, ein: 2.5 },
-    'pa6':           { n: 'PA6 (Nylon)',            kind: 'kunst',  E: 2500,   Rp: 60,  rmin: NaN, sb: NaN, ein: 2.5 }
+    'dc01':          { base: 'dc01', n: 'Stahlblech DC01',        kind: 'metall', E: 210000, Rp: 220, rmin: 0.5, sb: 1,   ein: 1.0 },
+    'edelstahl-1.4301': { base: 'edelstahl', n: 'Edelstahl 1.4301',    kind: 'metall', E: 200000, Rp: 300, rmin: 1.0, sb: 2.5, ein: 1.0 },
+    'alu-5754-h111': { base: 'al5754', n: 'Alu 5754 weich (H111)',  kind: 'metall', E: 70000,  Rp: 100, rmin: 1.0, sb: 1.5, ein: 2.0 },
+    'alu-6061-t6':   { base: 'al6061', n: 'Alu 6061 hart (T6)',     kind: 'metall', E: 69000,  Rp: 275, rmin: 2.5, sb: 3,   ein: 1.5 },
+    'messing-cuzn37': { base: 'messing', n: 'Messing CuZn37 halbhart', kind: 'metall', E: 110000, Rp: 250, rmin: 1.0, sb: 1.5, ein: 1.25 },
+    'kupfer-cu-etp': { base: 'kupfer', n: 'Kupfer weich',           kind: 'metall', E: 120000, Rp: 100, rmin: 0.5, sb: 0.5, ein: 2.0 },
+    'abs':           { base: 'abs', n: 'ABS',                    kind: 'kunst',  E: 2300,   Rp: 40,  rmin: NaN, sb: NaN, ein: 2.5 },
+    'pa6':           { base: 'pa6', n: 'PA6 (Nylon)',            kind: 'kunst',  E: 2500,   Rp: 60,  rmin: NaN, sb: NaN, ein: 2.5 }
   };
   const rad = a => a * Math.PI / 180;
   // Korrekturfaktor der neutralen Faser nach DIN 6935 (r/s < 0,1 begrenzt)

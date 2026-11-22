@@ -289,3 +289,5 @@ check('Schwappen Quader halbvoll: Freibord 50 mm (Ebene bis Rand) [mm]', 8 / Mat
   check('Randhubfaktor Rechteck: Projektion von x auf sin(πx/L), Rand / (L/2)', c / e * 2, Core.sloshCoef({ A: 1, I: 1, ua: 0, ub: 1, uc: 0 }, 1, false).kap, 1e-6); }
 { const g = pg([[0, 0], [40, 0], [40, 100]], { lid: true }), lk = Core.fillLakes(g, 1e9).lakes[0];
   check('Schwappen: Deckel zu, randvoll → kein freier Spiegel', +(Core.lakeSurf(g, lk, 0) === null), 1, 0); }
+// Werkstoffe im CORE (Konvention „Werkstoffe“; Dichten prüft tools/test.js gegen die Material-Karte)
+check('Gefäßwerkstoffe mit base', Object.values(Core.MAT).filter(m => m.base).length, 5, 0);

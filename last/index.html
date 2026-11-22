@@ -119,21 +119,21 @@ const Core = (() => {
   // kdef = Kriechzahl für Dauerlast (EN 1995 NKl 1 bzw. Schätzung Kriechmodul 1000 h); S = empfohlene Mindestsicherheit f/σ;
   // Sp = Mindestsicherheit der Spannung aus ständiger Last (Kriechbruch, γM/kmod; fehlt → S); kcr = Rissbeiwert Schub (EN 1995, Vollholz).
   const MAT = {
-    c24:   { grp: 'Holz', name: 'Fichte/Kiefer C24', E: 11000, G: 690, rho: 420, f: 24, fv: 4.0, kdef: 0.6, S: 2.5, kcr: 0.67, src: 'EN 338 (C24)' },
-    d30:   { grp: 'Holz', name: 'Eiche D30', E: 11000, G: 690, rho: 640, f: 30, fv: 4.0, kdef: 0.6, S: 2.5, kcr: 0.67, src: 'EN 338 (D30)' },
-    d40:   { grp: 'Holz', name: 'Buche ≈ D40', E: 13000, G: 810, rho: 700, f: 40, fv: 4.0, kdef: 0.6, S: 2.5, kcr: 0.67, src: 'EN 338 (D40)' },
-    bsp:   { grp: 'Platten', name: 'Multiplex Birke', E: 9000, G: 150, rho: 680, f: 35, fv: 1.5, kdef: 0.8, S: 2.5, src: 'Schätzwert nach Herstellerangaben, parallel zur Decklage; kdef EN 1995' },
-    mdf:   { grp: 'Platten', name: 'MDF', E: 3000, G: 200, rho: 750, f: 20, fv: 1.0, kdef: 2.25, S: 3, Sp: 6.5, src: 'f ≈ Mindestwert EN 622-5, E typisch; kdef und Sp = γM/kmod = 1,3/0,2 nach EN 1995' },
-    span:  { grp: 'Platten', name: 'Spanplatte (Möbel)', E: 2500, G: 200, rho: 650, f: 11, fv: 0.8, kdef: 2.25, S: 3, Sp: 4.3, src: 'f ≈ Mindestwert EN 312 P2, E typischer Mittelwert (P2-Mindestwert ≈ 1600); kdef und Sp = 1,3/0,3 wie P4 (EN 1995)' },
-    s235:  { grp: 'Metall', name: 'Stahl S235', E: 210000, G: 81000, rho: 7850, f: 235, fv: 136, kdef: 0, S: 1.5, src: 'EN 10025' },
-    a2:    { grp: 'Metall', name: 'Edelstahl 1.4301', E: 200000, G: 77000, rho: 7900, f: 230, fv: 133, kdef: 0, S: 1.5, src: 'EN 10088 (lösungsgeglüht)' },
-    al6060:{ grp: 'Metall', name: 'Aluminium 6060 T6', E: 70000, G: 26000, rho: 2700, f: 140, fv: 81, kdef: 0, S: 1.65, src: 'EN 755-2 (Strangpressprofil)' },
-    al6082:{ grp: 'Metall', name: 'Aluminium 6082 T6', E: 70000, G: 26000, rho: 2700, f: 250, fv: 144, kdef: 0, S: 1.65, src: 'EN 755-2 (Strangpressprofil)' },
-    glas:  { grp: 'Glas & Kunststoff', name: 'Floatglas', E: 70000, G: 29000, rho: 2500, f: 45, fv: 45, kdef: 0, S: 5, Sp: 7, src: 'EN 572-1; S hoch wegen Sprödbruch; Sp für Dauerlast nach DIN 18008 (kmod 0,25) gerundet, Richtwert' },
-    pmma:  { grp: 'Glas & Kunststoff', name: 'Acryl (PMMA)', E: 3200, G: 1200, rho: 1190, f: 70, fv: 35, kdef: 0.9, S: 5, src: 'Datenblatt typisch; kdef Schätzung; S hoch wegen Spannungsrissen' },
-    abs:   { grp: 'Glas & Kunststoff', name: 'ABS', E: 2300, G: 850, rho: 1040, f: 40, fv: 20, kdef: 0.5, S: 3, src: 'Datenblatt typisch; kdef Schätzung' },
-    pp:    { grp: 'Glas & Kunststoff', name: 'Polypropylen (PP)', E: 1300, G: 450, rho: 905, f: 30, fv: 15, kdef: 2.2, S: 3, src: 'Datenblatt typisch; kdef Schätzung' },
-    pagf:  { grp: 'Glas & Kunststoff', name: 'PA6 GF30 (konditioniert)', E: 6500, G: 2400, rho: 1360, f: 110, fv: 55, kdef: 0.6, S: 3, src: 'Datenblatt typisch; kdef Schätzung' }
+    c24:   { base: 'fichte', grp: 'Holz', name: 'Fichte/Kiefer C24', E: 11000, G: 690, rho: 420, f: 24, fv: 4.0, kdef: 0.6, S: 2.5, kcr: 0.67, src: 'EN 338 (C24)' },
+    d30:   { base: 'eiche', grp: 'Holz', name: 'Eiche D30', E: 11000, G: 690, rho: 640, f: 30, fv: 4.0, kdef: 0.6, S: 2.5, kcr: 0.67, src: 'EN 338 (D30)' },
+    d40:   { base: 'buche', grp: 'Holz', name: 'Buche ≈ D40', E: 13000, G: 810, rho: 700, f: 40, fv: 4.0, kdef: 0.6, S: 2.5, kcr: 0.67, src: 'EN 338 (D40)' },
+    bsp:   { base: 'multiplex', grp: 'Platten', name: 'Multiplex Birke', E: 9000, G: 150, rho: 680, f: 35, fv: 1.5, kdef: 0.8, S: 2.5, src: 'Schätzwert nach Herstellerangaben, parallel zur Decklage; kdef EN 1995' },
+    mdf:   { base: 'mdf', grp: 'Platten', name: 'MDF', E: 3000, G: 200, rho: 750, f: 20, fv: 1.0, kdef: 2.25, S: 3, Sp: 6.5, src: 'f ≈ Mindestwert EN 622-5, E typisch; kdef und Sp = γM/kmod = 1,3/0,2 nach EN 1995' },
+    span:  { base: 'span', grp: 'Platten', name: 'Spanplatte (Möbel)', E: 2500, G: 200, rho: 650, f: 11, fv: 0.8, kdef: 2.25, S: 3, Sp: 4.3, src: 'f ≈ Mindestwert EN 312 P2, E typischer Mittelwert (P2-Mindestwert ≈ 1600); kdef und Sp = 1,3/0,3 wie P4 (EN 1995)' },
+    s235:  { base: 's235', grp: 'Metall', name: 'Stahl S235', E: 210000, G: 81000, rho: 7850, f: 235, fv: 136, kdef: 0, S: 1.5, src: 'EN 10025' },
+    a2:    { base: 'edelstahl', grp: 'Metall', name: 'Edelstahl 1.4301', E: 200000, G: 77000, rho: 7900, f: 230, fv: 133, kdef: 0, S: 1.5, src: 'EN 10088 (lösungsgeglüht)' },
+    al6060:{ base: 'al6060', grp: 'Metall', name: 'Aluminium 6060 T6', E: 70000, G: 26000, rho: 2700, f: 140, fv: 81, kdef: 0, S: 1.65, src: 'EN 755-2 (Strangpressprofil)' },
+    al6082:{ base: 'al6082', grp: 'Metall', name: 'Aluminium 6082 T6', E: 70000, G: 26000, rho: 2700, f: 250, fv: 144, kdef: 0, S: 1.65, src: 'EN 755-2 (Strangpressprofil)' },
+    glas:  { base: 'glas', grp: 'Glas & Kunststoff', name: 'Floatglas', E: 70000, G: 29000, rho: 2500, f: 45, fv: 45, kdef: 0, S: 5, Sp: 7, src: 'EN 572-1; S hoch wegen Sprödbruch; Sp für Dauerlast nach DIN 18008 (kmod 0,25) gerundet, Richtwert' },
+    pmma:  { base: 'pmma', grp: 'Glas & Kunststoff', name: 'Acryl (PMMA)', E: 3200, G: 1200, rho: 1190, f: 70, fv: 35, kdef: 0.9, S: 5, src: 'Datenblatt typisch; kdef Schätzung; S hoch wegen Spannungsrissen' },
+    abs:   { base: 'abs', grp: 'Glas & Kunststoff', name: 'ABS', E: 2300, G: 850, rho: 1040, f: 40, fv: 20, kdef: 0.5, S: 3, src: 'Datenblatt typisch; kdef Schätzung' },
+    pp:    { base: 'pp', grp: 'Glas & Kunststoff', name: 'Polypropylen (PP)', E: 1300, G: 450, rho: 905, f: 30, fv: 15, kdef: 2.2, S: 3, src: 'Datenblatt typisch; kdef Schätzung' },
+    pagf:  { base: 'pagf', grp: 'Glas & Kunststoff', name: 'PA6 GF30 (konditioniert)', E: 6500, G: 2400, rho: 1360, f: 110, fv: 55, kdef: 0.6, S: 3, src: 'Datenblatt typisch; kdef Schätzung' }
   };
 
   // Querschnitt {type, b, h, t, d, tw, tf} [mm]; h = Höhe in Lastrichtung. Liefert A, I (um die Schwerachse),
@@ -890,7 +890,7 @@ function syncInputs() {
   renderSecIn(); renderMatIn();
 }
 $('secT').onchange = e => { S.sec = { type: e.target.value, ...SECS[e.target.value][2] }; syncInputs(); recompute(); };
-$('mat').onchange = e => { if (e.target.value === 'eigen') S.cm = { ...matOf(), Sp: undefined, kcr: undefined, name: 'Eigenes Material', grp: '', src: 'eigene Angabe' }; S.mat = e.target.value; renderMatIn(); recompute(); };
+$('mat').onchange = e => { if (e.target.value === 'eigen') S.cm = { ...matOf(), base: null, Sp: undefined, kcr: undefined, name: 'Eigenes Material', grp: '', src: 'eigene Angabe' }; S.mat = e.target.value; renderMatIn(); recompute(); };
 $('sw').onchange = e => { S.sw = e.target.checked; recompute(); };
 $('shr').onchange = e => { S.shear = e.target.checked; recompute(); };
 $('nax').onchange = e => { S.N = +e.target.value || 0; recompute(); };
@@ -936,7 +936,7 @@ function parse(o) {
   const sec = { type: o.sec.type };
   for (const f of SECS[sec.type][1]) { const v = num(o.sec[f], 0.01, 5000); if (v == null) return null; sec[f] = v; }
   if (o.mat !== 'eigen' && !Core.MAT[o.mat]) return null;
-  const cm = { ...Core.MAT.c24, kcr: undefined, name: 'Eigenes Material', grp: '', src: 'eigene Angabe' };
+  const cm = { ...Core.MAT.c24, base: null, kcr: undefined, name: 'Eigenes Material', grp: '', src: 'eigene Angabe' };
   if (o.cm) for (const [k, a, b] of [['E', 1, 1e6], ['G', 1, 1e6], ['rho', 1, 3e4], ['f', 0.01, 1e5], ['fv', 0.01, 1e5], ['kdef', 0, 20], ['S', 1, 100]]) { const v = num(o.cm[k], a, b); if (v != null) cm[k] = v; }
   if (o.cm && num(o.cm.G, 1, 1e6) == null) cm.G = cm.E / 2.6; // ältere Links ohne G: isotrop
   return { L, orient: o.orient === 'v' ? 'v' : 'h', sec, mat: o.mat, cm, sw: o.sw !== false, shear: o.shear !== false, N: num(o.N, -1e7, 1e7) || 0, lim: [150, 200, 300, 500].includes(+o.lim) ? +o.lim : 300,

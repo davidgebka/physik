@@ -53,7 +53,7 @@ const S = { kind: 'rot', pts: toPts(PRESETS.karaffe.p), smooth: true, plan: toPt
   spout: null, handle: null, lid: false, part: 'body', // Anbauteile (nur Drehkörper): {p: Mittellinie, d: Ø innen bzw. Stab-Ø}
   tA: toPts(PRESETS.kopf.back), tB: toPts(PRESETS.kopf.front), tsmooth: true, tPart: 'B', // Zwei Konturen: hinten, vorne
   slosh: false, wf: 1.8, wa: 10, sv: 1.4, sb: 0.3 }; // Schwappen: Schrittfrequenz [Hz], Hub [mm], Tempo [m/s], Bremszeit [s] (Schätzwerte)
-const MATS = { glas: ['Glas', 2.5], porzellan: ['Porzellan', 2.4], steinzeug: ['Steinzeug', 2.3], pp: ['PP', 0.9], edelstahl: ['Edelstahl', 7.9] };
+const MATS = Object.fromEntries(Object.entries(Core.MAT).map(([k, m]) => [k, [m.n, m.rho / 1000]])); // [Name, g/cm³]
 let G = {};
 let REF = null; // gemerkter Stand: Schnappschuss {cap, fill, start, tip, push, mv, fc, kc, V …}; pending bis Kipplauf und Standsicherheit fertig
 const isPlan = () => S.kind === 'plan', isRot = () => S.kind === 'rot', isTube = () => S.kind === 'tube';

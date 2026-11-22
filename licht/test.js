@@ -308,3 +308,6 @@ check('T15 Scheibe unter der Quelle: 0° (seitlich sichtbar)', sh(disc, iso), 0,
   check('T21e Σ Sektoren = Segment (Zähler)', ds, 0, 0); check('T21e Mittel der Sektoren = L', dl, 0, 1e-9);
   check('T21e Lampe außermittig: hellster Sektor > 1,5 × Mittel', pk > 1.5 ? 1 : 0, 1, 0); }
 check('T21 Eingabe: Lampenkörper ungültig wirft', (() => { try { Core.trace({ N: 1, profile: [], source: { ...iso, r: -1, a: 0.5 }, mat: black }); return 0; } catch (e) { return 1; } })(), 1, 0);
+// Werkstoffe im CORE (Konvention „Werkstoffe“): jede Oberfläche energieerhaltend (Reflexion + Durchlass ≤ 1), base gesetzt (auch null)
+check('Oberflächen mit base-Feld', Object.values(Core.MAT).filter(m => 'base' in m && m.finish).length, 10, 0);
+check('Oberflächen ohne Energiegewinn', Object.values(Core.MAT).filter(m => m.m.in.rd + m.m.in.rs + m.m.td + m.m.ts > 1).length, 0, 0);
