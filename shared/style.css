@@ -13,6 +13,9 @@
   --load:#712a94;--load-a:rgba(113,42,148,.22);
   --elec:#03919d;--elec-a:rgba(3,145,157,.22);
   --mat:#810354;--mat-a:rgba(129,3,84,.22);
+  /* Modulfarben innerhalb einer Familie: gleicher Farbton, andere Helligkeit (Styleguide § 3) */
+  --ergo:#60a06e;--ergo-a:rgba(96,160,110,.28);  /* Ergonomie, Familie Bewegung */
+  --fab:#9e366f;--fab-a:rgba(158,54,111,.22);    /* Fertigung, Familie Werkstoff */
   --font:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif
 }
 @media(pointer:coarse){:root{--h:48px}}
@@ -131,8 +134,16 @@ table.kv tr.warn td:nth-child(2){color:var(--warn)}
 }
 /* Ab sechs Modulen auf dem Telefon: zwei Zeilen à vier Segmente; Linien als Schatten wie bei .seg (keine Doppellinien, Zeilen bleiben --h hoch) */
 @media(max-width:860px){nav:has(>:nth-child(6)){display:grid;grid-template-columns:repeat(4,minmax(0,1fr))}nav:has(>:nth-child(6))>*{border:0;box-shadow:inset 1px 1px var(--ink),1px 1px var(--ink);white-space:nowrap}}
-/* Ab fünf Modulen auf schmalen Telefonen: Namen 12 px, ohne Modulquadrat (aktiv bleibt schwarz) */
-@media(max-width:480px){nav:has(>:nth-child(5)) :is(a,span){font-size:12px}nav:has(>:nth-child(5)) .mq{display:none}}
+/* Telefon: Kopfzeile knapp (Wortmarke 12 px Abstand), Navigationszellen 36 px (zwei Zeilen = 72 px = 3 Einheiten; Tippfläche > WCAG 24 px);
+   Modulfarbe als 4-px-Balken unten in jeder Zelle statt Quadrat – kostet keine Breite, sichtbar auch auf dem aktiven (schwarzen) Segment */
+@media(max-width:860px){
+  header{gap:12px}
+  nav:has(>:nth-child(6)){grid-auto-rows:36px}nav:has(>:nth-child(6))>*{height:36px}
+  nav a,nav span{position:relative}
+  nav .mq{position:absolute;left:1px;right:0;bottom:0;width:auto;height:4px}
+  nav .mq.off{height:4px;border:0;background:repeating-linear-gradient(90deg,var(--ink2) 0 3px,transparent 3px 6px)} /* nicht verfügbar: gestrichelt */
+}
+@media(max-width:480px){nav:has(>:nth-child(5)) :is(a,span){font-size:12px}}
 
 /* Startseite */
 .intro{padding-top:24px}
