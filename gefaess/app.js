@@ -669,7 +669,8 @@ function pushItem() {
   // Drehkörper: runde Standfläche, schwächste Richtung = vom Schwerpunkt weg (Arm rf − |x|); Grundriss: in Kipprichtung
   // Schlauch: kleinerer Arm von vorderer bzw. hinterer Standkante
   const a = isPlan() ? G.rf - st.xF : isTube() ? Math.min(G.rf - st.xF, G.rfB + st.xF) : G.rf - Math.abs(st.xF);
-  return ['Umstoßkraft', nf1.format(Core.pushForce(st.mF, a, G.hRim)) + ' N', 'waagrecht am Rand, gefüllt' + (isPlan() ? ', in Kipprichtung' : isTube() ? ', vorne/hinten, ungünstigere' : Math.abs(st.xF) > 0.5 ? ', ungünstigste Richtung' : '')];
+  // Rutschen: Haftreibung Glas/Keramik auf Tisch μ ≈ 0,3–0,5 (Richtwert) – ist a/h größer, rutscht das Gefäß, bevor es kippt
+  return ['Umstoßkraft', nf1.format(Core.pushForce(st.mF, a, G.hRim)) + ' N', 'waagrecht am Rand, gefüllt' + (isPlan() ? ', in Kipprichtung' : isTube() ? ', vorne/hinten, ungünstigere' : Math.abs(st.xF) > 0.5 ? ', ungünstigste Richtung' : '') + (a / G.hRim > 0.4 ? ' · rutscht eher, als dass es kippt (breit und niedrig)' : '')];
 }
 function drawStats() {
   if (!G.geo || !G.curve) return;
@@ -972,7 +973,7 @@ function sloshStats(keep) {
   if (!L) {
     L = [];
     if (isPlan()) { const c = V0 > 1 ? coefPlan(0, V0) : null; if (c) L.push({ c, W: V0, free: c.kap * c.a * Math.min(Core.sloshLimitG(G.geo, V0, 0, c.kap, 1), Core.sloshLimitG(G.geo, V0, 0, c.kap, -1)) }); }
-    else for (const lk of G.lakes0 || []) { const c = coefOf(lk, 0); if (c) L.push({ c, W: lk.W, free: c.kap * c.a * Math.min(Core.sloshLimit(G.pg, lk, 0, c.kap, 1), Core.sloshLimit(G.pg, lk, 0, c.kap, -1)) }); }
+    else for (const lk of G.lakes0 || []) { const c = coefOf(lk, 0); if (c) L.push({ c, W: lk.W, free: c.kap * c.a * Math.min(Core.sloshLimit(G.pg, lk, 0, c.kap, 1), Core.sloshLimit(G.pg, lk, 0, c.kap, -1)), approx: shallowSlope(lk, c) }); }
   }
   for (const q of L) {
     const c = q.c, ss = Core.sloshSteady(c.om, c.ze, S.wa, 2 * Math.PI * S.wf), pk = Core.sloshPeak(c.om, c.ze, t => stopX(stop, t), S.sb + 3, stop.v);
@@ -982,6 +983,13 @@ function sloshStats(keep) {
   // kritischster Wasserkörper je Fall: größtes Verhältnis Randhub/Freibord
   const worst = k => L.reduce((a, b) => !a || b[k] / b.free > a[k] / a.free ? b : a, null);
   D.lim = { L, main, walk: worst('walk'), stop: worst('stop') };
+}
+// Frequenz aus der mittleren Tiefe V/A ist exakt für senkrechte Wände; flacher See (kh < 2) mit stark schräger Wand
+// (mittlere Tiefe < 75 % der größten) → nur genähert. Größte Tiefe aus den Schichten des Drehkörpers (aufrecht).
+function shallowSlope(lk, c) {
+  const g = G.pg; if (!g || !g.z || !lk.nodes || !lk.nodes.length) return false;
+  let z0 = Infinity; for (const i of lk.nodes) z0 = Math.min(z0, g.z[i] - g.dz / 2);
+  const hT = lk.L - z0; return c.k * c.h < 2 && hT > 0 && c.h / hT < 0.75;
 }
 function sloshItems() {
   const Q = D.lim; if (!Q) return [['Eigenfrequenz', '…', '']];
@@ -995,7 +1003,7 @@ function sloshItems() {
   const fw = Q.walk.c.f, res = Math.abs(S.wf / fw - 1) < 0.15 ? ' · ⚠ nahe Resonanz' : Math.abs(2 * S.wf / fw - 1) < 0.15 ? ' · ⚠ f₁ ≈ 2 × Schrittfrequenz (Oberschwingung)' : '';
   const [wv, wn, ww] = verdict(Q.walk, 'walk', Q.walk.nlW), [sv, sn, sw] = verdict(Q.stop, 'stop', Q.stop.nlS);
   return [
-    ['Eigenfrequenz', nf1.format(m.c.f) + ' Hz', 'Periode ' + nf0.format(1000 / m.c.f) + ' ms · Dämpfung ' + nf1.format(m.c.ze * 100) + ' %' + more],
+    ['Eigenfrequenz', nf1.format(m.c.f) + ' Hz', 'Periode ' + nf0.format(1000 / m.c.f) + ' ms · Dämpfung ' + nf1.format(m.c.ze * 100) + ' %' + more + (m.approx ? ' · ⚠ flache Schale mit schräger Wand: Frequenz nur genähert' : '')],
     ['Freibord Schwappen', Number.isFinite(m.free) ? mm(m.free) : '–', Number.isFinite(m.free) ? 'aufrecht: Randhub, ab dem Wasser hinaus oder in eine andere Tasche läuft' : 'läuft auch bei großen Wellen nicht über'],
     ['Gehen ' + nf1.format(S.wf) + ' Hz, Hub ±' + nf0.format(S.wa) + ' mm', wv, 'aufrecht, eingeschwungen · ' + wn + res, ww],
     ['Anhalten ' + nf1.format(S.sv) + ' m/s in ' + nf1.format(S.sb) + ' s', sv, 'aufrecht, größter Randhub · ' + sn, sw]

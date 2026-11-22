@@ -118,7 +118,27 @@ buck([fix(0), fix(L)], ['eingespannt–eingespannt', '4', 4]);
 r = Core.analyze(base({ sup: [pin(0), pin(L)], N: 0.25 * PI * PI * EI / (L * L), pl: [{ x: L / 2, F }] }));
 check('II. Ordnung: α = 1/(1 − 1/λ) bei λ = 4', r.alpha, 4 / 3);
 check('… w = α · FL³/48EI', -wmin(r), 4 / 3 * F * L ** 3 / (48 * EI), 1e-4);
-check('… σ = N/A + α·M/W', r.max.sig.v, r.Nc[0] / sec.A + 4 / 3 * F * L / 4 / (sec.I / 10), 1e-4);
+check('… σ = N/A + α·M/W + Imperfektion N·(L/300)·α/W', r.max.sig.v, r.Nc[0] / sec.A + 4 / 3 * F * L / 4 / (sec.I / 10) + r.Nc[0] * L / 300 * 4 / 3 / (sec.I / 10), 1e-4);
+// Knicken aus der Ebene (schwache Achse) und Ersatzimperfektion
+{ const sr = Core.section({ type: 'rect', b: 20, h: 60 }), mk = o => Core.analyze(Object.assign({ L, E, I: sr.I, Iz: sr.Iz, A: sr.A, rhoA: 0, sec: sr, sw: false, orient: 'v', kdef: 0, sup: [pin(0), pin(L)], pl: [], ql: [], modes: false }, o));
+  check('Rechteck 20×60: Iz = h·b³/12', sr.Iz, 60 * 8000 / 12); check('Rechteck: ez = b/2', sr.ez, 10);
+  const N = 1000, rz = mk({ N }), NEz = PI * PI * E * sr.Iz / (L * L);
+  check('Hochkant stehend: λ = Euler um die schwache Achse', rz.lam, NEz / N, 1e-4);
+  check('… λ in der Ebene unverändert (Euler mit I)', rz.lamY, PI * PI * E * sr.I / (L * L) / N, 1e-4);
+  check('… gerade Stütze: σ = N/A + N·(L/300)/(1 − 1/λz)·ez/Iz', rz.max.sig.v, N / sr.A + N * L / 300 / (1 - N / NEz) * 10 / sr.Iz, 1e-4);
+  check('… knickt, sobald N über der Knicklast der schwachen Achse liegt', mk({ N: 1.01 * NEz }).buckled ? 1 : 0, 1, 0);
+  check('Ohne Iz (Rundstab-Fall): kein Knicken aus der Ebene', isFinite(Core.analyze(base({ sup: [pin(0), pin(L)], N: 1000 })).lamZ) ? 1 : 0, 0, 0); }
+{ const iz = s => Core.section(s).Iz;
+  check('Rechteckrohr 40×60×3: Iz', iz({ type: 'rhs', b: 40, h: 60, t: 3 }), (60 * 40 ** 3 - 54 * 34 ** 3) / 12);
+  check('I 200×100×6×10: Iz', iz({ type: 'I', b: 100, h: 200, tw: 6, tf: 10 }), 2 * 10 * 100 ** 3 / 12 + 180 * 6 ** 3 / 12);
+  const xc = (2 * 1000 * 50 + 180 * 6 * 3) / (2000 + 1080);
+  check('U 200×100×6×10: Iz um den seitlichen Schwerpunkt', iz({ type: 'U', b: 100, h: 200, tw: 6, tf: 10 }), 2 * (10 * 100 ** 3 / 12 + 1000 * (50 - xc) ** 2) + 180 * 216 / 12 + 1080 * (3 - xc) ** 2);
+  check('Rundrohr: Iz = I', iz({ type: 'tube', d: 30, t: 2 }), PI * (30 ** 4 - 26 ** 4) / 64);
+  check('U umgedreht 292×120×21: Iz', iz({ type: 'Un', b: 292, h: 120, t: 21 }), 21 * 292 ** 3 / 12 + 2 * (99 * 21 ** 3 / 12 + 99 * 21 * 135.5 ** 2)); }
+// Spannung aus ständiger Last (Kriechbruch-Nachweis): nur der Dauerlastanteil
+{ const rp = Core.analyze(base({ sup: [pin(0), pin(L)], pl: [{ x: L / 2, F, perm: true }, { x: L / 2, F: 2 * F }] }));
+  check('σ ständig = F·L/4/W (nur Dauerlast)', rp.max.sigP.v, F * L / 4 / (sec.I / 10), 1e-6);
+  check('σ gesamt = 3F·L/4/W', rp.max.sig.v, 3 * F * L / 4 / (sec.I / 10), 1e-6); }
 check('… V = α · F/2 (Querkraft mit verstärkt)', Math.abs(r.max.V.v), 4 / 3 * F / 2, 1e-4);
 check('… τ = α · 1,5·(F/2)/A', r.max.tau.v, 4 / 3 * 1.5 * F / 2 / sec.A, 1e-4);
 check('Über Knicklast: gemeldet', Core.analyze(base({ sup: [pin(0), pin(L)], N: 1.1 * PI * PI * EI / (L * L) })).buckled ? 1 : 0, 1, 0);

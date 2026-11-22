@@ -49,6 +49,9 @@
       <label for="type">Abstrahlung</label>
       <select id="type"><option value="iso">rundum (Glühlampe)</option><option value="lambert">nach unten (LED-Lampe)</option></select>
       <span></span>
+      <label for="lt">Leuchtmittel</label>
+      <select id="lt"><option value="klar">klar oder LED-Punkte</option><option value="matt">matt</option><option value="opal">opal (milchig)</option></select>
+      <span></span>
     </div>
     <details id="adv"><summary>Erweitert: Rohwerte des Materials (ausgewählter Schirm)</summary>
       <div class="raw" id="raw"></div>
@@ -100,7 +103,8 @@
     <h3>Begriffe</h3><p><a href="https://de.wikipedia.org/wiki/Lichtstrom" target="_blank" rel="noopener">Lichtstrom</a> [lm, Lumen]: die gesamte Lichtmenge, die die Lampe abgibt (steht auf der Verpackung). <a href="https://de.wikipedia.org/wiki/Lichtstärke_(Photometrie)" target="_blank" rel="noopener">Lichtstärke</a> [cd, Candela]: wie viel Licht in eine bestimmte Richtung geht. Die <a href="https://de.wikipedia.org/wiki/Lichtverteilungskurve" target="_blank" rel="noopener">Lichtverteilungskurve</a> (LVK) zeigt die Lichtstärke für jede Richtung; 0° = senkrecht nach unten. C0–C180 und C90–C270 sind zwei senkrecht zueinander stehende Schnitte durch die Leuchte (gleich, solange die Lampe auf der Achse sitzt; bei der langen Leuchte quer und längs). cd/klm = Lichtstärke je 1000&nbsp;lm Lampe – so lassen sich Schirme unabhängig von der Lampe vergleichen. <a href="https://de.wikipedia.org/wiki/Beleuchtungsstärke" target="_blank" rel="noopener">Beleuchtungsstärke</a> [lx, Lux]: wie viel Licht auf einer Fläche ankommt, etwa auf dem Tisch (Essen ca. 200&nbsp;lx, Lesen ca. 500&nbsp;lx). <a href="https://de.wikipedia.org/wiki/Leuchtdichte" target="_blank" rel="noopener">Leuchtdichte</a> [cd/m²]: wie hell eine Fläche für das Auge aussieht – hohe Werte blenden. Wirkungsgrad: Anteil des Lampenlichts, der die Leuchte verlässt; der Rest wird im Schirm geschluckt. Abschirmwinkel: wie weit man von der Waagrechten nach oben schauen muss, bis man die Lampe direkt sieht.</p>
     <h3>Materialwerte</h3><p>Jedes Material teilt auftreffendes Licht auf: gestreut zurückgeworfen (wie eine weiße Wand), gespiegelt (wie ein Spiegel), gestreut durchgelassen (wie Milchglas), klar durchgelassen (wie Fensterglas); der Rest wird geschluckt. Die Werte sind Richtwerte und meist die größte Fehlerquelle: Opalglas lässt 30–65&nbsp;% durch, weiß lackiert wirft 75–90&nbsp;% zurück, gebürstetes Aluminium 55–58&nbsp;%, Spiegelaluminium 75–95&nbsp;%, Klarglas lässt 80–90&nbsp;% durch (IES-Materialtabelle, UNCG eLight, „Material Properties“). Wie viel gebürstetes Aluminium streut und wie viel es spiegelt, ist geschätzt. <b>Papier, Stoff, Filz, satiniertes Acryl und halbdurchsichtiger Kunststoff sind Schätzwerte</b> – sie schwanken stark mit Dicke, Webart und Farbe. Eigene Messwerte unter „Erweitert“ eintragen.</p>
     <h3>Designklassiker</h3><p>Unter „Vorlage“. Außenmaße nach Angaben von Herstellern und Händlern, Profil nachempfunden – eine Annäherung, keine Werkszeichnung. Gerechnet wird nur der Schirm (Fuß, Bogen und Fassung fehlen), die Lampe als Punkt. Messing (Golden Bell) als gebürstetes Aluminium, gelochte Scheitel (Arco, Golden Bell) als offenes Loch. Mehrschalige Leuchten (PH 5, Artichoke) als mehrere Schirme; bei der Artichoke ist jede Blattreihe ein geschlossener Ring – die Lücken zwischen den Blättern fehlen, real tritt dort etwas mehr Licht seitlich aus. Flowerpot (farbige Emaille) und Atollo (lackiert) als weiß lackiert, Atollo ohne Zylinderfuß; angenommen sind die kleine Flowerpot-Schale Ø 130, die Kegelhöhe der Mayday (≈ 330) und die Höhe der Glo-Ball (≈ 290).</p>
-    <h3>Blendhinweis</h3><p>⚠ ab 20 000 cd/m²: Ist eine Lampe heller, verlangt die Norm für Arbeitsplatzbeleuchtung (EN 12464-1) einen Mindestabschirmwinkel – die Lampe muss so tief im Schirm sitzen, dass man sie von der Seite nicht direkt sieht (20 000–50 000 cd/m² → 15°, 50 000–500 000 cd/m² → 20°, darüber → 30°). Hier auf die Leuchtdichte des Schirms übertragen – ein Richtwert, keine Normprüfung (die echte Blendungsbewertung braucht den ganzen Raum). Der Abschirmwinkel ist rein geometrisch: Schirm undurchsichtig, Lampe als Punkt; eine echte Lampe ist etwas größer.</p>
+    <h3>Blendhinweis</h3><p>Schirm: ⚠ kritisch ab 20 000 cd/m² Leuchtdichte, knapp ab 10 000 cd/m² (Hälfte, Faustwert). Die Norm für Arbeitsplatzbeleuchtung (EN 12464-1) verlangt je nach Leuchtdichte der <i>Lampe</i> einen Mindestabschirmwinkel – die Lampe muss so tief im Schirm sitzen, dass man sie von der Seite nicht direkt sieht: 20 000–50 000 cd/m² → 15°, 50 000–500 000 cd/m² → 20°, darüber → 30°. Deshalb fragt „Leuchtmittel“: opal (milchig, ≈ 30 000 cd/m²) → 15°, matt (≈ 100 000) → 20°, klar oder LED-Punkte (weit über 500 000) → 30°; Werte gerundete Richtwerte. Spiegel und Klarglas zeigen ein <i>Bild der Lampe</i> fast so hell wie die Lampe selbst (Lampe × Spiegelungs- bzw. Durchlassgrad); tritt mehr als 2&nbsp;% des Lichts so aus und ist das Bild heller als 20 000 cd/m², gibt es ⚠ knapp. Ein Richtwert, keine Normprüfung (die echte Blendungsbewertung braucht den ganzen Raum). Der Abschirmwinkel ist rein geometrisch: Schirm undurchsichtig, Lampe als Punkt. Leuchtdichte bei Lampe neben der Achse je 30°-Sektor des Umfangs (Lichtfleck nicht verschmiert).</p>
+    <h3>Lampenkörper</h3><p>Die Lampe ist eine Kugel (Langfeld: Röhre) mit 15&nbsp;mm Radius, die Licht, das der Schirm auf sie zurückwirft, zu 30&nbsp;% schluckt (Fassung, Kolben, LED-Platine; Richtwert). Das senkt den Wirkungsgrad enger Reflektoren um einige Prozent. Das Licht startet weiter in der Mitte (Punktquelle).</p>
     <h3>Grenzen</h3><p>Gültig für dünne, runde oder gerade gezogene Schirme, ohne Farbe. Der Raum ist schwarz: Auf dem Tisch zählt nur das direkte Licht der Leuchte, nicht das von Wänden und Decke zurückgeworfene – im echten Raum wird es also etwas heller. Bei der langen Leuchte gemittelt über die Länge; sitzt die Lampe neben der Achse, wird rundum gemittelt. Nicht berücksichtigt: Wandstärke und Lichtbrechung, dass glatte Flächen bei flachem Einfall stärker spiegeln (<a href="https://de.wikipedia.org/wiki/Fresnelsche_Formeln" target="_blank" rel="noopener">Fresnelsche Formeln</a>), Farbe, Wärme, Licht von den Raumwänden. Wer einen ganzen Raum planen oder eine Norm nachweisen muss, braucht eine Lichtplanung (Werkzeuge unten).</p>
     <h3></h3><p><h3>Weiterführende Werkzeuge</h3><p><a href="https://www.dialux.com/" target="_blank" rel="noopener">DIALux evo</a> – kostenlos: ganze Räume planen, Normprüfung, Lichtdaten echter Leuchten von Herstellern<br><a href="https://relux.com/" target="_blank" rel="noopener">Relux</a> – kostenlos: Raum- und Außenbeleuchtung planen, ähnlich DIALux<br><a href="https://www.blender.org/" target="_blank" rel="noopener">Blender</a> – kostenlos: fotorealistische Bilder der Leuchte im Raum (Wirkung, keine Werte in Lux)</p></p>
     </div></details>
@@ -152,6 +156,8 @@ const Core = (() => {
         if (v[0] + v[1] + v[2] + v[3] > 1 + 1e-9) bad('ρd + ρs + τd + τs ≤ 1 je Seite');
       }
     }
+    if (s.r !== undefined && !(num(s.r) && s.r > 0 && num(s.a) && s.a >= 0 && s.a <= 1)) bad('Lampenkörper ungültig (r > 0, 0 ≤ a ≤ 1)');
+    if (o.nL !== undefined && !(o.nL >= 1 && o.nL % 1 === 0)) bad('nL muss eine ganze Zahl ≥ 1 sein');
     if (o.floor && !(o.floor.n >= 1 && o.floor.rMax > 0 && num(o.floor.z))) bad('Bodenebene ungültig');
     const F = o.field;
     if (F && !([F.x0, F.x1, F.z0, F.z1].every(num) && F.x1 > F.x0 && F.z1 > F.z0 && F.nx >= 1 && F.nz >= 1 && F.nx % 1 === 0 && F.nz % 1 === 0 && (ext || F.x0 >= 0))) bad('Lichtfeld ungültig');
@@ -244,7 +250,11 @@ const Core = (() => {
   //       profile: Innenseite = links in Zeichenrichtung (Außennormale = (Δz, −Δr)/Länge). Die UI legt die Richtung fest.
   //       source: { x, z, phi [lm], type: 'iso'|'lambert' } – bei 'ext' Linienquelle über die ganze Länge,
   //       mat: { in: {rd, rs}, out: {rd, rs}, td, ts },  Rest absorbiert
-  //       N, seed, dGamma = 5, nC = 1, floor: { z, rMax, n } (optional) }
+  //       N, seed, dGamma = 5, nC = 1, floor: { z, rMax, n } (optional), nL = 1 (Sektoren der Leuchtdichte um die Achse, nur 'rot') }
+  // source.r, source.a (optional): Lampenkörper als Kugel ('rot') bzw. Röhre längs y ('ext') mit Radius r [mm], die zurückfallendes Licht
+  //   mit Wahrscheinlichkeit a schluckt (sonst durchlässig); das erste Austreten aus der Lampe zählt nicht.
+  // Ergebnis zusätzlich: img[2·ns] = Lichtteilchen, die als Bild der Lampe austreten (letzte Wechselwirkung gerichtet: Spiegelung ρs
+  //   oder klare Durchsicht τs an diesem Segment/dieser Seite), leaveC[2·ns·nL] = leave je Sektor.
   // floor: 'rot' Ringe um die Achse bis rMax; 'ext' n Streifen quer von −rMax bis rMax, gemittelt über |y| ≤ len/2.
   // field: { x0, x1, z0, z1, nx, nz } (optional) Raster der Schnittebene für die Raumbeleuchtungsstärke E0 [lx]
   //   (Weglängen-Schätzer: E0 = Σ Weglänge · Φ_Teilchen / Zellvolumen). 'rot': x = r ≥ 0, Zelle = Ring;
@@ -255,7 +265,13 @@ const Core = (() => {
     const src = o.source, N = o.N, R = rng(o.seed || 1), ext = isExt(o), LEN = ext ? o.len : 0;
     const dG = o.dGamma || 5, nG = round(180 / dG) + 1, nC = o.nC || 1, dC = 360 / nC;
     const S = segs(o), ns = S.ns, { nr, nz, rdI, rdO, rsI, rsO, td, ts } = S, H = S.H;
-    const flux = new Float64Array(nC * nG), leave = new Float64Array(2 * ns); // leave[2i]: innen, [2i+1]: außen
+    const flux = new Float64Array(nC * nG), leave = new Float64Array(2 * ns), img = new Float64Array(2 * ns); // leave[2i]: innen, [2i+1]: außen
+    const nL = ext ? 1 : o.nL || 1, leaveC = nL > 1 ? new Float64Array(2 * ns * nL) : null, dL = 2 * PI / nL;
+    const lr = src.r || 0, la = src.a || 0, lr2 = lr * lr;
+    // Abstand zum Lampenkörper entlang p + t·d (t > ε), sonst ∞; 'ext': Röhre um die Lampenlinie (x, z)
+    const lampT = () => { const ox = px - src.x, oy = ext ? 0 : py, oz = pz - src.z, ddy = ext ? 0 : dy;
+      const A = dx * dx + ddy * ddy + dz * dz, B = ox * dx + oy * ddy + oz * dz, C = ox * ox + oy * oy + oz * oz - lr2, D = B * B - A * C;
+      if (D < 0 || A === 0) return INF; const q = sqrt(D), t0 = (-B - q) / A, t1 = (-B + q) / A; return t0 > EPS ? t0 : t1 > EPS ? t1 : INF; };
     const fl = o.floor, ring = fl ? new Float64Array(fl.n) : null, fz = fl ? fl.z : 0, fn = fl ? fl.n : 0;
     const fk = fl ? (ext ? fl.n / (2 * fl.rMax) : fl.n / fl.rMax) : 0, fo = fl && ext ? fl.rMax : 0;
     const LAM = src.type === 'lambert';
@@ -292,12 +308,13 @@ const Core = (() => {
       px = src.x; py = ext ? (R() - 0.5) * LEN : 0; pz = src.z;
       if (LAM) lambert(0, 0, -1); // shortcut: nur nach unten gerichtet, Richtung wählbar erst bei Bedarf
       else { dz = 2 * R() - 1; const f = 2 * PI * R(), s = sqrt(1 - dz * dz); dx = s * cos(f); dy = s * sin(f); }
-      let b = 0, last = -1;
+      let b = 0, last = -1, im = -1; // im: Segment/Seite der letzten gerichteten Wechselwirkung (−1: zuletzt gestreut oder direkt)
       for (; b < MAXB; b++) {
         const hs = nearest(S, px, py, pz, dx, dy, dz, last), best = S.t;
+        if (lr > 0 && b > 0 && lampT() < best && R() < la) { if (fld) dep(lampT()); nabs++; break; } // zurück in die Lampe: geschluckt
         if (fld) dep(best);
         if (hs < 0) { // entweicht
-          out++;
+          out++; if (im >= 0) img[im]++;
           const g = acos(max(-1, min(1, -dz))) * 180 / PI;
           const c = ((atan2(dy, dx) * 180 / PI) + 360) % 360;
           flux[(round(c / dC) % nC) * nG + round(g / dG)]++;
@@ -316,15 +333,16 @@ const Core = (() => {
         const side = dx * nx + dy * ny + dz * nzz < 0 ? 1 : 0; // 1: von außen getroffen
         const sg = side ? 1 : -1, rd = side ? rdO[hs] : rdI[hs], rs = side ? rsO[hs] : rsI[hs], TD = td[hs], TS = ts[hs]; // (sg·n) zeigt zur getroffenen Seite
         const u = R();
-        if (u < rd) { lambert(sg * nx, sg * ny, sg * nzz); leave[2 * hs + side]++; }
-        else if (u < rd + rs) { const dn = dx * nx + dy * ny + dz * nzz; dx -= 2 * dn * nx; dy -= 2 * dn * ny; dz -= 2 * dn * nzz; }
-        else if (u < rd + rs + TD) { lambert(-sg * nx, -sg * ny, -sg * nzz); leave[2 * hs + 1 - side]++; }
-        else if (u < rd + rs + TD + TS) { /* gerade durch */ }
+        const sc = leaveC ? (floor(((atan2(py, px) + 2 * PI) % (2 * PI)) / dL) % nL) : 0;
+        if (u < rd) { lambert(sg * nx, sg * ny, sg * nzz); leave[2 * hs + side]++; if (leaveC) leaveC[(2 * hs + side) * nL + sc]++; im = -1; }
+        else if (u < rd + rs) { const dn = dx * nx + dy * ny + dz * nzz; dx -= 2 * dn * nx; dy -= 2 * dn * ny; dz -= 2 * dn * nzz; im = 2 * hs + side; }
+        else if (u < rd + rs + TD) { lambert(-sg * nx, -sg * ny, -sg * nzz); leave[2 * hs + 1 - side]++; if (leaveC) leaveC[(2 * hs + 1 - side) * nL + sc]++; im = -1; }
+        else if (u < rd + rs + TD + TS) { im = 2 * hs + 1 - side; /* gerade durch */ }
         else { nabs++; break; }
       }
       if (b === MAXB) lost++; // nie still verwerfen (licht-grundlagen §7)
     }
-    return normalize({ N, out, abs: nabs, lost, flux, leave, ring, fld }, o);
+    return normalize({ N, out, abs: nabs, lost, flux, leave, ring, fld, img, leaveC }, o);
   }
 
   // Zähler → physikalische Größen. Auch für aufsummierte Pakete mehrerer trace()-Läufe gleicher Eingabe.
@@ -338,10 +356,14 @@ const Core = (() => {
       for (let k = 0; k < nC; k++) I[k * nG + g] = c.flux[k * nG + g] * w / dOm;
     }
     const L = new Float64Array(2 * ns); // Leuchtdichte je Segment/Seite [cd/m²], Lambert: L = M/π
+    const nL = c.leaveC ? c.leaveC.length / (2 * ns) : 1, Lsec = c.leaveC ? new Float64Array(2 * ns * nL) : null; // je Sektor (Fläche A/nL)
+    const imgK = new Float64Array(2 * ns); // Faktor Bild/Lampe je Segment/Seite: ρs dieser Seite bzw. τs
     for (let i = 0; i < ns; i++) {
+      imgK[2 * i] = Math.max(S.rsI[i], S.ts[i]); imgK[2 * i + 1] = Math.max(S.rsO[i], S.ts[i]);
       if (!S.on[i]) continue;
       const len = hypot(S.r2[i] - S.r1[i], S.z2[i] - S.z1[i]), A = (ext ? len * o.len : PI * (S.r1[i] + S.r2[i]) * len) * 1e-6;
       L[2 * i] = c.leave[2 * i] * w / A / PI; L[2 * i + 1] = c.leave[2 * i + 1] * w / A / PI;
+      if (Lsec) for (let k = 0; k < 2 * nL; k++) Lsec[2 * i * nL + k] = c.leaveC[2 * i * nL + k] * w / (A / nL) / PI;
     }
     let E = null;
     if (c.ring) {
@@ -357,7 +379,8 @@ const Core = (() => {
         for (let j = 0; j < FD.nz; j++) F[j * FD.nx + i] = c.fld[j * FD.nx + i] * w / V * 1e6;
       }
     }
-    return { N, out: c.out, abs: c.abs, lost: c.lost, eta: c.out / N, dGamma: dG, nG, nC, flux: c.flux, I, leave: c.leave, L, ring: c.ring, E, fld: c.fld || null, F };
+    return { N, out: c.out, abs: c.abs, lost: c.lost, eta: c.out / N, dGamma: dG, nG, nC, flux: c.flux, I, leave: c.leave, L, ring: c.ring, E, fld: c.fld || null, F,
+      img: c.img || null, imgK, leaveC: c.leaveC || null, Lsec, nL };
   }
 
   // Abschirmwinkel (EN 12464-1, rein geometrisch, Schirm undurchsichtig, Punktquelle): kleinster Winkel unter der
@@ -384,7 +407,10 @@ const Core = (() => {
 if (typeof module !== 'undefined') module.exports = Core;
 // === CORE END
 // ---- Vorlagen & Materialien ----
-const D2R = Math.PI / 180, LIM = 20000; // Blendhinweis ab 20 000 cd/m² (EN 12464-1, siehe Modell & Gültigkeit)
+const D2R = Math.PI / 180, LIM = 20000, LIM1 = 10000; // Schirm blendet ab 20 000 cd/m² (EN 12464-1), „hell“ ab der Hälfte (Heuristik; 3000 traf 8 von 20 Vorlagen, auch bewährte)
+// Leuchtmittel: Leuchtdichte der Lampe [cd/m²] (Richtwerte) und Mindestabschirmwinkel nach EN 12464-1 (20–50 k → 15°, 50–500 k → 20°, darüber 30°)
+const LT = { klar: [1e6, 30], matt: [1e5, 20], opal: [3e4, 15] };
+const LAMP = { r: 15, a: 0.3 }; // Lampenkörper: Kugel bzw. Röhre Radius 15 mm, schluckt 30 % des zurückfallenden Lichts (Richtwert)
 const sphereP = (R, rTop, n) => { const t1 = Math.PI - Math.asin(rTop / R), p = []; for (let i = 0; i <= n; i++) { const t = t1 * i / n; p.push([+(R * Math.sin(t)).toFixed(1), +(-R * Math.cos(t)).toFixed(1)]); } return p; };
 // Kugel Radius R um (0,0), unten offen mit Radius rBot, oben offen mit rTop (0 = geschlossen)
 const sphereOpen = (R, rBot, rTop, n) => { const t0 = Math.asin(rBot / R), t1 = Math.PI - Math.asin(rTop / R), p = [];
@@ -470,7 +496,7 @@ const toPts = a => a.map(([x, z]) => ({ x, z }));
 const part = (pts, mat = 'stoff', raw = null) => ({ pts, mat, raw });
 
 // sym: true = rotationssymmetrisch (Profil r ≥ 0, gespiegelt angezeigt), false = Langfeld (Querschnitt frei, Länge len)
-const S = { parts: [part(toPts(PRESETS.kegel[1]))], cur: 0, sym: true, len: 1200, src: { x: 0, z: 0 }, phi: 806, type: 'iso', dist: 600,
+const S = { parts: [part(toPts(PRESETS.kegel[1]))], cur: 0, sym: true, len: 1200, src: { x: 0, z: 0 }, phi: 806, type: 'iso', lt: 'klar', dist: 600,
   unit: 'klm', view: 'lvk', mode: 'edit', sel: -1, undo: [] };
 let G = {}, R = null; // G: Geometrie für den Kern, R: aktuelles Ergebnis
 let REF = null; // gemerkter Stand: {job, R, e0, rMax, sym, sh, phi, dist}; läuft mit, solange derselbe Rechenlauf noch ruhiger wird
@@ -547,7 +573,7 @@ function opts() {
   }
   G = { parts: gp, ns: off, diff, rMax, n, e0: S.sym ? 0 : (n - 1) / 2, zmin, cut: S.src.z - S.dist >= zmin };
   return { shape: S.sym ? 'rot' : 'ext', len: S.len, parts: gp.map(q => ({ profile: q.prof, mat: matOf(S.parts[q.i]) })),
-    source: { x: S.src.x, z: S.src.z, phi: S.phi, type: S.type }, dGamma: 5, nC: 24, floor: { z: S.src.z - S.dist, rMax, n }, field: fd || undefined };
+    source: { x: S.src.x, z: S.src.z, phi: S.phi, type: S.type, r: LAMP.r, a: LAMP.a }, nL: S.sym && S.src.x !== 0 ? 12 : 1, dGamma: 5, nC: 24, floor: { z: S.src.z - S.dist, rMax, n }, field: fd || undefined };
 }
 
 // ---- Rechnen: Web Worker mit dem CORE-Quelltext dieser Seite, fortschreitend in Paketen ----
@@ -560,7 +586,7 @@ function loop(d) {
   const step = () => {
     if (job !== d.job) return;
     const r = Core.trace(Object.assign({}, d.o, { N: d.chunk, seed: (d.job * 7919 + ++k) * 0x9E3779B1 | 0 }));
-    postMessage({ job: d.job, N: r.N, out: r.out, abs: r.abs, lost: r.lost, flux: r.flux, leave: r.leave, ring: r.ring, fld: r.fld });
+    postMessage({ job: d.job, N: r.N, out: r.out, abs: r.abs, lost: r.lost, flux: r.flux, leave: r.leave, ring: r.ring, fld: r.fld, img: r.img, leaveC: r.leaveC });
     setTimeout(step, 0);
   };
   step();
@@ -584,8 +610,9 @@ function restart() {
 function onChunk(m) {
   if (m.job !== J.id || J.done) return;
   const a = J.acc;
-  if (!a) J.acc = { N: m.N, out: m.out, abs: m.abs, lost: m.lost, flux: Float64Array.from(m.flux), leave: Float64Array.from(m.leave), ring: Float64Array.from(m.ring), fld: m.fld ? Float64Array.from(m.fld) : null };
-  else { a.N += m.N; a.out += m.out; a.abs += m.abs; a.lost += m.lost; for (const k of ['flux', 'leave', 'ring', 'fld']) if (a[k]) for (let i = 0; i < a[k].length; i++) a[k][i] += m[k][i]; }
+  const cp = x => x ? Float64Array.from(x) : null;
+  if (!a) J.acc = { N: m.N, out: m.out, abs: m.abs, lost: m.lost, flux: cp(m.flux), leave: cp(m.leave), ring: cp(m.ring), fld: cp(m.fld), img: cp(m.img), leaveC: cp(m.leaveC) };
+  else { a.N += m.N; a.out += m.out; a.abs += m.abs; a.lost += m.lost; for (const k of ['flux', 'leave', 'ring', 'fld', 'img', 'leaveC']) if (a[k]) for (let i = 0; i < a[k].length; i++) a[k][i] += m[k][i]; }
   R = Core.normalize(J.acc, J.o);
   derive();
   if (R.prog >= 1 || R.N >= NMAX) { J.done = true; J.calm = performance.now() - J.t0; if (worker) worker.postMessage({ job: -J.id }); }
@@ -616,9 +643,13 @@ function derive() {
   let dn = 0, up = 0; const g90 = Math.round(90 / R.dGamma);
   for (let c = 0; c < nC; c++) for (let g = 0; g < nG; g++) { const f = R.flux[c * nG + g]; if (g < g90) dn += f; else if (g > g90) up += f; else { dn += f / 2; up += f / 2; } }
   // max. Leuchtdichte (nur Abschnitte mit genug Treffern, sonst rauscht das Maximum nach oben)
+  // Lampe neben der Achse: je Sektor (Lichtfleck nicht über den Umfang verschmiert)
   let Lm = 0, Li = -1, Ln = 0;
-  for (let i = 0; i < R.L.length; i++) if (R.leave[i] >= 100 && R.L[i] > Lm) { Lm = R.L[i]; Li = i; Ln = R.leave[i]; }
-  R.st = { dn: dn / Math.max(1, R.out), up: up / Math.max(1, R.out), Lm, Li, sL: rel(Ln), sE: rel(R.ring[G.e0]), sP: peak,
+  if (R.Lsec) { for (let k = 0; k < R.Lsec.length; k++) if (R.leaveC[k] >= 100 && R.Lsec[k] > Lm) { Lm = R.Lsec[k]; Li = Math.floor(k / R.nL); Ln = R.leaveC[k]; } }
+  else for (let i = 0; i < R.L.length; i++) if (R.leave[i] >= 100 && R.L[i] > Lm) { Lm = R.L[i]; Li = i; Ln = R.leave[i]; }
+  // Bild der Lampe (Spiegelung, klare Durchsicht): Anteil des Lichts und größter Faktor an Flächen mit ≥ 0,5 % davon
+  let iN = 0, iK = 0; if (R.img) for (let i = 0; i < R.img.length; i++) { iN += R.img[i]; if (R.img[i] >= 0.005 * R.N) iK = Math.max(iK, R.imgK[i]); }
+  R.st = { dn: dn / Math.max(1, R.out), up: up / Math.max(1, R.out), Lm, Li, sL: rel(Ln), img: iN / R.N, imgK: iK, sE: rel(R.ring[G.e0]), sP: peak,
     sEta: Math.sqrt(R.eta * (1 - R.eta) / R.N) };
   // ruhig: LVK ±3 % (ungünstigste Stützstelle), E unter der Leuchte ±5 %, max. Leuchtdichte ±3 %
   // E-Kriterium relativ zum Maximum von E: sonst wird eine Leuchte, die nicht nach unten strahlt (E ≈ 0), nie ruhig
@@ -891,12 +922,16 @@ function drawE() {
 }
 
 // ---- Urteil & Vergleich ----
-function refSnap() { REF = { job: J.id, R, e0: G.e0, rMax: G.rMax, sym: S.sym, sh: J.sh, phi: S.phi, dist: S.dist, done: J.done }; }
-// Urteil in Designsprache: [Stufe, Text] aus Ergebnis r, Abschirmwinkel sh, Leuchtdichtegrenze LIM
-function verdict(r, sh, e0, dist, done) {
-  const st = r.st, E = r.E[e0], c = [], k = [];
+function refSnap() { REF = { job: J.id, R, e0: G.e0, rMax: G.rMax, sym: S.sym, sh: J.sh, phi: S.phi, dist: S.dist, done: J.done, lt: S.lt }; }
+// Leuchtdichte des Lampenbilds [cd/m²] (0: kein nennenswertes Bild)
+const imgL = (st, lt) => st.img >= 0.02 ? LT[lt][0] * st.imgK : 0;
+// Urteil in Designsprache: [Stufe, Text] aus Ergebnis r, Abschirmwinkel sh, Leuchtmittel lt; Grenzen LIM/LIM1, Abschirmung nach Leuchtmittel
+function verdict(r, sh, e0, dist, done, lt) {
+  const st = r.st, E = r.E[e0], c = [], k = [], shMin = LT[lt][1], Li = imgL(st, lt);
   if (st.Li >= 0 && st.Lm >= LIM) c.push(`blendet: Schirm leuchtet stellenweise zu hell (${nf0.format(st.Lm)} cd/m²)`);
-  if (sh < 15) k.push(sh <= 0 ? 'Lampe ist von der Seite direkt sichtbar' : `Lampe ist schon flach von unten sichtbar (Abschirmwinkel ${nf0.format(sh)}°, Richtwert ≥ 15°)`);
+  else if (st.Li >= 0 && st.Lm >= LIM1) k.push(`Schirm leuchtet stellenweise hell (${nf0.format(st.Lm)} cd/m²) – im Blickfeld unangenehm, größer oder dichter streuend wählen`);
+  if (sh < shMin) k.push(sh <= 0 ? 'Lampe ist von der Seite direkt sichtbar' : `Lampe ist schon flach von unten sichtbar (Abschirmwinkel ${nf0.format(sh)}°, Richtwert ≥ ${shMin}° für ${lt === 'klar' ? 'klare und LED-Lampen' : lt === 'matt' ? 'matte Lampen' : 'Opallampen'})`);
+  if (Li >= LIM) k.push(`Lampe spiegelt sich im Schirm oder scheint klar hindurch (Bild ≈ ${nf0.format(Li)} cd/m²) – blendet, wenn man hineinsieht`);
   if (st.dn > 0.3 && E < 150) k.push(`Tisch wird kaum hell: ${nf0.format(E)} lx in ${nf0.format(dist)} mm (Essen ca. 200, Lesen ca. 500 lx)`);
   if (r.eta < 0.4) k.push(`schluckt viel Licht: nur ${nf0.format(100 * r.eta)} % kommen heraus`);
   const t = a => a.join(' · ').replace(/^./, x => x.toUpperCase()), pre = done ? '' : 'Vorläufig: ';
@@ -915,19 +950,20 @@ function drawStats() {
   const sh = J.sh, st = R.st;
   const hidden = S.parts.some(pt => { const m = matOf(pt); return m.ts > 0 || m.in.rs + m.out.rs > 0; }); // nur klare Durchsicht und Spiegel zeigen ein Bild der Lampe
   const where = st.Li >= 0 && S.parts.length > 1 ? 'Schirm ' + (partOfSeg(st.Li) + 1) + ' ' : '';
-  const V = verdict(R, sh, G.e0, S.dist, J.done), F = REF && REF.R, VR = F && verdict(F, REF.sh, REF.e0, REF.dist, REF.done);
+  const V = verdict(R, sh, G.e0, S.dist, J.done, S.lt), F = REF && REF.R, VR = F && verdict(F, REF.sh, REF.e0, REF.dist, REF.done, REF.lt);
   const vs = (cur, ref, fmt) => F && isFinite(ref) ? ` · gemerkt ${fmt(ref)} (${dpDelta(cur, ref)})` : '';
   const TM = { eta: 'Wirkungsgrad η: Anteil des Lampenlichts, der die Leuchte verlässt; der Rest wird im Schirm geschluckt.',
-    sh: 'Abschirmwinkel: Winkel unter der Waagrechten, ab dem man die Lampe direkt sieht. Größer = blendet weniger (Richtwert ≥ 15°).',
-    L: 'Leuchtdichte: wie hell eine Fläche wirkt, in cd/m². Ab 20 000 cd/m² blendet sie ohne Abschirmung.',
+    sh: `Abschirmwinkel: Winkel unter der Waagrechten, ab dem man die Lampe direkt sieht. Größer = blendet weniger (Richtwert ≥ ${LT[S.lt][1]}° für dieses Leuchtmittel).`,
+    L: 'Leuchtdichte: wie hell eine Fläche wirkt, in cd/m². Ab etwa 10 000 cd/m² unangenehm hell, ab 20 000 cd/m² blendet sie.',
     E: 'Beleuchtungsstärke: Licht, das auf dem Tisch ankommt, in Lux (lx). Essen ca. 200 lx, Lesen ca. 500 lx.' };
   const items = [
     ['Wirkungsgrad η', pct(R.eta), 'Leuchte gibt ' + nf0.format(R.eta * S.phi) + ' lm ab' + pm(st.sEta / Math.max(R.eta, 1e-9)) + vs(R.eta, F && F.eta, pct)],
     ['Nach unten / oben', nf0.format(100 * st.dn) + ' / ' + nf0.format(100 * st.up) + ' %', 'des austretenden Lichts' + (F ? ` · gemerkt ${nf0.format(100 * F.st.dn)} / ${nf0.format(100 * F.st.up)} %` : '')],
-    [S.sym ? 'Abschirmwinkel' : 'Abschirmwinkel quer', nf1.format(sh) + '°', (sh >= 90 ? 'Lampe von unten nicht sichtbar' : sh <= 0 ? 'Lampe seitlich direkt sichtbar' : 'Lampe direkt sichtbar ab ' + nf1.format(sh) + '° unter der Horizontalen' + (hidden ? '; Durchsicht/Spiegelbild nicht erfasst' : '')) + (F && isFinite(REF.sh) ? ` · gemerkt ${nf1.format(REF.sh)}°` : '')],
+    [S.sym ? 'Abschirmwinkel' : 'Abschirmwinkel quer', nf1.format(sh) + '°', (sh >= 90 ? 'Lampe von unten nicht sichtbar' : sh <= 0 ? 'Lampe seitlich direkt sichtbar' : 'Lampe direkt sichtbar ab ' + nf1.format(sh) + '° unter der Horizontalen' + (hidden ? '; Durchsicht/Spiegelbild siehe „Bild der Lampe“' : '')) + (F && isFinite(REF.sh) ? ` · gemerkt ${nf1.format(REF.sh)}°` : '')],
     st.Li >= 0 ? ['Leuchtdichte max.', (st.Lm >= LIM ? '⚠ ' : '') + nf0.format(st.Lm) + ' cd/m²', where + (st.Li % 2 ? 'außen' : 'innen') + pm(st.sL) + (st.Lm >= LIM ? ' · blendet ohne Abschirmung' : '') + vs(st.Lm, F && F.st.Li >= 0 ? F.st.Lm : NaN, v => nf0.format(v) + ' cd/m²'), st.Lm >= LIM] : ['Leuchtdichte max.', '–', G.diff ? 'noch zu wenig Treffer' : 'keine streuende Fläche'],
     ['E unter der Leuchte', nf0.format(R.E[G.e0]) + ' lx', 'Tisch ' + nf0.format(S.dist) + ' mm tiefer' + (S.sym ? '' : ', unter der Mittelachse') + pm(st.sE) + vs(R.E[G.e0], F && F.E[REF.e0], v => nf0.format(v) + ' lx' + (REF.dist !== S.dist ? ` in ${nf0.format(REF.dist)} mm` : ''))]
   ];
+  if (st.img >= 0.02) { const Li = imgL(st, S.lt); items.push(['Bild der Lampe', (Li >= LIM ? '⚠ ' : '') + '≈ ' + nf0.format(Li) + ' cd/m²', nf0.format(100 * st.img) + ' % des Lichts treten gespiegelt oder klar durchscheinend aus; Leuchtdichte ≈ ' + nf0.format(100 * st.imgK) + ' % der Lampe', Li >= LIM]); }
   if (R.lost > 1e-3 * R.N) items.push(['Nicht gerechnet', '⚠ ' + pct(R.lost / R.N), 'Lichtteilchen nach 1000 Treffern abgebrochen', true]);
   // Ebene 2: Tisch, Blendung, Abschirmung, Wirkungsgrad groß; Rest (und Warnungen immer oben) – Begriffe mit Erklärung
   const tm = [TM.eta, null, TM.sh, TM.L, TM.E], it = items.map(([l, v, n, w], i) => ({ l: l.replace(' η', ''), v, n, w, t: tm[i] }));
@@ -974,6 +1010,7 @@ $('phiP').innerHTML = PHI.map(([v, t]) => `<option value="${v}">${t}</option>`).
 $('phiP').onchange = e => { if (e.target.value) { S.phi = +e.target.value; syncCtl(); restart(); } };
 $('phi').onchange = e => { S.phi = num(e.target.value, S.phi, 10, 20000); syncCtl(); restart(); };
 $('type').onchange = e => { S.type = e.target.value; restart(); };
+$('lt').onchange = e => { S.lt = e.target.value; drawAll(); linkLater(); }; // nur Bewertung, keine neue Rechnung
 $('mat').innerHTML = Object.entries(MATS).map(([k, v]) => `<option value="${k}">${v[0]}</option>`).join('') + '<option value="">eigene Werte (Erweitert)</option>';
 $('mat').onchange = e => { if (!e.target.value) { $('adv').open = true; return; } pushUndo(); cur().mat = e.target.value; cur().raw = null; syncCtl(); restart(); };
 const RAW = [['ρd innen', m => m.in.rd], ['ρs innen', m => m.in.rs], ['ρd außen', m => m.out.rd], ['ρs außen', m => m.out.rs], ['τd', m => m.td], ['τs', m => m.ts]];
@@ -990,7 +1027,7 @@ $('vLvk').onclick = () => setView('lvk');
 $('vFld').onclick = () => setView('field');
 function syncCtl() {
   $('phi').value = S.phi; $('phiP').value = PHI.some(p => p[0] === S.phi) ? S.phi : '';
-  $('type').value = S.type; $('dist').value = S.dist;
+  $('type').value = S.type; $('lt').value = S.lt; $('dist').value = S.dist;
   const fv = S.view === 'field'; $('vLvk').classList.toggle('on', !fv); $('vFld').classList.toggle('on', fv);
   $('uKlm').parentNode.hidden = fv; $('lvkT').innerHTML = fv ? 'Lichtfeld <small>Schnitt durch die Leuchte</small>' : 'Lichtverteilung <small>' + dpTerm('LVK', 'Lichtverteilungskurve: Lichtstärke je Richtung, 0° = senkrecht nach unten') + '</small>';
   $('sym').classList.toggle('on', S.sym); dpBtn($('sym'), 'sym', S.sym ? 'Symmetrie an' : 'Symmetrie aus');
@@ -1022,12 +1059,12 @@ function apply(d) { // v2: {form, len, parts:[{p, m}], s:[x,z,phi,type], d}; v1:
   const parts = list.map(q => q && prof(q.p, ext) ? Object.assign(part(prof(q.p, ext)), matFrom(q.m)) : null).filter(Boolean);
   if (!parts.length) return false;
   const s = Array.isArray(d.s) ? d.s : [];
-  Object.assign(S, { parts, cur: 0, sym: !ext, len: num(d.len, 1200, 100, 5000), src: { x: num(s[0], 0, ext ? -5000 : 0, 5000), z: num(s[1], 0, -5000, 5000) }, phi: num(s[2], 806, 10, 20000), type: s[3] === 'lambert' ? 'lambert' : 'iso',
+  Object.assign(S, { parts, cur: 0, sym: !ext, len: num(d.len, 1200, 100, 5000), src: { x: num(s[0], 0, ext ? -5000 : 0, 5000), z: num(s[1], 0, -5000, 5000) }, phi: num(s[2], 806, 10, 20000), type: s[3] === 'lambert' ? 'lambert' : 'iso', lt: Object.hasOwn(LT, s[4]) ? s[4] : 'klar',
     dist: num(d.d, 600, 100, 2000), sel: -1 });
   return true;
 }
 const snapshot = () => ({ form: S.sym ? 'rot' : 'ext', len: S.len, parts: S.parts.filter(pt => pt.pts.length >= 2).map(pt => ({ p: pt.pts.map(q => [q.x, q.z]), m: matOut(pt) })),
-  s: [S.src.x, S.src.z, S.phi, S.type], d: S.dist });
+  s: [S.src.x, S.src.z, S.phi, S.type, S.lt], d: S.dist });
 $('exp').onclick = () => dpDownload(Object.assign({ type: 'designphysik/licht', version: 2 }, snapshot()), 'lampenschirm.json');
 $('imp').onclick = () => $('file').click();
 $('file').onchange = async e => {

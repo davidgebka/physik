@@ -39,6 +39,7 @@
     <canvas id="c3" class="ch"></canvas>
     <h2>Haltemoment <small>Kraft am Antrieb, um die Lasten zu halten</small></h2>
     <canvas id="c4" class="ch"></canvas>
+    <div class="row"><label class="note pair">Gelenkreibung μ <input type="number" id="fmu" min="0" max="1" step="0.05"></label><label class="note pair">Bolzen Ø <input type="number" id="fd" min="0" max="100" step="1"> mm</label></div>
   </section>
   <section class="panel wide">
     <h2>Datei</h2>
@@ -55,7 +56,8 @@
     <h3>Begriffe</h3><p><i>Umkehrlage</i> – der Abtrieb bleibt kurz stehen und läuft zurück, wie ein Scheibenwischer am Ende seines Wegs. Liegen dabei Antrieb und Koppel auf einer Linie, heißt sie Streck- bzw. Decklage. <i>Totlage</i> – der Antrieb kommt nicht weiter, dahinter gibt es keine mögliche Stellung („klemmt“); dort einen Anschlag vorsehen oder sie als Verriegelung nutzen (<a href="https://de.wikipedia.org/wiki/Totpunkt" target="_blank" rel="noopener">Totpunkt</a>). <i>Übertragungswinkel μ</i> – Winkel zwischen Koppel und Abtriebsglied (0–90°). Bei 90° wird die Kraft am besten weitergegeben; unter etwa 40° drückt die Koppel vor allem gegen das Gelenk, statt das Glied zu drehen – mit Reibung wird es schwergängig oder klemmt (Richtwert). <i>Übersetzung</i> – wie weit sich der Abtrieb bewegt, wenn sich der Antrieb ein Stück bewegt; an einer Totlage unbegrenzt groß.</p>
     <h3>Kräfte</h3><p>Lasten Fx/Fy [N] an beliebigen Punkten, z.&nbsp;B. ein Gewicht: Fy = −Masse × 9,81 (1&nbsp;kg ≈ 10&nbsp;N nach unten). Das Werkzeug berechnet, welches <a href="https://de.wikipedia.org/wiki/Drehmoment" target="_blank" rel="noopener">Drehmoment</a> [N·m] bzw. welche Kraft [N] man am Antrieb braucht, um das Getriebe in jeder Stellung zu halten – ohne Reibung und ohne Eigengewicht der Glieder (es zählt nur, was als Last eingetragen ist). Positiv = in Richtung wachsender Antriebswerte. An einer Totlage geht der Wert gegen unendlich (Diagramm abgeschnitten). Für Fachleute: <a href="https://de.wikipedia.org/wiki/Prinzip_der_virtuellen_Arbeit" target="_blank" rel="noopener">Prinzip der virtuellen Arbeit</a>, Q = −Σ F·∂p/∂Antrieb.</p>
     <h3>Gültigkeit</h3><p>Getriebetyp (kann sich die Kurbel ganz herumdrehen? Grashof-Bedingung), μ und Streck-/Decklage nur für erkannte Viergelenke und <a href="https://de.wikipedia.org/wiki/Schubkurbel" target="_blank" rel="noopener">Schubkurbeln</a>. In Grenzfällen wie dem Parallelogramm kann das Getriebe an einer Stelle in zwei Richtungen weiterlaufen; das Werkzeug läuft dann geradeaus weiter. Ob sich das Getriebe bewegen kann, wird durch Abzählen geprüft (2 je beweglichem Punkt minus Bedingungen): Getriebe mit überzähligen, aber passenden Stäben (Parallelogramm mit drittem parallelem Stab) werden deshalb als blockiert gemeldet. Nur eine Führung, fest am Gestell.</p>
-    <h3>Nicht enthalten</h3><p>Kräfte in den Gelenken, Reibung, Schwung und Massenträgheit, Federn und Gasdruckfedern, Zusammenstoßen der Glieder, automatisches Entwerfen aus Wunschstellungen, mehrere Antriebe, bewegte Führungen. Für räumliche Mechanismen, Kollisionen und Gelenkkräfte: Bewegungssimulation im CAD (unten).</p>
+    <h3>Reibung und Gelenkkräfte</h3><p><i>Gelenkkraft</i>: die größte Kraft, die ein Bolzen oder ein Lager am Gestell aufnehmen muss – wichtig für Scharnier, Schraube, Befestigung im Möbel. <i>Reibung</i>: Jedes Gelenk bremst mit <a href="https://de.wikipedia.org/wiki/Reibung" target="_blank" rel="noopener">Reibwert</a> μ × halber Bolzendurchmesser × Gelenkkraft, die Führung mit μ × Querkraft. Im Haltemoment-Diagramm zeigen die gestrichelten Linien, wie viel Kraft man mit Reibung zum Vor- bzw. Zurückbewegen braucht. Frisst die Reibung mehr als die Hälfte des Haltemoments, gilt das Getriebe als schwergängig. Vorgabe μ = 0,2 (trocken, Stahl/Kunststoff), Bolzen Ø 6&nbsp;mm – Richtwerte, einstellbar. Näherung: Die Gelenkkräfte werden ohne Reibung gerechnet; dass Reibung sie weiter erhöht (Selbsthemmung) und dass Schieber in kurzen Führungen verkanten (Schubladeneffekt), ist nicht enthalten. An Totlagen laufen Haltemoment und Gelenkkräfte rechnerisch gegen unendlich; real begrenzen Elastizität und Spiel sie, deshalb zählen Stellen mit μ unter 20° dort nicht mit.</p>
+    <h3>Nicht enthalten</h3><p>Selbsthemmung durch Reibung, Verkanten in Führungen, Schwung und Massenträgheit, Federn und Gasdruckfedern, Zusammenstoßen der Glieder, automatisches Entwerfen aus Wunschstellungen, mehrere Antriebe, bewegte Führungen. Für räumliche Mechanismen, Kollisionen und Gelenkkräfte: Bewegungssimulation im CAD (unten).</p>
     <h3></h3><p><h3>Weiterführende Werkzeuge</h3><p><a href="https://motiongen.io/" target="_blank" rel="noopener">MotionGen</a> – kostenlos, Browser und App: Getriebe aus Wunschstellungen entwerfen lassen<br><a href="https://blog.rectorsquid.com/linkage-mechanism-designer-and-simulator/" target="_blank" rel="noopener">Linkage</a> – kostenlos, Windows: Getriebe zeichnen und animieren, auch mit Zahnrädern<br><a href="https://www.geogebra.org/classic" target="_blank" rel="noopener">GeoGebra</a> – kostenlos: Getriebe als Konstruktion selbst aufbauen und bewegen<br><a href="https://www.onshape.com/" target="_blank" rel="noopener">Onshape</a> – CAD im Browser: Baugruppen in 3D bewegen, Kollisionen prüfen</p></p>
     </div></details>
   </section>
@@ -120,18 +122,19 @@ const Core = (() => {
     if (m.out && m.out.link != null && m.links[m.out.link]) { const pv = pivoted(m, m.links[m.out.link]); if (pv) S.out = { kind: 'link', ...pv }; }
     else if (m.out && m.out.slider && S.sl) S.out = { kind: 'slide' };
     let lmin = Infinity;
-    for (const L of m.links) {
+    for (let li = 0; li < m.links.length; li++) { const L = m.links[li]; // li: Glied, dem die Gleichung gehört (Gelenkkräfte)
       const [i, j] = L, d = sub(P[j], P[i]), Ld = len(d);
       if (Ld < 1e-6) return { err: 'Glied mit zusammenfallenden Basispunkten' };
       lmin = Math.min(lmin, Ld);
-      if (!(known[i] && known[j])) eqs.push({ t: 'd', i, j, L: Ld });
+      if (!(known[i] && known[j])) eqs.push({ t: 'd', i, j, L: Ld, li });
       for (const k of L.slice(2)) {
         if (known[i] && known[j] && known[k]) continue;
         const r = sub(P[k], P[i]), a = dot(r, d) / (Ld * Ld), b = cr(d, r) / (Ld * Ld);
-        eqs.push({ t: 'l', i, j, k, a, b, c: 0 }, { t: 'l', i, j, k, a, b, c: 1 });
+        eqs.push({ t: 'l', i, j, k, a, b, c: 0, li }, { t: 'l', i, j, k, a, b, c: 1, li });
       }
     }
-    if (S.sl && S.drv.kind !== 'slide') eqs.push({ t: 's', p: S.sl.p, a: S.sl.a, u: S.sl.u });
+    if (S.sl && S.drv.kind !== 'slide') eqs.push({ t: 's', p: S.sl.p, a: S.sl.a, u: S.sl.u, li: -1 });
+    S.dl = S.drv.kind === 'link' ? m.drive.link : -1; S.links = m.links; S.fix = fix;
     S.cols = []; for (let i = 0; i < n; i++) if (used[i] && !known[i]) S.cols.push(2 * i, 2 * i + 1);
     S.kc = (S.drv.kind === 'link' ? S.drv.pts : [S.sl.p]).flatMap(i => [2 * i, 2 * i + 1]); // vom Antrieb bewegte Koordinaten
     S.dof = 1 + S.cols.length - eqs.length;
@@ -253,6 +256,40 @@ const Core = (() => {
     return S.drv.kind === 'link' ? -w / D / 1000 : -w; // je ° → je rad, N·mm → N·m
   }
 
+  // Gelenkkräfte (reibungsfrei, Lagrange-Multiplikatoren): Juᵀ·λ = −F an den unbekannten Koordinaten; Kraft, die Glied li auf Punkt p
+  // ausübt = Σ λ_r·∂Φ_r/∂p über die Gleichungen des Glieds. Antriebsglied (ohne Gleichungen) aus dem Gleichgewicht seiner Punkte,
+  // Lagerkraft am Drehpunkt = Summe. Liefert pin[p] = größte Kraft eines Glieds auf p an Gelenken (≥ 2 Teile incl. Gestell) [N],
+  // N = Normalkraft der Führung [N], mem[p] = Glieder an p.
+  function forces(S, X, loads) {
+    const { J } = evalF(S, X), n = S.cols.length, w = n + 1, M = new Float64Array(n * w), F = new Float64Array(X.length), np = S.n;
+    for (const l of loads || []) { F[2 * l.p] += l.fx; F[2 * l.p + 1] += l.fy; }
+    for (let c = 0; c < n; c++) { for (let r = 0; r < n; r++) M[c * w + r] = J[r][S.cols[c]]; M[c * w + n] = -F[S.cols[c]]; }
+    const sol = gauss(M, n); if (!sol) return null;
+    const by = new Map(), key = (li, p) => li * np + p + np, add = (li, p, fx, fy) => { const k = key(li, p), v = by.get(k) || [li, p, 0, 0]; v[2] += fx; v[3] += fy; by.set(k, v); };
+    S.eqs.forEach((e, r) => { const R = J[r], l = sol.x[r]; for (let k = 0; k < X.length; k += 2) if (R[k] || R[k + 1]) add(e.li, k >> 1, l * R[k], l * R[k + 1]); });
+    const sum = p => { let fx = F[2 * p], fy = F[2 * p + 1]; for (const [li, q, a, b] of by.values()) if (q === p) { fx += a; fy += b; } return [fx, fy]; };
+    let N = 0;
+    if (S.dl >= 0) { const d = S.drv; let rx = 0, ry = 0; // Antriebsglied hält seine Punkte im Gleichgewicht
+      for (const p of d.pts) { const [fx, fy] = sum(p); add(S.dl, p, -fx, -fy); rx -= fx; ry -= fy; }
+      add(S.dl, d.g, -rx, -ry); }
+    else if (S.sl) { const p = S.sl.p, [fx, fy] = sum(p); N = Math.abs(-fx * S.sl.u[1] + fy * S.sl.u[0]); } // Schieber als Antrieb: Führung nimmt den Rest quer auf
+    const mem = Array.from({ length: np }, (_, p) => S.links.map((L, li) => L.includes(p) ? li : -1).filter(li => li >= 0));
+    const pin = new Float64Array(np);
+    for (const [li, p, a, b] of by.values()) { if (li < 0) { N = Math.max(N, Math.hypot(a, b)); continue; } if (mem[p].length + (S.fix[p] ? 1 : 0) >= 2) pin[p] = Math.max(pin[p], Math.hypot(a, b)); }
+    return { pin, N, mem };
+  }
+  // Reibung (Näherung 1. Ordnung aus den reibungsfreien Gelenkkräften): Moment je Gelenk μ·d/2·|F| mal relative Drehung der Glieder,
+  // Führung μ·N mal Gleitweg; Summe je Antriebseinheit → Zusatzmoment [N·m] bzw. -kraft [N] gegen die Bewegung.
+  // shortcut: Selbsthemmung (Reibung erhöht die Gelenkkräfte weiter) und Verkanten in Führungen nicht gerechnet; großer Anteil = Warnzeichen.
+  function friction(S, X, loads, fr) {
+    const f = forces(S, X, loads), Xd = f && velocity(S, X); if (!f || !Xd) return NaN;
+    const om = S.links.map(L => { const [i, j] = L, rx = X[2 * j] - X[2 * i], ry = X[2 * j + 1] - X[2 * i + 1], vx = Xd[2 * j] - Xd[2 * i], vy = Xd[2 * j + 1] - Xd[2 * i + 1]; return (rx * vy - ry * vx) / (rx * rx + ry * ry); });
+    let P = 0;
+    for (let p = 0; p < S.n; p++) { if (!f.pin[p]) continue; const o = f.mem[p].map(li => om[li]).concat(S.fix[p] ? [0] : []); P += fr.mu * fr.d / 2 * f.pin[p] * (Math.max(...o) - Math.min(...o)); }
+    if (S.sl) P += (fr.ms ?? fr.mu) * f.N * Math.abs(Xd[2 * S.sl.p] * S.sl.u[0] + Xd[2 * S.sl.p + 1] * S.sl.u[1]);
+    return S.drv.kind === 'link' ? P / D / 1000 : P; // je ° → je rad, N·mm → N·m
+  }
+
   // Topologie: Viergelenk ('4') oder Schubkurbel ('S'), sonst null
   function topo(m) {
     const fix = i => !!m.pts[i].fix, deg = new Array(m.pts.length).fill(0), sp = m.slider ? m.slider.p : -1;
@@ -333,6 +370,7 @@ const Core = (() => {
     let prev = null;
     for (const s of smp) {
       s.out = outVal(S, s.X); s.i = ratio(S, s.X); s.mu = trans(m, S, T, s.X); s.Q = driveLoad(S, s.X, m.loads);
+      if (m.loads && m.loads.length) { const f = forces(S, s.X, m.loads); s.Fj = f ? Math.max(0, ...f.pin) : NaN; if (m.fric && m.fric.mu > 0) s.Qf = friction(S, s.X, m.loads, m.fric); }
       if (S.out && S.out.kind === 'link' && prev != null) s.out += 360 * Math.round((prev - s.out) / 360); // stetig
       prev = s.out;
     }
@@ -364,7 +402,7 @@ const Core = (() => {
     return w > 179 ? 'Strecklage' : w < 1 ? 'Decklage' : 'Umkehrlage';
   }
 
-  return { D, gauss, compile, place, newton, velocity, advance, run, outVal, ratio, driveLoad, topo, topoInfo, trans, grashof, sliderType,
+  return { D, gauss, compile, place, newton, velocity, advance, run, outVal, ratio, driveLoad, forces, friction, topo, topoInfo, trans, grashof, sliderType,
     fourbarClosed, sliderClosed, transFourbar, analyze };
 })();
 if (typeof module !== 'undefined') module.exports = Core;
@@ -462,7 +500,7 @@ function dispV(v) { if (!A.full) return v - A.shift; const x = ((v % 360) + 360)
 function dispOf(a) {
   const s = a.smp; a.shift = a.S.drv.kind === 'link' && !a.full ? 360 * Math.round((s[0].v + s[s.length - 1].v) / 720) : 0;
   const dv = v => { if (!a.full) return v - a.shift; const x = ((v % 360) + 360) % 360; return x > 359.95 ? 0 : x; };
-  let d = s.map(o => ({ v: o.v, out: o.out, i: o.i, mu: o.mu, Q: o.Q }));
+  let d = s.map(o => ({ v: o.v, out: o.out, i: o.i, mu: o.mu, Q: o.Q, Qf: o.Qf, Fj: o.Fj }));
   if (a.full) { d = d.slice(0, -1).map(o => ({ ...o, v: dv(o.v) })); const k = d.reduce((b, o, j) => o.v < d[b].v ? j : b, 0); d = [...d.slice(k), ...d.slice(0, k)]; }
   else d.forEach(o => o.v = dv(o.v));
   if (a.S.out && a.S.out.kind === 'link') { for (let j = 1; j < d.length; j++) d[j].out += 360 * Math.round((d[j - 1].out - d[j].out) / 360);
@@ -476,6 +514,7 @@ function verdict(a) {
   if (mn != null && mn < 20) c.push(`kann klemmen: Übertragungswinkel fällt auf ${nf0.format(mn)}°`);
   else if (mn != null && mn < 40) k.push(`läuft stellenweise schwergängig: Übertragungswinkel bis ${nf0.format(mn)}° (unter 40°)`);
   if (lim.length) k.push(`kommt an ${lim.length > 1 ? 'zwei Totlagen' : 'einer Totlage'} nicht weiter – dort Anschlag vorsehen oder als Verriegelung nutzen`);
+  const fs = keyVals(a).fs; if (isFinite(fs) && fs > 0.5) k.push(`Reibung in den Gelenken kostet ${fs > 1 ? 'mehr als das Haltemoment selbst' : 'bis ' + nf0.format(100 * fs) + ' % des Haltemoments'} – schwergängig: dünnere Bolzen, Gleitlager oder bessere Übersetzung`);
   const t = x => x.join(' · ').replace(/^./, y => y.toUpperCase());
   if (c.length) return [2, t(c.concat(k))]; if (k.length) return [1, t(k)];
   return [0, mn != null ? `Läuft leicht: Übertragungswinkel nie unter ${nf0.format(mn)}°` : `Bewegt sich ${a.full ? 'ganz herum' : 'im ganzen Bereich'} ohne Totlage`];
@@ -488,7 +527,10 @@ function awayFromLim(a) {
 // Kennzahlen für Urteil und Vergleich: Hub Abtrieb, μ min und |Haltelast| max abseits der Totlagen
 function keyVals(a) {
   const os = a.disp.map(o => o.out), aw = awayFromLim(a), qs = aw.map(o => Math.abs(o.Q)).filter(isFinite), mus = aw.map(o => o.mu).filter(isFinite);
-  return { hub: a.S.out ? Math.max(...os) - Math.min(...os) : NaN, mu: a.T && mus.length ? Math.min(...mus) : NaN, q: qs.length ? Math.max(...qs) : NaN };
+  // Reibung und Gelenkkraft ohne Stellen mit μ < 20° (dort laufen die Gelenkkräfte gegen ∞ – das meldet schon „kann klemmen“)
+  const ok20 = aw.filter(o => !(o.mu < 20)), qf = ok20.map(o => o.Qf).filter(isFinite), fj = ok20.map(o => o.Fj).filter(isFinite), q = qs.length ? Math.max(...qs) : NaN;
+  return { hub: a.S.out ? Math.max(...os) - Math.min(...os) : NaN, mu: a.T && mus.length ? Math.min(...mus) : NaN, q, qf: qf.length ? Math.max(...qf) : NaN, fj: fj.length ? Math.max(...fj) : NaN,
+    fs: qf.length && q > 0 ? Math.max(...qf) / q : NaN }; // Reibungsanteil: größtes Reibmoment / größtes Haltemoment (abseits der Totlagen)
 }
 // gemerkter Stand nur vergleichbar bei gleicher Antriebs- und Abtriebsart (gleiche Achsen und Einheiten)
 const refOk = () => REF && REF.a && !REF.a.err && ok() && REF.a.S.drv.kind === A.S.drv.kind && (REF.a.S.out ? REF.a.S.out.kind : '') === (A.S.out ? A.S.out.kind : '');
@@ -626,7 +668,9 @@ function drawCharts() {
     const k = crank() && Math.min(ql, aq[aq.length - 1] || 0) < 5 ? 1000 : 1;
     const pq = d.filter(o => isFinite(o.Q)).map(o => [o.v, k * Math.max(-ql, Math.min(ql, o.Q))]), [qy0, qy1] = rng(pq.map(p => p[1]).concat(0), 0.06);
     const gQ = ghost(o => k * Math.max(-ql, Math.min(ql, o.Q)));
-    chart($('c4'), { x0, x1, y0: qy0, y1: qy1, xs, xl, legend: gl, yl: crank() ? `Haltemoment M [${k > 1 ? 'N·mm' : 'N·m'}]` : 'Haltekraft F [N]', series: [...gQ, { pts: pq, color: M }, { pts: [[x0, 0], [x1, 0]], color: css('--mut'), width: 1, dash: [3, 4] }], vlines: cur });
+    const cl = v => k * Math.max(-ql, Math.min(ql, v)), fq = d.filter(o => isFinite(o.Q) && isFinite(o.Qf)), fr = fq.length ? [{ pts: fq.map(o => [o.v, cl(o.Q + o.Qf)]), color: css('--ink'), width: 1, dash: [4, 4] }, { pts: fq.map(o => [o.v, cl(o.Q - o.Qf)]), color: css('--ink'), width: 1, dash: [4, 4] }] : [];
+    const [fy0, fy1] = fr.length ? rng(pq.map(p => p[1]).concat(fr.flatMap(s => s.pts.map(p => p[1])), 0), 0.06) : [qy0, qy1];
+    chart($('c4'), { x0, x1, y0: fy0, y1: fy1, xs, xl, legend: [{ t: 'reibungsfrei', color: M }].concat(fr.length ? [{ t: 'mit Reibung (vor / zurück)', color: css('--ink'), width: 1, dash: [4, 4] }] : [], gl), yl: crank() ? `Haltemoment M [${k > 1 ? 'N·mm' : 'N·m'}]` : 'Haltekraft F [N]', series: [...gQ, ...fr, { pts: pq, color: M }, { pts: [[x0, 0], [x1, 0]], color: css('--mut'), width: 1, dash: [3, 4] }], vlines: cur });
   } else blank($('c4'), 'Last an einem Punkt eintragen (Konstruieren → Punkt wählen → Fx/Fy)');
   // Grenzbereich μ < 40° als --warn-a-Fläche (Bedeutung zusätzlich zur Farbe: Fläche, Linie, Legende)
   if (A.T) chart($('c2'), { x0, x1, y0: 0, y1: 90, xs, xl, yl: 'μ [°]', series: [{ pts: [[x0, 40], [x1, 40]], color: W, width: 1, dash: [4, 4], fill: css('--warn-a') }, ...(REF && REF.a.T ? ghost(o => o.mu) : []), { pts: d.map(o => [o.v, o.mu]), color: M }], vlines: cur,
@@ -643,7 +687,9 @@ const TERM = {
   mu: 'Übertragungswinkel μ: Winkel, unter dem die Koppel am Abtriebsglied zieht. 90° ideal, unter 40° wird es schwergängig, unter 20° klemmt es.',
   tot: 'Totlage: Stellung, über die der Antrieb nicht hinauskommt – dort Anschlag vorsehen oder als Verriegelung nutzen.',
   um: 'Umkehrlage: Der Abtrieb kehrt um, obwohl der Antrieb weiterläuft.',
-  q: 'Kraft bzw. Moment am Antrieb, um die eingetragenen Lasten zu halten (reibungsfrei).',
+  q: 'Kraft bzw. Moment am Antrieb, um die eingetragenen Lasten zu halten (reibungsfrei; Reibung als eigener Wert).',
+  fr: 'Zusätzliches Moment bzw. Kraft gegen die Bewegung durch Reibung in den Gelenken und der Führung (Näherung).',
+  fj: 'Größte Kraft, die ein Gelenkbolzen bzw. ein Lager am Gestell aufnehmen muss.',
   i: 'Übersetzung: Bewegung des Abtriebs je Bewegung des Antriebs.'
 };
 function renderStats() {
@@ -664,7 +710,9 @@ function renderStats() {
     const lims = A.lim.filter(v => v != null), q = Core.driveLoad(A.S, X, S.loads), f = v => (crank() ? nf2 : nf1).format(v) + uQ();
     const qs = s.filter(o => lims.every(l => Math.abs(o.v - l) > 2)).map(o => o.Q).filter(isFinite), qm = qs.reduce((b, v) => Math.abs(v) > Math.abs(b) ? v : b, 0);
     put({ l: crank() ? 'Haltemoment max.' : 'Haltekraft max.', t: TERM.q, v: f(qm), n: j(lims.length ? 'ohne ±2' + uD().trim() + ' um Totlagen' : '', KR && isFinite(KR.q) && isFinite(KV.q) ? `abseits (±5 %): ${f(KV.q)}, gemerkt ${f(KR.q)} (${dpDelta(KV.q, KR.q)})` : '') }, true);
-    put({ l: crank() ? 'Haltemoment aktuell' : 'Haltekraft aktuell', t: TERM.q, v: isFinite(q) && Math.abs(q) < 1e6 ? f(q) : '∞' });
+    put({ l: crank() ? 'Haltemoment aktuell' : 'Haltekraft aktuell', t: TERM.q, v: isFinite(q) && Math.abs(q) < 1e6 ? f(q) : 'sehr groß', n: isFinite(q) && Math.abs(q) < 1e6 ? '' : 'Totlage: rechnerisch unbegrenzt, real begrenzt durch Elastizität und Spiel' });
+    if (isFinite(KV.qf)) put({ l: 'Reibung max.', t: TERM.fr, v: f(KV.qf), w: KV.fs > 0.5, n: j(`${nf0.format(100 * KV.fs)} % des Haltemoments`, `μ ${nf2.format(S.fric.mu)}, Bolzen Ø ${nf0.format(S.fric.d)} mm (Richtwerte)`) }, KV.fs > 0.5);
+    if (isFinite(KV.fj)) put({ l: 'Gelenkkraft max.', t: TERM.fj, v: nf0.format(KV.fj) + ' N', n: 'abseits der Totlagen · für Bolzen, Scharnier, Befestigung' + vs('fj', v => nf0.format(v) + ' N') });
   }
   if (A.S.out) {
     const os = A.disp.map(o => o.out); put({ l: 'Hub Abtrieb', v: nf1.format(Math.max(...os) - Math.min(...os)) + uO(), n: vs('hub', v => nf1.format(v) + uO()) }, true);
@@ -813,8 +861,9 @@ document.querySelectorAll('#tools button').forEach(b => b.onclick = () => {
   document.querySelectorAll('#tools button').forEach(x => x.classList.toggle('on', x === b)); drawEd(); renderSel();
 });
 window.addEventListener('keydown', e => { if (e.key === 'Escape') { UI.chain = []; UI.pick = null; drawEd(); } });
+const FRIC = { mu: 0.2, d: 6 }; // Gelenkreibung trocken Stahl/Kunststoff, Bolzen Ø 6 mm (Richtwerte)
 function load(m, mode) {
-  S = m; UI.sel = null; UI.chain = []; UI.pick = null; UI.mode = 'build'; UI.view = null;
+  S = m; if (!S.fric) S.fric = { ...FRIC }; $('fmu').value = S.fric.mu; $('fd').value = S.fric.d; UI.sel = null; UI.chain = []; UI.pick = null; UI.mode = 'build'; UI.view = null;
   $('mBuild').classList.add('on'); $('mMove').classList.remove('on'); document.querySelectorAll('#tools button').forEach(b => b.disabled = false);
   const at = S.at; recompute('full');
   if (mode === 'move' && ok()) { setMode('move'); if (at != null) go(at); save(); }
@@ -832,7 +881,7 @@ dpGallery($('tpl'), TPLS.map(([g, a]) => [g, a.map(([k, n, s, f]) => ({ k, n, s,
 // ---- Datei & Teilen ----
 const TYPE = 'designphysik/mechanismus';
 function exportObj() { const o = { type: TYPE, version: 1, pts: S.pts, links: S.links, drive: S.drive, out: S.out };
-  if (S.slider) o.slider = S.slider; if (S.trace != null) o.trace = S.trace; if (S.loads && S.loads.length) o.loads = S.loads; if (UI.mode === 'move' && ok()) o.at = +S.at.toFixed(4); return o; }
+  if (S.slider) o.slider = S.slider; if (S.trace != null) o.trace = S.trace; if (S.loads && S.loads.length) o.loads = S.loads; if (S.fric) o.fric = S.fric; if (UI.mode === 'move' && ok()) o.at = +S.at.toFixed(4); return o; }
 // Rückgängig: Geometrie, Lasten, Antrieb/Abtrieb – nicht die Antriebsstellung (sonst jeder Reglerzug ein Schritt)
 const HIST = dpHistory($('undo'), o => { const m = parse(o); if (m) load(m, UI.mode); });
 function save() { const o = exportObj(); dpHashSet('m', o); const { at, ...g } = o; HIST.save(JSON.parse(JSON.stringify(g))); }
@@ -851,8 +900,11 @@ function parse(o) {
   if (idx(o.trace)) m.trace = o.trace;
   if (Array.isArray(o.loads)) m.loads = o.loads.slice(0, 200).filter(l => l && idx(l.p) && isFinite(l.fx) && isFinite(l.fy)).map(l => ({ p: l.p, fx: +l.fx, fy: +l.fy }));
   if (isFinite(o.at)) m.at = +o.at;
+  if (o.fric && o.fric.mu >= 0 && o.fric.mu <= 1 && o.fric.d >= 0 && o.fric.d <= 100) m.fric = { mu: +o.fric.mu, d: +o.fric.d };
   return m;
 }
+$('fmu').onchange = e => { const v = +e.target.value; S.fric.mu = v >= 0 && v <= 1 ? v : FRIC.mu; e.target.value = S.fric.mu; recompute(false); save(); };
+$('fd').onchange = e => { const v = +e.target.value; S.fric.d = v >= 0 && v <= 100 ? v : FRIC.d; e.target.value = S.fric.d; recompute(false); save(); };
 $('exp').onclick = () => dpDownload(exportObj(), 'mechanismus.json');
 $('imp').onclick = () => $('impF').click();
 $('impF').onchange = e => { const f = e.target.files[0]; if (!f) return; f.text().then(t => { let m = null; try { m = parse(JSON.parse(t)); } catch {}

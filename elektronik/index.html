@@ -32,7 +32,7 @@
   </section>
   <section class="panel kpi">
     <h2>Kennwerte</h2>
-    <div class="row"><label class="note pair">Laufzeit soll <input type="number" id="soll" min="0" step="1" placeholder="–"> h</label><label class="note pair">Betrieb <input type="number" id="hday" min="0" max="24" step="0.5" placeholder="dauernd"> h/Tag</label></div>
+    <div class="row"><label class="note pair">Laufzeit soll <input type="number" id="soll" min="0" step="1" placeholder="–"> h</label><label class="note pair">Betrieb <input type="number" id="hday" min="0" max="24" step="0.5" placeholder="dauernd"> h/Tag</label><label class="chk"><input type="checkbox" id="encl"> im Gehäuse</label></div>
     <div class="stats" id="stats"></div>
   </section>
   <section class="panel wide">
@@ -46,13 +46,13 @@
     <h2>Modell &amp; Gültigkeit</h2>
     <details data-k="model"><summary>Wie gerechnet wird, Begriffe, Grenzen und weiterführende Werkzeuge</summary><div class="txt">
     <h3>Was gerechnet wird</h3><p>Gleichstrom, wenn sich alles eingependelt hat – kein Einschalten, kein Flackern, kein Wechselstrom. An jedem Knotenpunkt wird die Spannung so bestimmt, dass dort so viel Strom hinein- wie hinausfließt (<a href="https://de.wikipedia.org/wiki/Kirchhoffsche_Regeln" target="_blank" rel="noopener">Kirchhoffsche Regeln</a>, <a href="https://de.wikipedia.org/wiki/Ohmsches_Gesetz" target="_blank" rel="noopener">Ohmsches Gesetz</a>). Bauteile wie LEDs, die sich nicht wie einfache Widerstände verhalten, werden schrittweise angenähert (<a href="https://de.wikipedia.org/wiki/Newton-Verfahren" target="_blank" rel="noopener">Newton-Verfahren</a>). Leitungen haben keinen Widerstand. Verbunden ist, was sich einen Rasterpunkt teilt: Leitungsenden, Abzweige und Bauteilanschlüsse, auch mitten auf einer Leitung. Kreuzende Leitungen ohne Punkt sind nicht verbunden.</p>
-    <h3>Batterien und Netzteile</h3><p>Jede Zelle hat eine Spannung und einen <a href="https://de.wikipedia.org/wiki/Innenwiderstand" target="_blank" rel="noopener">Innenwiderstand</a>: Je mehr Strom fließt, desto mehr Spannung geht in der Batterie selbst verloren. Zellen in Reihe addieren beides. Kapazität, Innenwiderstand und Dauerstrom sind Richtwerte für neue Zellen bei Raumtemperatur. <i>Laufzeit</i> = Kapazität / Strom – eine obere Abschätzung: Bei hohem Strom, Kälte und alten Zellen liefern besonders Alkali-Batterien deutlich weniger, und die Spannung sinkt beim Entladen. Netzteile: feste Spannung, kleiner Innenwiderstand, Höchststrom.</p>
-    <h3>Bauteile</h3><p><i><a href="https://de.wikipedia.org/wiki/Leuchtdiode" target="_blank" rel="noopener">LED</a></i>: leuchtet erst ab einer bestimmten Spannung, darüber steigt der Strom steil an – deshalb braucht sie einen <a href="https://de.wikipedia.org/wiki/Vorwiderstand" target="_blank" rel="noopener">Vorwiderstand</a>. 5-mm-LED: 20&nbsp;mA normal, 30&nbsp;mA Grenze; Helligkeit ≈ Strom / Nennstrom. <i>Glühlampe</i>: Der heiße Faden leitet schlechter; das Licht hängt stark von der Spannung ab (10&nbsp;% weniger Spannung ≈ 30&nbsp;% weniger Licht). <i>Motor</i> mit Last wie Lüfter oder Rad: im Lauf wie ein Widerstand, beim Anlaufen zieht er kurz deutlich mehr Strom. <i>Kabel</i>: Kupfer; der Widerstand steigt mit der Länge und sinkt mit dem Querschnitt (0,0175&nbsp;Ω·mm²/m). <i>Schalter</i>: 0,01&nbsp;Ω, wenn geschlossen.</p>
-    <h3>Betrieb und Ruhe</h3><p>„Betrieb h/Tag“: so lange läuft die Schaltung wie gezeichnet, den Rest des Tages im Ruhezustand – alle Schalter offen, Mikrocontroller im tiefsten Schlafmodus, Pins aus. Auch schlafend ziehen Entwicklungsplatinen Strom (Spannungsregler, USB-Chip, LED): Arduino Uno ≈ 35&nbsp;mA, Nano ≈ 7&nbsp;mA, ESP32 DevKit ≈ 10&nbsp;mA, Pico ≈ 2&nbsp;mA; der Raspberry Pi hat keinen Schlafmodus. Laufzeit = Kapazität / mittlerer Strom. Nicht gerechnet: <a href="https://de.wikipedia.org/wiki/Selbstentladung" target="_blank" rel="noopener">Selbstentladung</a> und Alterung – bei Monaten Laufzeit wichtig: NiMH-Akkus verlieren ≈ 20&nbsp;% pro Monat, Alkali und Lithium ≈ 2&nbsp;% pro Jahr.</p>
-    <h3>Erwärmung</h3><p>Was an <a href="https://de.wikipedia.org/wiki/Elektrische_Leistung" target="_blank" rel="noopener">Leistung</a> im Bauteil verloren geht, wird Wärme. Temperatur = 25&nbsp;°C + Verlustleistung × <a href="https://de.wikipedia.org/wiki/Wärmewiderstand" target="_blank" rel="noopener">Wärmewiderstand</a> (wie gut das Bauteil Wärme an die Luft abgibt, ohne Kühlkörper; K/W = Grad mehr je Watt). Widerstand: +100&nbsp;°C bei voller Nennleistung; Gehäuse TO-220 (7805, MOSFET) 62–65&nbsp;K/W, SOT-223 (AMS1117) ≈ 90&nbsp;K/W, TO-92 (BC547, 2N2222) ≈ 200&nbsp;K/W, Wandlermodul ≈ 40&nbsp;K/W. Richtwerte für freie Luft; im geschlossenen Gehäuse deutlich wärmer. Über 85&nbsp;°C markiert.</p>
-    <h3>Mikrocontroller, Wandler, Transistor</h3><p><i><a href="https://de.wikipedia.org/wiki/Mikrocontroller" target="_blank" rel="noopener">Mikrocontroller</a></i> (Arduino, ESP32, Pico, Raspberry Pi) als Block: mittlerer Stromverbrauch (WLAN-Spitzen und Schlafmodi nicht gerechnet), erlaubte Spannung an jedem Anschluss, ein Ausgangspin als kleine Spannungsquelle (5 bzw. 3,3&nbsp;V), deren Strom aus der Versorgung kommt. Antippen schaltet den Pin. Kein Programm, keine Abläufe. <i>Linearregler</i> (<a href="https://de.wikipedia.org/wiki/Spannungsregler" target="_blank" rel="noopener">Spannungsregler</a>): macht aus einer höheren eine feste niedrigere Spannung und braucht dafür etwas Abstand („Dropout“); überschüssige Spannung × Strom wird Wärme. <i>Step-down/Step-up-Wandler</i>: setzen die Spannung mit wenig Verlust herab bzw. hinauf (fester Wirkungsgrad). <i><a href="https://de.wikipedia.org/wiki/Metall-Oxid-Halbleiter-Feldeffekttransistor" target="_blank" rel="noopener">MOSFET</a></i>: elektronischer Schalter, der leitet, sobald die Steuerspannung am Gate hoch genug ist; Standardtypen brauchen ≈ 10&nbsp;V, „Logic-Level“-Typen schalten schon mit 3,3–5&nbsp;V vom Mikrocontroller. <i>NPN-Transistor</i> (<a href="https://de.wikipedia.org/wiki/Bipolartransistor" target="_blank" rel="noopener">Bipolartransistor</a>): Ein kleiner Steuerstrom an der Basis lässt einen größeren Strom durch die Last fließen, höchstens so viel, wie die Last zulässt. Grenzwerte ohne Kühlkörper (Richtwerte).</p>
-    <h3>Urteil</h3><p>Kritisch: Batterie über Dauerstrom oder Kurzschluss (Spannung bricht auf unter die Hälfte ein), LED über Grenzstrom, Widerstand über Nennleistung, Lampe über 110&nbsp;% und Motor über 150&nbsp;% der Nennspannung, Kabel über 15&nbsp;A/mm², Laufzeit unter halbem Soll, Mikrocontroller außerhalb seines Spannungsbereichs oder Pin über Grenzstrom, Wandler über Grenzstrom oder Eingangsspannung, Linearregler zu heiß, Transistor über Grenzstrom oder zu heiß. Knapp: Batterie über 80&nbsp;% des Dauerstroms oder Spannung bricht um mehr als 15&nbsp;% ein, Anlaufstrom über Dauerstrom, LED über 120&nbsp;% Nennstrom, falsch herum oder fast dunkel, Widerstand über 70&nbsp;% der Nennleistung, Lampe unter 90&nbsp;% der Nennspannung (≈ 70&nbsp;% Licht), Motor unter 50&nbsp;% bzw. über 120&nbsp;%, Kabel über 8&nbsp;A/mm² oder mehr als 10&nbsp;% Spannungsverlust, Laufzeit unter Soll, offener Anschluss, Pin über empfohlenem Strom, Linearregler über 60&nbsp;% der zulässigen Verlustleistung, Wandler-Ausgang unter 95&nbsp;% (Eingangsspannung zu niedrig), Transistor über 50&nbsp;% der zulässigen Verlustleistung, MOSFET oder NPN nicht ganz durchgeschaltet.</p>
-    <h3>Nicht enthalten</h3><p>230-V-Netzspannung und Transformatoren (nur für Elektrofachkräfte; hier nur Netzteile mit Kleinspannung am Ausgang) · Programmcode ausführen · Platinen · Kondensatoren, Spulen und zeitliche Verläufe · Belastbarkeit von Schaltern und Steckern, Entladekurven. Werkzeuge dafür unten.</p>
+    <h3>Batterien und Netzteile</h3><p>Jede Zelle hat eine Spannung und einen <a href="https://de.wikipedia.org/wiki/Innenwiderstand" target="_blank" rel="noopener">Innenwiderstand</a>: Je mehr Strom fließt, desto mehr Spannung geht in der Batterie selbst verloren. Zellen in Reihe addieren beides. Kapazität, Innenwiderstand und Dauerstrom sind Richtwerte für neue Zellen bei Raumtemperatur. <i>Laufzeit</i>: Die Zelle wird in Stufen entladen; dabei sinkt ihre Spannung nach einer typischen Entladekurve (Alkali von 1,5 auf 0,9&nbsp;V, Li-Ion von 4,2 auf 3,0&nbsp;V, NiMH fast flach), und bei großem Strom liefert sie weniger Kapazität (Alkali stark, Akkus kaum). Die Laufzeit endet, wenn die Zelle leer ist oder vorher ein Verbraucher ausfällt: Mikrocontroller unter seiner Mindestspannung, Wandler aus der Regelung, LED oder Lampe fast dunkel, Motor kaum noch drehend. Richtwerte für neue Zellen bei Raumtemperatur; Kälte und alte Zellen liefern weniger, der Innenwiderstand steigt beim Entladen (nicht gerechnet). Netzteile: feste Spannung, kleiner Innenwiderstand, Höchststrom.</p>
+    <h3>Bauteile</h3><p><i><a href="https://de.wikipedia.org/wiki/Leuchtdiode" target="_blank" rel="noopener">LED</a></i>: leuchtet erst ab einer bestimmten Spannung, darüber steigt der Strom steil an – deshalb braucht sie einen <a href="https://de.wikipedia.org/wiki/Vorwiderstand" target="_blank" rel="noopener">Vorwiderstand</a>. 5-mm-LED: 20&nbsp;mA normal, 30&nbsp;mA Grenze; Helligkeit ≈ Strom / Nennstrom. <i>Glühlampe</i>: Der heiße Faden leitet schlechter; das Licht hängt stark von der Spannung ab (10&nbsp;% weniger Spannung ≈ 30&nbsp;% weniger Licht). <i>Motor</i> mit gleichbleibender Last (Rad, Getriebe): Er zieht etwa seinen Laufstrom, egal bei welcher Spannung; die Drehzahl steigt mit der Spannung (<a href="https://de.wikipedia.org/wiki/Gleichstrommaschine" target="_blank" rel="noopener">Gleichstrommotor</a>). Reicht die Spannung nicht gegen die Last, bleibt er stehen und zieht Anlaufstrom. Lüfter, deren Last mit der Drehzahl wächst, ziehen bei weniger Spannung etwas weniger Strom als hier gerechnet. <i>Kabel</i>: Kupfer; der Widerstand steigt mit der Länge und sinkt mit dem Querschnitt (0,0175&nbsp;Ω·mm²/m). <i>Schalter</i>: 0,01&nbsp;Ω, wenn geschlossen.</p>
+    <h3>Betrieb und Ruhe</h3><p>„Betrieb h/Tag“: so lange läuft die Schaltung wie gezeichnet, den Rest des Tages im Ruhezustand – alle Schalter offen, Mikrocontroller im tiefsten Schlafmodus, Pins aus. Auch schlafend ziehen Entwicklungsplatinen Strom (Spannungsregler, USB-Chip, LED): Arduino Uno ≈ 35&nbsp;mA, Nano ≈ 7&nbsp;mA, ESP32 DevKit ≈ 10&nbsp;mA, Pico ≈ 2&nbsp;mA; der Raspberry Pi hat keinen Schlafmodus. Die <a href="https://de.wikipedia.org/wiki/Selbstentladung" target="_blank" rel="noopener">Selbstentladung</a> zählt als zusätzlicher kleiner Strom – bei Monaten Laufzeit wichtig: NiMH-Akkus verlieren ≈ 20&nbsp;% pro Monat, Li-Ion ≈ 3&nbsp;%, Alkali und Lithium ≈ 2&nbsp;% pro Jahr (Richtwerte). Powerbanks schalten bei kleinem Strom (typisch unter 50–100&nbsp;mA) oft von selbst ab. Alterung nicht gerechnet.</p>
+    <h3>Erwärmung</h3><p>Was an <a href="https://de.wikipedia.org/wiki/Elektrische_Leistung" target="_blank" rel="noopener">Leistung</a> im Bauteil verloren geht, wird Wärme. Temperatur = 25&nbsp;°C + Verlustleistung × <a href="https://de.wikipedia.org/wiki/Wärmewiderstand" target="_blank" rel="noopener">Wärmewiderstand</a> (wie gut das Bauteil Wärme an die Luft abgibt, ohne Kühlkörper; K/W = Grad mehr je Watt). Widerstand: +100&nbsp;°C bei voller Nennleistung; Gehäuse TO-220 (7805, MOSFET) 62–65&nbsp;K/W, SOT-223 (AMS1117) ≈ 90&nbsp;K/W, TO-92 (BC547, 2N2222) ≈ 200&nbsp;K/W, Wandlermodul ≈ 40&nbsp;K/W, 5-mm-LED ≈ 300&nbsp;K/W, 1-W-LED auf Sternplatine ohne Kühlkörper ≈ 50&nbsp;K/W (ganze Leistung als Wärme, sichere Seite; über 100&nbsp;°C Hinweis „Kühlfläche“). Richtwerte für freie Luft; „im Gehäuse“ rechnet mit 20&nbsp;K wärmerer Umgebung (Richtwert, belüftete Gehäuse weniger). Ab 60&nbsp;°C heiß beim Anfassen (Metall wenige Sekunden, <a href="https://de.wikipedia.org/wiki/Verbrennung_(Medizin)" target="_blank" rel="noopener">Verbrennungsgefahr</a>, EN ISO 13732-1), über 85&nbsp;°C markiert (zu heiß für Kunststoffgehäuse).</p>
+    <h3>Mikrocontroller, Wandler, Transistor</h3><p><i><a href="https://de.wikipedia.org/wiki/Mikrocontroller" target="_blank" rel="noopener">Mikrocontroller</a></i> (Arduino, ESP32, Pico, Raspberry Pi) als Block: mittlerer Stromverbrauch; Lastspitzen (ESP32 WLAN ≈ 350&nbsp;mA, Raspberry Pi 4/5 ≈ 1,2/1,6&nbsp;A, Zero 2 W ≈ 350&nbsp;mA; Richtwerte) werden geprüft, ob die Spannung dabei unter die Mindestspannung fällt, erlaubte Spannung an jedem Anschluss, ein Ausgangspin als kleine Spannungsquelle (5 bzw. 3,3&nbsp;V), deren Strom aus der Versorgung kommt. Antippen schaltet den Pin. Kein Programm, keine Abläufe. <i>Linearregler</i> (<a href="https://de.wikipedia.org/wiki/Spannungsregler" target="_blank" rel="noopener">Spannungsregler</a>): macht aus einer höheren eine feste niedrigere Spannung und braucht dafür etwas Abstand („Dropout“); überschüssige Spannung × Strom wird Wärme. <i>Step-down/Step-up-Wandler</i>: setzen die Spannung mit wenig Verlust herab bzw. hinauf (fester Wirkungsgrad). <i><a href="https://de.wikipedia.org/wiki/Metall-Oxid-Halbleiter-Feldeffekttransistor" target="_blank" rel="noopener">MOSFET</a></i>: elektronischer Schalter, der leitet, sobald die Steuerspannung am Gate hoch genug ist; Standardtypen brauchen ≈ 10&nbsp;V, „Logic-Level“-Typen schalten schon mit 3,3–5&nbsp;V vom Mikrocontroller. <i>NPN-Transistor</i> (<a href="https://de.wikipedia.org/wiki/Bipolartransistor" target="_blank" rel="noopener">Bipolartransistor</a>): Ein kleiner Steuerstrom an der Basis lässt einen größeren Strom durch die Last fließen, höchstens so viel, wie die Last zulässt. Grenzwerte ohne Kühlkörper (Richtwerte).</p>
+    <h3>Urteil</h3><p>Kritisch: Batterie über Dauerstrom oder Kurzschluss (Spannung bricht auf unter die Hälfte ein), LED über Grenzstrom, Widerstand über Nennleistung, Lampe über 110&nbsp;% und Motor über 150&nbsp;% der Nennspannung, Kabel über 15&nbsp;A/mm², Laufzeit unter halbem Soll, Mikrocontroller außerhalb seines Spannungsbereichs oder Pin über Grenzstrom, Wandler über Grenzstrom oder Eingangsspannung, Linearregler zu heiß, Transistor über Grenzstrom oder zu heiß. Knapp: Batterie über 80&nbsp;% des Dauerstroms oder Spannung bricht um mehr als 15&nbsp;% ein, Anlaufstrom über Dauerstrom, LED über 120&nbsp;% Nennstrom, falsch herum oder fast dunkel, Widerstand über 70&nbsp;% der Nennleistung, Lampe unter 90&nbsp;% der Nennspannung (≈ 70&nbsp;% Licht), Motor unter 50&nbsp;% bzw. über 120&nbsp;%, Kabel über 8&nbsp;A/mm² oder mehr als 10&nbsp;% Spannungsverlust, Laufzeit unter Soll, offener Anschluss, Pin über empfohlenem Strom, Linearregler über 60&nbsp;% der zulässigen Verlustleistung, Wandler-Ausgang unter 95&nbsp;% (Eingangsspannung zu niedrig), Transistor über 50&nbsp;% der zulässigen Verlustleistung, MOSFET oder NPN nicht ganz durchgeschaltet, MOSFET-Gate unter der Spannung, für die das Datenblatt den Widerstand garantiert (IRLZ44N ab 4&nbsp;V, IRF540N ab 10&nbsp;V – an 3,3-V-Boards einen MOSFET mit Angabe bei 2,5&nbsp;V wählen), Spannungseinbruch bei Lastspitzen, LED über 100&nbsp;°C, Powerbank unter Mindeststrom, Motor steht.</p>
+    <h3>Nicht enthalten</h3><p>230-V-Netzspannung und Transformatoren (nur für Elektrofachkräfte; hier nur Netzteile mit Kleinspannung am Ausgang) · Programmcode ausführen · Platinen · Kondensatoren, Spulen und zeitliche Verläufe · Belastbarkeit von Schaltern und Steckern, Temperatur und Alterung der Zellen. Werkzeuge dafür unten.</p>
     <h3>Bedienung</h3><p>Bauteil wählen und auf einen Rasterpunkt tippen. Leitung: von Punkt zu Punkt ziehen oder Punkte nacheinander antippen (denselben Punkt erneut antippen oder Esc beendet). Ziehen verschiebt Bauteile samt angeschlossenen Leitungsenden; Schalter antippen schaltet. Wird ein Bauteil auf eine Leitung gesetzt, wird es eingefügt: Die Leitung wird an seinen Anschlüssen aufgetrennt. Ausgewähltes Bauteil: Werte in der Zeile unter dem Plan, „Drehen“ bzw. Taste R, Entf löscht.</p>
     <h3></h3><p><h3>Weiterführende Werkzeuge</h3><p><a href="https://wokwi.com/" target="_blank" rel="noopener">Wokwi</a> – Arduino, ESP32 und Pico mit echtem Programm im Browser simulieren<br><a href="https://www.tinkercad.com/circuits" target="_blank" rel="noopener">Tinkercad Circuits</a> – Steckbrett und Arduino im Browser, sehr einsteigerfreundlich<br><a href="https://www.falstad.com/circuit/" target="_blank" rel="noopener">Falstad Circuit Simulator</a> – Schaltungen mit Kondensatoren, Spulen und Zeitverlauf; Strom wird animiert<br><a href="https://fritzing.org/" target="_blank" rel="noopener">Fritzing</a> – Steckbrett-Aufbau dokumentieren und daraus eine Platine machen<br><a href="https://www.kicad.org/" target="_blank" rel="noopener">KiCad</a> – kostenlos: Schaltplan und Platine professionell</p></p>
     </div></details>
@@ -69,31 +69,34 @@
 // Einheiten: V, A, Ω, W, mAh, h, g, cm³; Kabel m und mm².
 const Core = (() => {
   // Zellen und Netzteile, Richtwerte je Zelle (Datenblätter Energizer, Varta, Panasonic, typisch): U Leerlauf/nominal, Ri Innenwiderstand, C Kapazität bei kleinem Strom, Imax Dauerstrom
+  // Entladung (Richtwerte nach typischen Datenblattkurven, prüfen): dis = Spannung / U über dem entnommenen Anteil q; Kapazität sinkt oberhalb I0 mit (I0/I)^k;
+  // sd = Selbstentladung je Stunde (Anteil von C: Alkali/Lithium ≈ 2 %/Jahr, NiMH ≈ 20 %/Monat, Li-Ion ≈ 3 %/Monat)
+  const ALK = [[0, 1.03], [0.1, 0.92], [0.5, 0.81], [0.8, 0.75], [0.95, 0.68], [1, 0.6]], LIION = [[0, 1.12], [0.1, 1.07], [0.3, 1.03], [0.5, 1], [0.8, 0.96], [0.95, 0.89], [1, 0.81]];
   const CELLS = {
-    aa:    { n: 'AA Alkali',      U: 1.5,  Ri: 0.15, C: 2500, Imax: 1,     g: 23,  vol: 8.3,  dim: 'Ø 14,5 × 50,5 mm' },
-    aanimh:{ n: 'AA NiMH-Akku',   U: 1.2,  Ri: 0.03, C: 2000, Imax: 4,     g: 27,  vol: 8.3,  dim: 'Ø 14,5 × 50,5 mm' },
-    aaa:   { n: 'AAA Alkali',     U: 1.5,  Ri: 0.25, C: 1100, Imax: 0.5,   g: 11.5,vol: 3.9,  dim: 'Ø 10,5 × 44,5 mm' },
-    e9v:   { n: '9-V-Block',      U: 9,    Ri: 1.7,  C: 550,  Imax: 0.3,   g: 45,  vol: 22.5, dim: '26,5 × 17,5 × 48,5 mm' },
-    cr2032:{ n: 'Knopfzelle CR2032', U: 3, Ri: 15,   C: 225,  Imax: 0.003, g: 3,   vol: 1.0,  dim: 'Ø 20 × 3,2 mm' },
-    li18650:{ n: 'Li-Ion 18650',  U: 3.7,  Ri: 0.05, C: 3000, Imax: 5,     g: 46,  vol: 17.3, dim: 'Ø 18,4 × 65 mm' },
-    lipo:  { n: 'LiPo 1000 mAh',  U: 3.7,  Ri: 0.1,  C: 1000, Imax: 2,     g: 20,  vol: 9.0,  dim: '50 × 30 × 6 mm' },
+    aa:    { n: 'AA Alkali',      U: 1.5,  Ri: 0.15, C: 2500, Imax: 1,     g: 23,  vol: 8.3,  dim: 'Ø 14,5 × 50,5 mm', dis: ALK, I0: 0.025, k: 0.2, sd: 0.02 / 8760 },
+    aanimh:{ n: 'AA NiMH-Akku',   U: 1.2,  Ri: 0.03, C: 2000, Imax: 4,     g: 27,  vol: 8.3,  dim: 'Ø 14,5 × 50,5 mm', dis: [[0, 1.12], [0.1, 1.04], [0.5, 1], [0.8, 0.96], [0.95, 0.88], [1, 0.8]], I0: 0.2, k: 0.03, sd: 0.2 / 730 },
+    aaa:   { n: 'AAA Alkali',     U: 1.5,  Ri: 0.25, C: 1100, Imax: 0.5,   g: 11.5,vol: 3.9,  dim: 'Ø 10,5 × 44,5 mm', dis: ALK, I0: 0.01, k: 0.2, sd: 0.02 / 8760 },
+    e9v:   { n: '9-V-Block',      U: 9,    Ri: 1.7,  C: 550,  Imax: 0.3,   g: 45,  vol: 22.5, dim: '26,5 × 17,5 × 48,5 mm', dis: ALK, I0: 0.01, k: 0.25, sd: 0.02 / 8760 },
+    cr2032:{ n: 'Knopfzelle CR2032', U: 3, Ri: 15,   C: 225,  Imax: 0.003, g: 3,   vol: 1.0,  dim: 'Ø 20 × 3,2 mm', dis: [[0, 1], [0.1, 0.98], [0.5, 0.95], [0.8, 0.92], [0.95, 0.83], [1, 0.67]], I0: 0.0002, k: 0.15, sd: 0.01 / 8760 },
+    li18650:{ n: 'Li-Ion 18650',  U: 3.7,  Ri: 0.05, C: 3000, Imax: 5,     g: 46,  vol: 17.3, dim: 'Ø 18,4 × 65 mm', dis: LIION, I0: 0.6, k: 0.03, sd: 0.03 / 730 },
+    lipo:  { n: 'LiPo 1000 mAh',  U: 3.7,  Ri: 0.1,  C: 1000, Imax: 2,     g: 20,  vol: 9.0,  dim: '50 × 30 × 6 mm', dis: LIION, I0: 0.2, k: 0.03, sd: 0.03 / 730 },
     usb:   { n: 'USB 5 V (2 A)',  U: 5,    Ri: 0.1,  C: 0,    Imax: 2,     g: 0,   vol: 0 },
     psu12: { n: 'Netzteil 12 V (2 A)', U: 12, Ri: 0.1, C: 0,  Imax: 2,     g: 0,   vol: 0 },
     psu24: { n: 'Netzteil 24 V (2,5 A)', U: 24, Ri: 0.1, C: 0, Imax: 2.5,  g: 0,   vol: 0 },
-    pbank: { n: 'Powerbank 10 000 mAh', U: 5, Ri: 0.15, C: 6300, Imax: 2.4, g: 200, vol: 110, dim: '140 × 70 × 15 mm' } // C: 10 000 mAh bei 3,7 V → ≈ 6300 mAh bei 5 V (85 % Wandler)
+    pbank: { n: 'Powerbank 10 000 mAh', U: 5, Ri: 0.15, C: 6300, Imax: 2.4, g: 200, vol: 110, dim: '140 × 70 × 15 mm', dis: [[0, 1], [1, 1]], I0: 1, k: 0, sd: 0.03 / 730, Imin: 0.08 } // C: 10 000 mAh bei 3,7 V → ≈ 6300 mAh bei 5 V (85 % Wandler); geregelt; Imin: schaltet darunter oft ab (typ. 50–100 mA)
   };
   // Mikrocontroller-Boards (Richtwerte aus Datenblättern/Foren, typisch): Versorgung Vmin…Vmax am Pin vp, Aufnahme I0 (Mittel, ohne Pinstrom),
   // Ausgangspin: Pegel Vio, Innenwiderstand Ri, empfohlener Strom In, Grenze Imax; Isl Ruhestrom der ganzen Platine im tiefsten Schlafmodus (Spannungsregler,
-  // USB-Chip und LED laufen weiter – darum weit über dem Chip-Wert; Raspberry Pi: kein Schlafmodus)
+  // USB-Chip und LED laufen weiter – darum weit über dem Chip-Wert; Raspberry Pi: kein Schlafmodus); Ipk Lastspitze (WLAN senden, Rechenlast; Richtwert)
   const BOARDS = {
     uno:   { n: 'Arduino Uno R3', s: 'Uno', vp: 'VIN', Vmin: 7, Vmax: 12, I0: 0.05, Vio: 5, Ri: 25, In: 0.02, Imax: 0.04, Isl: 0.035 },
     uno5:  { n: 'Arduino Uno (5-V-Pin/USB)', s: 'Uno', vp: '5V', Vmin: 4.75, Vmax: 5.25, I0: 0.045, Vio: 5, Ri: 25, In: 0.02, Imax: 0.04, Isl: 0.03 },
     nano:  { n: 'Arduino Nano', s: 'Nano', vp: 'VIN', Vmin: 7, Vmax: 12, I0: 0.02, Vio: 5, Ri: 25, In: 0.02, Imax: 0.04, Isl: 0.007 },
-    esp32: { n: 'ESP32 DevKit (WLAN an)', s: 'ESP32', vp: '5V', Vmin: 4.5, Vmax: 6, I0: 0.1, Vio: 3.3, Ri: 30, In: 0.02, Imax: 0.04, Isl: 0.01 },
+    esp32: { n: 'ESP32 DevKit (WLAN an)', s: 'ESP32', vp: '5V', Vmin: 4.5, Vmax: 6, I0: 0.1, Vio: 3.3, Ri: 30, In: 0.02, Imax: 0.04, Isl: 0.01, Ipk: 0.35 },
     pico:  { n: 'Raspberry Pi Pico', s: 'Pico', vp: 'VSYS', Vmin: 1.8, Vmax: 5.5, I0: 0.025, Vio: 3.3, Ri: 40, In: 0.008, Imax: 0.012, Isl: 0.002 },
-    pi4:   { n: 'Raspberry Pi 4', s: 'Pi 4', vp: '5V', Vmin: 4.75, Vmax: 5.25, I0: 0.6, Vio: 3.3, Ri: 40, In: 0.008, Imax: 0.016, Isl: 0.6 },
-    pi5:   { n: 'Raspberry Pi 5', s: 'Pi 5', vp: '5V', Vmin: 4.75, Vmax: 5.25, I0: 0.7, Vio: 3.3, Ri: 40, In: 0.008, Imax: 0.016, Isl: 0.7 },
-    piz:   { n: 'Raspberry Pi Zero 2 W', s: 'Zero', vp: '5V', Vmin: 4.75, Vmax: 5.25, I0: 0.12, Vio: 3.3, Ri: 40, In: 0.008, Imax: 0.016, Isl: 0.12 }
+    pi4:   { n: 'Raspberry Pi 4', s: 'Pi 4', vp: '5V', Vmin: 4.75, Vmax: 5.25, I0: 0.6, Vio: 3.3, Ri: 40, In: 0.008, Imax: 0.016, Isl: 0.6, Ipk: 1.2 },
+    pi5:   { n: 'Raspberry Pi 5', s: 'Pi 5', vp: '5V', Vmin: 4.75, Vmax: 5.25, I0: 0.7, Vio: 3.3, Ri: 40, In: 0.008, Imax: 0.016, Isl: 0.7, Ipk: 1.6 },
+    piz:   { n: 'Raspberry Pi Zero 2 W', s: 'Zero', vp: '5V', Vmin: 4.75, Vmax: 5.25, I0: 0.12, Vio: 3.3, Ri: 40, In: 0.008, Imax: 0.016, Isl: 0.12, Ipk: 0.35 }
   };
   // Spannungswandler: lin = Linearregler (Verlust (Uein − Uaus)·I), buck = Step-down, boost = Step-up (Wirkungsgrad eta); drop Mindestabstand Ein–Aus, Iq Eigenverbrauch
   const REGS = {
@@ -104,26 +107,28 @@ const Core = (() => {
     boost5:{ n: 'Step-up 5 V (1 A, 85 %)', k: 'boost', Vset: 5, Vstart: 0.9, Iq: 0.005, eta: 0.85, Imax: 1, Iinmax: 2.5, Vimax: 5, Rth: 40 }
   };
   // Rth: Wärmewiderstand zur Luft ohne Kühlkörper [K/W] (TO-220 ≈ 62, SOT-223 auf Platine ≈ 90, TO-92 ≈ 200, Wandlermodul ≈ 40)
-  // Transistoren als Schalter: mos = N-MOSFET (Ron, Schaltschwelle Vm ± w), npn = Bipolar (Stromverstärkung beta); Grenzen ohne Kühlkörper
+  // Transistoren als Schalter: mos = N-MOSFET (Ron, Schaltschwelle Vm ± w, Vspec = kleinste Gate-Spannung, für die das Datenblatt Ron garantiert), npn = Bipolar (Stromverstärkung beta); Grenzen ohne Kühlkörper
   const TRANS = {
-    irlz:  { n: 'MOSFET Logik-Pegel (IRLZ44N)', k: 'mos', Ron: 0.025, Vm: 2.0, w: 0.25, Imax: 10, Pmax: 1.5, Rth: 62 },
-    irf:   { n: 'MOSFET Standard (IRF540N)', k: 'mos', Ron: 0.044, Vm: 4.5, w: 0.4, Imax: 10, Pmax: 1.5, Rth: 62 },
+    irlz:  { n: 'MOSFET Logik-Pegel (IRLZ44N)', k: 'mos', Ron: 0.025, Vm: 2.0, w: 0.25, Vspec: 4, Imax: 10, Pmax: 1.5, Rth: 62 },
+    irf:   { n: 'MOSFET Standard (IRF540N)', k: 'mos', Ron: 0.044, Vm: 4.5, w: 0.4, Vspec: 10, Imax: 10, Pmax: 1.5, Rth: 62 },
     bc547: { n: 'NPN klein (BC547)', k: 'npn', beta: 200, Imax: 0.1, Pmax: 0.5, Rth: 200 },
     n2222: { n: 'NPN (2N2222)', k: 'npn', beta: 100, Imax: 0.6, Pmax: 0.5, Rth: 200 }
   };
   const BE = { Vf: 0.65, In: 1e-3, Rs: 10, nvt: 0.026 }; // Basis-Emitter-Diode: 0,65 V bei 1 mA
   // LEDs: Flussspannung Vf beim Nennstrom In, Grenze Imax, Bahnwiderstand Rs (5-mm-Standard; Power-LED 1 W)
+  // Rth: Sperrschicht → Luft [K/W] (5 mm bedrahtet ≈ 300; 1-W-LED auf Sternplatine ohne Kühlkörper ≈ 50; Richtwerte), Tmax Sperrschicht
   const LEDS = {
-    rot:  { n: 'rot',   Vf: 2.0, In: 0.02, Imax: 0.03, Rs: 10 },
-    gelb: { n: 'gelb',  Vf: 2.1, In: 0.02, Imax: 0.03, Rs: 10 },
-    gruen:{ n: 'grün',  Vf: 3.0, In: 0.02, Imax: 0.03, Rs: 10 },
-    blau: { n: 'blau',  Vf: 3.1, In: 0.02, Imax: 0.03, Rs: 10 },
-    weiss:{ n: 'weiß',  Vf: 3.1, In: 0.02, Imax: 0.03, Rs: 10 },
-    w1:   { n: 'weiß 1 W', Vf: 3.2, In: 0.35, Imax: 0.5, Rs: 1 }
+    rot:  { n: 'rot',   Vf: 2.0, In: 0.02, Imax: 0.03, Rs: 10, Rth: 300 },
+    gelb: { n: 'gelb',  Vf: 2.1, In: 0.02, Imax: 0.03, Rs: 10, Rth: 300 },
+    gruen:{ n: 'grün',  Vf: 3.0, In: 0.02, Imax: 0.03, Rs: 10, Rth: 300 },
+    blau: { n: 'blau',  Vf: 3.1, In: 0.02, Imax: 0.03, Rs: 10, Rth: 300 },
+    weiss:{ n: 'weiß',  Vf: 3.1, In: 0.02, Imax: 0.03, Rs: 10, Rth: 300 },
+    w1:   { n: 'weiß 1 W', Vf: 3.2, In: 0.35, Imax: 0.5, Rs: 1, Rth: 50 }
   };
   const NVT = 0.06;       // n·U_T der LED-Kennlinie: ≈ 0,14 V je Dekade Strom
   const RHO_CU = 0.0175;  // Ω·mm²/m
-  const T_AMB = 25;       // °C Umgebung für die Erwärmung
+  const T_AMB = 25, T_ENC = 20; // °C Umgebung für die Erwärmung; im geschlossenen Gehäuse ≈ 20 K wärmer (Richtwert)
+  const T_TOUCH = 60;     // °C: darüber heiß beim Anfassen (Metall wenige Sekunden, EN ISO 13732-1, Richtwert)
   const R_SW = 0.01;      // Schalter geschlossen (Kontaktwiderstand)
   const GMIN = 1e-12;     // S je Knoten nach Masse: nur über Sperrstrecken verbundene Knoten bleiben bestimmt
   const LAMP_EXP = 0.6;   // Glühlampe: I ∝ U^0,6 (Wolfram, warmer Faden)
@@ -135,6 +140,9 @@ const Core = (() => {
   const term = p => (TERMS[p.t] || T2).map(q => place(p, q));
   const cell = p => { const c = CELLS[p.cell] || CELLS.aa, n = c.C ? Math.max(1, p.n | 0) : 1; return { ...c, U: c.U * n, Ri: c.Ri * n, g: c.g * n, vol: c.vol * n, cnt: n }; };
   const led = p => LEDS[p.col] || LEDS.rot;
+  // Spannungsanteil der Zelle beim entnommenen Anteil q (lineare Interpolation der Entladekurve)
+  const disU = (c, q) => { const d = c.dis || [[0, 1], [1, 1]]; for (let i = 1; i < d.length; i++) if (q <= d[i][0]) return d[i - 1][1] + (d[i][1] - d[i - 1][1]) * (q - d[i - 1][0]) / (d[i][0] - d[i - 1][0]); return d[d.length - 1][1]; };
+  const capAt = (c, I) => c.C / 1000 * (I > c.I0 ? Math.pow(c.I0 / I, c.k) : 1); // Ah bei Entladestrom I
 
   // Kennlinien: I(v) und dI/dv
   // LED: v = I·Rs + NVT·ln(1 + I/Is), Is so, dass I(Vf) = In; I(v) per Bisektion (monoton), wächst höchstens linear → Newton ohne Spannungsbegrenzung stabil
@@ -168,9 +176,13 @@ const Core = (() => {
     return [s * In * Math.pow(x, LAMP_EXP), In * LAMP_EXP * Math.pow(x, LAMP_EXP - 1) / Un];
   }
 
+  // Motor im Lauf: unter Ra·In blockiert (I = U/Ra), darüber Strom ≈ In (festes Lastmoment), Drehzahl ∝ U − I·Ra; glatter Übergang x/(1 + x⁸)^⅛
+  const motIV = (Ra, In, v) => { const x = v / (Ra * In), w = 1 + x ** 8; return [In * x * w ** -0.125, w ** -1.125 / Ra]; };
+  const iv = (e, v) => e.k === 'led' ? ledIV(e.L, v) : e.k === 'mot' ? motIV(e.Ra, e.In, v) : lampIV(e.Un, e.In, v);
   // Netzliste: Rasterpunkte über Leitungen vereinigen → Knoten; Bauteile → Elemente
   // start: Motoren als Ankerwiderstand (Anlauf); rest: Ruhezustand – Schalter offen, Mikrocontroller schlafen, Pins aus
-  function netlist(m, start, rest) {
+  // opt.q: Entladezustand (entnommener Anteil) aller Batterien; opt.peak: Mikrocontroller mit Lastspitze
+  function netlist(m, start, rest, opt = {}) {
     const par = new Map(), key = q => q[0] + ',' + q[1];
     const find = k => { if (!par.has(k)) par.set(k, k); let r = k; while (par.get(r) !== r) r = par.get(r); par.set(k, r); return r; };
     const uni = (a, b) => par.set(find(a), find(b));
@@ -184,14 +196,14 @@ const Core = (() => {
     const el = m.parts.map((p, i) => {
       const N = T[i].map(node), a = N[0], b = N[1];
       switch (p.t) {
-        case 'mcu': { const B = BOARDS[p.board] || BOARDS.uno; return { k: 'nl', n: N, f: rest ? mcuF({ ...B, I0: B.Isl }, false) : mcuF(B, p.hi) }; }
+        case 'mcu': { const B = BOARDS[p.board] || BOARDS.uno; return { k: 'nl', n: N, f: rest ? mcuF({ ...B, I0: B.Isl }, false) : mcuF(opt.peak && B.Ipk ? { ...B, I0: B.Ipk } : B, p.hi) }; }
         case 'reg': return { k: 'nl', n: N, f: regF(REGS[p.rt] || REGS.buck5) };
         case 'tr': return { k: 'nl', n: N, f: trF(TRANS[p.tt] || TRANS.irlz) };
-        case 'bat': { const c = cell(p); return { k: 'src', a, b, U: c.U, Ri: c.Ri }; }
+        case 'bat': { const c = cell(p); return { k: 'src', a, b, U: c.U * (opt.q != null && c.C ? disU(c, opt.q) : 1), Ri: c.Ri }; }
         case 'r': return { k: 'g', a, b, g: 1 / Math.max(p.R, 1e-6) };
         case 'sw': return { k: 'g', a, b, g: p.on && !rest ? 1 / R_SW : 0 };
         case 'cab': return { k: 'g', a, b, g: p.A / (RHO_CU * Math.max(p.L, 1e-6)) };
-        case 'mot': return { k: 'g', a, b, g: (start ? p.Ia : p.In) / p.Un }; // Lauf: Last ∝ Drehzahl → R = Un/In; Anlauf: Ankerwiderstand Un/Ia
+        case 'mot': return start ? { k: 'g', a, b, g: p.Ia / p.Un } : { k: 'mot', a, b, Ra: p.Un / p.Ia, In: p.In }; // Anlauf: Ankerwiderstand Ra = Un/Ia; Lauf: festes Lastmoment → Strom ≈ In
         case 'led': return { k: 'led', a, b, L: led(p) };
         case 'lamp': return { k: 'lamp', a, b, Un: p.Un, In: p.Pn / p.Un };
       }
@@ -226,7 +238,7 @@ const Core = (() => {
     // Restfehler der Knotenregel (größter Betrag) – für die Schrittweitensteuerung; sc skaliert die Quellen
     const resid = (X, sc, gm = GMIN) => { const o = X.map(x => gm * x);
       el.forEach(e => { if (e.k === 'nl') { const I = e.f(e.n.map(j => X[j])); e.n.forEach((j, k) => o[j] += I[k]); return; }
-        const u = dv(e, X), I = e.k === 'g' ? e.g * u : e.k === 'src' ? -(e.U * sc - u) / e.Ri : e.k === 'led' ? ledIV(e.L, u)[0] : lampIV(e.Un, e.In, u)[0]; o[e.a] += I; o[e.b] -= I; });
+        const u = dv(e, X), I = e.k === 'g' ? e.g * u : e.k === 'src' ? -(e.U * sc - u) / e.Ri : iv(e, u)[0]; o[e.a] += I; o[e.b] -= I; });
       return Math.max(0, ...o.filter((_, i) => !gnd.has(i)).map(Math.abs)); };
     function newton(V, sc, maxIt, gm = GMIN) {
       let conv = false, it = 0;
@@ -244,7 +256,7 @@ const Core = (() => {
               const Ip = e.f(vp), Im = e.f(vm); e.n.forEach((r, k) => { const d = (Ip[k] - Im[k]) / (2 * h); M[r][j] += d; M[r][n] += d * v0[c]; }); });
             e.n.forEach((r, k) => M[r][n] -= I0[k]);
           }
-          else { const v = dv(e, V), [I, g] = e.k === 'led' ? ledIV(e.L, v) : lampIV(e.Un, e.In, v); G(e.a, e.b, g); J(e.a, e.b, -(I - g * v)); }
+          else { const v = dv(e, V), [I, g] = iv(e, v); G(e.a, e.b, g); J(e.a, e.b, -(I - g * v)); }
         });
         for (const g of gnd) { M[g].fill(0); M[g][g] = 1; }
         let X = gauss(M, n); if (!X) return { V, conv: false, it };
@@ -266,8 +278,37 @@ const Core = (() => {
     const V = r.V;
     // Mehrpole: U = Anschlussspannungen, I = Ströme in das Bauteil je Anschluss
     const I = el.map(e => { if (e.k === 'nl') return e.f(e.n.map(j => V[j])); const u = dv(e, V);
-      return e.k === 'g' ? e.g * u : e.k === 'src' ? (e.U - u) / e.Ri : e.k === 'led' ? ledIV(e.L, u)[0] : lampIV(e.Un, e.In, u)[0]; });
+      return e.k === 'g' ? e.g * u : e.k === 'src' ? (e.U - u) / e.Ri : iv(e, u)[0]; });
     return { V, I, U: el.map(e => e.k === 'nl' ? e.n.map(j => V[j]) : dv(e, V)), it: r.it };
+  }
+
+  // Laufzeit [h] mit Entladekurve: Batterien in Stufen des entnommenen Anteils q entladen; je Stufe Betrieb und Ruhe neu lösen.
+  // Ende: Zelle leer (q = 1) oder ein Verbraucher, der anfangs lief, fällt aus (Mikrocontroller unter Vmin, Wandler aus der Regelung,
+  // LED/Lampe unter 10 % Licht, Motor unter 30 % Drehzahl). Kapazität nach dem Strom im Betrieb (I0/I)^k, Selbstentladung als Zusatzstrom.
+  // shortcut: alle Batterien gleich weit entladen, Ri konstant; genügt für eine Quelle, mehrere Quellen ungleicher Art nur genähert.
+  const QS = [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.95, 1];
+  function runtime(m, d) {
+    const dead = (r, ref) => { if (r.err) return 'Rechnung konvergiert nicht';
+      for (let i = 0; i < m.parts.length; i++) { const p = m.parts[i], U = r.U[i], I = r.I[i], o = ref && ref.U[i];
+        if (p.t === 'mcu') { const B = BOARDS[p.board] || BOARDS.uno, Vs = U[0] - U[1]; if (Vs < B.Vmin * 0.98 && (!o || o[0] - o[1] >= B.Vmin * 0.98)) return `${B.n} startet nicht mehr`; }
+        if (p.t === 'reg') { const R = REGS[p.rt] || REGS.buck5, Vi = U[0] - U[2], Vo = U[1] - U[2]; if (Vo < 0.95 * R.Vset && (!o || o[1] - o[2] >= 0.95 * R.Vset) && -I[1] > 1e-4) return 'Wandler hält die Ausgangsspannung nicht mehr'; }
+        if (p.t === 'led' && ref) { const L = led(p); if (I < 0.1 * L.In && ref.I[i] >= 0.1 * L.In) return 'LED fast dunkel'; }
+        if (p.t === 'lamp' && ref && Math.abs(U) < 0.5 * p.Un && Math.abs(o) >= 0.5 * p.Un) return 'Lampe glimmt nur noch';
+        if (p.t === 'mot' && ref) { const Ra = p.Un / p.Ia, rel = u => (Math.abs(u) - motIV(Ra, p.In, Math.abs(u))[0] * Ra) / (p.Un - p.In * Ra); if (rel(U) < 0.3 && rel(o) >= 0.3) return 'Motor läuft kaum noch'; }
+      } return null; };
+    let t = 0, ref = null;
+    for (let j = 0; j + 1 < QS.length; j++) {
+      const q = (QS[j] + QS[j + 1]) / 2, on = solve(netlist(m, false, false, { q })), why = dead(on, ref);
+      if (!ref && !on.err) ref = on;
+      if (why) return { h: t, why: (j ? 'Laufzeit endet bei ≈ ' + Math.round(QS[j] * 100) + ' % entnommener Ladung: ' : '') + why };
+      const off = d < 1 ? solve(netlist(m, false, true, { q })) : on;
+      let dt = Infinity;
+      m.parts.forEach((p, i) => { if (p.t !== 'bat') return; const c = cell(p); if (!c.C) return;
+        const Ion = Math.max(0, on.I[i]), Iav = d * Ion + (1 - d) * Math.max(0, off.err ? Ion : off.I[i]) + c.sd * c.C / 1000;
+        dt = Math.min(dt, (QS[j + 1] - QS[j]) * capAt(c, Ion) / Iav); });
+      t += dt; if (!isFinite(t)) return { h: null };
+    }
+    return { h: t, why: null };
   }
 
   // Auswertung mit Urteil je Bauteil: lv 0 passt, 1 knapp, 2 kritisch; Texte in Designsprache
@@ -275,6 +316,8 @@ const Core = (() => {
     const net = netlist(m), r = solve(net);
     if (r.err) return { err: r.err, parts: [], issues: [[2, r.err, -1]] };
     const hasMot = m.parts.some(p => p.t === 'mot'), rs = hasMot ? solve(netlist(m, true)) : null;
+    const hasPk = m.parts.some(p => p.t === 'mcu' && (BOARDS[p.board] || BOARDS.uno).Ipk), rp = hasPk ? solve(netlist(m, false, false, { peak: true })) : null;
+    const Tamb = T_AMB + (m.encl ? T_ENC : 0);
     const f2 = v => (Math.round(v * 100) / 100).toString().replace('.', ','), mA = I => { const x = Math.abs(I); return x >= 1 ? f2(x) + ' A' : x >= 0.01 ? Math.round(x * 1000) + ' mA' : (Math.round(x * 10000) / 10).toString().replace('.', ',') + ' mA'; };
     const Umax = Math.max(0, ...m.parts.filter(p => p.t === 'bat').map(p => cell(p).U));
     const issues = [], parts = m.parts.map((p, i) => {
@@ -289,6 +332,8 @@ const Core = (() => {
           else if (Vs > 0.5 && Vs < B.Vmin * 0.98) set(2, `${B.n} startet nicht: ${f2(Vs)} V, braucht ${f2(B.Vmin)}–${f2(B.Vmax)} V am ${B.vp}-Pin`);
           else if (Ip > B.Imax) set(2, `Pin überlastet: ${mA(Ip)} > ${mA(B.Imax)} – Transistor davorschalten`);
           else if (Ip > B.In * 1.05) set(1, `Pin über der Empfehlung: ${mA(Ip)} (${mA(B.In)})`);
+          if (!o.lv && rp && !rp.err && B.Ipk) { const Vpk = rp.U[i][0] - rp.U[i][1]; o.Vpk = Vpk;
+            if (Vpk < B.Vmin * 0.98) set(1, `Bei Lastspitzen (≈ ${mA(B.Ipk)}, z. B. WLAN) bricht die Spannung auf ${f2(Vpk)} V ein – ${B.s} kann neu starten`); }
           break; }
         case 'reg': { const R = REGS[p.rt] || REGS.buck5, Vi = U[0] - U[2], Vo = U[1] - U[2], Io = -I[1], Pin = Vi * I[0], Pout = Vo * Io;
           Object.assign(o, { U: Vo, I: Io, Vi, Iin: I[0], P: Pin - Pout, eta: Pin > 1e-9 ? Pout / Pin : 0, R });
@@ -305,6 +350,7 @@ const Core = (() => {
           else if (o.P > 0.5 * T.Pmax) set(1, `Transistor wird warm: ${f2(o.P)} W`);
           else if (T.k === 'mos' && I[1] > 1e-3 && Vds > 0.2 && Vg < T.Vm + 4 * T.w) set(1, `MOSFET schaltet mit ${f2(Vg)} V am Gate nicht ganz durch – Logik-Pegel-Typ nehmen`);
           else if (T.k === 'npn' && I[1] > 1e-3 && I[0] > 1e-6 && Vds > 0.3) set(1, `Transistor nicht ganz durchgeschaltet (${f2(Vds)} V) – Basiswiderstand verkleinern`);
+          else if (T.k === 'mos' && I[1] > 1e-3 && Vg < T.Vspec) set(1, `Nur ${f2(Vg)} V am Gate – das Datenblatt garantiert den kleinen Widerstand erst ab ${f2(T.Vspec)} V: MOSFET für ${Vg < 4 ? '3,3' : '5'}-V-Logik wählen (Widerstand bei 2,5 V angegeben)`);
           break; }
         case 'bat': {
           const c = cell(p), Is = rs ? rs.I[i] : I; o.P = U * I; o.cell = c; o.Uk = U;
@@ -320,7 +366,7 @@ const Core = (() => {
           if (o.P > p.Pn) set(2, `Widerstand wird zu heiß: ${f2(o.P)} W > ${f2(p.Pn)} W`);
           else if (o.P > 0.7 * p.Pn) set(1, `Widerstand wird warm: ${f2(o.P)} W von ${f2(p.Pn)} W`);
           break;
-        case 'led': { const L = led(p); o.rel = Math.max(0, I) / L.In;
+        case 'led': { const L = led(p); o.rel = Math.max(0, I) / L.In; o.Rth = L.Rth;
           if (I > L.Imax) set(2, `LED brennt durch: ${mA(I)} > ${mA(L.Imax)}`);
           else if (I > 1.2 * L.In) set(1, `LED zu hell betrieben: ${mA(I)} (Nennstrom ${mA(L.In)}) – lebt kürzer`);
           else if (U < -1) set(1, 'LED verpolt – bleibt dunkel');
@@ -331,10 +377,11 @@ const Core = (() => {
           else if (x > 1.05) set(1, 'Glühlampe überspannt – lebt deutlich kürzer');
           else if (x > 0.05 && x < 0.9) set(1, `Glühlampe ${x < 0.7 ? 'glimmt nur' : 'gedimmt'} (${Math.round(o.rel * 100)} % Licht)`);
           break; }
-        case 'mot': { const x = Math.abs(U) / p.Un; o.rel = x; o.Is = rs ? rs.I[i] : 0;
+        case 'mot': { const x = Math.abs(U) / p.Un, Ra = p.Un / p.Ia; o.rel = Math.max(0, (Math.abs(U) - Math.abs(I) * Ra) / (p.Un - p.In * Ra)); o.Is = rs ? rs.I[i] : 0;
           if (x > 1.5) set(2, `Motor überlastet (${f2(Math.abs(U))} V an ${f2(p.Un)}-V-Motor)`);
           else if (x > 1.2) set(1, 'Motor läuft zu schnell und wird heiß');
-          else if (x > 0.05 && x < 0.5) set(1, `Motor läuft kaum an (${Math.round(x * 100)} % Drehzahl)`);
+          else if (x > 0.05 && o.rel < 0.02) set(1, `Motor steht – ${f2(Math.abs(U))} V reichen gegen die Last nicht`);
+          else if (x > 0.05 && o.rel < 0.5) set(1, `Motor läuft kaum an (${Math.round(o.rel * 100)} % Drehzahl)`);
           break; }
         case 'cab': { const J = Math.abs(I) / p.A; o.J = J;
           if (J > 15) set(2, `Kabel wird heiß: ${f2(J)} A/mm²`);
@@ -342,24 +389,28 @@ const Core = (() => {
           else if (Umax && Math.abs(U) > 0.1 * Umax) set(1, `Kabel verliert ${f2(Math.abs(U))} V`);
           break; }
       }
-      const Rth = p.t === 'r' ? 100 / p.Pn : p.t === 'tr' ? (TRANS[p.tt] || TRANS.irlz).Rth : p.t === 'reg' ? (REGS[p.rt] || REGS.buck5).Rth : 0; // Widerstand: +100 K bei Nennleistung
-      if (Rth && o.P > 0) o.dT = o.P * Rth;
+      const Rth = p.t === 'r' ? 100 / p.Pn : p.t === 'tr' ? (TRANS[p.tt] || TRANS.irlz).Rth : p.t === 'reg' ? (REGS[p.rt] || REGS.buck5).Rth : p.t === 'led' ? o.Rth : 0; // Widerstand: +100 K bei Nennleistung
+      if (Rth && o.P > 0) { o.dT = o.P * Rth; o.T = Tamb + o.dT; } // LED: ganze Leistung als Wärme (sichere Seite)
+      if (p.t === 'led' && o.T > 100) set(1, `LED wird ≈ ${Math.round(o.T)} °C heiß – Kühlfläche (Alu) vorsehen, sonst lebt sie kurz`);
       if (o.lv) issues.push([o.lv, o.msg, i]);
       return o;
     });
-    // Betrieb hday Stunden am Tag, sonst Ruhezustand: mittlerer Strom je Batterie, Laufzeit = C / Mittel
+    // Betrieb hday Stunden am Tag, sonst Ruhezustand: mittlerer Strom je Batterie
     const d = m.hday > 0 && m.hday < 24 ? m.hday / 24 : 1, rr = d < 1 ? solve(netlist(m, false, true)) : null;
-    parts.forEach((o, i) => { if (m.parts[i].t !== 'bat') return; o.h0 = o.h; o.Ir = rr && !rr.err ? rr.I[i] : o.I; o.Iavg = d * o.I + (1 - d) * o.Ir;
-      o.h = o.cell.C && o.Iavg > 1e-9 ? o.cell.C / 1000 / o.Iavg : null; });
+    parts.forEach((o, i) => { if (m.parts[i].t !== 'bat') return; o.Ir = rr && !rr.err ? rr.I[i] : o.I; o.Iavg = d * o.I + (1 - d) * o.Ir;
+      o.hNom = o.cell.C && o.Iavg > 1e-9 ? o.cell.C / 1000 / o.Iavg : null; }); // alte Abschätzung Nennkapazität / Strom (Vergleich)
     const bats = parts.filter((o, i) => m.parts[i].t === 'bat');
-    const hs = bats.filter(o => o.h != null).map(o => o.h), h = hs.length ? Math.min(...hs) : null, h0s = bats.filter(o => o.h0 != null).map(o => o.h0);
+    const RT = bats.some(o => o.cell.C) ? runtime(m, d) : null, RT0 = RT && d < 1 ? runtime(m, 1) : RT;
+    bats.forEach(o => { o.h = o.cell.C ? RT.h : null; o.h0 = o.cell.C ? RT0.h : null; });
+    const h = RT ? RT.h : null, h0s = RT0 ? [RT0.h] : [];
+    bats.forEach(o => { if (o.cell.Imin && o.Iavg < o.cell.Imin) issues.push([1, `${o.cell.n} schaltet bei so wenig Strom (${mA(o.Iavg)}) oft ab – typisch unter 50–100 mA`, parts.indexOf(o)]); });
     const fh = x => x >= 48 ? f2(Math.round(x / 2.4) / 10) + ' Tage' : f2(x) + ' h';
     if (!bats.length) issues.push([1, 'Keine Stromquelle', -1]);
     if (h != null && m.soll > 0 && h < m.soll) issues.push([h < m.soll / 2 ? 2 : 1, `Batterie hält nur ${fh(h)} (Soll ${fh(m.soll)})` + (d < 1 && bats.some(o => o.Ir > 0.5 * o.Iavg) ? ' – vor allem der Ruhestrom' : ''), -1]);
-    const hot = parts.reduce((b, o, i) => o.dT > (b ? b.dT : 0) ? { i, dT: o.dT, T: T_AMB + o.dT } : b, null);
+    const hot = parts.reduce((b, o, i) => o.dT > (b ? b.dT : 0) ? { i, dT: o.dT, T: Tamb + o.dT } : b, null);
     issues.sort((a, b) => b[0] - a[0]);
     const P = bats.reduce((s, o) => s + Math.max(0, o.P), 0), g = bats.reduce((s, o) => s + o.cell.g, 0), vol = bats.reduce((s, o) => s + o.cell.vol, 0);
-    return { parts, issues, h, h0: h0s.length ? Math.min(...h0s) : null, d, Ir: bats.reduce((s, o) => s + Math.max(0, o.Ir), 0), hot, P, g, vol, net, it: r.it };
+    return { parts, issues, h, h0: h0s.length ? Math.min(...h0s) : null, hNom: bats.some(o => o.hNom) ? Math.min(...bats.filter(o => o.hNom).map(o => o.hNom)) : null, why: RT && RT.why, Tamb, d, Ir: bats.reduce((s, o) => s + Math.max(0, o.Ir), 0), hot, P, g, vol, net, it: r.it };
   }
 
   // Leitungen aufräumen (nach jeder Bearbeitung): an Anschlüssen und Leitungsenden, die mitten auf einer Leitung liegen, wird sie geteilt (T-Abzweig);
@@ -378,7 +429,7 @@ const Core = (() => {
     return out;
   }
 
-  return { T_AMB, CELLS, LEDS, BOARDS, REGS, TRANS, BE, NVT, ledIs, RHO_CU, R_SW, TERMS, place, term, cell, ledIV, lampIV, mcuF, regF, trF, netlist, solve, analyze, tidy };
+  return { T_AMB, T_ENC, T_TOUCH, disU, capAt, runtime, CELLS, LEDS, BOARDS, REGS, TRANS, BE, NVT, ledIs, RHO_CU, R_SW, TERMS, place, term, cell, ledIV, lampIV, mcuF, regF, trF, netlist, solve, analyze, tidy };
 })();
 if (typeof module !== 'undefined') module.exports = Core;
 // === CORE END
@@ -552,8 +603,8 @@ function drawMulti(ctx, p, i, T, k) {
     const r = p.t === 'mcu' ? fU(o.U) + ' · ' + fI(o.I) : p.t === 'reg' ? 'aus ' + fU(o.U) + ' · ' + fI(o.I) : fI(o.I) + (o.P > 0.01 ? ' · ' + fP(o.P) : '');
     rows.push([(warn ? '⚠ ' : '') + r, warn ? '--warn' : '--ink']);
     if (p.t === 'mcu' && Math.abs(o.pin) > 1e-6) rows.push(['Pin ' + fI(o.pin), '--ink']);
-    if (p.t === 'reg' && o.I > 1e-4) rows.push([(Core.REGS[p.rt].k === 'lin' ? '' : 'η ' + nf0.format(o.eta * 100) + ' % · ') + 'Verlust ' + fP(o.P) + (o.dT > 20 ? ' · ' + nf0.format(Core.T_AMB + o.dT) + ' °C' : ''), '--ink2']);
-    if (p.t === 'tr' && o.dT > 20) rows.push(['≈ ' + nf0.format(Core.T_AMB + o.dT) + ' °C', warn ? '--warn' : '--ink2']);
+    if (p.t === 'reg' && o.I > 1e-4) rows.push([(Core.REGS[p.rt].k === 'lin' ? '' : 'η ' + nf0.format(o.eta * 100) + ' % · ') + 'Verlust ' + fP(o.P) + (o.dT > 20 ? ' · ' + nf0.format(A.Tamb + o.dT) + ' °C' : ''), '--ink2']);
+    if (p.t === 'tr' && o.dT > 20) rows.push(['≈ ' + nf0.format(A.Tamb + o.dT) + ' °C', warn ? '--warn' : '--ink2']);
   }
   ctx.font = DP_CFONT; ctx.textBaseline = 'middle';
   rows.forEach(([t, c], j) => { ctx.fillStyle = css(c);
@@ -588,7 +639,7 @@ function drawPart(ctx, p, i, T, k) {
     if (vert) { ctx.textAlign = 'left'; ctx.fillText(t, C[0] + 0.6 * k, C[1] + side * 9); } else { ctx.textAlign = 'center'; ctx.fillText(t, C[0], C[1] + side * 0.72 * k); }
     ctx.textBaseline = 'alphabetic'; };
   ctx.font = DP_CFONT; if (k >= 28) lab(pv(p, true), -1, css('--ink2')); // eng (Telefon): nur Ergebnisse, Werte in der Auswahlzeile
-  if (o) { const r = p.t === 'bat' ? fU(o.U) + ' · ' + fI(o.I) : p.t === 'cab' ? 'ΔU ' + fU(Math.abs(o.U)) : p.t === 'sw' ? (p.on ? fI(o.I) : '') : fI(o.I) + (o.dT > 20 ? ' · ' + nf0.format(Core.T_AMB + o.dT) + ' °C' : '');
+  if (o) { const r = p.t === 'bat' ? fU(o.U) + ' · ' + fI(o.I) : p.t === 'cab' ? 'ΔU ' + fU(Math.abs(o.U)) : p.t === 'sw' ? (p.on ? fI(o.I) : '') : fI(o.I) + (o.dT > 20 ? ' · ' + nf0.format(A.Tamb + o.dT) + ' °C' : '');
     if (r || warn) lab((warn ? '⚠ ' : '') + r, 1, css(warn ? '--warn' : '--ink')); }
 }
 
@@ -611,13 +662,13 @@ function renderStats() {
   const bats = S.parts.map((p, i) => [p, A.parts[i]]).filter(([p]) => p.t === 'bat'), net = bats.length && bats.every(([p]) => !Core.CELLS[p.cell].C);
   const low = A.h != null && S.soll > 0 && A.h < S.soll;
   const main = [
-    { l: 'Laufzeit', t: 'Kapazität / Strom: obere Abschätzung für neue Zellen (siehe Modell)', v: A.h != null ? (low ? '⚠ ' : '') + fh(A.h) : net ? '∞' : '–', w: low, n: j(A.h != null ? (A.d < 1 ? nf1.format(A.d * 24) + ' h/Tag, dauernd ' + fh(A.h0) : 'Batterie, Richtwert') : net ? 'Netzteil' : 'kein Strom', S.soll > 0 ? 'Soll ' + fh(S.soll) : '', vs('h', fh)) },
+    { l: 'Laufzeit', t: 'Neue Zellen bei Raumtemperatur: Spannung sinkt beim Entladen, bei hohem Strom weniger Kapazität, Selbstentladung (Richtwerte, siehe Modell)', v: A.h != null ? (low ? '⚠ ' : '') + fh(A.h) : net ? '∞' : '–', w: low, n: j(A.h != null ? (A.d < 1 ? nf1.format(A.d * 24) + ' h/Tag, dauernd ' + fh(A.h0) : 'Batterie, Richtwert') : net ? 'Netzteil' : 'kein Strom', A.why || '', A.hNom ? 'Kapazität / Strom wäre ' + fh(A.hNom) : '', S.soll > 0 ? 'Soll ' + fh(S.soll) : '', vs('h', fh)) },
     { l: 'Strom aus der Quelle', v: fI(KV.I), n: vs('I', fI) },
     { l: 'Leistung', v: fP(A.P), n: vs('P', fP) }
   ];
   if (A.d < 1 && A.h != null) main.push({ l: 'Ruhestrom', t: 'Strom außerhalb der Betriebszeit: Schalter offen, Mikrocontroller im Schlafmodus, Pins aus', v: fI(A.Ir), n: A.Ir > 0 ? 'verbraucht ' + nf0.format(100 * (1 - A.d) * A.Ir / ((1 - A.d) * A.Ir + A.d * KV.I)) + ' % der Ladung' : 'nichts in der Ruhezeit' });
   if (A.g) main.push({ l: 'Batterien', v: nf0.format(A.g) + ' g', n: j(nf1.format(A.vol) + ' cm³', [...new Set(bats.filter(([p]) => Core.CELLS[p.cell].C).map(([p]) => (p.n > 1 ? p.n + ' × ' : '') + Core.CELLS[p.cell].dim))].join(', '), vs('g', g => nf0.format(g) + ' g'), vs('vol', v => nf1.format(v) + ' cm³')) });
-  if (A.hot && A.hot.dT > 5) { const hp = S.parts[A.hot.i]; main.push({ l: 'Wärmste Stelle', t: 'Erwärmung = Verlustleistung × Wärmewiderstand ohne Kühlkörper, bei 25 °C Umgebung (Richtwert)', v: '≈ ' + nf0.format(A.hot.T) + ' °C', w: A.hot.T > 85, n: j(NAME[hp.t] + ' ' + (A.hot.i + 1), A.hot.T > 150 ? 'rechnerisch – real schaltet der Schutz ab oder das Bauteil fällt aus' : A.hot.T > 85 ? 'zu heiß für Gehäuse und Hand' : A.hot.T > 50 ? 'warm' : '', vs('T', t => nf0.format(t) + ' °C')) }); }
+  if (A.hot && A.hot.dT > 5) { const hp = S.parts[A.hot.i]; main.push({ l: 'Wärmste Stelle', t: `Erwärmung = Verlustleistung × Wärmewiderstand ohne Kühlkörper, bei ${A.Tamb} °C Umgebung (Richtwert). Ab ${Core.T_TOUCH} °C heiß beim Anfassen.`, v: '≈ ' + nf0.format(A.hot.T) + ' °C', w: A.hot.T > 85, n: j(NAME[hp.t] + ' ' + (A.hot.i + 1), A.hot.T > 150 ? 'rechnerisch – real schaltet der Schutz ab oder das Bauteil fällt aus' : A.hot.T > 85 ? 'zu heiß für Kunststoffgehäuse und Nachbarteile' : A.hot.T > Core.T_TOUCH ? 'heiß beim Anfassen – innen, nicht berührbar anordnen' : A.hot.T > 45 ? 'warm' : '', vs('T', t => nf0.format(t) + ' °C')) }); }
   const more = S.parts.map((p, i) => { const o = A.parts[i];
     return { l: NAME[p.t] + ' ' + (i + 1) + ' <small>' + pv(p) + '</small>', v: (p.t === 'bat' ? fU(o.U) : fU(Math.abs(o.U))) + ' · ' + fI(o.I) + ' · ' + fP(Math.abs(o.P)),
       n: o.msg ? '⚠ ' + o.msg : p.t === 'mcu' ? 'Pin ' + fI(o.pin) + ' · ' + fU(o.Vpin) : p.t === 'reg' ? 'ein ' + fU(o.Vi) + ' · ' + fI(o.Iin) + ' · Verlust ' + fP(o.P) + (o.Iin > 1e-6 ? ' · η ' + nf0.format(o.eta * 100) + ' %' : '')
@@ -723,10 +774,11 @@ document.querySelectorAll('#tools button, #parts button, #parts2 button').forEac
   document.querySelectorAll('#tools button, #parts button, #parts2 button').forEach(x => x.classList.toggle('on', x === b)); drawEd(); renderSel();
 });
 $('soll').onchange = e => { const v = +e.target.value; S.soll = v > 0 && isFinite(v) ? v : 0; recompute(); };
+$('encl').onchange = e => { S.encl = e.target.checked; recompute(); };
 $('hday').onchange = e => { const v = +e.target.value; S.hday = v > 0 && v < 24 ? v : 0; e.target.value = S.hday || ''; recompute(); };
 
 // ---- Vorlagen ----
-function load(m) { S = m; S.wires = Core.tidy(S); UI.sel = null; UI.pend = null; $('soll').value = S.soll || ''; $('hday').value = S.hday || ''; A = Core.analyze(S); fit(true); drawAll(); store(); }
+function load(m) { S = m; S.wires = Core.tidy(S); UI.sel = null; UI.pend = null; $('soll').value = S.soll || ''; $('hday').value = S.hday || ''; $('encl').checked = !!S.encl; A = Core.analyze(S); fit(true); drawAll(); store(); }
 function tplSketch(m) {
   const out = m.wires.map(q => ({ p: [[q[0], -q[1]], [q[2], -q[3]]], c: '--elec', w: 1.5 }));
   m.parts.forEach(p => { if (MBOX[p.t]) { out.push({ p: MBOX[p.t].map(q => { const g = Core.place(p, q); return [g[0], -g[1]]; }), z: 1, f: '--bg', w: 1.5 }); return; }
@@ -739,8 +791,8 @@ dpGallery($('tpl'), TPLS.map(([g, a]) => [g, a.map(([k, n, s, f]) => ({ k, n, s,
 
 // ---- Datei & Teilen ----
 const TYPE = 'designphysik/elektronik';
-const exportObj = () => ({ type: TYPE, version: 1, parts: S.parts, wires: S.wires, ...(S.soll > 0 ? { soll: S.soll } : {}), ...(S.hday > 0 ? { hday: S.hday } : {}) });
-const HIST = dpHistory($('undo'), o => { const m = parse(o); if (m) { S = m; UI.sel = null; $('soll').value = S.soll || ''; $('hday').value = S.hday || ''; recompute(false); dpHashSet('e', exportObj()); } });
+const exportObj = () => ({ type: TYPE, version: 1, parts: S.parts, wires: S.wires, ...(S.soll > 0 ? { soll: S.soll } : {}), ...(S.hday > 0 ? { hday: S.hday } : {}), ...(S.encl ? { encl: true } : {}) });
+const HIST = dpHistory($('undo'), o => { const m = parse(o); if (m) { S = m; UI.sel = null; $('soll').value = S.soll || ''; $('hday').value = S.hday || ''; $('encl').checked = !!S.encl; recompute(false); dpHashSet('e', exportObj()); } });
 function store() { const o = exportObj(); dpHashSet('e', o); HIST.save(JSON.parse(JSON.stringify(o))); }
 dpCompare($('cmp'), exportObj, ref => { const m = ref && parse(ref); REF = m ? { m, a: Core.analyze(m) } : null; drawAll(); });
 // Eingang prüfen (Datei/Link sind fremd): unbekannte Bauteile verwerfen, Zahlen außerhalb des Bereichs → Vorgabe
@@ -753,7 +805,7 @@ function parse(o) {
     if (q.t === 'bat') q.n = Math.min(12, Math.max(1, Math.round(q.n)));
     return q; });
   const wires = o.wires.filter(w => Array.isArray(w) && w.length === 4 && w.every(int) && (w[0] !== w[2] || w[1] !== w[3])).map(w => w.slice());
-  return { parts, wires, soll: pos(o.soll, 0), hday: o.hday > 0 && o.hday < 24 ? +o.hday : 0 };
+  return { parts, wires, soll: pos(o.soll, 0), hday: o.hday > 0 && o.hday < 24 ? +o.hday : 0, encl: o.encl === true };
 }
 $('exp').onclick = () => dpDownload(exportObj(), 'elektronik.json');
 $('imp').onclick = () => $('impF').click();

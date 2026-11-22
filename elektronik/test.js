@@ -43,7 +43,11 @@ const loop = (bat, part, extra = []) => ({ parts: [{ t: 'bat', x: 0, y: 0, r: 0,
 { const c = Core.cell({ cell: 'aa', n: 4 }); check('4 × AA: 6 V', c.U, 6); check('4 × AA: Ri 0,6 Ω', c.Ri, 0.6); check('4 × AA: 92 g', c.g, 92); }
 // Motor: Laufstrom bei Nennspannung, Anlaufstrom = Ia
 { const a = Core.analyze(loop({ cell: 'psu12' }, { t: 'mot', Un: 12, In: 0.1, Ia: 0.3 })); const Rt = 12 / 0.1 + 0.1;
-  check('Motor 12 V: Laufstrom', a.parts[1].I, 12 / Rt, 1e-6); check('Motor 12 V: Anlaufstrom', a.parts[1].Is, 12 / (40 + 0.1), 1e-6); check('Motor 12 V: Drehzahl ≈ 100 %', a.parts[1].rel, (12 - 0.1 * 12 / Rt) / 12, 1e-6); }
+  check('Motor 12 V: Laufstrom ≈ In (festes Lastmoment)', a.parts[1].I, 0.1, 1e-3); check('Motor 12 V: Anlaufstrom', a.parts[1].Is, 12 / (40 + 0.1), 1e-6); check('Motor 12 V: Drehzahl ≈ 100 %', a.parts[1].rel, 1, 2e-3); void Rt; }
+// Motor unter festem Lastmoment: Strom bleibt In, Drehzahl ∝ U − In·Ra; unter In·Ra blockiert (I = U/Ra)
+{ const r6 = Core.analyze(loop({ cell: 'aa', n: 4 }, { t: 'mot', Un: 12, In: 0.1, Ia: 0.3 })).parts[1], Ra = 40;
+  check('Motor 12 V an 6 V: Strom ≈ In', r6.I, 0.1, 0.01); check('… Drehzahl = (U − In·Ra)/(Un − In·Ra)', r6.rel, (Math.abs(r6.U) - r6.I * Ra) / (12 - 4), 1e-6);
+  const r3 = Core.analyze(loop({ cell: 'aa', n: 2 }, { t: 'mot', Un: 12, In: 0.1, Ia: 0.3 })).parts[1]; check('Motor 12 V an 3 V: blockiert, I = U/Ra', r3.I, Math.abs(r3.U) / Ra, 0.02); }
 // Kabel: 10 m 0,14 mm² Kupfer → 1,25 Ω
 { const n = Core.netlist(loop({ cell: 'psu12' }, { t: 'cab', L: 10, A: 0.14 })); check('Kabel 10 m × 0,14 mm²: 1,25 Ω', 1 / n.el[1].g, 1.25, 1e-9); }
 // Schalter offen: kein Strom; zu: Strom
@@ -57,7 +61,7 @@ const loop = (bat, part, extra = []) => ({ parts: [{ t: 'bat', x: 0, y: 0, r: 0,
 // Urteile
 { const m = { parts: [{ t: 'bat', x: 0, y: 0, r: 0, cell: 'e9v' }, { t: 'r', x: 0, y: 2, r: 0, R: 330, Pn: 0.25 }, { t: 'led', x: 2, y: 2, r: 0, col: 'rot' }], wires: [[0, 0, 0, 2], [4, 2, 4, 0], [4, 0, 2, 0]] };
   const a = Core.analyze(m); ok('9 V + 330 Ω + rote LED: ≈ 20 mA, passt', a.issues.length === 0 && Math.abs(a.parts[2].I - 0.0205) < 0.001);
-  check('Laufzeit 9-V-Block = C/I', a.h, 0.55 / a.parts[0].I, 1e-9);
+  check('Nennabschätzung 9-V-Block = C/I', a.hNom, 0.55 / a.parts[0].I, 1e-9); ok('Laufzeit mit Entladekurve länger (Strom sinkt mit der Spannung)', a.h > a.hNom);
   m.parts[1].R = 1e-3; ok('LED ohne Vorwiderstand: kritisch „brennt durch“', Core.analyze(m).issues[0][0] === 2); }
 { const a = Core.analyze(loop({ cell: 'cr2032' }, { t: 'led', col: 'rot' })); check('CR2032 + LED direkt: Strom über Ri + Rs', a.parts[1].I, ledRef(3, 15, Core.LEDS.rot), 1e-6); ok('CR2032 + LED: Zelle überlastet (kritisch)', a.issues[0][0] === 2 && a.issues[0][2] === 0); }
 { const a = Core.analyze(loop({ cell: 'aa', n: 2 }, { t: 'r', R: 0.01, Pn: 0.25 })); ok('Kurzschluss 2 × AA', a.issues[0][1].startsWith('Kurzschluss')); }
@@ -122,7 +126,7 @@ for (const [k, Vg] of [['irlz', 5], ['irf', 3.3], ['irf', 10]]) { const T = TR[k
 
 // Urteile v2 über das Modell (Raster): Board + an Batterie (0,2)/(0,4), Board bei (3,2): VIN (3,2), GND (3,4), Pin (7,3)
 const mcuM = (cell, board, load) => ({ parts: [{ t: 'bat', x: 0, y: 2, r: 1, cell, n: 1 }, { t: 'mcu', x: 3, y: 2, r: 0, board, hi: true }, ...load], wires: [[0, 2, 3, 2], [0, 4, 3, 4], [9, 3, 9, 6], [9, 6, 3, 6], [3, 6, 3, 4]] });
-{ const a = Core.analyze(mcuM('e9v', 'uno', [{ t: 'r', x: 7, y: 3, r: 0, R: 220, Pn: 0.25 }])); ok('Uno an 9-V-Block, 220 Ω am Pin: passt (≈ 20 mA)', a.issues.length === 0 || a.issues[0][0] === 0); check('Uno: Laufzeit 9-V-Block', a.h, 0.55 / a.parts[0].I, 1e-9); }
+{ const a = Core.analyze(mcuM('e9v', 'uno', [{ t: 'r', x: 7, y: 3, r: 0, R: 220, Pn: 0.25 }])); ok('Uno an 9-V-Block, 220 Ω am Pin: passt (≈ 20 mA)', a.issues.length === 0 || a.issues[0][0] === 0); ok('Uno an 9-V-Block: Laufzeit endet, wenn VIN unter 7 V fällt', /Uno R3 startet nicht mehr/.test(a.why) && a.h < 0.6 * a.hNom); }
 { const a = Core.analyze(mcuM('psu12', 'uno', [{ t: 'mot', x: 7, y: 3, r: 0, Un: 3, In: 0.25, Ia: 1.5 }])); ok('Motor direkt am Pin: kritisch „Pin überlastet“', a.issues[0][0] === 2 && /Pin überlastet/.test(a.issues[0][1])); }
 { const a = Core.analyze(mcuM('usb', 'uno', [{ t: 'r', x: 7, y: 3, r: 0, R: 1000, Pn: 0.25 }])); ok('Uno mit 5 V am VIN: startet nicht', /startet nicht/.test(a.issues[0][1])); }
 { const a = Core.analyze(mcuM('psu12', 'pi4', [])); ok('Pi 4 an 12 V: zu viel Spannung (kritisch)', a.issues[0][0] === 2 && /zu viel/.test(a.issues[0][1])); }
@@ -146,12 +150,36 @@ const regM = rt => (m => (m.wires = Core.tidy(m), m))({ parts: [{ t: 'bat', x: 0
 
 // ---- v3: Betriebsprofil (Stunden am Tag, sonst Ruhe: Schalter offen, Mikrocontroller schlafen) und Erwärmung ----
 { const m = mcuM('aanimh', 'esp32', []); m.parts[0].n = 4; m.hday = 0.5; const a = Core.analyze(m), o = a.parts[0], d = 0.5 / 24;
-  check('ESP32 an 4 × NiMH: Ruhestrom ≈ 10 mA', o.Ir, 0.01, 1e-3); check('Laufzeit = C / (d·I_an + (1 − d)·I_Ruhe)', a.h, 2 / (d * o.I + (1 - d) * o.Ir), 1e-9);
+  check('ESP32 an 4 × NiMH: Ruhestrom ≈ 10 mA', o.Ir, 0.01, 1e-3); check('Nennabschätzung = C / (d·I_an + (1 − d)·I_Ruhe)', a.hNom, 2 / (d * o.I + (1 - d) * o.Ir), 1e-9); ok('ESP32: endet, wenn 4 × NiMH unter 4,5 V fallen', /ESP32.*startet nicht mehr/.test(a.why));
   ok('Soll 30 Tage verfehlt, „vor allem der Ruhestrom“', (m.soll = 720, /Ruhestrom/.test(Core.analyze(m).issues[0][1]))); }
 { const m = loop({ cell: 'aa', n: 2 }, { t: 'lamp', Un: 3, Pn: 0.9 }, [{ t: 'sw', x: 4, y: 0, r: 1, on: true }]); m.wires = [[0, 0, 4, 0], [4, 2, 0, 2], [2, 0, 2, 2]];
-  const a0 = Core.analyze(m); m.hday = 1; const a = Core.analyze(m); check('Taschenlampe 1 h/Tag: Laufzeit × 24 (Ruhe = Schalter offen)', a.h, a0.h * 24, 1e-6); check('Ruhestrom 0', a.Ir, 0, 1e-9); }
+  const a0 = Core.analyze(m); m.hday = 1; const a = Core.analyze(m); check('Taschenlampe 1 h/Tag: Laufzeit × 24 (Ruhe = Schalter offen; Selbstentladung klein)', a.h, a0.h * 24, 1e-3); check('Ruhestrom 0', a.Ir, 0, 1e-9); }
 { const m = { parts: [{ t: 'bat', x: 0, y: 2, r: 1, cell: 'pbank', n: 1 }, { t: 'mcu', x: 3, y: 2, r: 0, board: 'pi4', hi: false }], wires: [[0, 2, 3, 2], [0, 4, 3, 4]], hday: 2 };
   const a = Core.analyze(m); check('Raspberry Pi ohne Schlafmodus: Profil ändert nichts', a.h, a.h0, 1e-6); }
 { const m = { parts: [{ t: 'bat', x: 0, y: 0, r: 0, cell: 'e9v' }, { t: 'r', x: 0, y: 2, r: 0, R: 330, Pn: 0.25 }, { t: 'led', x: 2, y: 2, r: 0, col: 'rot' }], wires: [[0, 0, 0, 2], [4, 2, 4, 0], [4, 0, 2, 0]] };
   const a = Core.analyze(m), o = a.parts[1]; check('Widerstand: ΔT = P · 100 K / Nennleistung', o.dT, o.I * o.I * 330 * 100 / 0.25, 1e-9); ok('wärmste Stelle = Widerstand', a.hot.i === 1 && Math.abs(a.hot.T - 25 - o.dT) < 1e-9); }
 { const a = Core.analyze(regM('l7805')); check('7805: ΔT = Verlust · 65 K/W', a.parts[1].dT, a.parts[1].P * 65, 1e-9); }
+
+// ---- Entladekurve, Kapazität nach Strom, Selbstentladung (Laufzeit) ----
+// Widerstand an AA: I(q) = U·f(q)/(R + Ri); f stückweise linear → t = ∫ C dq / I geschlossen (Logarithmus), unter I0 ohne Abschlag
+{ const R = 100, c = Core.CELLS.aa, a = Core.analyze(loop({ cell: 'aa', n: 1 }, { t: 'r', R, Pn: 0.25 })), d = c.dis;
+  let t = 0; for (let i = 1; i < d.length; i++) { const [q0, f0] = d[i - 1], [q1, f1] = d[i], k = (f1 - f0) / (q1 - q0); t += (R + c.Ri) * c.C / 1000 / c.U * Math.log(f1 / f0) / k; }
+  t = t / (1 + c.sd * c.C / 1000 * (R + c.Ri) / (0.8 * c.U)); // Selbstentladung grob (≈ 1e-5): eigene Stufenrechnung prüft das genauer
+  check('AA + 100 Ω: Laufzeit = ∫ C dq / I(q) (Mittelpunktregel, 11 Stufen)', a.h, t, 0.01); ok('… kein Ausfallgrund (Widerstand)', !a.why); }
+{ const c = Core.CELLS.aa; check('Kapazität bei 0,5 A = C·(I0/I)^0,2', Core.capAt(c, 0.5), 2.5 * Math.pow(0.025 / 0.5, 0.2), 1e-9); check('… unter I0 volle Kapazität', Core.capAt(c, 0.01), 2.5, 1e-12); }
+{ const m = { parts: [{ t: 'bat', x: 0, y: 2, r: 1, cell: 'pbank', n: 1 }, { t: 'mcu', x: 3, y: 2, r: 0, board: 'pi4', hi: false }], wires: [[0, 2, 3, 2], [0, 4, 3, 4]] }, a = Core.analyze(m), c = Core.CELLS.pbank;
+  check('Powerbank (geregelt, k = 0): t = C / (I + Selbstentladung)', a.h, c.C / 1000 / (a.parts[0].I + c.sd * c.C / 1000), 1e-6); }
+{ const m = { parts: [{ t: 'bat', x: 0, y: 2, r: 1, cell: 'pbank', n: 1 }, { t: 'mcu', x: 3, y: 2, r: 0, board: 'nano', hi: false }], wires: [[0, 2, 3, 2], [0, 4, 3, 4]] };
+  ok('Powerbank mit Nano (20 mA): Hinweis „schaltet ab“', Core.analyze(m).issues.some(x => /schaltet bei so wenig Strom/.test(x[1]))); }
+// MOSFET unter der Datenblatt-Gate-Spannung: ESP32 (3,3 V) schaltet IRLZ44N → Hinweis; Lastspitze; LED-Erwärmung; Gehäuse
+const fetM = (board, tt, cell = 'psu12') => (m => (m.wires = Core.tidy(m), m))({ parts: [{ t: 'bat', x: 0, y: 2, r: 1, cell, n: 1 }, { t: 'mcu', x: 3, y: 2, r: 0, board, hi: true }, { t: 'tr', x: 7, y: 3, r: 0, tt }, { t: 'r', x: 9, y: 0, r: 1, R: 24, Pn: 10 }],
+  wires: [[0, 2, 3, 2], [0, 4, 3, 4], [0, 2, 0, 0], [0, 0, 9, 0], [9, 4, 9, 6], [9, 6, 3, 6], [3, 6, 3, 4]] });
+{ const a = Core.analyze(fetM('pico', 'irlz', 'usb')); ok('Pico (3,3 V) + IRLZ44N: Hinweis Gate unter Datenblattangabe', a.issues.some(x => x[0] === 1 && /garantiert/.test(x[1]))); }
+{ const a = Core.analyze(fetM('uno5', 'irlz', 'usb')); ok('Uno (5 V) + IRLZ44N: kein Gate-Hinweis', !a.issues.some(x => /garantiert/.test(x[1]))); }
+{ const m = mcuM('cr2032', 'esp32', []); const a = Core.analyze(m); ok('ESP32 an CR2032: startet nicht (kritisch)', a.issues[0][0] === 2); }
+{ const m = mcuM('aanimh', 'esp32', []); m.parts[0].n = 4; m.parts[0].cell = 'aa'; m.parts[0].n = 3; const a = Core.analyze(m), o = a.parts[1];
+  ok('ESP32 an 3 × AA: Lastspitze 350 mA bricht unter 4,5 V ein → Hinweis', o.Vpk < 4.41 && a.issues.some(x => /Lastspitzen/.test(x[1]))); }
+{ const a = Core.analyze(loop({ cell: 'usb' }, { t: 'r', R: 1000, Pn: 0.25 })); check('Gehäuse aus: 25 °C Umgebung', a.Tamb, 25, 0); }
+{ const m = loop({ cell: 'usb' }, { t: 'r', R: 1000, Pn: 0.25 }); m.encl = true; const a = Core.analyze(m); check('Gehäuse: Umgebung + 20 K', a.Tamb, 45, 0); check('… Bauteil = 45 °C + P·Rth', a.parts[1].T, 45 + a.parts[1].P * 400, 1e-9); }
+{ const m = { parts: [{ t: 'bat', x: 0, y: 0, r: 0, cell: 'li18650', n: 1 }, { t: 'r', x: 0, y: 2, r: 0, R: 1, Pn: 1 }, { t: 'led', x: 2, y: 2, r: 0, col: 'w1' }], wires: [[0, 0, 0, 2], [4, 2, 4, 0], [4, 0, 2, 0]] };
+  const a = Core.analyze(m), o = a.parts[2]; check('1-W-LED: ΔT = P · 50 K/W', o.dT, o.P * 50, 1e-9); ok('1-W-LED ohne Kühlfläche über 100 °C: Hinweis', o.T < 100 || /Kühlfläche/.test(o.msg)); }

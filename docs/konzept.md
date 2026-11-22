@@ -46,18 +46,20 @@ Bei Zielkonflikten entscheidet A.
   2. **Kennwerte** mit Einheit; Fachbegriffe (LVK, λ, μ, N_cr …) beim ersten Auftreten kurz erklärt (`title` bzw. Glossar).
   3. **Details** (Diagramme, Eigenformen, Rohwerte, „Modell & Gültigkeit“) – erreichbar, aber nicht im Weg.
 - **Gültigkeit:** Jedes Modul hat einen Abschnitt „Modell & Gültigkeit“ und nennt, ab wann Fachplanung nötig ist; darin zuletzt „Weiterführende Werkzeuge“ (3–5 Links mit einem Satz, wofür). Unsichere Eingangswerte (Schätzmaterialien, Streuung) als solche kennzeichnen, wo möglich als Band statt Einzelwert.
+- **Gültigkeitswächter** (22.11.2026, Physik-Audit): Verlässt ein Fall den Gültigkeitsbereich des Modells (z. B. hochkantes Brett → Kippen nicht gerechnet, Spiegel → Lampenbild, MOSFET unter der Datenblatt-Gate-Spannung), lautet das Urteil höchstens „knapp: …“ mit Begründung – nie „passt“.
+- **Urteilsschwellen mit Herkunft:** Jedes Modul führt in `docs/<modul>.md` eine Liste „Urteilsschwellen (Herkunft)“: Wert, Quelle (Norm, Literatur, Heuristik) und Bezug. Neue Schwellen dort eintragen; Heuristiken als solche benennen.
 - **Export:** JSON `{type:"designphysik/<modul>", version, …}`; Teilen per URL-Hash `#<kürzel>=…`
 - **Look:** Grundrichtung F „Punktraster“ (20.11.2026), verbindlich nach `docs/styleguide.md`. Farbe nur je **Physik-Familie** (`--water` Fluid, `--light` Licht, `--mech` Bewegung, reserviert `--load` Kraft & Festigkeit; jeweils `-a` für Flächen) und `--warn`. Alle Farben in style.css, Module definieren keine eigenen; Modulfarbe in `DP_MODULES[].color`. Canvas-Raster über `dpDots()`.
 - **Modulgröße:** wächst ein `index.html` über ~1500 Zeilen, vor der nächsten Erweiterung Aufteilen oder eigenes Modul prüfen.
 
-## Module (Stand 21.11.2026; Details in `docs/<modul>.md`; Spalte Modul = `name` in `DP_MODULES`)
+## Module (Stand 22.11.2026; Details in `docs/<modul>.md`; Spalte Modul = `name` in `DP_MODULES`)
 | Modul | Key | Stand | Entwurfsfrage |
 |---|---|---|---|
-| Gefäß | `gefaess` | v1.14 | Wie viel passt rein, wo sind Eichstriche, wann gießt es aus, kippt es um, schwappt es beim Tragen über? |
-| Licht | `licht` | v2.6 | Wie verteilt der Schirm das Licht, wird der Tisch hell genug, blendet es? |
-| Statik | `last` | v1.8 | Hält das Brett/der Balken, wie stark hängt es durch, schwingt es? |
-| Mechanik | `mechanismus` | v1.5 | Wie bewegt sich das Getriebe, wo klemmt es, welche Kraft braucht es? |
-| Elektronik | `elektronik` | v3 | Hält der Akku lange genug, reicht der Strom, wird etwas zu heiß? |
+| Gefäß | `gefaess` | v1.16 | Wie viel passt rein, wo sind Eichstriche, wann gießt es aus, kippt es um, schwappt es beim Tragen über? |
+| Licht | `licht` | v2.8 | Wie verteilt der Schirm das Licht, wird der Tisch hell genug, blendet es? |
+| Statik | `last` | v1.9 | Hält das Brett/der Balken, wie stark hängt es durch, schwingt es? |
+| Mechanik | `mechanismus` | v1.7 | Wie bewegt sich das Getriebe, wo klemmt es, welche Kraft braucht es? |
+| Elektronik | `elektronik` | v3.1 | Hält der Akku lange genug, reicht der Strom, wird etwas zu heiß? |
 
 ## Roadmap (21.11.2026, nach Persona A)
 **Moratorium auf Tiefe:** In Gefäß und Licht keine neuen Physik-Verfeinerungen, bis die Punkte „Jetzt“ erledigt sind. Fehlerbehebungen und Bedienung gehen immer.
@@ -77,7 +79,7 @@ Bei Zielkonflikten entscheidet A.
 4. **Schnapphaken** (Füge-/Lösekraft, Dehnung)
 5. **Bemessen statt nachweisen** in Last: „kleinste Dicke für l/x bzw. Sicherheit“ (Löser auf vorhandenem Kennwert)
 6. **Einfluss der Parameter** („größter Hebel: …“, finite Differenzen im CORE)
-7. **Realitätscheck** je Modul: wenige Vergleiche gegen Messung/Herstellerangabe in `docs/<modul>.md` (u. a. Papier/Stoff messen)
+7. **Realitätscheck** je Modul: wenige Vergleiche gegen Messung/Herstellerangabe in `docs/<modul>.md` (Vorschläge in `docs/audit-physik.md` §6: Regalbrett-Durchbiegung, τ von Papier/Stoff, Kippwinkel Flasche, Laufzeit Uno an 9-V-Block, Klappdeckel mit Federwaage; kalibriert u. a. die Licht-Stufe „hell“ und die Entladekurven)
 8. Echte Geräte prüfen: Telefon/Touch, Safari, Firefox
 
 **Ideen (unpriorisiert, Prüffrage oben anwenden):** Rutschen vs. Kippen · Festkörpergelenk/Filmscharnier · Tasten-Haptik · Bedienkräfte (Schraubdeckel, Hebel, DIN 33411) · Fall & Stoß · Seil & Abhängung · Biegen (K-Faktor, Rückfederung) · Abkühlen/Warmhalten · Kühlkörper LED (koppelt an Licht) · Nachtropfen am Ausguss (koppelt an Gefäß) · Schwimmen/Metazentrum · Helmholtz-Resonator · Sonnenstand & Schatten · Lichtleiter · Holz arbeitet/Wärmedehnung · Energiebudget · Gewicht/Material/CO₂
