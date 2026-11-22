@@ -60,6 +60,7 @@ Bei Zielkonflikten entscheidet A.
 | Statik | `last` | v1.11 | Hält das Brett/der Balken, wie stark hängt es durch, schwingt es? |
 | Mechanik | `mechanismus` | v1.9 | Wie bewegt sich das Getriebe, wo klemmt es, welche Kraft braucht es? |
 | Elektronik | `elektronik` | v3.3 | Hält der Akku lange genug, reicht der Strom, wird etwas zu heiß? |
+| Material | `material` | v0.4 | Welches Material macht das Brett, den Balken, den Stab leichter, günstiger, klimafreundlicher, und wie fühlt es sich an? |
 
 ## Roadmap (21.11.2026, nach Persona A)
 **Moratorium auf Tiefe:** In Gefäß und Licht keine neuen Physik-Verfeinerungen, bis die Punkte „Jetzt“ erledigt sind. Fehlerbehebungen und Bedienung gehen immer.
@@ -90,4 +91,5 @@ Bei Zielkonflikten entscheidet A.
 (Modul-Chats tragen hier ein; der zentrale Chat bzw. der Style-Chat arbeitet sie ab. Erledigtes wandert nach `docs/historie.md`.)
 
 Offen:
-- (keine)
+- **Style-Chat:** eigene Familienfarbe für Material (bis dahin `--load` in `DP_MODULES`); sechste und letzte Familie nach Styleguide § 3.
+- **Material → andere Module** (später): Datensatz nach `shared/materials.js`, sobald ein zweites Modul ihn liest (Statik „In Statik verwenden“, Berührtemperatur, Gewicht/CO₂).
