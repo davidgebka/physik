@@ -90,4 +90,6 @@ Bei Zielkonflikten entscheidet A.
 (Modul-Chats tragen hier ein; der zentrale Chat bzw. der Style-Chat arbeitet sie ab. Erledigtes wandert nach `docs/historie.md`.)
 
 Offen:
-- (keine)
+- **Fertigung (neues Modul, 22.11.2026):** Eintrag `fertigung` in `DP_MODULES` mit eigener Farbfamilie; Konzept in `docs/fertigung.md`.
+- **Style-Chat:** Farbtoken für Fertigung (`--fab`/`--fab-a`), sinnvollerweise zusammen mit der noch offenen eigenen Familie für Material; deutlich abgesetzt von `--warn` und `--light`.
+- **Materialschlüssel in `shared/`** (Fertigung ist der zweite Nutzer nach Material): nur Schlüssel, Name, Familie, mit Werkstoffzustand im Schlüssel (z. B. `alu-6061-t6`); modulspezifische Werte bleiben im jeweiligen CORE. Mit dem Material-Chat abstimmen.
