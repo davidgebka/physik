@@ -13,6 +13,7 @@ select{max-width:100%}
 .rk tr{cursor:pointer}
 .rk tr:hover td,.rk tr.on td{background:var(--fill)}
 .rk tr.on td:first-child{font-weight:700}
+#cats button{white-space:nowrap}
 </style>
 </head>
 <body>
@@ -23,6 +24,7 @@ select{max-width:100%}
     <div class="row">
       <span class="pair"><select id="ax-y" aria-label="Achse oben"></select> über <select id="ax-x" aria-label="Achse rechts"></select></span>
     </div>
+    <div class="row" id="cats"></div>
     <canvas id="map" role="img"></canvas>
     <div class="row"><select id="mat" aria-label="Material"></select><button id="cmp" class="ico"></button></div>
     <p class="note" id="mapN"></p>
@@ -34,6 +36,7 @@ select{max-width:100%}
       <span class="seg" id="by"><button data-v="mass">leicht</button><button data-v="eur">günstig</button><button data-v="co2">wenig CO₂</button></span></div>
     <p class="note" id="rkN"></p>
     <table class="kv rk" id="rk"></table>
+    <div class="row"><button id="rkAll" class="q"></button></div>
   </section>
   <section class="panel wide kpi">
     <h2>Kennwerte</h2>
@@ -46,7 +49,7 @@ select{max-width:100%}
   <section class="panel wide model">
     <h2>Modell &amp; Gültigkeit</h2>
     <details data-k="model"><summary>Modell und Grenzen lesen</summary><div class="txt">
-      <h3>Wozu</h3><p>Die Karte zeigt, wo ein Material im Vergleich zu anderen liegt, z. B. Steifigkeit über Dichte: oben links ist steif und leicht, unten rechts weich und schwer. Jede Ellipse reicht über die übliche Spanne des Materials; Holz und Kunststoffe streuen stark, Metalle kaum. Die Darstellung folgt den Material-Karten von Michael Ashby (<a href="https://de.wikipedia.org/wiki/Werkstoffauswahl" target="_blank" rel="noopener">Werkstoffauswahl</a>).</p>
+      <h3>Wozu</h3><p>Die Karte zeigt, wo ein Material im Vergleich zu anderen liegt, z. B. Steifigkeit über Dichte: oben links ist steif und leicht, unten rechts weich und schwer. Jede Ellipse reicht über die übliche Spanne des Materials; Holz und Kunststoffe streuen stark, Metalle kaum. Gepunktete Umrisse fassen die Kategorien zusammen (Holz, Metall, Kunststoff, Schaumstoff …); mit den Kategorie-Knöpfen lassen sie sich aus- und einblenden, Rangliste und Urteil vergleichen dann nur noch mit den eingeblendeten. Die Darstellung folgt den Material-Karten von Michael Ashby (<a href="https://de.wikipedia.org/wiki/Werkstoffauswahl" target="_blank" rel="noopener">Werkstoffauswahl</a>).</p>
       <h3>Ziel und Rangliste</h3><p>Die Rangliste beantwortet: Wie schwer (teuer, CO₂-lastig) wird das Bauteil, wenn es aus einem anderen Material genauso steif oder fest sein soll? Die Form bleibt gleich, nur die Dicke ändert sich. Beim <i>Brett</i> ändert sich nur die Dicke, beim <i>Balken</i> der ganze Querschnitt, beim <i>Stab</i> (auf Zug) die Querschnittsfläche. Deshalb gewinnen beim Brett leichte Materialien wie Holz, beim Stab die steifen wie Stahl. Die gestrichelte Linie in der Karte verbindet alle Materialien, die für das gewählte Ziel gleich gut sind wie das ausgewählte; alles darüber ist besser.</p>
       <h3>Berührgefühl</h3><p>Ob sich etwas warm oder kalt anfühlt, hängt nicht von der Temperatur ab (alles hat Raumtemperatur), sondern davon, wie schnell es der Haut Wärme entzieht: dem <a href="https://de.wikipedia.org/wiki/Wärmeeindringkoeffizient" target="_blank" rel="noopener">Wärmeeindringkoeffizienten</a>. Angegeben ist die Temperatur, die die Haut (33 °C) im ersten Moment an einem 20 °C warmen Teil annimmt. Dünne Teile und Schichten (Folie, Lack auf Metall) erwärmen sich schneller und fühlen sich mit der Zeit wärmer an.</p>
       <h3>Werte</h3><p>Richtwerte für den Entwurf, als Spanne typischer Werte, nicht als Mindestwerte für einen Nachweis. Holz längs zur Faser bei etwa 12 % Holzfeuchte, quer zur Faser ist es rund 20-mal weicher. Festigkeit: Biegefestigkeit bei Holz, Platten, Glas, Keramik und Stein (Beton und Stein halten auf Druck ein Vielfaches), Streckgrenze bei Metall, Zugfestigkeit bei Kunststoff, Verbund in der Plattenebene. Dicht liegende Materialien sind in der Karte nicht alle beschriftet; antippen zeigt den Namen. Preise grob (Handel, kleine Mengen, 2026). CO₂ von der Herstellung bis zum Werktor, ohne den im Holz gespeicherten Kohlenstoff; bei Aluminium entscheidet der Recyclinganteil (die Spanne reicht von viel Recycling bis Neumetall). Für Statik und Nachweise gelten die Normwerte im Modul Statik bzw. das Datenblatt des Herstellers.</p>
@@ -82,7 +85,7 @@ const Core = (() => {
       proc: 'spritzgießen, Filmscharnier, schwer zu kleben; kriecht', src: 'Datenblätter typisch; CO₂ PlasticsEurope/ICE' },
     { k: 'pmma', n: 'Acryl (PMMA)', fam: 'Kunststoff', rho: [1180, 1190], E: [2900, 3300], f: [60, 75], lam: [0.18, 0.20], c: [1400, 1500], tmax: [70, 90], eur: [3, 5], co2: [3, 7],
       proc: 'lasern, fräsen, polieren, warm biegen; klar, spannungsrissempfindlich', src: 'Datenblätter typisch; CO₂ geschätzt' },
-    { k: 'glas', n: 'Floatglas', fam: 'Glas, Keramik, Stein', rho: [2490, 2520], E: [70000, 74000], f: [40, 90], lam: [0.9, 1.05], c: [720, 840], tmax: [100, 250], eur: [1, 2.5], co2: [0.9, 1.4], brittle: true,
+    { k: 'glas', n: 'Floatglas', fam: 'Glas & Keramik', rho: [2490, 2520], E: [70000, 74000], f: [40, 90], lam: [0.9, 1.05], c: [720, 840], tmax: [100, 250], eur: [1, 2.5], co2: [0.9, 1.4], brittle: true,
       proc: 'schneiden, Kante schleifen, härten (ESG); bricht spröde, Temperaturschock begrenzt', src: 'EN 572-1; Festigkeit streut mit Kante und Kratzern; CO₂ ICE' },
     { k: 'silikon', n: 'Silikon', fam: 'Elastomer', rho: [1100, 1250], E: [1, 8], f: [5, 10], lam: [0.2, 0.3], c: [1100, 1300], tmax: [180, 230], eur: [5, 15], co2: [3, 7],
       proc: 'gießen, spritzgießen; lebensmitteltauglich erhältlich, griffig', src: 'Datenblätter typisch (Shore 30–70 A); Preis und CO₂ geschätzt' },
@@ -130,22 +133,142 @@ const Core = (() => {
       proc: 'blasformen, rotationsformen, Schneidbretter; zäh, kaum zu kleben', src: 'Datenblätter typisch; CO₂ PlasticsEurope/ICE' },
     { k: 'tpu', n: 'TPU', fam: 'Elastomer', rho: [1100, 1250], E: [10, 80], f: [25, 50], lam: [0.19, 0.25], c: [1500, 1800], tmax: [80, 100], eur: [5, 10], co2: [4, 7],
       proc: 'spritzgießen, 3D-Druck; Griffe, Puffer, Armbänder (Shore 85–95 A)', src: 'Datenblätter typisch; CO₂ geschätzt' },
-    { k: 'boro', n: 'Borosilikatglas', fam: 'Glas, Keramik, Stein', rho: [2200, 2240], E: [63000, 64000], f: [40, 80], lam: [1.1, 1.2], c: [750, 850], tmax: [200, 450], eur: [4, 10], co2: [1, 2], brittle: true,
+    { k: 'boro', n: 'Borosilikatglas', fam: 'Glas & Keramik', rho: [2200, 2240], E: [63000, 64000], f: [40, 80], lam: [1.1, 1.2], c: [750, 850], tmax: [200, 450], eur: [4, 10], co2: [1, 2], brittle: true,
       proc: 'blasen, ziehen (Laborglas, Teekannen); verträgt Temperaturwechsel', src: 'DIN ISO 3585 typisch; CO₂ geschätzt' },
-    { k: 'porzellan', n: 'Porzellan', fam: 'Glas, Keramik, Stein', rho: [2300, 2500], E: [60000, 100000], f: [50, 100], lam: [1.2, 2], c: [800, 1100], tmax: [500, 1000], eur: [2, 6], co2: [1, 3], brittle: true,
+    { k: 'porzellan', n: 'Porzellan', fam: 'Glas & Keramik', rho: [2300, 2500], E: [60000, 100000], f: [50, 100], lam: [1.2, 2], c: [800, 1100], tmax: [500, 1000], eur: [2, 6], co2: [1, 3], brittle: true,
       proc: 'gießen, drehen, brennen (schwindet ~13 %), glasieren', src: 'Literatur typisch (Hartporzellan); Preis (Masse) und CO₂ geschätzt' },
-    { k: 'beton', n: 'Beton', fam: 'Glas, Keramik, Stein', rho: [2200, 2400], E: [25000, 40000], f: [3, 8], lam: [1.4, 2], c: [850, 1000], tmax: [200, 300], eur: [0.1, 0.4], co2: [0.1, 0.2], brittle: true,
+    { k: 'beton', n: 'Beton', fam: 'Stein & Beton', rho: [2200, 2400], E: [25000, 40000], f: [3, 8], lam: [1.4, 2], c: [850, 1000], tmax: [200, 300], eur: [0.1, 0.4], co2: [0.1, 0.2], brittle: true,
       proc: 'gießen in Schalung; Festigkeit = Biegezug, auf Druck 30–50 N/mm²; ohne Bewehrung spröde', src: 'EN 1992-1-1 (C20–C40) typisch; CO₂ ICE' },
-    { k: 'granit', n: 'Granit', fam: 'Glas, Keramik, Stein', rho: [2600, 2800], E: [40000, 70000], f: [10, 25], lam: [2.5, 3.5], c: [750, 850], tmax: [200, 400], eur: [1.5, 5], co2: [0.1, 0.7], brittle: true,
+    { k: 'granit', n: 'Granit', fam: 'Stein & Beton', rho: [2600, 2800], E: [40000, 70000], f: [10, 25], lam: [2.5, 3.5], c: [750, 850], tmax: [200, 400], eur: [1.5, 5], co2: [0.1, 0.7], brittle: true,
       proc: 'sägen, schleifen, polieren; Festigkeit = Biegezug, sehr hart und schwer', src: 'EN 1469/EN 12372 typisch; Preis und CO₂ geschätzt' },
     { k: 'cfk', n: 'CFK (Gewebe)', fam: 'Verbund', rho: [1500, 1600], E: [45000, 70000], f: [400, 700], lam: [1, 5], c: [900, 1100], tmax: [100, 150], eur: [30, 80], co2: [20, 40],
       proc: 'laminieren, Autoklav; Werte in der Plattenebene, Gewebe 0/90°; teuer, schwer zu recyceln', src: 'Datenblätter typisch (Epoxid, quasiisotrop bis 0/90°); CO₂ Literatur' },
     { k: 'gfk', n: 'GFK (Gewebe)', fam: 'Verbund', rho: [1700, 2000], E: [15000, 25000], f: [150, 300], lam: [0.3, 0.5], c: [900, 1100], tmax: [100, 150], eur: [5, 15], co2: [3, 6],
       proc: 'laminieren, pressen (Schalensitze, Boote); Werte in der Plattenebene', src: 'Datenblätter typisch (Polyester/Epoxid-Gewebe); CO₂ ICE' },
-    { k: 'karton', n: 'Karton (Vollpappe)', fam: 'Naturstoff', rho: [600, 900], E: [2000, 6000], f: [20, 60], lam: [0.08, 0.15], c: [1300, 1500], tmax: [100, 150], eur: [0.5, 1.5], co2: [0.5, 1.2],
+    { k: 'karton', n: 'Karton (Vollpappe)', fam: 'Naturstoff & Papier', rho: [600, 900], E: [2000, 6000], f: [20, 60], lam: [0.08, 0.15], c: [1300, 1500], tmax: [100, 150], eur: [0.5, 1.5], co2: [0.5, 1.2],
       proc: 'schneiden, rillen, falten, stecken; Werte in Laufrichtung, quer etwa halb; feuchteempfindlich', src: 'Literatur typisch; Preis und CO₂ geschätzt' },
-    { k: 'kork', n: 'Kork (Press)', fam: 'Naturstoff', rho: [120, 250], E: [10, 50], f: [0.8, 2], lam: [0.04, 0.06], c: [1700, 2000], tmax: [80, 120], eur: [5, 15], co2: [0.2, 1],
-      proc: 'pressen, schneiden, drehen; dämpft, fühlt sich warm an, rutschfest', src: 'Literatur typisch (Presskork); Preis und CO₂ geschätzt' }
+    { k: 'kork', n: 'Kork (Press)', fam: 'Naturstoff & Papier', rho: [120, 250], E: [10, 50], f: [0.8, 2], lam: [0.04, 0.06], c: [1700, 2000], tmax: [80, 120], eur: [5, 15], co2: [0.2, 1],
+      proc: 'pressen, schneiden, drehen; dämpft, fühlt sich warm an, rutschfest', src: 'Literatur typisch (Presskork); Preis und CO₂ geschätzt' },
+    { k: 'laerche', n: 'Lärche', fam: 'Massivholz', rho: [550, 650], E: [11000, 14000], f: [80, 110], lam: [0.13, 0.16], c: [1600, 1700], tmax: [80, 120], eur: [1.5, 3], co2: [0.2, 0.4],
+      proc: 'witterungsbeständig ohne Schutz, Fassade, Gartenmöbel; harzig', src: 'Wood Handbook (USDA FPL), typische Werte; Preis und CO₂ geschätzt (ICE)' },
+    { k: 'douglasie', n: 'Douglasie', fam: 'Massivholz', rho: [480, 560], E: [11000, 14000], f: [75, 100], lam: [0.12, 0.15], c: [1600, 1700], tmax: [80, 120], eur: [1.5, 3], co2: [0.2, 0.4],
+      proc: 'kräftige Maserung, Bau und Möbel, mäßig witterungsfest', src: 'Wood Handbook (USDA FPL), typische Werte; Preis und CO₂ geschätzt (ICE)' },
+    { k: 'kirsche', n: 'Kirsche', fam: 'Massivholz', rho: [560, 650], E: [9000, 11000], f: [80, 100], lam: [0.14, 0.17], c: [1600, 1700], tmax: [80, 120], eur: [5, 10], co2: [0.3, 0.6],
+      proc: 'rötlich, dunkelt nach, edle Möbel', src: 'Wood Handbook (USDA FPL), typische Werte; Preis und CO₂ geschätzt (ICE)' },
+    { k: 'teak', n: 'Teak', fam: 'Massivholz', rho: [600, 700], E: [10000, 13000], f: [90, 110], lam: [0.15, 0.18], c: [1600, 1700], tmax: [80, 120], eur: [15, 30], co2: [0.5, 2],
+      proc: 'ölig, außen und Boot; Herkunft/Zertifikat beachten, Transport prägt CO₂', src: 'Wood Handbook (USDA FPL), typische Werte; Preis und CO₂ geschätzt (ICE)' },
+    { k: 'linde', n: 'Linde', fam: 'Massivholz', rho: [450, 560], E: [7000, 10000], f: [60, 85], lam: [0.12, 0.15], c: [1600, 1700], tmax: [80, 120], eur: [2, 4], co2: [0.2, 0.4],
+      proc: 'weich, gleichmäßig, Schnitzholz', src: 'Wood Handbook (USDA FPL), typische Werte; Preis und CO₂ geschätzt (ICE)' },
+    { k: 'pappel', n: 'Pappel', fam: 'Massivholz', rho: [400, 500], E: [7000, 10000], f: [50, 75], lam: [0.11, 0.13], c: [1600, 1700], tmax: [80, 120], eur: [1, 2.5], co2: [0.2, 0.4],
+      proc: 'leicht, weich, Sperrholzkern, Obstkisten', src: 'Wood Handbook (USDA FPL), typische Werte; Preis und CO₂ geschätzt (ICE)' },
+    { k: 'robinie', n: 'Robinie', fam: 'Massivholz', rho: [720, 800], E: [12000, 15000], f: [120, 150], lam: [0.17, 0.21], c: [1600, 1700], tmax: [80, 120], eur: [3, 6], co2: [0.3, 0.6],
+      proc: 'dauerhaftestes heimisches Holz (Spielplätze, außen), hart', src: 'Wood Handbook (USDA FPL), typische Werte; Preis und CO₂ geschätzt (ICE)' },
+    { k: 'wollfilz', n: 'Wollfilz', fam: 'Naturstoff & Papier', rho: [150, 400], E: [1, 10], f: [0.5, 3], lam: [0.04, 0.06], c: [1300, 1700], tmax: [80, 120], eur: [15, 40], co2: [5, 20],
+      proc: 'schneiden, stanzen, nähen; dämpft Schall, warm; CO₂ hängt an der Schafhaltung', src: 'Literatur typisch; Preis und CO₂ geschätzt' },
+    { k: 'osb', n: 'OSB', fam: 'Holzwerkstoff', rho: [600, 680], E: [3500, 6000], f: [18, 30], lam: [0.12, 0.14], c: [1600, 1700], tmax: [70, 90], eur: [0.6, 1.2], co2: [0.3, 0.7],
+      proc: 'grobe Spanoptik, Bau und Messe; Werte in Hauptrichtung', src: 'EN 300 (OSB/3) typisch; CO₂ ICE' },
+    { k: 'hpl', n: 'HPL Kompaktplatte', fam: 'Holzwerkstoff', rho: [1350, 1450], E: [9000, 12000], f: [80, 120], lam: [0.25, 0.3], c: [1300, 1500], tmax: [100, 140], eur: [5, 10], co2: [1.5, 3],
+      proc: 'Papier und Harz gepresst; Tischplatten, Nassraum, sehr robust', src: 'EN 438-4 typisch; CO₂ geschätzt' },
+    { k: 'pappelsperr', n: 'Pappelsperrholz', fam: 'Holzwerkstoff', rho: [400, 500], E: [4000, 7000], f: [30, 50], lam: [0.1, 0.13], c: [1600, 1700], tmax: [80, 100], eur: [2, 4], co2: [0.4, 0.8],
+      proc: 'leicht, lasern, Modellbau, Möbelrücken', src: 'Herstellerangaben typisch; CO₂ ICE (Sperrholz)' },
+    { k: 'tischler', n: 'Tischlerplatte', fam: 'Holzwerkstoff', rho: [450, 550], E: [4000, 8000], f: [30, 50], lam: [0.11, 0.14], c: [1600, 1700], tmax: [80, 100], eur: [1.5, 3], co2: [0.4, 0.8],
+      proc: 'Stabmittellage, formstabil, Regalböden; Werte längs zu den Stäben', src: 'EN 13353 typisch; CO₂ geschätzt' },
+    { k: 'hdf', n: 'HDF', fam: 'Holzwerkstoff', rho: [800, 1000], E: [3500, 5000], f: [35, 50], lam: [0.14, 0.18], c: [1600, 1700], tmax: [70, 90], eur: [0.8, 1.5], co2: [0.4, 0.8],
+      proc: 'dünne Platten 3–6 mm, Rückwände, Laminatträger', src: 'EN 622-5 typisch; CO₂ ICE' },
+    { k: 'lvl', n: 'Furnierschichtholz', fam: 'Holzwerkstoff', rho: [480, 550], E: [12000, 14000], f: [50, 70], lam: [0.12, 0.14], c: [1600, 1700], tmax: [80, 100], eur: [1.5, 3], co2: [0.3, 0.6],
+      proc: 'Furniere längs verleimt (Kerto, LVL); tragend, gleichmäßig', src: 'EN 14374 typisch; CO₂ geschätzt' },
+    { k: 'al6082', n: 'Aluminium 6082', fam: 'Metall', rho: [2700, 2710], E: [69000, 71000], f: [250, 290], lam: [160, 180], c: [880, 920], tmax: [120, 180], eur: [3, 6], co2: [2, 12],
+      proc: 'fester als 6060, Profile und Platten, fräsen', src: 'EN 755-2 (T6); CO₂ ICE und Branchenangaben' },
+    { k: 'al7075', n: 'Aluminium 7075', fam: 'Metall', rho: [2800, 2810], E: [71000, 72000], f: [430, 500], lam: [130, 150], c: [860, 960], tmax: [100, 150], eur: [6, 12], co2: [3, 14],
+      proc: 'hochfest (Fahrrad, Klettern), fräsen; nicht schweißbar', src: 'EN 485-2 (T6) typisch; CO₂ geschätzt' },
+    { k: 'alguss', n: 'Aluminium-Druckguss', fam: 'Metall', rho: [2650, 2680], E: [70000, 75000], f: [140, 240], lam: [120, 150], c: [880, 920], tmax: [120, 200], eur: [3, 6], co2: [2, 10],
+      proc: 'Druckguss (Gehäuse, Leuchten), dünnwandig; Recyclinganteil hoch', src: 'EN 1706 (AlSi10Mg) typisch; CO₂ geschätzt' },
+    { k: 'grauguss', n: 'Grauguss', fam: 'Metall', rho: [7150, 7250], E: [100000, 130000], f: [150, 250], lam: [45, 55], c: [450, 550], tmax: [300, 400], eur: [1.5, 3], co2: [1, 2], brittle: true,
+      proc: 'gießen (Pfannen, Maschinenfüße), dämpft Schwingungen; spröde', src: 'EN 1561 (EN-GJL-250); CO₂ ICE' },
+    { k: 'federstahl', n: 'Federstahl', fam: 'Metall', rho: [7840, 7860], E: [206000, 210000], f: [1100, 1600], lam: [40, 50], c: [450, 500], tmax: [150, 250], eur: [2, 5], co2: [1.5, 3],
+      proc: 'Federn, Clips, Freischwinger; gehärtet, kaum zu bearbeiten', src: 'EN 10089/10132 typisch; CO₂ ICE' },
+    { k: 'corten', n: 'Cortenstahl', fam: 'Metall', rho: [7840, 7860], E: [205000, 212000], f: [355, 420], lam: [45, 55], c: [450, 500], tmax: [350, 450], eur: [1.5, 3], co2: [1.5, 2.5],
+      proc: 'rostet kontrolliert (Patina), außen, Skulpturen; färbt ab', src: 'EN 10025-5 (S355J2W); CO₂ ICE' },
+    { k: 'bronze', n: 'Bronze', fam: 'Metall', rho: [8800, 8900], E: [105000, 120000], f: [250, 500], lam: [50, 70], c: [370, 380], tmax: [150, 250], eur: [10, 18], co2: [3, 5],
+      proc: 'Kunstguss, Gleitlager, Beschläge; Patina', src: 'EN 1652/1982 (CuSn) typisch; CO₂ geschätzt' },
+    { k: 'zinn', n: 'Zinn', fam: 'Metall', rho: [7200, 7300], E: [40000, 50000], f: [15, 40], lam: [60, 67], c: [220, 230], tmax: [50, 100], eur: [30, 45], co2: [15, 25],
+      proc: 'gießen bei ~230 °C in Silikon- oder Gipsform, sehr weich', src: 'Literatur typisch (Zinnlegierung); Preis und CO₂ geschätzt' },
+    { k: 'magnesium', n: 'Magnesium', fam: 'Metall', rho: [1800, 1830], E: [44000, 46000], f: [140, 170], lam: [70, 80], c: [1000, 1050], tmax: [100, 150], eur: [4, 8], co2: [15, 35],
+      proc: 'Druckguss (Laptop, Kamera), leichtestes Baumetall; korrodiert', src: 'EN 1753 (AZ91) typisch; CO₂ Literatur (Herkunft prägt die Spanne)' },
+    { k: 'silber', n: 'Silber 925', fam: 'Metall', rho: [10300, 10400], E: [70000, 80000], f: [150, 300], lam: [360, 420], c: [230, 240], tmax: [150, 250], eur: [800, 1100], co2: [50, 200],
+      proc: 'Schmuck, Besteck, treiben, löten; läuft an', src: 'Literatur typisch; Preis Börse 2026 geschätzt, CO₂ Literatur' },
+    { k: 'peld', n: 'PE-LD', fam: 'Kunststoff', rho: [915, 935], E: [150, 300], f: [8, 15], lam: [0.32, 0.36], c: [1900, 2300], tmax: [60, 80], eur: [1.2, 2.2], co2: [1.8, 2.1],
+      proc: 'Folien, Flaschen, weich und zäh', src: 'Datenblätter typisch; CO₂ PlasticsEurope' },
+    { k: 'ps', n: 'Polystyrol (PS)', fam: 'Kunststoff', rho: [1040, 1060], E: [3000, 3400], f: [35, 50], lam: [0.14, 0.17], c: [1200, 1400], tmax: [60, 80], eur: [1.5, 2.5], co2: [2.5, 3.5],
+      proc: 'spritzgießen, tiefziehen, Modellbau; spröde, klar', src: 'Datenblätter typisch; CO₂ PlasticsEurope' },
+    { k: 'pvc', n: 'PVC hart', fam: 'Kunststoff', rho: [1380, 1420], E: [2700, 3200], f: [45, 55], lam: [0.15, 0.2], c: [900, 1100], tmax: [60, 70], eur: [1.5, 3], co2: [2, 3],
+      proc: 'Rohre, Profile, Platten; gut zu kleben und schweißen', src: 'Datenblätter typisch; CO₂ PlasticsEurope' },
+    { k: 'pa6', n: 'PA6', fam: 'Kunststoff', rho: [1120, 1150], E: [1200, 3000], f: [40, 80], lam: [0.23, 0.29], c: [1600, 1800], tmax: [80, 110], eur: [3, 5], co2: [6, 9],
+      proc: 'spritzgießen, zäh; nimmt Wasser auf (Werte trocken bis feucht)', src: 'Datenblätter typisch; CO₂ PlasticsEurope' },
+    { k: 'pa12', n: 'PA12 (SLS-Druck)', fam: 'Kunststoff', rho: [950, 1020], E: [1500, 1900], f: [40, 50], lam: [0.15, 0.25], c: [1600, 2000], tmax: [80, 100], eur: [40, 80], co2: [6, 10],
+      proc: 'Pulverdruck ohne Stützen, Kleinserien; Preis gedruckt', src: 'Datenblätter SLS typisch; CO₂ geschätzt' },
+    { k: 'pet', n: 'PET', fam: 'Kunststoff', rho: [1330, 1390], E: [2800, 3100], f: [50, 70], lam: [0.15, 0.24], c: [1000, 1300], tmax: [70, 110], eur: [1.5, 2.5], co2: [2, 3],
+      proc: 'Flaschen, Fasern, Folien; gut recycelbar', src: 'Datenblätter typisch; CO₂ PlasticsEurope' },
+    { k: 'peek', n: 'PEEK', fam: 'Kunststoff', rho: [1300, 1320], E: [3600, 4100], f: [90, 100], lam: [0.24, 0.26], c: [1300, 1400], tmax: [240, 260], eur: [60, 100], co2: [15, 40],
+      proc: 'Hochleistung: heiß, chemisch beständig, Medizintechnik; teuer', src: 'Datenblätter typisch; Preis und CO₂ geschätzt' },
+    { k: 'ptfe', n: 'PTFE (Teflon)', fam: 'Kunststoff', rho: [2140, 2200], E: [400, 750], f: [20, 35], lam: [0.24, 0.26], c: [1000, 1050], tmax: [250, 260], eur: [15, 25], co2: [10, 15],
+      proc: 'gleitet am besten, antihaft, hitzefest; kriecht, nicht zu kleben', src: 'Datenblätter typisch; Preis und CO₂ geschätzt' },
+    { k: 'epoxid', n: 'Epoxidharz', fam: 'Kunststoff', rho: [1100, 1250], E: [2500, 3500], f: [50, 90], lam: [0.17, 0.23], c: [1000, 1300], tmax: [60, 120], eur: [8, 20], co2: [5, 8],
+      proc: 'gießen (Resin-Tische), laminieren, kleben', src: 'Datenblätter typisch; Preis und CO₂ geschätzt' },
+    { k: 'upharz', n: 'Polyesterharz (UP)', fam: 'Kunststoff', rho: [1100, 1250], E: [3000, 4000], f: [40, 80], lam: [0.17, 0.22], c: [1200, 1400], tmax: [60, 100], eur: [3, 6], co2: [3, 5],
+      proc: 'gießen, laminieren (GFK); riecht (Styrol), schwindet', src: 'Datenblätter typisch; Preis und CO₂ geschätzt' },
+    { k: 'eps', n: 'EPS (Styropor)', fam: 'Schaumstoff', rho: [15, 30], E: [2, 8], f: [0.1, 0.4], lam: [0.032, 0.04], c: [1300, 1500], tmax: [70, 85], eur: [2, 4], co2: [2.5, 3.5],
+      proc: 'formschäumen, heißdrahtschneiden; Verpackung, Modellbau', src: 'Datenblätter typisch; Preis und CO₂ geschätzt' },
+    { k: 'puweich', n: 'PU-Weichschaum', fam: 'Schaumstoff', rho: [25, 60], E: [0.01, 0.1], f: [0.05, 0.2], lam: [0.035, 0.045], c: [1400, 1600], tmax: [80, 100], eur: [4, 8], co2: [3, 5],
+      proc: 'Polster, Matratzen; Festigkeit = Reißfestigkeit', src: 'Datenblätter typisch; Preis und CO₂ geschätzt' },
+    { k: 'puhart', n: 'PU-Hartschaum', fam: 'Schaumstoff', rho: [30, 200], E: [3, 60], f: [0.3, 2], lam: [0.022, 0.035], c: [1300, 1500], tmax: [90, 120], eur: [3, 8], co2: [3, 5],
+      proc: 'Dämmung, Modellbau (Ureol bei hoher Dichte), Sandwichkern', src: 'Datenblätter typisch; Preis und CO₂ geschätzt' },
+    { k: 'eva', n: 'EVA-Schaum', fam: 'Schaumstoff', rho: [80, 250], E: [0.5, 5], f: [0.5, 3], lam: [0.04, 0.06], c: [1800, 2200], tmax: [60, 80], eur: [5, 10], co2: [2, 4],
+      proc: 'Schuhsohlen, Matten, Cosplay; weich, rückfedernd', src: 'Datenblätter typisch; Preis und CO₂ geschätzt' },
+    { k: 'peschaum', n: 'PE-Schaum', fam: 'Schaumstoff', rho: [25, 100], E: [0.2, 2], f: [0.2, 1], lam: [0.035, 0.045], c: [1800, 2300], tmax: [70, 90], eur: [4, 8], co2: [2, 3],
+      proc: 'Verpackungseinlagen, Polster; geschlossenzellig, wasserfest', src: 'Datenblätter typisch; Preis und CO₂ geschätzt' },
+    { k: 'nr', n: 'Naturkautschuk', fam: 'Elastomer', rho: [920, 960], E: [1, 4], f: [15, 30], lam: [0.13, 0.16], c: [1800, 2000], tmax: [60, 80], eur: [3, 6], co2: [1, 3],
+      proc: 'Gummibänder, Dichtungen, Puffer; sehr dehnbar, nicht UV-fest', src: 'Datenblätter typisch; Preis und CO₂ geschätzt' },
+    { k: 'epdm', n: 'EPDM', fam: 'Elastomer', rho: [1000, 1300], E: [2, 10], f: [7, 20], lam: [0.2, 0.3], c: [1800, 2100], tmax: [120, 150], eur: [3, 6], co2: [3, 5],
+      proc: 'Dichtungen, Profile außen; witterungsfest', src: 'Datenblätter typisch; Preis und CO₂ geschätzt' },
+    { k: 'nbr', n: 'NBR', fam: 'Elastomer', rho: [1000, 1300], E: [2, 10], f: [10, 25], lam: [0.2, 0.3], c: [1600, 2000], tmax: [100, 120], eur: [4, 8], co2: [3, 5],
+      proc: 'O-Ringe, Dichtungen; ölbeständig', src: 'Datenblätter typisch; Preis und CO₂ geschätzt' },
+    { k: 'tpe', n: 'TPE (weich)', fam: 'Elastomer', rho: [890, 1200], E: [1, 20], f: [5, 15], lam: [0.15, 0.2], c: [1800, 2100], tmax: [60, 90], eur: [3, 6], co2: [2.5, 4],
+      proc: 'Softgriffe im Zweikomponentenguss, Shore 30–90 A', src: 'Datenblätter typisch; Preis und CO₂ geschätzt' },
+    { k: 'esg', n: 'ESG (Sicherheitsglas)', fam: 'Glas & Keramik', rho: [2490, 2520], E: [70000, 74000], f: [120, 200], lam: [0.9, 1.05], c: [720, 840], tmax: [200, 250], eur: [2, 4], co2: [1, 1.6], brittle: true,
+      proc: 'vorgespannt, zerfällt in Krümel; nach dem Härten nicht mehr zu schneiden', src: 'EN 12150; CO₂ ICE' },
+    { k: 'glaskeramik', n: 'Glaskeramik', fam: 'Glas & Keramik', rho: [2500, 2600], E: [85000, 95000], f: [80, 140], lam: [1.5, 1.7], c: [800, 900], tmax: [600, 700], eur: [10, 30], co2: [2, 5], brittle: true,
+      proc: 'Kochfelder, Kaminscheiben; fast keine Wärmedehnung', src: 'Literatur typisch; Preis und CO₂ geschätzt' },
+    { k: 'steinzeug', n: 'Steinzeug', fam: 'Glas & Keramik', rho: [2200, 2400], E: [50000, 70000], f: [30, 60], lam: [1, 1.6], c: [800, 900], tmax: [400, 800], eur: [1, 4], co2: [0.5, 1.5], brittle: true,
+      proc: 'dicht gebrannt, frostfest; Geschirr, Fliesen', src: 'Literatur typisch; Preis und CO₂ geschätzt' },
+    { k: 'steingut', n: 'Steingut / Terrakotta', fam: 'Glas & Keramik', rho: [1700, 2000], E: [15000, 35000], f: [10, 25], lam: [0.6, 1], c: [800, 900], tmax: [300, 600], eur: [0.5, 2], co2: [0.3, 0.8], brittle: true,
+      proc: 'porös ohne Glasur, Blumentöpfe; leicht zu formen', src: 'Literatur typisch; Preis und CO₂ geschätzt' },
+    { k: 'alox', n: 'Aluminiumoxid', fam: 'Glas & Keramik', rho: [3700, 3950], E: [300000, 380000], f: [300, 400], lam: [20, 30], c: [750, 900], tmax: [1500, 1700], eur: [20, 60], co2: [5, 15], brittle: true,
+      proc: 'technische Keramik: hart, verschleißfest, isoliert elektrisch', src: 'Datenblätter typisch; Preis und CO₂ geschätzt' },
+    { k: 'marmor', n: 'Marmor', fam: 'Stein & Beton', rho: [2650, 2750], E: [50000, 70000], f: [8, 20], lam: [2, 3], c: [850, 900], tmax: [200, 300], eur: [1.5, 5], co2: [0.1, 0.5], brittle: true,
+      proc: 'schleifen, polieren; säureempfindlich (Zitrone, Essig)', src: 'EN 1469/12372 typisch; Preis und CO₂ geschätzt' },
+    { k: 'sandstein', n: 'Sandstein', fam: 'Stein & Beton', rho: [2000, 2400], E: [10000, 30000], f: [3, 10], lam: [1.5, 2.5], c: [700, 900], tmax: [200, 400], eur: [0.5, 2], co2: [0.05, 0.3], brittle: true,
+      proc: 'weich zu bearbeiten, porös, nimmt Wasser auf', src: 'EN 1469/12372 typisch; Preis und CO₂ geschätzt' },
+    { k: 'schiefer', n: 'Schiefer', fam: 'Stein & Beton', rho: [2700, 2850], E: [50000, 90000], f: [40, 90], lam: [1.5, 2.5], c: [750, 850], tmax: [200, 400], eur: [1, 4], co2: [0.05, 0.3], brittle: true,
+      proc: 'in dünne Platten spaltbar; Festigkeit längs der Schichtung', src: 'EN 12326 typisch; Preis und CO₂ geschätzt' },
+    { k: 'ziegel', n: 'Ziegel', fam: 'Stein & Beton', rho: [1600, 2000], E: [5000, 20000], f: [2, 10], lam: [0.5, 1], c: [800, 900], tmax: [500, 1000], eur: [0.1, 0.5], co2: [0.2, 0.3], brittle: true,
+      proc: 'gebrannter Ton, mauern; Festigkeit = Biegezug', src: 'EN 771-1 typisch; CO₂ ICE' },
+    { k: 'gips', n: 'Gips', fam: 'Stein & Beton', rho: [1000, 1300], E: [2000, 8000], f: [2, 6], lam: [0.3, 0.5], c: [1000, 1100], tmax: [40, 100], eur: [0.2, 1], co2: [0.1, 0.2], brittle: true,
+      proc: 'gießen (Formenbau, Modelle), abbinden in Minuten; nicht feuchtefest', src: 'Literatur typisch; Preis und CO₂ geschätzt' },
+    { k: 'gfrc', n: 'Glasfaserbeton', fam: 'Stein & Beton', rho: [2000, 2300], E: [15000, 30000], f: [10, 25], lam: [1, 1.5], c: [850, 1000], tmax: [200, 300], eur: [0.5, 2], co2: [0.3, 0.6], brittle: true,
+      proc: 'dünnwandig 10–20 mm gießen oder spritzen; Möbel, Fassade', src: 'Literatur typisch; Preis und CO₂ geschätzt' },
+    { k: 'nfk', n: 'Flachsfaser-Verbund', fam: 'Verbund', rho: [1250, 1350], E: [8000, 15000], f: [80, 150], lam: [0.2, 0.4], c: [1200, 1500], tmax: [80, 120], eur: [15, 40], co2: [2, 5],
+      proc: 'laminieren, pressen; dämpft, leichter als GFK; Werte in der Plattenebene', src: 'Literatur typisch; Preis und CO₂ geschätzt' },
+    { k: 'wpc', n: 'WPC (Holz-Kunststoff)', fam: 'Verbund', rho: [1100, 1350], E: [2500, 5000], f: [20, 40], lam: [0.2, 0.3], c: [1300, 1500], tmax: [60, 80], eur: [2, 4], co2: [1, 2],
+      proc: 'extrudiert (Terrassendielen); kriecht, wird in der Sonne heiß', src: 'Datenblätter typisch; Preis und CO₂ geschätzt' },
+    { k: 'aluverbund', n: 'Alu-Verbundplatte', fam: 'Verbund', rho: [1250, 1500], E: [30000, 45000], f: [60, 100], lam: [0.4, 0.5], c: [1000, 1200], tmax: [70, 80], eur: [6, 12], co2: [3, 8],
+      proc: '3–4 mm, Alu-Deckbleche mit Kunststoffkern; fräsen und kanten (Schilder); Werte als Platte verschmiert', src: 'Datenblätter typisch; Preis und CO₂ geschätzt' },
+    { k: 'papier', n: 'Papier', fam: 'Naturstoff & Papier', rho: [700, 900], E: [3000, 8000], f: [30, 80], lam: [0.05, 0.12], c: [1300, 1500], tmax: [100, 150], eur: [0.8, 2], co2: [0.7, 1.3],
+      proc: 'falten, schneiden, kaschieren; Werte in Laufrichtung, feuchteempfindlich', src: 'Literatur typisch; Preis und CO₂ geschätzt' },
+    { k: 'wellpappe', n: 'Wellpappe', fam: 'Naturstoff & Papier', rho: [100, 200], E: [200, 800], f: [2, 8], lam: [0.05, 0.08], c: [1300, 1500], tmax: [100, 150], eur: [1, 2.5], co2: [0.6, 1.1],
+      proc: 'rillen, stecken, Verpackung und Möbel aus Pappe; Werte als Platte verschmiert, stark richtungsabhängig', src: 'Literatur typisch; Preis und CO₂ geschätzt' },
+    { k: 'leder', n: 'Leder', fam: 'Naturstoff & Papier', rho: [800, 1100], E: [50, 500], f: [15, 30], lam: [0.15, 0.2], c: [1400, 1600], tmax: [80, 110], eur: [15, 40], co2: [5, 20],
+      proc: 'schneiden, nähen, prägen; CO₂ stark umstritten (Anteil der Rinderhaltung)', src: 'Literatur typisch; Preis und CO₂ geschätzt' }
   ];
   const gm = r => Math.sqrt(r[0] * r[1]); // Mittelwert einer Spanne (geometrisch)
   // Wärmeeindringkoeffizient b = √(λρc) [W·s½/(m²·K)], Spanne aus den Spannen
@@ -171,7 +294,9 @@ const Core = (() => {
     const e0 = effort(ref, part, prop, by), s0 = size(ref, part, prop);
     return mats.map(m => ({ k: m.k, rel: effort(m, part, prop, by) / e0, dim: size(m, part, prop) / s0 })).sort((a, b) => a.rel - b.rel);
   }
-  return { MAT, gm, bOf, contact, SKIN, ROOM, touch, EXP, PROP, nOf, dOf, effort, size, rank };
+  // Kategorien in fester Reihenfolge (Auswahl, Umrisse in der Karte)
+  const FAM = ['Massivholz', 'Holzwerkstoff', 'Metall', 'Kunststoff', 'Schaumstoff', 'Elastomer', 'Glas & Keramik', 'Stein & Beton', 'Verbund', 'Naturstoff & Papier'];
+  return { MAT, FAM, gm, bOf, contact, SKIN, ROOM, touch, EXP, PROP, nOf, dOf, effort, size, rank };
 })();
 if (typeof module !== 'undefined') module.exports = Core;
 // === CORE END
@@ -195,8 +320,10 @@ const BY = { mass: ['Gewicht', 'leichter', 'mit wenig Gewicht'], eur: ['Kosten',
 // „ein steifes Brett“ / „einen steifen Balken“ (Akkusativ) bzw. „ein gleich steifer Balken“ (Nominativ)
 const acc = a => S.part === 'brett' ? `ein ${a}es Brett` : `einen ${a}en ${PART[S.part][0]}`;
 const nom = a => S.part === 'brett' ? `Ein ${a}es Brett` : `Ein ${a}er ${PART[S.part][0]}`;
-const DEF = { k: 'fichte', part: 'brett', prop: 'steif', by: 'mass', x: 'rho', y: 'E' };
-let S = Object.assign({}, DEF), hits = [];
+const DEF = { k: 'fichte', part: 'brett', prop: 'steif', by: 'mass', x: 'rho', y: 'E', off: [] }; // off: ausgeblendete Kategorien
+let S = Object.assign({}, DEF), hits = [], rkAll = false;
+// sichtbare Materialien: eingeschaltete Kategorien, das gewählte immer
+const vis = () => MAT.filter(m => !S.off.includes(m.fam) || m.k === S.k);
 
 const sig = new Intl.NumberFormat('de-DE', { maximumSignificantDigits: 2 }), sig3 = new Intl.NumberFormat('de-DE', { maximumSignificantDigits: 3 });
 const fv = v => (v >= 100 ? sig3 : sig).format(v); // keine Scheinpräzision
@@ -213,9 +340,10 @@ function parse(o) {
   if (BY[o.by]) s.by = o.by;
   if (AX[o.x]) s.x = o.x;
   if (AX[o.y]) s.y = o.y;
+  s.off = Array.isArray(o.off) ? Core.FAM.filter(f => o.off.includes(f)) : [];
   return s;
 }
-const exportObj = () => ({ type: 'designphysik/material', version: 1, k: S.k, part: S.part, prop: S.prop, by: S.by, x: S.x, y: S.y });
+const exportObj = () => ({ type: 'designphysik/material', version: 1, k: S.k, part: S.part, prop: S.prop, by: S.by, x: S.x, y: S.y, off: S.off });
 
 // ---- Karte (log-log) ----
 function range(p) {
@@ -231,8 +359,8 @@ function ticks(l0, l1) {
 const tl = v => v >= 1000 ? nf0.format(v) : new Intl.NumberFormat('de-DE', { maximumSignificantDigits: 3 }).format(v);
 
 function drawMap(ref) {
-  const cv = $('map'), { ctx, w, h } = prep(cv), M = { l: 60, r: 12, t: 12, b: 36 };
-  const [x0, x1] = range(S.x), [y0, y1] = range(S.y);
+  const cv = $('map'), { ctx, w, h } = prep(cv), [x0, x1] = range(S.x), [y0, y1] = range(S.y);
+  ctx.font = DP_CFONT; const M = { l: 30 + Math.max(...ticks(y0, y1).map(v => ctx.measureText(tl(v)).width)), r: 12, t: 12, b: 36 }; // links Platz für die längste Zahl
   const X = v => M.l + (Math.log10(v) - x0) / (x1 - x0) * (w - M.l - M.r);
   const Y = v => h - M.b - (Math.log10(v) - y0) / (y1 - y0) * (h - M.t - M.b);
   ctx.font = DP_CFONT; ctx.lineWidth = 1;
@@ -255,17 +383,32 @@ function drawMap(ref) {
     ctx.strokeStyle = css('--ink'); ctx.setLineDash([4, 4]); ctx.beginPath(); ctx.moveTo(X(10 ** x0), Y(at(x0))); ctx.lineTo(X(10 ** x1), Y(at(x1))); ctx.stroke(); ctx.setLineDash([]);
   }
   // Ellipsen: Spanne in beiden Richtungen, mindestens 5 px Halbachse
-  hits = [];
-  for (const m of MAT) {
-    const cx = X(Core.gm(m[S.x])), cy = Y(Core.gm(m[S.y])), rx = Math.max(5, (X(m[S.x][1]) - X(m[S.x][0])) / 2), ry = Math.max(5, (Y(m[S.y][0]) - Y(m[S.y][1])) / 2);
-    hits.push({ k: m.k, cx, cy, rx, ry });
+  hits = vis().map(m => ({ k: m.k, cx: X(Core.gm(m[S.x])), cy: Y(Core.gm(m[S.y])), rx: Math.max(5, (X(m[S.x][1]) - X(m[S.x][0])) / 2), ry: Math.max(5, (Y(m[S.y][0]) - Y(m[S.y][1])) / 2) }));
+  // Kategorien als Umriss (konvexe Hülle der Ellipsen, 6 px Abstand) wie in Ashbys Karten; Name am höchsten Punkt
+  const famLbl = [];
+  for (const fam of Core.FAM) {
+    if (S.off.includes(fam)) continue;
+    const pts = hits.filter(p => byK(p.k).fam === fam).flatMap(p => Array.from({ length: 16 }, (_, i) => [p.cx + (p.rx + 6) * Math.cos(i * Math.PI / 8), p.cy + (p.ry + 6) * Math.sin(i * Math.PI / 8)]));
+    if (!pts.length) continue;
+    const H = hull(pts); ctx.beginPath(); H.forEach(([x, y], i) => i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)); ctx.closePath();
+    ctx.strokeStyle = css('--mut'); ctx.lineWidth = 1; ctx.setLineDash([2, 4]); ctx.stroke(); ctx.setLineDash([]);
+    famLbl.push([fam, H.reduce((a, b) => b[1] < a[1] ? b : a)]);
+  }
+  for (const p of hits) {
+    const m = byK(p.k), { cx, cy, rx, ry } = p;
     ctx.beginPath(); ctx.ellipse(cx, cy, rx, ry, 0, 0, 7); ctx.fillStyle = css('--load-a'); ctx.fill();
     const on = m.k === S.k, isRef = ref && m.k === ref.k;
     ctx.strokeStyle = css(on || isRef ? '--ink' : '--load'); ctx.lineWidth = on ? 2 : 1; ctx.setLineDash(isRef && !on ? [4, 4] : []); ctx.stroke(); ctx.setLineDash([]);
   }
   ctx.restore();
-  // Beschriftung: rechts, links, darüber oder darunter – die erste Lage ohne Überschneidung (gewähltes Material zuerst)
+  // Beschriftung: Kategorien über ihrem Umriss (fett), dann Materialien rechts, links, darüber oder darunter –
+  // die erste Lage ohne Überschneidung (gewähltes Material zuerst)
   const boxes = [], over = (a, b) => a[0] < b[2] && b[0] < a[2] && a[1] < b[3] && b[1] < a[3];
+  ctx.font = '700 ' + DP_CFONT; ctx.fillStyle = css('--ink2'); ctx.textAlign = 'left';
+  for (const [fam, [x, y]] of famLbl) {
+    const tw = ctx.measureText(fam).width, bx = Math.min(Math.max(x - tw / 2, M.l + 2), w - M.r - tw), by = Math.max(M.t, y - 18), b = [bx, by, bx + tw, by + 16];
+    if (boxes.some(o => over(b, o))) continue; boxes.push(b); ctx.fillText(fam, bx, by + 12);
+  }
   for (const p of hits.slice().sort((a, b) => (b.k === S.k) - (a.k === S.k))) {
     const m = byK(p.k), on = m.k === S.k; ctx.font = (on ? '700 ' : '') + DP_CFONT; ctx.fillStyle = css(on ? '--ink' : '--ink2');
     const tw = ctx.measureText(m.n).width, cand = [[p.cx + p.rx + 4, p.cy - 8], [p.cx - p.rx - 4 - tw, p.cy - 8], [p.cx - tw / 2, p.cy - p.ry - 18], [p.cx - tw / 2, p.cy + p.ry + 2]]
@@ -276,6 +419,14 @@ function drawMap(ref) {
   ctx.font = DP_CFONT;
   $('mapN').textContent = guide ? `Gestrichelt: gleich gut wie ${sel.n} für ${acc(S.prop)} ${BY.mass[2]}; alles darüber ist besser. Material antippen zum Auswählen.`
     : 'Material antippen zum Auswählen. Die Linie gleicher Eignung erscheint bei Steifigkeit bzw. Festigkeit über Dichte und dem Ziel „leicht“.';
+}
+// Konvexe Hülle (monotone Kette)
+function hull(P) {
+  P = P.slice().sort((a, b) => a[0] - b[0] || a[1] - b[1]);
+  const cr = (o, a, b) => (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]), lo = [], up = [];
+  for (const p of P) { while (lo.length > 1 && cr(lo[lo.length - 2], lo[lo.length - 1], p) <= 0) lo.pop(); lo.push(p); }
+  for (const p of P.reverse()) { while (up.length > 1 && cr(up[up.length - 2], up[up.length - 1], p) <= 0) up.pop(); up.push(p); }
+  return lo.slice(0, -1).concat(up.slice(0, -1));
 }
 function pick(e) {
   const r = $('map').getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top;
@@ -294,12 +445,17 @@ function update() {
   $('mat').value = S.k;
   $('ax-x').value = S.x; $('ax-y').value = S.y;
   for (const id of ['part', 'prop', 'by']) $(id).querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.v === S[id]));
+  $('cats').querySelectorAll('button[data-f]').forEach(b => b.classList.toggle('on', !S.off.includes(b.dataset.f)));
+  $('cats').querySelector('[data-a]').textContent = S.off.length ? 'alle' : 'keine';
   drawMap(ref);
-  const R = Core.rank(MAT, S.part, S.prop, S.by, sel), dn = PART[S.part][1];
+  const V = vis(), R = Core.rank(V, S.part, S.prop, S.by, sel), dn = PART[S.part][1];
   $('rkN').textContent = `${BY[S.by][0]} für ${acc('gleich ' + S.prop)} im Vergleich zu ${sel.n}; daneben das nötige Maß.`;
-  $('rk').innerHTML = R.map(r => `<tr data-k="${r.k}"${r.k === S.k ? ' class="on"' : ''}><td>${byK(r.k).n}${byK(r.k).brittle ? ' <span class="note">spröde</span>' : ''}</td><td>${fx(r.rel)}</td><td>${dn} ${fx(r.dim)}</td></tr>`).join('');
+  // gekürzt: die besten 10 und das gewählte, auf Wunsch alle
+  const iSel = R.findIndex(r => r.k === S.k), shown = rkAll ? R : R.filter((r, i) => i < 10 || i === iSel);
+  dpBtn($('rkAll'), rkAll ? 'minus' : 'plus', rkAll ? 'Nur die besten 10' : `Alle ${R.length} zeigen`); $('rkAll').hidden = R.length <= 10;
+  $('rk').innerHTML = shown.map(r => `<tr data-k="${r.k}"${r.k === S.k ? ' class="on"' : ''}><td>${byK(r.k).n}${byK(r.k).brittle ? ' <span class="note">spröde</span>' : ''}</td><td>${fx(r.rel)}</td><td>${dn} ${fx(r.dim)}</td></tr>`).join('');
   // Urteil (Heuristik): passt, wenn kein Material das Ziel um mehr als Faktor 1,5 besser erreicht
-  const best = R[0], bm = byK(best.k), extra = ref && ref.k !== S.k ? `Gemerkt: ${ref.n}` : '';
+  const best = R[0], bm = byK(best.k), extra = [ref && ref.k !== S.k ? `Gemerkt: ${ref.n}` : '', !S.off.length ? '' : S.off.length > Core.FAM.length / 2 ? `Verglichen nur mit ${Core.FAM.filter(f => !S.off.includes(f)).join(', ')}` : `Verglichen ohne ${S.off.join(', ')}`].filter(Boolean).join(' · ');
   const verdict = best.k === S.k ? dpVerdict(0, `${sel.n} ist hier die beste Wahl für ${acc(S.prop)} ${BY[S.by][2]}.`, extra)
     : best.rel > 1 / 1.5 ? dpVerdict(0, `${sel.n} liegt nahe am besten Material (${bm.n}: ${fx(best.rel)}).`, extra)
     : dpVerdict(1, `${nom('gleich ' + S.prop)} aus ${bm.n}: ${nf0.format((1 - best.rel) * 100)} % ${BY[S.by][1]} (${dn} ${fx(best.dim)}).`, extra);
@@ -330,7 +486,12 @@ function update() {
 dpHeader('material'); dpIcons();
 const opts = o => Object.entries(o).map(([k, v]) => `<option value="${k}">${v[0]}</option>`).join('');
 $('ax-x').innerHTML = opts(AX); $('ax-y').innerHTML = opts(AX);
-$('mat').innerHTML = [...new Set(MAT.map(m => m.fam))].map(f => `<optgroup label="${f}">${MAT.filter(m => m.fam === f).map(m => `<option value="${m.k}">${m.n}</option>`).join('')}</optgroup>`).join('');
+$('cats').innerHTML = Core.FAM.map(f => `<button type="button" data-f="${f}" title="Kategorie ein- oder ausblenden">${f}</button>`).join('') + '<button type="button" class="q" data-a="all">alle</button>';
+$('cats').onclick = e => { const b = e.target.closest('button'); if (!b) return;
+  if (b.dataset.a) S.off = S.off.length ? [] : Core.FAM.slice(); else { const f = b.dataset.f; S.off = S.off.includes(f) ? S.off.filter(x => x !== f) : S.off.concat(f); }
+  update(); };
+$('rkAll').onclick = () => { rkAll = !rkAll; update(); };
+$('mat').innerHTML = Core.FAM.map(f => `<optgroup label="${f}">${MAT.filter(m => m.fam === f).map(m => `<option value="${m.k}">${m.n}</option>`).join('')}</optgroup>`).join('');
 $('ax-x').onchange = e => { S.x = e.target.value; update(); };
 $('ax-y').onchange = e => { S.y = e.target.value; update(); };
 $('mat').onchange = e => { S.k = e.target.value; update(); };

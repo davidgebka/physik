@@ -21,14 +21,20 @@ Verbindliche Konventionen stehen in `docs/konzept.md`.
 - Folge: Für „steifes Brett, leicht“ gewinnt jetzt Balsa, für Stab und Balken CFK. Das stimmt nach Ashby; ob Balsa/CFK im Urteil ausgenommen werden sollen (z. B. Schalter „nur übliche Materialien“), ist offen.
 - Tests unverändert grün (29 Prüfungen, Datenprüfung über alle 40). Browser 1280/390 px, Konsole fehlerfrei.
 
+## v0.3 (22.11.2026, 100 Materialien, Kategorien)
+- **100 Materialien in 10 Kategorien:** Massivholz 17, Holzwerkstoff 9, Metall 17, Kunststoff 19, Schaumstoff 5, Elastomer 6, Glas & Keramik 8, Stein & Beton 8, Verbund 5, Naturstoff & Papier 6. Neu u. a. Lärche, Douglasie, Kirsche, Teak, Linde, Pappel, Robinie; OSB, HPL, Pappelsperrholz, Tischlerplatte, HDF, Furnierschichtholz; Alu 6082/7075/Druckguss, Grauguss, Federstahl, Cortenstahl, Bronze, Zinn, Magnesium, Silber; PE-LD, PS, PVC, PA6, PA12 (SLS), PET, PEEK, PTFE, Epoxid, UP-Harz; EPS, PU weich/hart, EVA, PE-Schaum; Naturkautschuk, EPDM, NBR, TPE; ESG, Glaskeramik, Steinzeug, Steingut, Aluminiumoxid; Marmor, Sandstein, Schiefer, Ziegel, Gips, Glasfaserbeton; Flachsfaser-Verbund, WPC, Alu-Verbundplatte; Papier, Wellpappe, Leder, Wollfilz.
+- **Kategorien:** Knöpfe zum Ein-/Ausblenden (plus „alle/keine“), in Karte, Rangliste und Urteil wirksam; das gewählte Material bleibt immer sichtbar. Im Urteil steht, womit verglichen wurde. Karte: gepunktete konvexe Hülle je Kategorie mit Namen (wie bei Ashby). Export/Link um `off` (ausgeblendete Kategorien) erweitert, version bleibt 1.
+- Rangliste zeigt die besten 10 und das gewählte, „Alle N zeigen“ klappt auf. Linker Kartenrand passt sich der längsten Achsenzahl an.
+- **Vorbehalt unverändert:** Richtwerte aus dem Gedächtnis nach den genannten Quellen, nicht einzeln geprüft; Schaumstoffe, Naturstoffe, Silber, PEEK/PTFE und Preise/CO₂ besonders grob.
+- test.js 32 Prüfungen (+3: 100 Materialien, alle 10 Kategorien belegt, EPS fühlt sich warm an; Datenprüfung erweitert auf die Kategorienliste). Browser 1280/390 px: Kategorien aus/ein, nur Holz + Metall, Rangliste aufklappen, Link-Rundreise mit Filter; kein Überlaufen, Konsole fehlerfrei.
+
 ## Urteilsschwellen (Herkunft)
 - passt, wenn kein Material das Ziel um mehr als Faktor 1,5 besser erreicht; sonst knapp mit dem besten Material und Ersparnis in % (Heuristik).
 - Berührgefühl: ≥ 28 °C „warm“, 24–28 °C „neutral bis kühl“, < 24 °C „kalt“ (Heuristik); Haut 33 °C, b_Haut = 1000 W·s½/(m²·K) (Literatur etwa 1000–1500).
 
 ## Offen (Pareto-Reihenfolge)
-1. Werte der 40 Materialien gegen die Quellen prüfen und Quelle je Wert festhalten.
-2. Nächste Kandidaten (erst bei Bedarf): OSB, HPL, Aluminium 6082, PA6 unverstärkt, Wellpappe, Leder, Filz, Gusseisen.
+1. Werte der 100 Materialien gegen die Quellen prüfen und Quelle je Wert festhalten (Priorität: Holz und Metall, dann Kunststoffe).
 2a. Urteil: Sonderfälle (Balsa, CFK) ausnehmen oder Filter „übliche Materialien“?
-3. Familien als Hüllflächen hinter den Ellipsen, sobald je Familie mehrere Materialien da sind.
+3. Telefon: Kategorie-Knöpfe belegen vier Zeilen – ggf. aufklappbar.
 4. Übergabe „In Statik verwenden“ (Material per Link) – Datensatz dann nach `shared/`.
 5. Vorlagen-Galerie (z. B. Regalbrett leichter, Griff nicht kalt, Lampenschirm hitzefest).

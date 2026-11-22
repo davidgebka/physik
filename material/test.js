@@ -51,12 +51,17 @@ check('Brett steif: Stahl schwerer als Alu', +(r('s235', 'brett', 'steif') > r('
 check('Stab steif: Stahl, Alu, Fichte ähnlich (Faktor < 1,5)', +(Math.max(r('s235', 'stab', 'steif'), r('al6060', 'stab', 'steif'), 1) / Math.min(r('s235', 'stab', 'steif'), r('al6060', 'stab', 'steif'), 1) < 1.5), 1);
 
 // Daten: jede Spanne positiv und geordnet, plausible Grenzen, Quelle vorhanden, Schlüssel eindeutig
-const LIM = { rho: [50, 25000], E: [0.1, 500000], f: [0.1, 3000], lam: [0.01, 500], c: [100, 5000], tmax: [20, 3000], eur: [0.05, 500], co2: [0.01, 100] };
+const LIM = { rho: [5, 25000], E: [0.001, 500000], f: [0.01, 3000], lam: [0.01, 500], c: [100, 5000], tmax: [20, 3000], eur: [0.05, 5000], co2: [0.01, 1000] };
+// Kategorien: genau die zehn festgelegten
+const FAM = ['Massivholz', 'Holzwerkstoff', 'Metall', 'Kunststoff', 'Schaumstoff', 'Elastomer', 'Glas & Keramik', 'Stein & Beton', 'Verbund', 'Naturstoff & Papier'];
 let bad = 0;
 for (const m of MAT) {
   for (const [p, [lo, hi]] of Object.entries(LIM)) { const v = m[p];
     if (!Array.isArray(v) || !(v[0] > 0) || v[0] > v[1] || v[0] < lo || v[1] > hi) { bad++; console.log('  Wert ' + m.k + '.' + p + ' ungültig: ' + v); } }
-  if (!m.n || !m.fam || !m.src || !m.proc) { bad++; console.log('  Angaben fehlen: ' + m.k); }
+  if (!m.n || !FAM.includes(m.fam) || !m.src || !m.proc) { bad++; console.log('  Angaben fehlen: ' + m.k); }
 }
 check('Datensätze gültig', bad, 0);
 check('Schlüssel eindeutig', new Set(MAT.map(m => m.k)).size, MAT.length);
+check('100 Materialien', MAT.length, 100);
+check('jede Kategorie belegt', new Set(MAT.map(m => m.fam)).size, FAM.length);
+check('EPS fühlt sich warm an (> 30 °C)', +(T('eps') > 30), 1);
