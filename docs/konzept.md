@@ -50,7 +50,7 @@ Bei Zielkonflikten entscheidet A.
 - **Gültigkeitswächter** (22.11.2026, Physik-Audit): Verlässt ein Fall den Gültigkeitsbereich des Modells (z. B. hochkantes Brett → Kippen nicht gerechnet, Spiegel → Lampenbild, MOSFET unter der Datenblatt-Gate-Spannung), lautet das Urteil höchstens „knapp: …“ mit Begründung – nie „passt“.
 - **Urteilsschwellen mit Herkunft:** Jedes Modul führt in `docs/<modul>.md` eine Liste „Urteilsschwellen (Herkunft)“: Wert, Quelle (Norm, Literatur, Heuristik) und Bezug. Neue Schwellen dort eintragen; Heuristiken als solche benennen.
 - **Export:** JSON `{type:"designphysik/<modul>", version, …}`; Teilen per URL-Hash `#<kürzel>=…`
-- **Look:** Grundrichtung F „Punktraster“ (20.11.2026), verbindlich nach `docs/styleguide.md`. Farbe nur je **Physik-Familie** (`--water` Fluid, `--light` Licht, `--mech` Bewegung, reserviert `--load` Kraft & Festigkeit; jeweils `-a` für Flächen) und `--warn`. Alle Farben in style.css, Module definieren keine eigenen; Modulfarbe in `DP_MODULES[].color`. Canvas-Raster über `dpDots()`.
+- **Look:** Grundrichtung F „Punktraster“ (20.11.2026), verbindlich nach `docs/styleguide.md`. Farbe nur je **Physik-Familie** (`--water` Fluid, `--light` Licht, `--mech` Bewegung, `--load` Kraft & Festigkeit, `--elec` Elektrik, `--mat` Werkstoff; jeweils `-a` für Flächen; sechs Familien = Obergrenze) und `--warn`. Alle Farben in style.css, Module definieren keine eigenen; Modulfarbe in `DP_MODULES[].color`. Canvas-Raster über `dpDots()`.
 - **Modulgröße:** wächst ein `index.html` über ~1500 Zeilen, vor der nächsten Erweiterung Aufteilen oder eigenes Modul prüfen.
 
 ## Module (Stand 22.11.2026; Details in `docs/<modul>.md`; Spalte Modul = `name` in `DP_MODULES`)
@@ -93,8 +93,5 @@ Bei Zielkonflikten entscheidet A.
 (Modul-Chats tragen hier ein; der zentrale Chat bzw. der Style-Chat arbeitet sie ab. Erledigtes wandert nach `docs/historie.md`.)
 
 Offen:
-- **Style-Chat:** eigene Familienfarbe für Material (bis dahin `--load` in `DP_MODULES`); sechste und letzte Familie nach Styleguide § 3.
 - **Material → andere Module** (später): Datensatz nach `shared/materials.js`, sobald ein zweites Modul ihn liest (Statik „In Statik verwenden“, Berührtemperatur, Gewicht/CO₂).
-- **Style-Chat** (Ergonomie, 22.11.2026): Modul nutzt vorerst Familie Bewegung `--mech` (Biomechanik). Prüfen, ob eine eigene Familie „Körper“ sinnvoll ist (sechste und letzte Familie nach § 3; Farbton-Lücke 312°…26° bzw. 72°…150°, Abstand zu `--warn` beachten) – sonst bei `--mech` bleiben und im Styleguide § 3 bei Bewegung eintragen.
-- **Style-Chat:** Farbtoken für Fertigung (`--fab`/`--fab-a`), zusammen mit der noch offenen Familie für Material. Achtung Styleguide §3: höchstens sechs Familien (heute fünf); freie Farbtöne mit ≥ 30° Abstand etwa bei 110° (Oliv) und 350°. Entweder Grenze auf sieben anheben oder Material und Fertigung teilen sich eine Familie „Werkstoff“.
 - **Materialschlüssel in `shared/`** (Fertigung ist der zweite Nutzer nach Material): nur Schlüssel, Name, Familie, mit Werkstoffzustand im Schlüssel (z. B. `alu-6061-t6`); modulspezifische Werte bleiben im jeweiligen CORE. Mit dem Material-Chat abstimmen.

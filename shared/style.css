@@ -12,6 +12,7 @@
   --mech:#0a7e3a;--mech-a:rgba(10,126,58,.25);
   --load:#712a94;--load-a:rgba(113,42,148,.22);
   --elec:#03919d;--elec-a:rgba(3,145,157,.22);
+  --mat:#810354;--mat-a:rgba(129,3,84,.22);
   --font:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif
 }
 @media(pointer:coarse){:root{--h:48px}}
@@ -128,6 +129,8 @@ table.kv tr.warn td:nth-child(2){color:var(--warn)}
   #dp-bar[hidden]{display:none}
   #dp-bar .vt{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:700}
 }
+/* Ab sechs Modulen auf dem Telefon: zwei Zeilen à vier Segmente; Linien als Schatten wie bei .seg (keine Doppellinien, Zeilen bleiben --h hoch) */
+@media(max-width:860px){nav:has(>:nth-child(6)){display:grid;grid-template-columns:repeat(4,minmax(0,1fr))}nav:has(>:nth-child(6))>*{border:0;box-shadow:inset 1px 1px var(--ink),1px 1px var(--ink);white-space:nowrap}}
 /* Ab fünf Modulen auf schmalen Telefonen: Namen 12 px, ohne Modulquadrat (aktiv bleibt schwarz) */
 @media(max-width:480px){nav:has(>:nth-child(5)) :is(a,span){font-size:12px}nav:has(>:nth-child(5)) .mq{display:none}}
 

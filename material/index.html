@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Designphysik · Material</title>
 <link rel="stylesheet" href="../shared/style.css">
-<!-- Farbe: vorläufig --load (Kraft & Festigkeit); eigene Familie entscheidet der Style-Chat -->
+<!-- Farbe: Familie Werkstoff --mat (Styleguide § 3) -->
 <style>
 #map{--ar:calc(5/4);aspect-ratio:5/4;touch-action:manipulation}
 @media(max-width:600px){#map{--ar:1;aspect-ratio:1/1}}
@@ -396,9 +396,9 @@ function drawMap(ref) {
   }
   for (const p of hits) {
     const m = byK(p.k), { cx, cy, rx, ry } = p;
-    ctx.beginPath(); ctx.ellipse(cx, cy, rx, ry, 0, 0, 7); ctx.fillStyle = css('--load-a'); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(cx, cy, rx, ry, 0, 0, 7); ctx.fillStyle = css('--mat-a'); ctx.fill();
     const on = m.k === S.k, isRef = ref && m.k === ref.k;
-    ctx.strokeStyle = css(on || isRef ? '--ink' : '--load'); ctx.lineWidth = on ? 2 : 1; ctx.setLineDash(isRef && !on ? [4, 4] : []); ctx.stroke(); ctx.setLineDash([]);
+    ctx.strokeStyle = css(on || isRef ? '--ink' : '--mat'); ctx.lineWidth = on ? 2 : 1; ctx.setLineDash(isRef && !on ? [4, 4] : []); ctx.stroke(); ctx.setLineDash([]);
   }
   ctx.restore();
   // Beschriftung: Kategorien über ihrem Umriss (fett), dann Materialien rechts, links, darüber oder darunter –

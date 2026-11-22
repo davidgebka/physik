@@ -41,7 +41,7 @@ const SK = {
   elektronik: () => [{ p: [[0, 70], [0, 0], [300, 0], [300, 60]], c: '--elec', w: 2 }, { p: [[0, 90], [0, 160], [300, 160], [300, 100]], c: '--elec', w: 2 }, // Batterie links, LED rechts
     { p: [[-30, 70], [30, 70]], w: 2.5 }, { p: [[-15, 90], [15, 90]], w: 2.5 }, { p: [[280, 100], [320, 100], [300, 60]], z: true, f: '--elec-a', w: 2 }, { p: [[280, 60], [320, 60]], w: 2 },
     { p: [[330, 70], [360, 50]], c: '--mut', w: 1 }, { p: [[330, 90], [360, 110]], c: '--mut', w: 1 }],
-  material: () => { const el = (x, y, a, b) => ({ p: Array.from({ length: 36 }, (_, i) => [x + a * Math.cos(i * Math.PI / 18), y + b * Math.sin(i * Math.PI / 18)]), z: true, f: '--load-a', c: '--load', w: 1 });
+  material: () => { const el = (x, y, a, b) => ({ p: Array.from({ length: 36 }, (_, i) => [x + a * Math.cos(i * Math.PI / 18), y + b * Math.sin(i * Math.PI / 18)]), z: true, f: '--mat-a', c: '--mat', w: 1 });
     return [{ p: [[0, 220], [0, 0], [300, 0]], w: 1.5 }, el(60, 70, 22, 30), el(105, 95, 18, 16), el(230, 185, 10, 8), el(180, 160, 9, 8), el(130, 45, 14, 18), el(155, 20, 10, 10),
       { p: [[20, 30], [280, 210]], c: '--ink', w: 1, dash: [4, 4] }]; }, // Material-Karte: Familien als Ellipsen, Linie gleicher Eignung
   ergonomie: () => { const head = Array.from({ length: 17 }, (_, i) => [130 + 95 * Math.cos(i * Math.PI / 8), 1270 + 95 * Math.sin(i * Math.PI / 8)]); // sitzende Figur am Tisch
@@ -50,7 +50,7 @@ const SK = {
       { p: [[120, 540], [560, 535]], c: '--mech', w: 2.5 }, { p: [[560, 535], [600, 75]], c: '--mech', w: 2.5 }, { p: [[560, 35], [770, 30]], c: '--mech', w: 2.5 },
       { p: [[120, 540], [100, 1040]], c: '--mech', w: 2.5 }, { p: [[100, 1040], [115, 700], [420, 775]], c: '--mech', w: 2.5 }, { p: head, c: '--mech', w: 2.5 }]; },
   fertigung: () => { const a = Array.from({ length: 10 }, (_, i) => [60 - 40 * Math.cos(i * Math.PI / 18), 60 - 40 * Math.sin(i * Math.PI / 18)]); // L-Winkel mit Biegeradius, darunter Abwicklung
-    return [{ p: [[20, 220], ...a, [300, 20]], c: '--load', w: 3 }, { p: [[0, -40], [340, -40]], w: 1.5 }, { p: [[150, -25], [150, -55]], c: '--mut', w: 1, dash: [3, 3] }]; }
+    return [{ p: [[20, 220], ...a, [300, 20]], c: '--mat', w: 3 }, { p: [[0, -40], [340, -40]], w: 1.5 }, { p: [[150, -25], [150, -55]], c: '--mut', w: 1, dash: [3, 3] }]; }
 };
 const draw = () => document.querySelectorAll('.card canvas').forEach(c => SK[c.dataset.k] && dpSketch(c, SK[c.dataset.k]()));
 draw(); window.addEventListener('resize', draw);
