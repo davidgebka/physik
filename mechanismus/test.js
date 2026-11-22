@@ -116,3 +116,21 @@ check('Energie Umlauf: ∮M dθ [N·m]', Wk, 0, 1e-6);
   check('… Antriebswert stetig (36 090°)', a2.cur.v, 90 + 36000, 1e-12);
   const a3 = Core.analyze({ ...m, at: 90 - 360 * 3 }); let e3 = 0; for (let i = 0; i < a1.cur.X.length; i++) e3 = Math.max(e3, Math.abs(a1.cur.X[i] - a3.cur.X[i]));
   check('… auch rückwärts (−990°) [mm]', e3, 0, 1e-6); }
+
+// 9 Gelenkkräfte (Lagrange-Multiplikatoren) und Reibung (Audit 22.11.2026)
+{ const S9 = Core.compile(lev), f = Core.forces(S9, S9.X0, lev.loads);
+  check('Hebel: Lagerkraft am Drehpunkt = W', f.pin[0], 10, 1e-9); check('Hebel: Lastpunkt ist kein Gelenk', f.pin[1], 0, 0);
+  check('Hebel: Reibmoment = μ·d/2·W (0,2 · 3 mm · 10 N) [N·m]', Core.friction(S9, S9.X0, lev.loads, { mu: 0.2, d: 6 }), 0.2 * 3 * 10 / 1000, 1e-9); }
+// Schubkurbel r40 l120 e0, Kolbenlast P = 50 N: Koppelkraft P/cos φ, sin φ = r·sin θ/l; Führung quer P·tan φ
+{ let e1 = 0, e2 = 0, e3 = 0;
+  for (const s of Core.analyze(skL).smp) { const t = s.v * D, ph = Math.asin(40 * Math.sin(t) / 120), S9 = Core.compile({ ...skL }), f = Core.forces(S9, s.X, skL.loads);
+    e1 = Math.max(e1, Math.abs(f.pin[1] - 50 / Math.cos(ph))); e2 = Math.max(e2, Math.abs(f.pin[0] - 50 / Math.cos(ph))); e3 = Math.max(e3, Math.abs(f.N - 50 * Math.abs(Math.tan(ph)))); }
+  check('Schubkurbel: Kurbelzapfen = P/cos φ, max. Abweichung [N]', e1, 0, 1e-6);
+  check('Schubkurbel: Kurbellager = P/cos φ, max. Abweichung [N]', e2, 0, 1e-6);
+  check('Schubkurbel: Führungskraft quer = P·tan φ, max. Abweichung [N]', e3, 0, 1e-6); }
+// Viergelenk mit Gewicht: Gleichgewicht jedes beweglichen Glieds ist in λ enthalten → Summe der Lagerkräfte = Gewicht (ohne Antrieb: Moment, keine Kraft)
+{ const S9 = Core.compile(ksL), X9 = Core.advance(S9, S9.X0, S9.v0, 50).X, f = Core.forces(S9, X9, ksL.loads);
+  check('Viergelenk: Lager A0 und B0 tragen zusammen mindestens das Gewicht', f.pin[0] + f.pin[3] >= 20 - 1e-9 ? 1 : 0, 1, 0); }
+// Reibung kostet immer Arbeit: Umlauf mit Reibung ∮ Qf dθ > 0, ohne Reibung keine
+{ const a = Core.analyze({ ...ksL, fric: { mu: 0.2, d: 6 } }, 1); let Wf = 0; for (let k = 1; k < a.smp.length; k++) Wf += (a.smp[k].Qf + a.smp[k - 1].Qf) / 2 * (a.smp[k].v - a.smp[k - 1].v) * D;
+  check('Reibung Umlauf: ∮ Qf dθ > 0', Wf > 0 ? 1 : 0, 1, 0); check('ohne μ keine Reibungswerte', Core.analyze({ ...ksL, fric: { mu: 0, d: 6 } }).smp[0].Qf === undefined ? 1 : 0, 1, 0); }
