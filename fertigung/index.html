@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Designphysik · Fertigung</title>
 <link rel="stylesheet" href="../shared/style.css">
-<!-- Farbe: Familie Werkstoff --mat (Styleguide § 3). Blech = Medium. -->
+<!-- Farbe: Modulfarbe --fab in der Familie Werkstoff (Styleguide § 3). Blech = Medium. -->
 <style>
 #ed{--ar:calc(4/3)}
 #flat{--ar:3}
@@ -145,7 +145,7 @@ if (typeof module !== 'undefined') module.exports = Core;
 // === CORE END
 
 // ---- UI ----
-const FAM = '--mat'; // Familie Werkstoff
+const FAM = '--fab'; // Modulfarbe Fertigung (Familie Werkstoff)
 const PROF = { L: { legs: [30, 20], dir: [1] }, U: { legs: [20, 40, 20], dir: [1, 1] }, Z: { legs: [20, 30, 20], dir: [1, -1] }, H: { legs: [15, 20, 30, 20, 15], dir: [1, -1, -1, 1] } };
 const LEG = 'abcde';
 const S = { tool: 'bend', mat: 'dc01', s: 1.5, prof: 'U', legs: PROF.U.legs.slice(), ang: 90, r: 1.5, B: 50, d: 4 };

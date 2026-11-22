@@ -13,6 +13,9 @@
   --load:#712a94;--load-a:rgba(113,42,148,.22);
   --elec:#03919d;--elec-a:rgba(3,145,157,.22);
   --mat:#810354;--mat-a:rgba(129,3,84,.22);
+  /* Modulfarben innerhalb einer Familie: gleicher Farbton, andere Helligkeit (Styleguide § 3) */
+  --ergo:#60a06e;--ergo-a:rgba(96,160,110,.28);  /* Ergonomie, Familie Bewegung */
+  --fab:#9e366f;--fab-a:rgba(158,54,111,.22);    /* Fertigung, Familie Werkstoff */
   --font:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif
 }
 @media(pointer:coarse){:root{--h:48px}}

@@ -90,6 +90,9 @@ Faustregeln für Luftbiegen auf der Abkantbank und für Standardgewinde; keine B
 ## v1.1 (22.11.2026, Werkstoffe; zentraler Chat)
 - je Werkstoff `base` auf `shared/materials.js` (`alu-5754-h111` → `al5754`, `alu-6061-t6` → `al6061`, `dc01` → `dc01`, übrige nach Grundwerkstoff); Werte unverändert.
 
+## v1.2 (22.11.2026, Style-Chat: eigene Modulfarbe)
+- Farbe `--fab` `#9e366f` statt `--mat` (`FAM`): helleres Bordeaux in der Familie Werkstoff, unterscheidbar von Material. Nur Farbtoken, Rechnung unverändert, Tests grün.
+
 ## Offen (Pareto)
 1. ~~Registry-Eintrag, eigene Farbe, gemeinsame Materialschlüssel~~ – erledigt 22.11.2026 (v1.1, Familie Werkstoff `--mat`).
 2. Werte einzeln gegen Quellen prüfen (Mindestradien, Rückfederung, Einschraubtiefe), Quelle je Wert.

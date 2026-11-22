@@ -50,6 +50,9 @@ Vom Modul-Chat gepflegt (Branch `modul/ergonomie`). Verbindliche Konventionen st
 - Daten: Abgleich ISO 14738 als Test, Hüftbreite korrigiert (siehe Rechenkern).
 - Telefon: Referenzzeilen als Block (Name · Anteil · Laden, darunter Maß und Hinweis). Browser 1280/390 px, Konsole fehlerfrei.
 
+## v1.2 (22.11.2026, Style-Chat: eigene Modulfarbe)
+- Farbe `--ergo` `#60a06e` statt `--mech`: helleres, weicheres Grün in der Familie Bewegung (Mensch statt Maschine), unterscheidbar von Mechanik. Nur Farbtokens getauscht, Rechnung unverändert, Tests grün.
+
 ## Offen (Vorschläge)
 - Daten gegen DIN 33402-2:2020 abgleichen, Altersgruppen (über 65), Kinder (DIN EN 1729 Größenklassen).
 - Greifraum nach vorn/seitlich (Tischtiefe, Bedienfeld), Sichtlinie/Bildschirm, Rollstuhl (DIN 18040).

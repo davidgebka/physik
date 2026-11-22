@@ -20,7 +20,7 @@ table.crit tr{cursor:pointer}
 table.crit tr.on td{background:var(--fill)}
 table.crit td:first-child{white-space:nowrap}
 .bar{display:inline-block;width:72px;height:6px;box-shadow:inset 0 0 0 1px var(--ink);vertical-align:middle;margin-right:6px;position:relative}
-.bar i{position:absolute;left:0;top:0;bottom:0;background:var(--mech)}
+.bar i{position:absolute;left:0;top:0;bottom:0;background:var(--ergo)}
 /* Nachschlagetabellen: Zahlen rechtsbündig, auf dem Telefon seitlich scrollbar */
 .tw{overflow-x:auto}
 table.bt{border-collapse:collapse;width:100%;font-size:14px;line-height:24px;font-variant-numeric:tabular-nums}
@@ -431,7 +431,7 @@ function drawBody(ctx, T, k, f, mode) {
     for (const [a, b, w] of segs) { c.lineWidth = Math.max(1, w * k + add); c.beginPath(); const [x1, y1] = T(a), [x2, y2] = T(b); c.moveTo(x1, y1); c.lineTo(x2, y2); c.stroke(); }
     const [hx, hy] = T(f.head.c); c.beginPath(); c.arc(hx, hy, Math.max(1, f.head.r * k + add / 2), 0, 7); c.fill(); c.globalCompositeOperation = 'source-over'; };
   const blit = (o, a) => { ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = a; ctx.drawImage(o, 0, 0); ctx.restore(); };
-  const ring = mode === 'main' ? 3 : 2, col = css(mode === 'main' ? '--mech' : '--mut');
+  const ring = mode === 'main' ? 3 : 2, col = css(mode === 'main' ? '--ergo' : '--mut');
   OFF2.getContext('2d').clearRect(0, 0, OFF2.width, OFF2.height); OFF2.getContext('2d').setTransform(1, 0, 0, 1, 0, 0); OFF2.getContext('2d').clearRect(0, 0, OFF2.width, OFF2.height);
   paint(OFF2, col, ring, false); paint(OFF2, col, 0, true); // Umriss = breiter Strich minus Körper
   if (mode === 'main') { const c = OFF1.getContext('2d'); c.setTransform(1, 0, 0, 1, 0, 0); c.clearRect(0, 0, OFF1.width, OFF1.height); paint(OFF1, col, 0, false); blit(OFF1, 0.25); }
@@ -603,12 +603,12 @@ function drawDist() {
   const tot = X.map(x => [x, dens(x, pop.w)]), [b0, b1] = bandOf(c), inB = tot.filter(([x]) => x >= b0 && x <= b1);
   if (inB.length && b0 > xa) inB.unshift([b0, dens(b0, pop.w)]); if (inB.length && b1 < xb) inB.push([b1, dens(b1, pop.w)]);
   const series = [], ymax = Math.max(...tot.map(p => p[1])) * 1.1;
-  if (inB.length) series.push({ pts: inB, color: css('--mech'), width: 0.01, fill: css('--mech-a') });
+  if (inB.length) series.push({ pts: inB, color: css('--ergo'), width: 0.01, fill: css('--ergo-a') });
   if (both) series.push({ pts: X.map(x => [x, pop.w * dens(x, 1)]), color: css('--ink'), dash: [4, 4], width: 1.5 }, { pts: X.map(x => [x, (1 - pop.w) * dens(x, 0)]), color: css('--mut'), dash: [3, 4], width: 1.5 });
-  series.push({ pts: tot, color: css('--mech'), width: 2 });
+  series.push({ pts: tot, color: css('--ergo'), width: 2 });
   const fig = (S.scene === 'sit' || id !== 'thigh') ? Core.val(id, S.sex, S.p, S.shoe) : null;
   chart($('dist'), { x0: xa, x1: xb, y0: 0, y1: ymax, xl: `${d.n} [${u}]${d.sh && S.shoe ? ', mit Schuhen' : ''}`, yl: `Anteil [% je ${u === 'kg' ? 'kg' : 'cm'}]`, series,
-    vlines: fig != null ? [{ x: fig, color: css('--ink') }] : [], legend: [{ t: 'alle', color: css('--mech') }].concat(both ? [{ t: 'Frauen', color: css('--ink'), dash: [4, 4], width: 1.5 }, { t: 'Männer', color: css('--mut'), dash: [3, 4], width: 1.5 }] : []) });
+    vlines: fig != null ? [{ x: fig, color: css('--ink') }] : [], legend: [{ t: 'alle', color: css('--ergo') }].concat(both ? [{ t: 'Frauen', color: css('--ink'), dash: [4, 4], width: 1.5 }, { t: 'Männer', color: css('--mut'), dash: [3, 4], width: 1.5 }] : []) });
   $('distT').textContent = `${CN[c.k].n}: ${d.n}`;
   const bt = isFinite(b0) && isFinite(b1) ? `zwischen ${nf0.format(b0)} und ${nf0.format(b1)} ${u}` : isFinite(b0) ? `ab ${nf0.format(b0)} ${u}` : `bis ${nf0.format(b1)} ${u}`;
   $('distN').textContent = `Fläche = passt: ${d.n} ${bt}` + (c.k === 'tab' || c.k === 'leg' ? ' (für die Sitzeinstellung der Figur; der Anteil mittelt über alle Sitzeinstellungen)' : '') + `. Senkrechte Linie: Figur ${S.sex === 'f' ? 'Frau' : 'Mann'} P${S.p}.`;
@@ -807,7 +807,7 @@ function tplSketch(m) {
   const sh = prodShapes(m.scene, m[m.scene], st).map(s => ({ ...s, w: (s.w || 1.5) * 0.8 }));
   const [x0, x1] = m.scene === 'sit' ? [-200, 1150] : [m.stand.shelfOn && !m.stand.over ? -950 : -400, 950];
   const circ = Array.from({ length: 17 }, (_, i) => [f.head.c[0] + f.head.r * Math.cos(i * Math.PI / 8), f.head.c[1] + f.head.r * Math.sin(i * Math.PI / 8)]);
-  return [{ p: [[x0, 0], [x1, 0]], c: '--mut', w: 1 }, ...sh, ...f.segs.concat(f.arm2 || []).map(([a, b]) => ({ p: [a, b], c: '--mech', w: 2 })), { p: circ, c: '--mech', w: 2 }];
+  return [{ p: [[x0, 0], [x1, 0]], c: '--mut', w: 1 }, ...sh, ...f.segs.concat(f.arm2 || []).map(([a, b]) => ({ p: [a, b], c: '--ergo', w: 2 })), { p: circ, c: '--ergo', w: 2 }];
 }
 dpGallery($('tpl'), TPLS.map(([g, a]) => [g, a.map(([k, n, s]) => ({ k, n, s, d: () => tplSketch(TPL[k]()) }))]), k => load(TPL[k]()));
 
