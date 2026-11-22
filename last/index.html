@@ -812,8 +812,15 @@ cv.addEventListener('pointerdown', e => {
   drawAll();
 });
 let raf = 0;
+// Cursor beim Überfahren (Maus) zeigt, was ein Klick tut
+function cursor(e) {
+  if (!UI.G) return; const [X, Y] = evLocal(e), x = X / UI.G.k, hh = hit(X, Y);
+  cv.style.cursor = UI.tool === 'drag' ? (!hh ? 'default' : hh.mode === 'a' || hh.mode === 'b' ? 'ew-resize' : 'grab')
+    : UI.tool === 'del' ? (hh ? 'pointer' : 'default') : x < -0.02 * S.L || x > 1.02 * S.L ? 'not-allowed' : 'copy';
+}
 cv.addEventListener('pointermove', e => {
-  const d = UI.drag; if (!d) return;
+  const d = UI.drag; if (!d) return cursor(e);
+  if (d.mode !== 'a' && d.mode !== 'b') cv.style.cursor = 'grabbing';
   const x = evLocal(e)[0] / UI.G.k, dx = x - d.x0; d.moved = true;
   if (d.t === 'q') { const o = S.ql[d.i];
     if (d.mode === 'a') o.a = snap(d.a + dx); else if (d.mode === 'b') o.b = snap(d.b + dx);
@@ -821,7 +828,7 @@ cv.addEventListener('pointermove', e => {
   else ({ s: S.sup, p: S.pl })[d.t][d.i].x = snap(d.ox + dx);
   if (!raf) raf = requestAnimationFrame(() => { raf = 0; recompute(true); });
 });
-function endDrag() { const d = UI.drag; if (!d) return; UI.drag = null; if (d.moved) recompute(); else drawEd(); }
+function endDrag(e) { const d = UI.drag; if (!d) return; UI.drag = null; if (e) cursor(e); if (d.moved) recompute(); else drawEd(); }
 cv.addEventListener('pointerup', endDrag); cv.addEventListener('pointercancel', endDrag);
 window.addEventListener('keydown', e => {
   if ((e.key === 'Delete' || e.key === 'Backspace') && UI.sel && !/INPUT|SELECT/.test(document.activeElement.tagName)) { del(UI.sel.t, UI.sel.i); recompute(); } });

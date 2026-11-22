@@ -748,14 +748,23 @@ cv.addEventListener('pointerdown', e => {
 cv.addEventListener('pointermove', e => {
   const mm = UI.T.inv(...evPos(e)), g = grid(mm), d = UI.drag;
   if (UI.tool === 'wire') { UI.hover = g; if (UI.pend) drawEd(); }
+  if (!d) cursor(mm, g); else if (!d.wire) cv.style.cursor = 'grabbing';
   if (!d || d.wire) return;
   const dx = g[0] - d.from[0], dy = g[1] - d.from[1]; if (!dx && !dy && !d.moved) return;
   if (d.i != null) { const p = S.parts[d.i]; p.x = d.p0[0] + dx; p.y = d.p0[1] + dy; }
   d.ends.forEach(([i, o]) => { const q = S.wires[i]; if (!d.w0) d.w0 = {}; const k = i + ',' + o; if (!d.w0[k]) d.w0[k] = [q[o], q[o + 1]]; q[o] = d.w0[k][0] + dx; q[o + 1] = d.w0[k][1] + dy; });
   d.moved = true; A = Core.analyze(S); drawEd();
 });
+// Cursor beim Überfahren (Maus) zeigt, was ein Klick tut
+function wireEnd(mm, g) { return Math.hypot(mm[0] - g[0], mm[1] - g[1]) < 0.3 && !S.parts.some(p => Core.term(p).some(q => same(q, g))) && S.wires.some(q => same([q[0], q[1]], g) || same([q[2], q[3]], g)); }
+function cursor(mm, g) {
+  const t = UI.tool, hp = () => hitPart(mm) >= 0, hw = () => hitWire(mm) >= 0;
+  cv.style.cursor = t === 'drag' ? (wireEnd(mm, g) || hp() ? 'grab' : hw() ? 'pointer' : 'default')
+    : t === 'wire' ? 'crosshair' : t === 'del' ? (hp() || hw() ? 'pointer' : 'default') : 'copy';
+}
 function endDrag(e) {
   const d = UI.drag; UI.drag = null; if (!d) return;
+  if (e && UI.T) { const mm = UI.T.inv(...evPos(e)); cursor(mm, grid(mm)); }
   if (d.wire) { const g = UI.hover || d.from; if (!same(g, d.from)) { addWire(d.from, g); UI.pend = null; recompute(); } return; }
   if (!d.moved) { const p = d.i != null && S.parts[d.i]; if (p && p.t === 'sw') { p.on = !p.on; recompute(); } else if (p && p.t === 'mcu') { p.hi = !p.hi; recompute(); } return; }
   S.wires = S.wires.filter(q => q[0] !== q[2] || q[1] !== q[3]); // zusammengeschobene Leitungen entfallen

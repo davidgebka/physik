@@ -684,7 +684,7 @@ function lcol(L, Lsc) { // Falschfarbe: --grid2 (dunkel) → --light (hell); ab 
   const a = hex(css('--mut')), b = hex(css('--light')), t = Math.min(1, L / Lsc);
   return `rgb(${a.map((v, i) => Math.round(v + (b[i] - v) * t)).join(',')})`;
 }
-let stroke = null, drag = -1, dragSrc = false, lastTap = { t: 0, i: -1, p: -1 }, pend = null; // pend: Schnappschuss beim Antippen, Rückgängig-Schritt erst beim ersten Verschieben
+let stroke = null, drag = -1, dragSrc = false, lastTap = { t: 0, i: -1, p: -1 }, pend = null, hov = null; // hov: Zeiger über Lampe {src}, Punkt {pi, i} bzw. Einfügestelle {p} (nur Maus) // pend: Schnappschuss beim Antippen, Rückgängig-Schritt erst beim ersten Verschieben
 function drawEditor() {
   if (!V) fitView();
   const { ctx, w, h } = prep(ed);
@@ -725,15 +725,17 @@ function drawEditor() {
     const [sx, sy] = w2s(p), on = pi === S.cur;
     const a = on && i === S.sel ? 5 : on ? 4 : 2.5; ctx.beginPath(); ctx.rect(Math.round(sx) - a, Math.round(sy) - a, 2 * a, 2 * a);
     ctx.fillStyle = on && i === S.sel ? css('--ctl') : on ? css('--bg') : css('--mut'); ctx.fill();
-    if (on && i !== S.sel) { ctx.strokeStyle = css('--ink'); ctx.lineWidth = 1.5; ctx.stroke(); }
+    if (on && i !== S.sel) { ctx.strokeStyle = css('--ink'); ctx.lineWidth = hov && hov.pi === pi && hov.i === i ? 2.5 : 1.5; ctx.stroke(); }
+    else if (!on && hov && hov.pi === pi && hov.i === i) { ctx.strokeStyle = css('--ink'); ctx.lineWidth = 1.5; ctx.stroke(); }
   }));
+  if (hov && hov.p && !stroke) { const [sx, sy] = w2s(hov.p); ctx.beginPath(); ctx.arc(sx, sy, 4, 0, 2 * Math.PI); ctx.strokeStyle = css('--ink'); ctx.lineWidth = 1.5; ctx.stroke(); }
   // Schirmnummern, sobald es mehrere gibt
   if (S.parts.length > 1 && !stroke) S.parts.forEach((pt, pi) => { if (!pt.pts.length) return;
     let top = pt.pts[0]; pt.pts.forEach(p => { if (p.z > top.z) top = p; });
     const [sx, sy] = w2s(top); ctx.fillStyle = pi === S.cur ? css('--ctl') : css('--ink2'); ctx.fillText(String(pi + 1), sx + 7, sy - 7); });
   // Lampe
   const [lx, ly] = w2s(S.src);
-  ctx.beginPath(); ctx.arc(lx, ly, dragSrc ? 9 : 7.5, 0, 7); ctx.fillStyle = css('--light'); ctx.fill();
+  ctx.beginPath(); ctx.arc(lx, ly, dragSrc || (hov && hov.src) ? 9 : 7.5, 0, 7); ctx.fillStyle = css('--light'); ctx.fill();
   ctx.strokeStyle = css('--ink'); ctx.lineWidth = 1.5; ctx.stroke();
   // Legende Leuchtdichte
   ctx.fillStyle = css('--mut');
@@ -777,7 +779,7 @@ function hitSegment(wp) {
 ed.addEventListener('pointerdown', e => {
   ed.setPointerCapture(e.pointerId);
   const [sx, sy] = evPos(e), wp = s2w(sx, sy), [lx, ly] = w2s(S.src);
-  if (Math.hypot(sx - lx, sy - ly) < 16) { pend = snap(); dragSrc = true; drawEditor(); return; }
+  hov = null; if (Math.hypot(sx - lx, sy - ly) < 16) { pend = snap(); dragSrc = true; ed.style.cursor = 'grabbing'; drawEditor(); return; }
   if (S.mode === 'draw') { stroke = [fold(wp)]; drawEditor(); return; }
   let [pi, i] = hitPoint(sx, sy);
   const now = performance.now();
@@ -795,10 +797,22 @@ ed.addEventListener('pointerdown', e => {
     changed();
   }
   if (pi !== S.cur) { S.cur = pi; syncCtl(); }
-  drag = i; S.sel = i; drawEditor();
+  drag = i; S.sel = i; ed.style.cursor = 'grabbing'; drawEditor();
 });
+// Rückmeldung beim Überfahren (Maus): Cursor und Hervorhebung zeigen, was ein Klick tut
+function hover(sx, sy, wp) {
+  const [lx, ly] = w2s(S.src); let h = null, c = 'crosshair';
+  if (Math.hypot(sx - lx, sy - ly) < 16) { h = { src: 1 }; c = 'grab'; }
+  else if (S.mode === 'edit') { const [pi, i] = hitPoint(sx, sy);
+    if (i >= 0) { h = { pi, i }; c = 'grab'; }
+    else { const q = snapP(wp); h = hitSegment(wp)[1] >= 0 ? { p: S.sym && wp.x < 0 ? { x: -q.x, z: q.z } : q } : null; c = 'copy'; } }
+  ed.style.cursor = c;
+  if (JSON.stringify(h) !== JSON.stringify(hov)) { hov = h; drawEditor(); }
+}
+ed.addEventListener('pointerleave', () => { if (hov && drag < 0 && !dragSrc) { hov = null; drawEditor(); } });
 ed.addEventListener('pointermove', e => {
   const [sx, sy] = evPos(e), wp = s2w(sx, sy);
+  if (e.pointerType === 'mouse' && !dragSrc && !stroke && drag < 0) return hover(sx, sy, wp);
   if (dragSrc) { const x = Math.round(S.sym ? Math.abs(wp.x) : wp.x), q = { x: Math.abs(x) < 4 ? 0 : x, z: Math.round(wp.z) };
     if (q.x === S.src.x && q.z === S.src.z) return;
     if (pend) { pushUndo(pend); pend = null; } S.src = q; changed(true); }
@@ -810,6 +824,7 @@ ed.addEventListener('pointermove', e => {
 });
 function endPointer() {
   pend = null; if (dirty) changed();
+  if (dragSrc || drag >= 0) ed.style.cursor = 'grab';
   if (dragSrc) { dragSrc = false; drawEditor(); }
   if (stroke) {
     if (stroke.length > 3) {

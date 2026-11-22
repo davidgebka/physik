@@ -281,7 +281,7 @@ function fitGeo() {
 const w2s = p => [V.ox + p.x * V.s, V.oy - p.z * V.s];
 const s2w = (x, y) => ({ x: (x - V.ox) / V.s, z: (V.oy - y) / V.s });
 
-let stroke = null, drag = -1, lastTap = { t: 0, i: -1 };
+let stroke = null, drag = -1, lastTap = { t: 0, i: -1 }, hov = null; // hov: Zeiger über Punkt {i} bzw. Einfügestelle {p} (nur Maus)
 function drawEditor() {
   if (!V) fitView();
   const { ctx, w, h } = prep(ed);
@@ -315,8 +315,9 @@ function drawPoints(ctx, closed) {
     const [sx, sy] = w2s(p);
     const a = i === S.sel ? 5 : 4; ctx.beginPath(); ctx.rect(Math.round(sx) - a, Math.round(sy) - a, 2 * a, 2 * a);
     ctx.fillStyle = i === S.sel ? css('--ctl') : css('--bg'); ctx.fill();
-    if (i !== S.sel) { ctx.strokeStyle = css('--ink'); ctx.lineWidth = 1.5; ctx.stroke(); }
+    if (i !== S.sel) { ctx.strokeStyle = css('--ink'); ctx.lineWidth = hov && hov.i === i ? 2.5 : 1.5; ctx.stroke(); }
   });
+  if (hov && hov.p) { const [sx, sy] = w2s(hov.p); ctx.beginPath(); ctx.arc(sx, sy, 4, 0, 2 * Math.PI); ctx.strokeStyle = css('--ink'); ctx.lineWidth = 1.5; ctx.stroke(); }
 }
 function drawPlan(ctx, w, h) {
   if (!G.planS || stroke) return;
@@ -453,10 +454,21 @@ ed.addEventListener('pointerdown', e => {
     else { pts.push(snapP(wp)); i = pts.length - 1; }
     changed();
   }
-  drag = i; S.sel = i; drawEditor();
+  drag = i; S.sel = i; hov = null; ed.style.cursor = S.mode === 'edit' ? 'grabbing' : 'crosshair'; drawEditor();
 });
+// Rückmeldung beim Überfahren (Maus): Cursor und Hervorhebung zeigen, was ein Klick tut
+function hover(sx, sy, wp) {
+  let h = null, c = 'crosshair';
+  if (S.mode === 'edit') { const i = hitPoint(sx, sy);
+    if (i >= 0) { h = { i }; c = 'grab'; }
+    else { const q = snapP(wp); h = hitSegment(wp, isPlan()) >= 0 ? { p: mirror() && wp.x < 0 ? { x: -q.x, z: q.z } : q } : null; c = 'copy'; } }
+  ed.style.cursor = c;
+  if (JSON.stringify(h) !== JSON.stringify(hov)) { hov = h; drawEditor(); }
+}
+ed.addEventListener('pointerleave', () => { if (hov && drag < 0) { hov = null; drawEditor(); } });
 ed.addEventListener('pointermove', e => {
   const [sx, sy] = evPos(e), wp = s2w(sx, sy);
+  if (e.pointerType === 'mouse' && !stroke && drag < 0) return hover(sx, sy, wp);
   if (stroke) {
     const q = mirror() ? { x: Math.abs(wp.x), z: wp.z } : wp, l = stroke[stroke.length - 1];
     if (Math.hypot(q.x - l.x, q.z - l.z) > 0.8) { stroke.push(q); drawEditor(); }
@@ -491,7 +503,7 @@ function endPointer() {
     }
     stroke = null; changed(); fitView(); drawAll();
   }
-  if (drag >= 0) { drag = -1; pend = null; if (dirty) changed(); const r = ed.getBoundingClientRect();
+  if (drag >= 0) { drag = -1; pend = null; ed.style.cursor = 'grab'; if (dirty) changed(); const r = ed.getBoundingClientRect();
     if (P().some(p => { const [x, y] = w2s(p); return x < 10 || x > r.width - 10 || y < 10 || y > r.height - 10; })) { fitView(); drawAll(); } }
 }
 ed.addEventListener('pointerup', endPointer);

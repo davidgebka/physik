@@ -55,11 +55,11 @@ Bei Zielkonflikten entscheidet A.
 ## Module (Stand 22.11.2026; Details in `docs/<modul>.md`; Spalte Modul = `name` in `DP_MODULES`)
 | Modul | Key | Stand | Entwurfsfrage |
 |---|---|---|---|
-| Gefäß | `gefaess` | v1.16 | Wie viel passt rein, wo sind Eichstriche, wann gießt es aus, kippt es um, schwappt es beim Tragen über? |
-| Licht | `licht` | v2.8 | Wie verteilt der Schirm das Licht, wird der Tisch hell genug, blendet es? |
-| Statik | `last` | v1.9 | Hält das Brett/der Balken, wie stark hängt es durch, schwingt es? |
-| Mechanik | `mechanismus` | v1.7 | Wie bewegt sich das Getriebe, wo klemmt es, welche Kraft braucht es? |
-| Elektronik | `elektronik` | v3.1 | Hält der Akku lange genug, reicht der Strom, wird etwas zu heiß? |
+| Gefäß | `gefaess` | v1.17 | Wie viel passt rein, wo sind Eichstriche, wann gießt es aus, kippt es um, schwappt es beim Tragen über? |
+| Licht | `licht` | v2.9 | Wie verteilt der Schirm das Licht, wird der Tisch hell genug, blendet es? |
+| Statik | `last` | v1.10 | Hält das Brett/der Balken, wie stark hängt es durch, schwingt es? |
+| Mechanik | `mechanismus` | v1.8 | Wie bewegt sich das Getriebe, wo klemmt es, welche Kraft braucht es? |
+| Elektronik | `elektronik` | v3.2 | Hält der Akku lange genug, reicht der Strom, wird etwas zu heiß? |
 
 ## Roadmap (21.11.2026, nach Persona A)
 **Moratorium auf Tiefe:** In Gefäß und Licht keine neuen Physik-Verfeinerungen, bis die Punkte „Jetzt“ erledigt sind. Fehlerbehebungen und Bedienung gehen immer.

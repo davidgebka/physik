@@ -816,14 +816,23 @@ cv.addEventListener('pointerdown', e => {
   recompute();
 });
 let raf = 0;
+// Cursor beim Überfahren (Maus) zeigt, was ein Klick tut
+function cursor(e) {
+  if (!UI.T) return; const [sx, sy] = evPos(e), hp = hitPoint(sx, sy), hl = () => hitLink(sx, sy) >= 0, t = UI.tool;
+  cv.style.cursor = UI.mode === 'move' ? (ok() ? 'grab' : 'not-allowed')
+    : t === 'drag' ? (hp >= 0 ? 'grab' : hl() ? 'pointer' : 'default')
+    : t === 'slider' ? (hp >= 0 ? 'pointer' : 'default') : t === 'del' ? (hp >= 0 || hl() ? 'pointer' : 'default')
+    : hp >= 0 ? 'pointer' : 'copy';
+}
 cv.addEventListener('pointermove', e => {
-  if (!UI.drag) return;
+  if (!UI.drag) return cursor(e);
+  cv.style.cursor = 'grabbing';
   const mm = UI.T.inv(...evPos(e));
   if (UI.drag.move) { UI.drag.to = driveAt(mm) + UI.drag.off; if (!raf) raf = requestAnimationFrame(() => { raf = 0; if (UI.drag && UI.drag.move) go(UI.drag.to); }); return; } // ein Schritt je Bild
   const p = S.pts[UI.drag.i]; p.x = snap(mm[0]); p.y = snap(mm[1]); slAng(UI.drag.i);
   if (!raf) raf = requestAnimationFrame(() => { raf = 0; recompute(false); });
 });
-function endDrag() { if (!UI.drag) return; const d = UI.drag; UI.drag = null; if (d.move) { if (d.to != null) go(d.to); save(); } else recompute(true); }
+function endDrag(e) { if (!UI.drag) return; const d = UI.drag; UI.drag = null; if (e) cursor(e); if (d.move) { if (d.to != null) go(d.to); save(); } else recompute(true); }
 cv.addEventListener('pointerup', endDrag);
 cv.addEventListener('pointercancel', endDrag); // sonst bleibt UI.drag hängen: Punkt folgt dem Zeiger, Link wird nicht mehr gespeichert
 // Antriebswert, den der Zeiger vorgibt (ohne Versatz)
