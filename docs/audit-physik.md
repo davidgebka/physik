@@ -160,3 +160,33 @@ Schweregrade:
 5. Übergreifend: Gültigkeitswächter, Schwellentabelle, Bänder als Wunsch an shared.
 
 Für jede Korrektur gilt `CLAUDE.md` Regel 3: Änderung nur im CORE-Block, mit neuem analytischem Testfall, der gegen den alten Stand fehlschlägt.
+
+---
+
+## Umsetzung (22.11.2026)
+
+Alle Befunde A und B wurden bearbeitet; jede Kernänderung hat neue analytische Tests. Je Modul steht das Detail in `docs/<modul>.md`.
+
+| # | Befund | Stand |
+|---|---|---|
+| 1 | Statik: Knicken schwache Achse | umgesetzt: `Iz`/`ez` je Querschnitt, zweiter Knick-Eigenwert mit E·Iz, λ = min |
+| 2 | Elektronik: Laufzeit | umgesetzt: Entladekurve, Kapazität nach Strom, Selbstentladung, Ende beim Ausfall eines Verbrauchers (Uno an 9-V-Block 8,8 → 3,9 h). Entladekurven sind Richtwerte und noch nicht gegen Messung geprüft |
+| 3 | Licht: Abschirmschwelle | umgesetzt: Auswahl „Leuchtmittel“ → 15/20/30°, Vorgabe „klar“ (30°) |
+| 4 | Licht: gerichtete Leuchtdichte | umgesetzt: Zähler „Bild der Lampe“ im CORE, Urteil knapp |
+| 5 | Statik: Dauerlast | umgesetzt: `Sp` = γM/kmod (MDF 6,5, Spanplatte 4,3, Glas 7), Spannung aus ständiger Last |
+| 6 | Elektronik: MOSFET 3,3 V | umgesetzt als Hinweis (`Vspec`). Der Leitwert unter Vspec bleibt modelliert wie bisher, weil es keine Datenblattwerte gibt |
+| 7 | Statik: Imperfektion | umgesetzt: e₀ = L/300 als Zusatzspannung (sichere Seite) |
+| 8 | Mechanik: Reibung/Gelenkkräfte | umgesetzt: Gelenkkräfte exakt (Lagrange); Reibung als Näherung 1. Ordnung. Offen: Selbsthemmung und Verkanten |
+| 9 | Elektronik: Erwärmung | umgesetzt: LED-Rth, Schalter „im Gehäuse“, Berührgrenze 60 °C getrennt von 85 °C |
+| 10 | Licht: Leuchtdichtegrenze | **korrigiert**: Die Audit-Aussage „20 000 greift praktisch nie“ war falsch. Weiß lackierte Reflektoren erreichen nahe der Lampe 5 000–19 000 cd/m² (Semi, Uplight). Die vorgeschlagene Stufe 3000 traf 8 von 20 Vorlagen; umgesetzt ist „hell“ ab 10 000 cd/m² (Heuristik, im Realitätscheck kalibrieren) |
+| 11 | Licht: Lampenkörper | umgesetzt: Kugel/Röhre r = 15 mm, schluckt 30 % (Richtwerte) |
+| 12 | Elektronik: Motor, Spitzen, Powerbank | umgesetzt (Motor mit festem Lastmoment, `Ipk`, `Imin`) |
+| 13 | Gefäß: Rutschen, Schwappen | umgesetzt als Hinweise. **Zurückgestellt:** Nicken der Hand beim Gehen, weil eine gemessene Amplitude fehlt und der Wert sonst geraten wäre |
+| 14 | Unsicherheitsbänder | Statik: Band der Durchbiegung aus der Streuung von E. Übrige Module: Schätzwerte sind gekennzeichnet; ein gemeinsamer Helfer lohnt sich erst mit Roadmap-Punkt 6 („Einfluss der Parameter“) |
+| B (Statik) | Kippen, k_cr, Spanplatte E | umgesetzt (Hinweis, Rissbeiwert, Quelle klargestellt) |
+| B (Licht) | Sektoren | umgesetzt (12 Sektoren bei Lampe neben der Achse) |
+
+Übergreifend:
+- Gültigkeitswächter und Schwellen mit Herkunft sind als Regel in `konzept.md` eingetragen.
+- Jedes `docs/<modul>.md` hat jetzt eine Liste „Urteilsschwellen (Herkunft)“.
+- Der Realitätscheck bleibt offen (Roadmap 7); er braucht Messungen.
