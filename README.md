@@ -17,7 +17,8 @@ Funktioniert auch per Doppelklick auf index.html (file://).
     shared/style.css    gemeinsames Aussehen
     shared/util.js      Modul-Registry (DP_MODULES), Kopfzeile, Canvas-, Zahlen-, Export-Helfer
     shared/chart.js     Diagramme
-    tools/              Testwerkzeuge für Node (load-core.js, check.js)
+    shared/materials.js Werkstoffliste (DP_MATERIALS): Schlüssel, Name, Familie
+    tools/              Testwerkzeuge für Node (load-core.js, check.js); test.js prüft Werkstoffe modulübergreifend
     _vorlage/           Gerüst für neue Module
     gefaess/            Modul Gefäß (index.html Kern, app.js Oberfläche, + test.js)
     licht/              Modul Lampenschirm (+ test.js)
@@ -46,3 +47,4 @@ Laufen auch in der CI bei jedem Push (.github/workflows/test.yml).
     node material/test.js
     node ergonomie/test.js
     node fertigung/test.js
+    node tools/test.js
