@@ -79,7 +79,8 @@ function prep(cv) {
 const DP_U = 24, DP_STEPS = [1, 1.5, 2, 2.5, 3, 4, 5, 6, 8]; // s = Stufe × 10^n mm je Seitenpunkt
 let dpPinching = false; // während zwei Finger zoomen: frei, Raster eigenes (deckend); danach rastet die Ansicht ein
 // Canvas-px des ersten Seitenpunkts (Phase des Seitenrasters im Canvas)
-function dpPhase(cv) { const r = cv.getBoundingClientRect(), m = v => ((-v % DP_U) + DP_U) % DP_U; return [m(r.left + scrollX), m(r.top + scrollY), r]; }
+function dpPhase(cv) { const r = cv.getBoundingClientRect(), m = v => ((-v % DP_U) + DP_U) % DP_U, gx = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--gx')) || 0;
+  return [m(r.left + scrollX - gx), m(r.top + scrollY), r]; } // --gx: Telefon-Raster um den 12-px-Rand verschoben
 // Ansicht einrasten: k [px/mm] auf die nächste Stufe (abgerundet = Inhalt passt weiter; near = nächstgelegene, nach Zoomen),
 // Bildmitte bleibt, Ursprung (ox, oy) auf den nächsten Seitenpunkt. Liefert [k, ox, oy]; idempotent. steps z. B. [1, 2, 5] (Elektronik).
 function dpSnap(cv, k, ox, oy, near, steps = DP_STEPS) {
