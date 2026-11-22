@@ -18,11 +18,13 @@
     <h2>Getriebe <small>Seitenansicht, mm</small></h2>
     <div class="row">
       <span class="seg"><button id="mBuild" class="on">Konstruieren</button><button id="mMove">Bewegen</button></span>
-      <button id="tpl"></button><button id="cmp"></button><button id="undo" class="q ico" data-i="undo" disabled>Rückgängig</button>
-    </div>
-    <div class="row"><span class="seg" id="tools">
+      <span class="seg" id="tools">
       <button data-t="drag" class="on">Ziehen</button><button data-t="point">Punkt</button><button data-t="fix" title="Fester Punkt, der sich nicht bewegt (z. B. am Möbelkorpus)">Gestell</button><button data-t="link" title="Starrer Stab zwischen zwei Punkten">Glied</button><button data-t="slider" title="Gerade Führung: Punkt gleitet auf einer Linie (wie eine Schublade)">Schub</button><button data-t="del">Löschen</button>
-    </span></div>
+    </span>
+    </div>
+    <div class="row">
+      <button id="tpl" class="ico"></button><button id="cmp" class="ico"></button><button id="undo" class="q ico" data-i="undo" disabled>Rückgängig</button><button id="fitB" class="q ico" data-i="fit" title="Ganzes Getriebe zeigen">Einpassen</button>
+    </div>
     <canvas id="ed" role="img"></canvas>
     <div class="ctl"><label for="drv">Antrieb</label><input type="range" id="drv" step="0.1"><output id="drvO"></output></div>
     <div class="row sel" id="selp"></div>
@@ -547,6 +549,7 @@ function recompute(refit = true) {
 }
 // Ansicht: voll einpassen (Laden) oder nur erweitern, wenn Inhalt herausragt – kein Springen beim Konstruieren
 function fit(full) {
+  if (full) UI.zoomed = false; else if (UI.zoomed) return; // nach Zoomen mit zwei Fingern nicht von selbst erweitern
   let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
   const add = (x, y) => { x0 = Math.min(x0, x); x1 = Math.max(x1, x); y0 = Math.min(y0, y); y1 = Math.max(y1, y); };
   S.pts.forEach(p => add(p.x, p.y));
@@ -635,7 +638,14 @@ function drawEd() {
   if (S.out && S.out.link != null) tag(S.links[S.out.link], 'Abtrieb');
   if (UI.mode === 'build' && UI.sel && UI.sel.t === 'l') { const L = S.links[UI.sel.i]; if (L) { const a = pos(L[0]), b = pos(L[1]), m = T([(a[0] + b[0]) / 2, (a[1] + b[1]) / 2]);
     ctx.fillText(nf1.format(Math.hypot(b[0] - a[0], b[1] - a[1])) + ' mm', m[0] + 8, m[1] + 14); } }
+  touchUi(ctx, T);
+  const dh = UI.mode === 'build' && UI.tool === 'del' && UI.delHov;
+  if (dh) { const Q = (dh.t === 'p' ? [dh.i] : S.links[dh.i] || []).map(i => T(pos(i))); if (Q.length) { const xs = Q.map(q => q[0]), ys = Q.map(q => q[1]); delMark(ctx, Math.min(...xs) - 4, Math.min(...ys) - 4, Math.max(...xs) + 4, Math.max(...ys) + 4); } }
 }
+// Lösch-Vorschau: Ziel unter dem Zeiger blass, gestrichelt umrahmt (Bildschirmkoordinaten)
+function delMark(ctx, x0, y0, x1, y1) { const p = 6, x = Math.min(x0, x1) - p, y = Math.min(y0, y1) - p, w = Math.abs(x1 - x0) + 2 * p, h = Math.abs(y1 - y0) + 2 * p;
+  ctx.save(); ctx.globalAlpha = 0.65; ctx.fillStyle = css('--bg'); ctx.fillRect(x, y, w, h); ctx.globalAlpha = 1;
+  ctx.setLineDash([4, 3]); ctx.strokeStyle = css('--ink'); ctx.lineWidth = 1; ctx.strokeRect(Math.round(x) + 0.5, Math.round(y) + 0.5, Math.round(w), Math.round(h)); ctx.restore(); }
 function blank(c, txt) { // Hinweis im leeren Diagramm, auf schmalen Schirmen umbrochen (Zeile 24 px)
   const { ctx, w, h } = prep(c); ctx.font = DP_CFONT; ctx.fillStyle = css('--ink2'); ctx.textAlign = 'center';
   const lines = []; let ln = '';
@@ -786,9 +796,9 @@ function delLink(k) {
   S.links.splice(k, 1);
   for (const key of ['drive', 'out']) { const l = S[key].link; if (l === k) S[key] = {}; else if (l > k) S[key] = { link: l - 1 }; }
 }
-function hitPoint(sx, sy) { let best = -1, bd = 12; S.pts.forEach((p, i) => { const [x, y] = UI.T.f(pos(i, curX())), d = Math.hypot(x - sx, y - sy); if (d < bd) { bd = d; best = i; } }); return best; }
+function hitPoint(sx, sy) { let best = -1, bd = DP_HIT; S.pts.forEach((p, i) => { const [x, y] = UI.T.f(pos(i, curX())), d = Math.hypot(x - sx, y - sy); if (d < bd) { bd = d; best = i; } }); return best; }
 function hitLink(sx, sy) {
-  let best = -1, bd = 7;
+  let best = -1, bd = DP_HIT / 2;
   S.links.forEach((L, k) => { const h = hull(L.map(i => UI.T.f(pos(i)))); for (let j = 0; j < h.length; j++) { const a = h[j], b = h[(j + 1) % h.length], dx = b[0] - a[0], dy = b[1] - a[1];
     const t = Math.max(0, Math.min(1, ((sx - a[0]) * dx + (sy - a[1]) * dy) / (dx * dx + dy * dy || 1))), d = Math.hypot(a[0] + t * dx - sx, a[1] + t * dy - sy); if (d < bd) { bd = d; best = k; } } });
   return best;
@@ -796,6 +806,21 @@ function hitLink(sx, sy) {
 function evPos(e) { const r = cv.getBoundingClientRect(); return [e.clientX - r.left, e.clientY - r.top]; }
 const snap = v => Math.round(v);
 
+// Finger (docs/mobil-editor.md): ins Leere wischen scrollt die Seite, zwei Finger zoomen/verschieben, Lupe beim Ziehen, Kontextleiste an der Auswahl
+let tpos = null; const ctxBar = dpCtxBar(cv);
+dpTouchGuard(cv, () => !!UI.drag);
+dpPinch(cv, () => { if (UI.drag) { const d = UI.drag; UI.drag = null; if (d.move) save(); else recompute(true); } },
+  (f, cx, cy, dx, dy) => { const v = UI.view, T = UI.T, [wx, wy] = T.inv(cx, cy), k = T.k * f, z = (a, c) => c + (a - c) / f;
+    UI.view = { x0: z(v.x0, wx) - dx / k, x1: z(v.x1, wx) - dx / k, y0: z(v.y0, wy) + dy / k, y1: z(v.y1, wy) + dy / k }; UI.zoomed = true; drawEd(); });
+cv.addEventListener('pointerdown', e => { tpos = e.pointerType === 'touch' ? evPos(e) : null; }, true);
+cv.addEventListener('pointermove', e => { if (tpos) tpos = evPos(e); }, true);
+function touchUi(ctx, T) {
+  if (tpos && UI.drag && !UI.drag.move) dpLoupe(ctx, ...tpos);
+  const s = UI.sel; if (UI.mode !== 'build' || !s || UI.drag || (s.t === 'p' ? !S.pts[s.i] : !S.links[s.i])) return ctxBar.hide();
+  const Q = (s.t === 'p' ? [s.i] : S.links[s.i]).map(i => T(pos(i))), x = Q.reduce((a, q) => a + q[0], 0) / Q.length, y = Math.min(...Q.map(q => q[1]));
+  ctxBar.show(x, y, [['close', 'Löschen', () => { if (s.t === 'p') delPoint(s.i); else delLink(s.i); UI.sel = null; recompute(); }]]);
+}
+$('fitB').onclick = () => { fit(true); drawEd(); };
 cv.addEventListener('pointerdown', e => {
   const [sx, sy] = evPos(e), mm = UI.T.inv(sx, sy); cv.setPointerCapture(e.pointerId);
   if (UI.mode === 'move') { if (!ok()) return; UI.drag = { move: true, off: S.at - driveAt(mm) }; return; }
@@ -811,19 +836,30 @@ cv.addEventListener('pointerdown', e => {
       if (UI.pick == null) { if (!fixed(hp)) UI.pick = hp; drawEd(); return; }
       if (fixed(hp) && hp !== UI.pick) { S.slider = { p: UI.pick, a: hp, ang: 0 }; slAng(UI.pick); UI.sel = { t: 'p', i: UI.pick }; }
       UI.pick = null; break;
-    case 'del': if (hp >= 0) delPoint(hp); else { const hl = hitLink(sx, sy); if (hl >= 0) delLink(hl); } UI.sel = null; break;
+    case 'del': UI.delHov = null; if (hp >= 0) delPoint(hp); else { const hl = hitLink(sx, sy); if (hl >= 0) delLink(hl); } UI.sel = null; break;
   }
   recompute();
 });
 let raf = 0;
+// Cursor beim Überfahren (Maus) zeigt, was ein Klick tut
+function cursor(e) {
+  if (!UI.T) return; const [sx, sy] = evPos(e), hp = hitPoint(sx, sy), hl = () => hitLink(sx, sy) >= 0, t = UI.tool;
+  const dl = t === 'del' && UI.mode === 'build' ? (hp >= 0 ? { t: 'p', i: hp } : (k => k >= 0 ? { t: 'l', i: k } : null)(hitLink(sx, sy))) : null;
+  if (JSON.stringify(dl) !== JSON.stringify(UI.delHov || null)) { UI.delHov = dl; drawEd(); }
+  cv.style.cursor = UI.mode === 'move' ? (ok() ? 'grab' : 'not-allowed')
+    : t === 'drag' ? (hp >= 0 ? 'grab' : hl() ? 'pointer' : 'default')
+    : t === 'slider' ? (hp >= 0 ? 'pointer' : 'default') : t === 'del' ? (hp >= 0 || hl() ? 'pointer' : 'default')
+    : hp >= 0 ? 'pointer' : 'copy';
+}
 cv.addEventListener('pointermove', e => {
-  if (!UI.drag) return;
+  if (!UI.drag) return cursor(e);
+  cv.style.cursor = 'grabbing';
   const mm = UI.T.inv(...evPos(e));
   if (UI.drag.move) { UI.drag.to = driveAt(mm) + UI.drag.off; if (!raf) raf = requestAnimationFrame(() => { raf = 0; if (UI.drag && UI.drag.move) go(UI.drag.to); }); return; } // ein Schritt je Bild
   const p = S.pts[UI.drag.i]; p.x = snap(mm[0]); p.y = snap(mm[1]); slAng(UI.drag.i);
   if (!raf) raf = requestAnimationFrame(() => { raf = 0; recompute(false); });
 });
-function endDrag() { if (!UI.drag) return; const d = UI.drag; UI.drag = null; if (d.move) { if (d.to != null) go(d.to); save(); } else recompute(true); }
+function endDrag(e) { if (!UI.drag) return; const d = UI.drag; UI.drag = null; if (e) cursor(e); if (d.move) { if (d.to != null) go(d.to); save(); } else recompute(true); }
 cv.addEventListener('pointerup', endDrag);
 cv.addEventListener('pointercancel', endDrag); // sonst bleibt UI.drag hängen: Punkt folgt dem Zeiger, Link wird nicht mehr gespeichert
 // Antriebswert, den der Zeiger vorgibt (ohne Versatz)

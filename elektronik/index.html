@@ -18,7 +18,6 @@
 <main>
   <section class="panel">
     <h2>Schaltung <small>Schaltplan</small></h2>
-    <div class="row"><button id="tpl"></button><button id="cmp"></button><button id="undo" class="q ico" data-i="undo" disabled>Rückgängig</button></div>
     <div class="row"><span class="seg" id="tools">
       <button data-t="drag" class="on">Ziehen</button><button data-t="wire">Leitung</button><button data-t="del">Löschen</button>
     </span><span class="seg" id="parts">
@@ -26,6 +25,7 @@
     </span><span class="seg" id="parts2">
       <button data-t="mcu">Mikrocontroller</button><button data-t="tr">Transistor</button><button data-t="reg">Wandler</button>
     </span></div>
+    <div class="row"><button id="tpl" class="ico"></button><button id="cmp" class="ico"></button><button id="undo" class="q ico" data-i="undo" disabled>Rückgängig</button><button id="fitB" class="q ico" data-i="fit" title="Ganze Schaltung zeigen">Einpassen</button></div>
     <canvas id="ed" role="img"></canvas>
     <div class="row sel" id="selp"></div>
     <p class="note" id="hint"></p>
@@ -534,6 +534,7 @@ function bbox(m) {
 }
 // Ausschnitt nur vergrößern (beim Bearbeiten springt nichts), beim Laden neu
 function fit(reset) {
+  if (reset) UI.zoomed = false; else if (UI.zoomed) return; // nach Zoomen mit zwei Fingern nicht von selbst erweitern
   const b = bbox(S) || { x0: 0, x1: 8, y0: 0, y1: 6 }, v = !reset && UI.view;
   const x0 = Math.min(b.x0 - 2, v ? v.x0 : Infinity), x1 = Math.max(b.x1 + 4, v ? v.x1 : -Infinity), y0 = Math.min(b.y0 - 2, v ? v.y0 : Infinity), y1 = Math.max(b.y1 + 2, v ? v.y1 : -Infinity);
   const cx = (x0 + x1) / 2, cy = (y0 + y1) / 2, wx = Math.max(x1 - x0, 12), wy = Math.max(y1 - y0, 9);
@@ -574,7 +575,15 @@ function drawEd() {
   const hs = UI.sel ? (UI.sel.t === 'p' ? Core.term(S.parts[UI.sel.i]) : [[S.wires[UI.sel.i][0], S.wires[UI.sel.i][1]], [S.wires[UI.sel.i][2], S.wires[UI.sel.i][3]]]) : [];
   ctx.fillStyle = css('--ctl'); hs.forEach(q => { const [x, y] = T(q); ctx.fillRect(x - 5, y - 5, 10, 10); });
   if (!S.parts.length) { ctx.font = DP_CFONT; ctx.fillStyle = css('--ink2'); ctx.textAlign = 'left'; ctx.fillText('Leer: Bauteil wählen und auf einen Punkt tippen', 8, h - 8); }
+  touchUi(ctx, T);
+  const dh = UI.tool === 'del' && UI.delHov;
+  if (dh) { const o = dh.t === 'p' ? S.parts[dh.i] : S.wires[dh.i]; if (o) { const Q = dh.t === 'p' ? (MBOX[o.t] ? (([c, sn]) => Core.term(o).concat(MBOX[o.t].map(([u, v]) => [o.x + u * c - v * sn, o.y + u * sn + v * c])))([[1, 0], [0, 1], [-1, 0], [0, -1]][o.r]) : Core.term(o)) : [[o[0], o[1]], [o[2], o[3]]];
+    const P2 = Q.map(q => T(q)), xs = P2.map(q => q[0]), ys = P2.map(q => q[1]), pad = dh.t === 'p' ? 0.3 * k : 0; delMark(ctx, Math.min(...xs), Math.min(...ys) - pad, Math.max(...xs), Math.max(...ys) + pad); } }
 }
+// Lösch-Vorschau: Ziel unter dem Zeiger blass, gestrichelt umrahmt (Bildschirmkoordinaten)
+function delMark(ctx, x0, y0, x1, y1) { const p = 6, x = Math.min(x0, x1) - p, y = Math.min(y0, y1) - p, w = Math.abs(x1 - x0) + 2 * p, h = Math.abs(y1 - y0) + 2 * p;
+  ctx.save(); ctx.globalAlpha = 0.65; ctx.fillStyle = css('--bg'); ctx.fillRect(x, y, w, h); ctx.globalAlpha = 1;
+  ctx.setLineDash([4, 3]); ctx.strokeStyle = css('--ink'); ctx.lineWidth = 1; ctx.strokeRect(Math.round(x) + 0.5, Math.round(y) + 0.5, Math.round(w), Math.round(h)); ctx.restore(); }
 // Mehrpole (Mikrocontroller, Wandler, Transistor): in Bauteil-Koordinaten zeichnen, Beschriftung rechts daneben
 const MBOX = { mcu: [[0.5, -0.5], [3.5, -0.5], [3.5, 2.5], [0.5, 2.5]], reg: [[0.5, -0.6], [3.5, -0.6], [3.5, 0.6], [0.5, 0.6]], tr: [[0.6, -0.8], [2.1, -0.8], [2.1, 0.8], [0.6, 0.8]] };
 function drawMulti(ctx, p, i, T, k) {
@@ -715,22 +724,37 @@ const same = (a, b) => a[0] === b[0] && a[1] === b[1];
 function rotate(i) { const p = S.parts[i], mid = Q => [(Math.min(...Q.map(q => q[0])) + Math.max(...Q.map(q => q[0]))) / 2, (Math.min(...Q.map(q => q[1])) + Math.max(...Q.map(q => q[1]))) / 2];
   const c = mid(Core.term(p)); p.r = (p.r + 1) % 4; const c2 = mid(Core.term({ ...p, x: 0, y: 0 })); p.x = c[0] - c2[0]; p.y = c[1] - c2[1]; recompute(); }
 function delPart(i) { S.parts.splice(i, 1); UI.sel = null; recompute(); }
-function hitPart(mm) { let best = -1, bd = 0.45; S.parts.forEach((p, i) => {
+function hitPart(mm) { let best = -1, bd = Math.max(0.45, DP_HIT / UI.T.k); S.parts.forEach((p, i) => {
   if (MBOX[p.t]) { const [c, s] = [[1, 0], [0, 1], [-1, 0], [0, -1]][p.r], dx = mm[0] - p.x, dy = mm[1] - p.y, u = dx * c + dy * s, v = -dx * s + dy * c, b = MBOX[p.t];
     if (u > b[0][0] - 0.1 && u < b[1][0] + 0.1 && v > b[0][1] - 0.1 && v < b[2][1] + 0.1) { bd = 0; best = i; } return; }
   const [a, b] = Core.term(p), dx = b[0] - a[0], dy = b[1] - a[1], t = Math.max(0, Math.min(1, ((mm[0] - a[0]) * dx + (mm[1] - a[1]) * dy) / (dx * dx + dy * dy))), d = Math.hypot(a[0] + t * dx - mm[0], a[1] + t * dy - mm[1]);
   if (d < bd && t > 0.1 && t < 0.9) { bd = d; best = i; } }); return best; }
-function hitWire(mm) { let best = -1, bd = 0.3; S.wires.forEach((q, i) => { const dx = q[2] - q[0], dy = q[3] - q[1], L2 = dx * dx + dy * dy || 1, t = Math.max(0, Math.min(1, ((mm[0] - q[0]) * dx + (mm[1] - q[1]) * dy) / L2)), d = Math.hypot(q[0] + t * dx - mm[0], q[1] + t * dy - mm[1]); if (d < bd) { bd = d; best = i; } }); return best; }
+function hitWire(mm) { let best = -1, bd = Math.max(0.3, 0.6 * DP_HIT / UI.T.k); S.wires.forEach((q, i) => { const dx = q[2] - q[0], dy = q[3] - q[1], L2 = dx * dx + dy * dy || 1, t = Math.max(0, Math.min(1, ((mm[0] - q[0]) * dx + (mm[1] - q[1]) * dy) / L2)), d = Math.hypot(q[0] + t * dx - mm[0], q[1] + t * dy - mm[1]); if (d < bd) { bd = d; best = i; } }); return best; }
 function evPos(e) { const r = cv.getBoundingClientRect(); return [e.clientX - r.left, e.clientY - r.top]; }
 const grid = mm => [Math.round(mm[0]), Math.round(mm[1])];
 function addWire(a, b) { if (!same(a, b) && !S.wires.some(q => (same([q[0], q[1]], a) && same([q[2], q[3]], b)) || (same([q[0], q[1]], b) && same([q[2], q[3]], a)))) S.wires.push([...a, ...b]); }
 
+// Finger (docs/mobil-editor.md): ins Leere wischen scrollt die Seite, zwei Finger zoomen/verschieben, Lupe beim Ziehen, Kontextleiste an der Auswahl
+let tpos = null; const ctxBar = dpCtxBar(cv);
+dpTouchGuard(cv, () => !!UI.drag);
+dpPinch(cv, () => { if (UI.drag) { UI.drag = null; UI.pend = null; recompute(); } },
+  (f, cx, cy, dx, dy) => { const v = UI.view, T = UI.T, [wx, wy] = T.inv(cx, cy), k = T.k * f, z = (a, c) => c + (a - c) / f;
+    UI.view = { x0: z(v.x0, wx) - dx / k, x1: z(v.x1, wx) - dx / k, y0: z(v.y0, wy) - dy / k, y1: z(v.y1, wy) - dy / k }; UI.zoomed = true; drawEd(); });
+cv.addEventListener('pointerdown', e => { tpos = e.pointerType === 'touch' ? evPos(e) : null; }, true);
+cv.addEventListener('pointermove', e => { if (tpos) tpos = evPos(e); }, true);
+function touchUi(ctx, T) {
+  if (tpos && UI.drag && (UI.drag.moved || UI.drag.wire)) dpLoupe(ctx, ...tpos);
+  const s = UI.sel, o = s && (s.t === 'p' ? S.parts[s.i] : S.wires[s.i]); if (!o || UI.drag) return ctxBar.hide();
+  const Q = (s.t === 'p' ? Core.term(o) : [[o[0], o[1]], [o[2], o[3]]]).map(q => T(q)), x = Q.reduce((a, q) => a + q[0], 0) / Q.length, y = Math.min(...Q.map(q => q[1])) - (s.t === 'p' ? 12 : 0);
+  ctxBar.show(x, y, s.t === 'p' ? [['turn', 'Drehen', () => rotate(s.i)], ['close', 'Löschen', () => delPart(s.i)]] : [['close', 'Löschen', () => { S.wires.splice(s.i, 1); UI.sel = null; recompute(); }]]);
+}
+$('fitB').onclick = () => { fit(true); drawEd(); };
 cv.addEventListener('pointerdown', e => {
   const mm = UI.T.inv(...evPos(e)), g = grid(mm); cv.setPointerCapture(e.pointerId);
   switch (UI.tool) {
     case 'drag': {
       // Leitungsende an einem Punkt ohne Bauteilanschluss ziehen, sonst Bauteil, sonst Leitung wählen
-      const near = Math.hypot(mm[0] - g[0], mm[1] - g[1]) < 0.3, onTerm = S.parts.some(p => Core.term(p).some(q => same(q, g)));
+      const near = Math.hypot(mm[0] - g[0], mm[1] - g[1]) < Math.max(0.3, DP_HIT / UI.T.k), onTerm = S.parts.some(p => Core.term(p).some(q => same(q, g)));
       const ends = near && !onTerm ? S.wires.flatMap((q, i) => [same([q[0], q[1]], g) ? [i, 0] : null, same([q[2], q[3]], g) ? [i, 2] : null]).filter(Boolean) : [];
       if (ends.length) { UI.drag = { ends, from: g, moved: false }; UI.sel = null; break; }
       const hp = hitPart(mm);
@@ -740,7 +764,7 @@ cv.addEventListener('pointerdown', e => {
       const hw = hitWire(mm); UI.sel = hw >= 0 ? { t: 'w', i: hw } : null; break;
     }
     case 'wire': if (UI.pend) { if (same(UI.pend, g)) UI.pend = null; else { addWire(UI.pend, g); UI.pend = g; recompute(); return; } } else { UI.pend = g; UI.drag = { wire: true, from: g }; } break;
-    case 'del': { const hp = hitPart(mm); if (hp >= 0) { delPart(hp); return; } const hw = hitWire(mm); if (hw >= 0) { S.wires.splice(hw, 1); UI.sel = null; recompute(); return; } break; }
+    case 'del': { UI.delHov = null; const hp = hitPart(mm); if (hp >= 0) { delPart(hp); return; } const hw = hitWire(mm); if (hw >= 0) { S.wires.splice(hw, 1); UI.sel = null; recompute(); return; } break; }
     default: S.parts.push(P(UI.tool, g[0], g[1], 0)); UI.sel = { t: 'p', i: S.parts.length - 1 }; recompute(); return;
   }
   drawEd(); renderSel();
@@ -748,16 +772,27 @@ cv.addEventListener('pointerdown', e => {
 cv.addEventListener('pointermove', e => {
   const mm = UI.T.inv(...evPos(e)), g = grid(mm), d = UI.drag;
   if (UI.tool === 'wire') { UI.hover = g; if (UI.pend) drawEd(); }
+  if (!d) cursor(mm, g); else if (!d.wire) cv.style.cursor = 'grabbing';
   if (!d || d.wire) return;
   const dx = g[0] - d.from[0], dy = g[1] - d.from[1]; if (!dx && !dy && !d.moved) return;
   if (d.i != null) { const p = S.parts[d.i]; p.x = d.p0[0] + dx; p.y = d.p0[1] + dy; }
   d.ends.forEach(([i, o]) => { const q = S.wires[i]; if (!d.w0) d.w0 = {}; const k = i + ',' + o; if (!d.w0[k]) d.w0[k] = [q[o], q[o + 1]]; q[o] = d.w0[k][0] + dx; q[o + 1] = d.w0[k][1] + dy; });
   d.moved = true; A = Core.analyze(S); drawEd();
 });
+// Cursor beim Überfahren (Maus) zeigt, was ein Klick tut
+function wireEnd(mm, g) { return Math.hypot(mm[0] - g[0], mm[1] - g[1]) < Math.max(0.3, DP_HIT / UI.T.k) && !S.parts.some(p => Core.term(p).some(q => same(q, g))) && S.wires.some(q => same([q[0], q[1]], g) || same([q[2], q[3]], g)); }
+function cursor(mm, g) {
+  const t = UI.tool, hp = () => hitPart(mm) >= 0, hw = () => hitWire(mm) >= 0;
+  const dl = t === 'del' ? (i => i >= 0 ? { t: 'p', i } : (j => j >= 0 ? { t: 'w', i: j } : null)(hitWire(mm)))(hitPart(mm)) : null;
+  if (JSON.stringify(dl) !== JSON.stringify(UI.delHov || null)) { UI.delHov = dl; drawEd(); }
+  cv.style.cursor = t === 'drag' ? (wireEnd(mm, g) || hp() ? 'grab' : hw() ? 'pointer' : 'default')
+    : t === 'wire' ? 'crosshair' : t === 'del' ? (hp() || hw() ? 'pointer' : 'default') : 'copy';
+}
 function endDrag(e) {
   const d = UI.drag; UI.drag = null; if (!d) return;
+  if (e && UI.T) { const mm = UI.T.inv(...evPos(e)); cursor(mm, grid(mm)); }
   if (d.wire) { const g = UI.hover || d.from; if (!same(g, d.from)) { addWire(d.from, g); UI.pend = null; recompute(); } return; }
-  if (!d.moved) { const p = d.i != null && S.parts[d.i]; if (p && p.t === 'sw') { p.on = !p.on; recompute(); } else if (p && p.t === 'mcu') { p.hi = !p.hi; recompute(); } return; }
+  if (!d.moved) { const p = d.i != null && S.parts[d.i]; if (p && p.t === 'sw') { p.on = !p.on; recompute(); } else if (p && p.t === 'mcu') { p.hi = !p.hi; recompute(); } else drawEd(); return; }
   S.wires = S.wires.filter(q => q[0] !== q[2] || q[1] !== q[3]); // zusammengeschobene Leitungen entfallen
   recompute();
 }

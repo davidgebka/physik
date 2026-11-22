@@ -79,7 +79,7 @@ Nur diese Farben sind erlaubt. Module definieren **keine eigenen Farben** in `:r
 - **Bedienung** ist immer `--ctl` (Schwarz), in drei Arten:
   - **Segment** (`.seg`): sich ausschließende Wahl (Modus, Werkzeug, Ansicht), Knöpfe ohne Lücke; aktiv = schwarz gefüllt mit `--ctl-ink`. Nur hier und in der Navigation volles Schwarz.
   - **Schalter** (einzelner Knopf mit `.on`, z. B. „Stand merken“, „Symmetrie“, „Schwappen“): Rahmen 1 px; an = Fläche `--fill` mit 2 px Unterstrich `--ink`.
-  - **Leise Aktion** (`.q`): ohne Rahmen, Symbol + Wort (Rückgängig, Einpassen, Foto, Export, Import, Link); Hover = 1 px Unterstrich. `.ico` = auf dem Telefon nur Symbol.
+  - **Leise Aktion** (`.q`): ohne Rahmen, Symbol + Wort (Rückgängig, Einpassen, Foto, Export, Import, Link); Hover = 1 px Unterstrich. `.ico` = auf dem Telefon nur Symbol – seit 22.11.2026 auch für Vorlage, Stand merken und Segmente mit Symbol (Gefäß-Art, Freihand/Punkte), damit die Editorleiste auf dem Telefon kurz bleibt.
 - **Serien in einem Diagramm** (höchstens 3): 1. Familie durchgezogen 2 px (Licht 2,5 px) · 2. `--ink` gestrichelt [4,4] · 3. `--mut` gestrichelt [3,4]. Aktueller Zustand: senkrechte Linie `--ink`.
 - **Warnung:** Wert oder Linie in `--warn`, dazu immer ⚠ und ein Satz. Grenzbereich als `--warn-a`-Fläche. **Rot nur bei Überschreitung:** Grenzlinien sind `--ink` gestrichelt und werden erst rot, wenn der Wert sie überschreitet. In Kennwerten färbt `.warn` nur den Wert, nicht Label und Notiz. Familienfarben nie für Bedienung (Fortschrittsbalken `--ink`). Bewegung (Grün) und Warnung (Rot) treffen in Mechanismen aufeinander; deshalb nie Bedeutung nur über Farbe.
 - **Falschfarbe** (Leuchtdichte): Verlauf `--mut` → Familie, ab Grenzwert `--warn` mit ⚠-Text.
@@ -130,7 +130,8 @@ Nur diese Farben sind erlaubt. Module definieren **keine eigenen Farben** in `:r
 - Medium: Familie, Fläche `--<familie>-a`.
 - **Griffe** (Stützpunkte): Quadrat 8 × 8 px `--bg` mit 1,5 px `--ink`; ausgewählt 10 × 10 px `--ctl` gefüllt. **Gelenke** (Mechanismen): Kreis r 5, sonst wie Griffe.
 - Bemaßung: 11 px `--ink2`, Wert mit Einheit.
-- Immer `prep(cv)` (HiDPI) und `touch-action:none`.
+- Immer `prep(cv)` (HiDPI) und `touch-action:none`; Editoren mit Fingerbedienung über `dpTouchGuard` (`pan-y`: ins Leere wischen scrollt die Seite, auf einem Objekt bearbeitet es).
+- **Finger** (22.11.2026): Trefferzone 24 px (`DP_HIT`); beim Ziehen Lupe 96 px, zweifach, in der oberen Ecke gegenüber dem Finger, Rahmen 1 px `--ink`, Fadenkreuz `--ink2`; Kontextleiste `.dp-ctx` (normale Knöpfe ohne Lücke, Symbol + Wort) 30 px über der Auswahl, nur bei `pointer: coarse`. Zwei Finger zoomen/verschieben; „Einpassen“ setzt zurück.
 
 ## 8. Diagramme
 - Nur über `chart()` aus `shared/chart.js`; Seitenverhältnis `.ch` 16:8.

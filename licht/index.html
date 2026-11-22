@@ -22,13 +22,14 @@
   <section class="panel">
     <h2>Schirm <small id="edT">Profil, rotationssymmetrisch</small></h2>
     <div class="row">
-      <span class="seg"><button id="mDraw" data-i="pen">Freihand</button><button id="mEdit" class="on" data-i="pts">Punkte</button></span>
+      <span class="seg"><button id="mDraw" class="ico" data-i="pen">Freihand</button><button id="mEdit" class="on ico" data-i="pts">Punkte</button></span>
       <button id="sym" class="on" title="An: Profil wird um die Achse gedreht. Aus: Querschnitt frei zeichnen, entlang der Länge gezogen (Langfeldleuchte)."></button>
       <button id="addP" data-i="plus" title="Weiteren, getrennten Schirm anlegen und gleich freihand zeichnen">Schirm</button>
     </div>
     <div class="row">
-      <button id="preset"></button><button id="cmp"></button>
+      <button id="preset" class="ico"></button><button id="cmp" class="ico"></button>
       <button id="undo" class="q ico" data-i="undo" title="Rückgängig (Strg+Z)">Rückgängig</button>
+      <button id="ptDel" class="q ico" data-i="close" title="Ausgewählten Punkt löschen (Entf oder Doppeltipp)" disabled>Punkt löschen</button>
       <button id="fitB" class="q ico" data-i="fit">Einpassen</button>
     </div>
     <canvas id="ed" role="img"></canvas>
@@ -98,7 +99,7 @@
   <section class="panel wide model">
     <h2>Modell &amp; Gültigkeit</h2>
     <details data-k="model"><summary>Wie gerechnet wird, Begriffe, Grenzen und weiterführende Werkzeuge</summary><div class="txt">
-    <h3>Bedienung</h3><p>Freihand: Schirmprofil zeichnen; mit „Symmetrie an“ egal auf welcher Seite – es wird gespiegelt. „Symmetrie aus“: einen Querschnitt zeichnen, der in die Länge gezogen wird (lange Leuchte, z.&nbsp;B. über einem Esstisch; Enden offen, Lampe als leuchtender Stab über die ganze Länge). Mehrere Schirme: „+ Schirm“ legt einen neuen an; Tippen auf einen Schirm wählt ihn aus, das Material gilt für den ausgewählten. Punkte: ziehen verschiebt, auf die Linie tippen fügt ein, ins Leere tippen hängt an, Doppeltippen löscht. Den gelben Punkt (Lampe) ziehen; nahe der Achse rastet er ein. Innenseite = die Seite zur Lampe hin. Raster 10&nbsp;mm.</p>
+    <h3>Bedienung</h3><p>Freihand: Schirmprofil zeichnen; mit „Symmetrie an“ egal auf welcher Seite – es wird gespiegelt. „Symmetrie aus“: einen Querschnitt zeichnen, der in die Länge gezogen wird (lange Leuchte, z.&nbsp;B. über einem Esstisch; Enden offen, Lampe als leuchtender Stab über die ganze Länge). Mehrere Schirme: „+ Schirm“ legt einen neuen an; Tippen auf einen Schirm wählt ihn aus, das Material gilt für den ausgewählten. Punkte: ziehen verschiebt, auf die Linie tippen fügt ein, ins Leere tippen hebt die Auswahl auf (bei einem neuen Schirm setzt es die ersten zwei Punkte); „Punkt löschen“ (oder Entf, Doppeltippen) entfernt den ausgewählten Punkt. Den gelben Punkt (Lampe) ziehen; nahe der Achse rastet er ein. Innenseite = die Seite zur Lampe hin. Raster 10&nbsp;mm.</p>
     <h3>So wird gerechnet</h3><p>Mit Symmetrie wird das gezeichnete Profil um die Achse gedreht. Alle Schirme sind dünne Schalen ohne Wandstärke, jeder mit eigenem Material; mehrere Schirme beleuchten sich gegenseitig. Das Werkzeug schickt von der Lampe aus Millionen einzelner Lichtteilchen in zufällige Richtungen und verfolgt jedes in 3D (<a href="https://de.wikipedia.org/wiki/Monte-Carlo-Simulation" target="_blank" rel="noopener">Monte-Carlo-Simulation</a>): Trifft es auf einen Schirm, wird es je nach Material gestreut, gespiegelt, durchgelassen oder geschluckt – bis es den Schirm verlässt. Aus allen Teilchen zusammen ergibt sich, wie viel Licht in welche Richtung geht. Weil der Zufall mitspielt, wird das Bild mit der Zeit ruhiger; ±σ gibt die verbleibende Unsicherheit an. <b>Lichtfeld</b>: zeigt, wie hell es im Raum rund um die Leuchte ist – im Schnitt durch die Leuchte, mit Lichtkegel und Schatten. Es wird nur gerechnet, solange die Ansicht offen ist, und braucht mindestens 1 Mio. Lichtteilchen. Grundlagen und Prüffälle: <code>docs/licht-grundlagen.md</code>, <code>licht/test.js</code>.</p>
     <h3>Begriffe</h3><p><a href="https://de.wikipedia.org/wiki/Lichtstrom" target="_blank" rel="noopener">Lichtstrom</a> [lm, Lumen]: die gesamte Lichtmenge, die die Lampe abgibt (steht auf der Verpackung). <a href="https://de.wikipedia.org/wiki/Lichtstärke_(Photometrie)" target="_blank" rel="noopener">Lichtstärke</a> [cd, Candela]: wie viel Licht in eine bestimmte Richtung geht. Die <a href="https://de.wikipedia.org/wiki/Lichtverteilungskurve" target="_blank" rel="noopener">Lichtverteilungskurve</a> (LVK) zeigt die Lichtstärke für jede Richtung; 0° = senkrecht nach unten. C0–C180 und C90–C270 sind zwei senkrecht zueinander stehende Schnitte durch die Leuchte (gleich, solange die Lampe auf der Achse sitzt; bei der langen Leuchte quer und längs). cd/klm = Lichtstärke je 1000&nbsp;lm Lampe – so lassen sich Schirme unabhängig von der Lampe vergleichen. <a href="https://de.wikipedia.org/wiki/Beleuchtungsstärke" target="_blank" rel="noopener">Beleuchtungsstärke</a> [lx, Lux]: wie viel Licht auf einer Fläche ankommt, etwa auf dem Tisch (Essen ca. 200&nbsp;lx, Lesen ca. 500&nbsp;lx). <a href="https://de.wikipedia.org/wiki/Leuchtdichte" target="_blank" rel="noopener">Leuchtdichte</a> [cd/m²]: wie hell eine Fläche für das Auge aussieht – hohe Werte blenden. Wirkungsgrad: Anteil des Lampenlichts, der die Leuchte verlässt; der Rest wird im Schirm geschluckt. Abschirmwinkel: wie weit man von der Waagrechten nach oben schauen muss, bis man die Lampe direkt sieht.</p>
     <h3>Materialwerte</h3><p>Jedes Material teilt auftreffendes Licht auf: gestreut zurückgeworfen (wie eine weiße Wand), gespiegelt (wie ein Spiegel), gestreut durchgelassen (wie Milchglas), klar durchgelassen (wie Fensterglas); der Rest wird geschluckt. Die Werte sind Richtwerte und meist die größte Fehlerquelle: Opalglas lässt 30–65&nbsp;% durch, weiß lackiert wirft 75–90&nbsp;% zurück, gebürstetes Aluminium 55–58&nbsp;%, Spiegelaluminium 75–95&nbsp;%, Klarglas lässt 80–90&nbsp;% durch (IES-Materialtabelle, UNCG eLight, „Material Properties“). Wie viel gebürstetes Aluminium streut und wie viel es spiegelt, ist geschätzt. <b>Papier, Stoff, Filz, satiniertes Acryl und halbdurchsichtiger Kunststoff sind Schätzwerte</b> – sie schwanken stark mit Dicke, Webart und Farbe. Eigene Messwerte unter „Erweitert“ eintragen.</p>
@@ -666,7 +667,7 @@ const ed = $('ed');
 let V = null;
 const MIR = () => S.sym ? [1, -1] : [1];
 function fitView() {
-  const r = ed.getBoundingClientRect(); if (!r.width) return;
+  const r = ed.getBoundingClientRect(); if (!r.width) return; zoomed = false;
   let mx = 60, zmin = S.src.z - 20, zmax = S.src.z + 20;
   S.parts.forEach(pt => pt.pts.forEach(p => { mx = Math.max(mx, Math.abs(p.x)); zmin = Math.min(zmin, p.z); zmax = Math.max(zmax, p.z); }));
   mx = Math.max(mx, Math.abs(S.src.x));
@@ -684,7 +685,7 @@ function lcol(L, Lsc) { // Falschfarbe: --grid2 (dunkel) → --light (hell); ab 
   const a = hex(css('--mut')), b = hex(css('--light')), t = Math.min(1, L / Lsc);
   return `rgb(${a.map((v, i) => Math.round(v + (b[i] - v) * t)).join(',')})`;
 }
-let stroke = null, drag = -1, dragSrc = false, lastTap = { t: 0, i: -1, p: -1 }, pend = null; // pend: Schnappschuss beim Antippen, Rückgängig-Schritt erst beim ersten Verschieben
+let stroke = null, drag = -1, dragSrc = false, lastTap = { t: 0, i: -1, p: -1 }, pend = null, hov = null; // hov: Zeiger über Lampe {src}, Punkt {pi, i} bzw. Einfügestelle {p} (nur Maus) // pend: Schnappschuss beim Antippen, Rückgängig-Schritt erst beim ersten Verschieben
 function drawEditor() {
   if (!V) fitView();
   const { ctx, w, h } = prep(ed);
@@ -721,19 +722,22 @@ function drawEditor() {
       }
     }
   }
+  $('ptDel').disabled = !(S.mode === 'edit' && S.sel >= 0 && cur().pts.length > 2);
   if (S.mode === 'edit' && !stroke) S.parts.forEach((pt, pi) => pt.pts.forEach((p, i) => {
     const [sx, sy] = w2s(p), on = pi === S.cur;
     const a = on && i === S.sel ? 5 : on ? 4 : 2.5; ctx.beginPath(); ctx.rect(Math.round(sx) - a, Math.round(sy) - a, 2 * a, 2 * a);
     ctx.fillStyle = on && i === S.sel ? css('--ctl') : on ? css('--bg') : css('--mut'); ctx.fill();
-    if (on && i !== S.sel) { ctx.strokeStyle = css('--ink'); ctx.lineWidth = 1.5; ctx.stroke(); }
+    if (on && i !== S.sel) { ctx.strokeStyle = css('--ink'); ctx.lineWidth = hov && hov.pi === pi && hov.i === i ? 2.5 : 1.5; ctx.stroke(); }
+    else if (!on && hov && hov.pi === pi && hov.i === i) { ctx.strokeStyle = css('--ink'); ctx.lineWidth = 1.5; ctx.stroke(); }
   }));
+  if (hov && hov.p && !stroke) { const [sx, sy] = w2s(hov.p); ctx.beginPath(); ctx.arc(sx, sy, 4, 0, 2 * Math.PI); ctx.strokeStyle = css('--ink'); ctx.lineWidth = 1.5; ctx.stroke(); }
   // Schirmnummern, sobald es mehrere gibt
   if (S.parts.length > 1 && !stroke) S.parts.forEach((pt, pi) => { if (!pt.pts.length) return;
     let top = pt.pts[0]; pt.pts.forEach(p => { if (p.z > top.z) top = p; });
     const [sx, sy] = w2s(top); ctx.fillStyle = pi === S.cur ? css('--ctl') : css('--ink2'); ctx.fillText(String(pi + 1), sx + 7, sy - 7); });
   // Lampe
   const [lx, ly] = w2s(S.src);
-  ctx.beginPath(); ctx.arc(lx, ly, dragSrc ? 9 : 7.5, 0, 7); ctx.fillStyle = css('--light'); ctx.fill();
+  ctx.beginPath(); ctx.arc(lx, ly, dragSrc || (hov && hov.src) ? 9 : 7.5, 0, 7); ctx.fillStyle = css('--light'); ctx.fill();
   ctx.strokeStyle = css('--ink'); ctx.lineWidth = 1.5; ctx.stroke();
   // Legende Leuchtdichte
   ctx.fillStyle = css('--mut');
@@ -746,6 +750,7 @@ function drawEditor() {
     if (R.st.Lm >= LIM) { ctx.fillStyle = css('--warn'); ctx.fillText('⚠ rot: ≥ 20 000 cd/m²', 8, 56); }
   }
   if (!S.sym) { ctx.fillStyle = css('--ink2'); ctx.textAlign = 'right'; ctx.fillText('Querschnitt · Länge ' + nf0.format(S.len) + ' mm', w - 8, 16); ctx.textAlign = 'left'; }
+  touchUi(ctx);
 }
 const snap = () => JSON.stringify({ parts: S.parts, cur: S.cur, sym: S.sym, src: S.src });
 function pushUndo(sn) { S.undo.push(sn || snap()); if (S.undo.length > 100) S.undo.shift(); }
@@ -765,40 +770,64 @@ function rdp(pts, eps) {
   return rdp(pts.slice(0, idx + 1), eps).slice(0, -1).concat(rdp(pts.slice(idx), eps));
 }
 function hitPoint(sx, sy) { // → [Teil, Punkt]; aktueller Teil hat Vorrang bei Gleichstand
-  let best = [-1, -1], bd = 14;
+  let best = [-1, -1], bd = DP_HIT;
   S.parts.forEach((pt, pi) => pt.pts.forEach((p, i) => { for (const sg of MIR()) { const [px, py] = w2s({ x: sg * p.x, z: p.z }); const d = Math.hypot(px - sx, py - sy) - (pi === S.cur ? 0.5 : 0); if (d < bd) { bd = d; best = [pi, i]; } } }));
   return best;
 }
 function hitSegment(wp) {
-  const q = fold(wp); let best = [-1, -1], bd = 10 / V.s;
+  const q = fold(wp); let best = [-1, -1], bd = (DP_HIT - 4) / V.s;
   S.parts.forEach((pt, pi) => { for (let i = 0; i < pt.pts.length - 1; i++) { const d = distSeg(q, pt.pts[i], pt.pts[i + 1]); if (d < bd) { bd = d; best = [pi, i]; } } });
   return best;
+}
+// Finger (docs/mobil-editor.md): ins Leere wischen scrollt die Seite, zwei Finger zoomen/verschieben, Lupe beim Ziehen, Kontextleiste an der Auswahl
+let zoomed = false, tpos = null; const ctxBar = dpCtxBar(ed);
+dpTouchGuard(ed, () => drag >= 0 || dragSrc || !!stroke);
+dpPinch(ed, () => { stroke = null; if (drag >= 0 || dragSrc) { if (!pend) undo(); drag = -1; dragSrc = false; pend = null; } }, // Ein-Finger-Schritt zurücknehmen
+  (f, cx, cy, dx, dy) => { V = { s: V.s * f, ox: cx - (cx - V.ox) * f + dx, oy: cy - (cy - V.oy) * f + dy }; zoomed = true; drawEditor(); });
+ed.addEventListener('pointerdown', e => { tpos = e.pointerType === 'touch' ? evPos(e) : null; }, true);
+ed.addEventListener('pointermove', e => { if (tpos) tpos = evPos(e); }, true);
+function touchUi(ctx) {
+  if (tpos && (drag >= 0 || dragSrc || stroke)) dpLoupe(ctx, ...tpos);
+  if (S.mode === 'edit' && S.sel >= 0 && drag < 0 && !stroke && cur().pts[S.sel] && cur().pts.length > 2) ctxBar.show(...w2s(cur().pts[S.sel]), [['close', 'Löschen', delSel]]); else ctxBar.hide();
 }
 ed.addEventListener('pointerdown', e => {
   ed.setPointerCapture(e.pointerId);
   const [sx, sy] = evPos(e), wp = s2w(sx, sy), [lx, ly] = w2s(S.src);
-  if (Math.hypot(sx - lx, sy - ly) < 16) { pend = snap(); dragSrc = true; drawEditor(); return; }
+  hov = null; if (Math.hypot(sx - lx, sy - ly) < DP_HIT + 2) { pend = snap(); dragSrc = true; ed.style.cursor = 'grabbing'; drawEditor(); return; }
   if (S.mode === 'draw') { stroke = [fold(wp)]; drawEditor(); return; }
   let [pi, i] = hitPoint(sx, sy);
   const now = performance.now();
   if (i >= 0 && lastTap.i === i && lastTap.p === pi && now - lastTap.t < 350) {
-    if (S.parts[pi].pts.length > 2) { pushUndo(); S.parts[pi].pts.splice(i, 1); S.sel = -1; changed(); }
+    S.cur = pi; S.sel = i; delSel();
     lastTap = { t: 0, i: -1, p: -1 }; return;
   }
   lastTap = { t: now, i, p: pi };
   pend = snap();
-  if (i < 0) {
-    pushUndo(pend); pend = null;
+  if (i < 0) { // auf der Linie einfügen; ins Leere nur anhängen, solange der Schirm noch keine zwei Punkte hat, sonst Auswahl aufheben
     const [si, sgi] = hitSegment(wp);
+    if (sgi < 0 && cur().pts.length >= 2) { pend = null; S.sel = -1; drawEditor(); return; }
+    pushUndo(pend); pend = null;
     if (sgi >= 0) { pi = si; S.parts[pi].pts.splice(sgi + 1, 0, snapP(wp)); i = sgi + 1; }
     else { pi = S.cur; cur().pts.push(snapP(wp)); i = cur().pts.length - 1; }
     changed();
   }
   if (pi !== S.cur) { S.cur = pi; syncCtl(); }
-  drag = i; S.sel = i; drawEditor();
+  drag = i; S.sel = i; ed.style.cursor = 'grabbing'; drawEditor();
 });
+// Rückmeldung beim Überfahren (Maus): Cursor und Hervorhebung zeigen, was ein Klick tut
+function hover(sx, sy, wp) {
+  const [lx, ly] = w2s(S.src); let h = null, c = 'crosshair';
+  if (Math.hypot(sx - lx, sy - ly) < 16) { h = { src: 1 }; c = 'grab'; }
+  else if (S.mode === 'edit') { const [pi, i] = hitPoint(sx, sy);
+    if (i >= 0) { h = { pi, i }; c = 'grab'; }
+    else { const q = snapP(wp), on = hitSegment(wp)[1] >= 0; h = on ? { p: S.sym && wp.x < 0 ? { x: -q.x, z: q.z } : q } : null; c = on || cur().pts.length < 2 ? 'copy' : 'default'; } }
+  ed.style.cursor = c;
+  if (JSON.stringify(h) !== JSON.stringify(hov)) { hov = h; drawEditor(); }
+}
+ed.addEventListener('pointerleave', () => { if (hov && drag < 0 && !dragSrc) { hov = null; drawEditor(); } });
 ed.addEventListener('pointermove', e => {
   const [sx, sy] = evPos(e), wp = s2w(sx, sy);
+  if (e.pointerType === 'mouse' && !dragSrc && !stroke && drag < 0) return hover(sx, sy, wp);
   if (dragSrc) { const x = Math.round(S.sym ? Math.abs(wp.x) : wp.x), q = { x: Math.abs(x) < 4 ? 0 : x, z: Math.round(wp.z) };
     if (q.x === S.src.x && q.z === S.src.z) return;
     if (pend) { pushUndo(pend); pend = null; } S.src = q; changed(true); }
@@ -810,6 +839,7 @@ ed.addEventListener('pointermove', e => {
 });
 function endPointer() {
   pend = null; if (dirty) changed();
+  if (dragSrc || drag >= 0) ed.style.cursor = 'grab';
   if (dragSrc) { dragSrc = false; drawEditor(); }
   if (stroke) {
     if (stroke.length > 3) {
@@ -821,16 +851,17 @@ function endPointer() {
     stroke = null; changed(); fitView(); drawEditor();
   }
   if (drag >= 0) { drag = -1; const r = ed.getBoundingClientRect();
-    if (cur().pts.some(p => { const [x, y] = w2s(p); return x < 10 || x > r.width - 10 || y < 10 || y > r.height - 10; })) { fitView(); drawEditor(); } }
+    if (!zoomed && cur().pts.some(p => { const [x, y] = w2s(p); return x < 10 || x > r.width - 10 || y < 10 || y > r.height - 10; })) fitView(); drawEditor(); }
 }
 ed.addEventListener('pointerup', endPointer);
 ed.addEventListener('pointercancel', endPointer);
 window.addEventListener('keydown', e => {
   if (dpUndoKey(e)) { e.preventDefault(); undo(); }
-  else if ((e.key === 'Delete' || e.key === 'Backspace') && S.sel >= 0 && cur().pts.length > 2 && !/INPUT|SELECT/.test(document.activeElement.tagName)) {
-    pushUndo(); cur().pts.splice(S.sel, 1); S.sel = -1; changed();
-  }
+  else if ((e.key === 'Delete' || e.key === 'Backspace') && !dpEditing()) delSel();
 });
+// ausgewählten Punkt löschen (Knopf „Punkt löschen“, Entf, Doppeltipp)
+function delSel() { if (S.sel < 0 || cur().pts.length <= 2) return; pushUndo(); cur().pts.splice(S.sel, 1); S.sel = -1; changed(); }
+$('ptDel').onclick = delSel;
 function undo() { if (!S.undo.length) return; Object.assign(S, JSON.parse(S.undo.pop())); S.sel = -1; fitView(); changed(); }
 // later: Ziehen – höchstens ein Neustart je Bild (Abschirmwinkel, Worker, Zeichnen)
 let dirty = false, craf = 0;
@@ -980,7 +1011,7 @@ function drawAll() { drawEditor(); drawLvk(); drawE(); drawStats(); }
 // ---- Bedienelemente ----
 // kurzer Hinweis je Werkzeug (ausführlich unter „Modell & Gültigkeit → Bedienung“)
 function hint() { $('hint').textContent = S.mode === 'draw' ? (S.sym ? 'Profil in einem Zug zeichnen – egal auf welcher Seite, es wird gespiegelt.' : 'Querschnitt in einem Zug zeichnen – er wird entlang der Länge gezogen.')
-  : 'Punkte ziehen · auf die Linie tippen fügt ein · Doppeltipp löscht · gelben Punkt (Lampe) ziehen.'; }
+  : 'Punkte ziehen · auf die Linie tippen fügt ein · gelben Punkt (Lampe) ziehen.'; }
 function setMode(m) { S.mode = m; $('mDraw').classList.toggle('on', m === 'draw'); $('mEdit').classList.toggle('on', m === 'edit'); hint(); drawEditor(); }
 $('mDraw').onclick = () => setMode('draw');
 $('mEdit').onclick = () => setMode('edit');
@@ -1084,7 +1115,8 @@ let linkT = 0;
 function linkLater() { clearTimeout(linkT); linkT = setTimeout(() => { if (S.parts.some(pt => pt.pts.length >= 2)) dpHashSet('l', snapshot()); }, 400); }
 // eingefügter Link im selben Tab (dpHashSet löst kein hashchange aus)
 window.addEventListener('hashchange', () => { const keep = snap(), d = dpHashGet('l'); if (d && apply(d)) { pushUndo(keep); syncCtl(); fitView(); restart(); } });
-window.addEventListener('resize', () => { fitView(); drawAll(); });
+let lastW = 0; // Telefon: Adressleiste ändert beim Scrollen nur die Höhe – dann Zoom behalten
+window.addEventListener('resize', () => { if (ed.clientWidth === lastW) return; lastW = ed.clientWidth; fitView(); drawAll(); });
 dpHeader('licht'); dpIcons();
 apply(dpHashGet('l') || {});
 syncCtl();

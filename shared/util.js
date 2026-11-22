@@ -46,7 +46,8 @@ const DP_ICONS = {
   link: '<path d="M7 9a2.5 2.5 0 0 0 3.5 0l2-2a2.5 2.5 0 0 0-3.5-3.5l-.8.8M9 7a2.5 2.5 0 0 0-3.5 0l-2 2A2.5 2.5 0 0 0 7 12.5l.8-.8"/>',
   wave: '<path d="M2 9c2-3 4-3 6 0s4 3 6 0"/><path d="M2 13h12"/>',
   more: '<circle cx="3.5" cy="8" r=".8"/><circle cx="8" cy="8" r=".8"/><circle cx="12.5" cy="8" r=".8"/>',
-  check: '<path d="m3 8.5 3 3 7-7"/>'
+  check: '<path d="m3 8.5 3 3 7-7"/>',
+  turn: '<path d="M12.5 8A4.5 4.5 0 1 1 8 3.5h2"/><path d="m8.5 1.5 2 2-2 2"/>'
 };
 const dpIco = n => `<svg class="i" viewBox="0 0 16 16" aria-hidden="true">${DP_ICONS[n] || ''}</svg>`;
 // Knopf mit Symbol und Beschriftung; Beschriftung als .lbl (auf dem Telefon bei leisen Knöpfen ausgeblendet)
@@ -219,4 +220,56 @@ function dpSketch(cv, shapes) {
     if (s.f) { ctx.fillStyle = css(s.f); ctx.fill(); }
     if (s.c !== null) { ctx.strokeStyle = css(s.c || '--ink'); ctx.lineWidth = s.w || 1.5; ctx.setLineDash(s.dash || []); ctx.stroke(); ctx.setLineDash([]); }
   }
+}
+
+// ---- Touch (Telefon/Tablet): Editoren mit dem Finger, docs/mobil-editor.md ----
+const DP_COARSE = matchMedia('(pointer: coarse)').matches;
+const DP_HIT = DP_COARSE ? 24 : 14; // Trefferradius in px: Finger ~ halbe Bedienhöhe (48 px), Maus 14 px
+// Scrollen und Bearbeiten trennen: der Editor lässt senkrechtes Scrollen zu; busy() → true, wenn der Finger gerade etwas
+// bearbeitet (pointerdown des Moduls läuft vor touchstart), dann scrollt die Seite nicht. Zwei Finger scrollen nie (Zoom).
+function dpTouchGuard(cv, busy) {
+  cv.style.touchAction = 'pan-y';
+  cv.addEventListener('touchstart', e => { if (e.touches.length > 1 || busy()) e.preventDefault(); }, { passive: false });
+}
+// Zwei Finger: zoomen und verschieben. start() bricht die Ein-Finger-Bearbeitung ab; move(f, cx, cy, dx, dy): Faktor seit dem
+// letzten Aufruf um die Mitte (Canvas-px), Verschiebung in px. Ein Finger bleibt dem Modul.
+function dpPinch(cv, start, move) {
+  const P = new Map(); let last = null;
+  const pos = e => { const r = cv.getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top }; };
+  const mid = () => { const [a, b] = [...P.values()]; return { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2, d: Math.hypot(a.x - b.x, a.y - b.y) || 1 }; };
+  cv.addEventListener('pointerdown', e => { if (e.pointerType !== 'touch') return; P.set(e.pointerId, pos(e));
+    if (P.size === 2) { start(); last = mid(); } if (P.size > 1) e.stopImmediatePropagation(); }, true);
+  cv.addEventListener('pointermove', e => { if (!P.has(e.pointerId)) return; P.set(e.pointerId, pos(e)); if (!last || P.size < 2) return;
+    e.stopImmediatePropagation(); const m = mid(); move(Math.min(1.5, Math.max(0.67, m.d / last.d)), m.x, m.y, m.x - last.x, m.y - last.y); last = m; }, true);
+  const up = e => { if (!P.delete(e.pointerId)) return; if (last) { e.stopImmediatePropagation(); if (P.size < 2) last = null; } };
+  cv.addEventListener('pointerup', up, true); cv.addEventListener('pointercancel', up, true);
+}
+// Lupe beim Ziehen mit dem Finger: Ausschnitt um (x, y) doppelt groß in einer oberen Ecke, damit der Finger den Punkt nicht verdeckt.
+// Am Ende des Zeichnens aufrufen; (x, y) in Canvas-px.
+function dpLoupe(ctx, x, y, s = 96, z = 2) {
+  const cv = ctx.canvas, w = cv.clientWidth, d = cv.width / (w || 1), src = s / z;
+  const bx = x < s + 36 && y < s + 36 ? w - s - 6 : 6, by = 6;
+  ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.drawImage(cv, (x - src / 2) * d, (y - src / 2) * d, src * d, src * d, bx * d, by * d, s * d, s * d);
+  ctx.setTransform(d, 0, 0, d, 0, 0); ctx.strokeStyle = css('--ink'); ctx.lineWidth = 1; ctx.strokeRect(bx + 0.5, by + 0.5, s, s);
+  ctx.beginPath(); const cx = bx + s / 2, cy = by + s / 2; ctx.moveTo(cx - 6, cy); ctx.lineTo(cx + 6, cy); ctx.moveTo(cx, cy - 6); ctx.lineTo(cx, cy + 6);
+  ctx.strokeStyle = css('--ink2'); ctx.stroke(); ctx.restore();
+}
+// Kontextleiste an der Auswahl (nur Finger): Knöpfe über dem gewählten Objekt statt Doppeltipp, Entf, R.
+// show(x, y, [[Symbol, Text, fn], …]) mit (x, y) in Canvas-px; hide() z. B. beim Ziehen.
+function dpCtxBar(cv) {
+  const el = document.createElement('div'); el.className = 'dp-ctx'; el.hidden = true; cv.after(el);
+  let key = '';
+  return {
+    show(x, y, items) {
+      if (!DP_COARSE) return;
+      const k = items.map(i => i[1]).join('|');
+      if (k !== key) { key = k; el.innerHTML = ''; items.forEach(([ic, t, f]) => { const b = document.createElement('button'); b.type = 'button'; dpBtn(b, ic, t); b.onclick = f; el.append(b); }); }
+      el.hidden = false;
+      const w = el.offsetWidth, h = el.offsetHeight, cw = cv.clientWidth, ch = cv.clientHeight, gap = 30;
+      const top = y - h - gap >= 0 ? y - h - gap : Math.min(ch - h, y + gap);
+      el.style.left = cv.offsetLeft + Math.max(0, Math.min(cw - w, x - w / 2)) + 'px'; el.style.top = cv.offsetTop + top + 'px';
+    },
+    hide() { el.hidden = true; }
+  };
 }

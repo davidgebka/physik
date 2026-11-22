@@ -35,7 +35,7 @@ Bei Zielkonflikten entscheidet A.
 ## Konventionen (verbindlich)
 - **Struktur:** `index.html` (Startseite) · `shared/` (style.css, util.js, chart.js) · `tools/` (load-core.js, check.js) · `_vorlage/` · `<modul>/index.html` (Rechenkern; Oberfläche bei Bedarf in weiteren Skripten im Modulordner, z. B. `gefaess/app.js`) + `<modul>/test.js` · `docs/` (konzept, styleguide, historie, `<modul>.md`)
 - **Modul-Registry:** `DP_MODULES` in `shared/util.js` – einzige Stelle (`name` = einziger Modulname überall, `desc` = ein Satz auf der Startseite; keine Entwurfsfragen, keine Untertitel); Kopfzeile per `dpHeader(key)`
-- **Shared-Globale:** `dpEditing`/`dpUndoKey` (Tastatur: Strg+Z nicht beim Tippen), `$`, `nf0`, `nf1`, `css` (Token-Werte gecacht in `dpCss`), `prep`, `polyPath`, `dpDots`, `dpMq`, `dpDownload`, `dpHashGet/Set`, `niceStep`, `chart`; Entwurfshilfen `dpVerdict` (Urteil), `dpHistory` (Rückgängig, Strg+Z), `dpCompare` + `dpDelta` (Variantenvergleich), `dpGallery` + `dpSketch` (Vorlagen-Galerie mit Skizze, Name, Entwurf/Prinzip; alle vier Module); Darstellung (Design-Audit 21.11.2026): `dpStats` + `dpStat` (Urteil, Hauptkennwerte, „Alle Werte“), `dpTerm` (Fachbegriff mit Erklärung), `dpIco`/`dpBtn`/`dpIcons` (SVG-Symbole), `dpMenu` (Telefon „⋯“), `DP_LV`; `legend` in `chart()`, `DP_CFONT`
+- **Shared-Globale:** `dpEditing`/`dpUndoKey` (Tastatur: Strg+Z nicht beim Tippen), `$`, `nf0`, `nf1`, `css` (Token-Werte gecacht in `dpCss`), `prep`, `polyPath`, `dpDots`, `dpMq`, `dpDownload`, `dpHashGet/Set`, `niceStep`, `chart`; Entwurfshilfen `dpVerdict` (Urteil), `dpHistory` (Rückgängig, Strg+Z), `dpCompare` + `dpDelta` (Variantenvergleich), `dpGallery` + `dpSketch` (Vorlagen-Galerie mit Skizze, Name, Entwurf/Prinzip; alle vier Module); Darstellung (Design-Audit 21.11.2026): `dpStats` + `dpStat` (Urteil, Hauptkennwerte, „Alle Werte“), `dpTerm` (Fachbegriff mit Erklärung), `dpIco`/`dpBtn`/`dpIcons` (SVG-Symbole), `dpMenu` (Telefon „⋯“), `DP_LV`; Touch (22.11.2026, `docs/mobil-editor.md`): `DP_COARSE`, `DP_HIT` (Trefferradius), `dpTouchGuard` (Scrollen vs. Bearbeiten), `dpPinch` (zwei Finger), `dpLoupe` (Lupe), `dpCtxBar` (Kontextleiste); `legend` in `chart()`, `DP_CFONT`
 - **Links** immer explizit auf `…/index.html` (damit file:// funktioniert)
 - **Technik:** Vanilla JS, Canvas 2D (WebGL/WebGPU nur, wo nötig), keine CDNs
 - **Einheiten:** mm, ml, g, N, lm/cd/lx, Winkel in Grad in der UI; deutsche Zahlenformatierung; Alltagsbezug mitgeben, wo er hilft (N ≈ kg)
@@ -55,11 +55,11 @@ Bei Zielkonflikten entscheidet A.
 ## Module (Stand 22.11.2026; Details in `docs/<modul>.md`; Spalte Modul = `name` in `DP_MODULES`)
 | Modul | Key | Stand | Entwurfsfrage |
 |---|---|---|---|
-| Gefäß | `gefaess` | v1.16 | Wie viel passt rein, wo sind Eichstriche, wann gießt es aus, kippt es um, schwappt es beim Tragen über? |
-| Licht | `licht` | v2.8 | Wie verteilt der Schirm das Licht, wird der Tisch hell genug, blendet es? |
-| Statik | `last` | v1.9 | Hält das Brett/der Balken, wie stark hängt es durch, schwingt es? |
-| Mechanik | `mechanismus` | v1.7 | Wie bewegt sich das Getriebe, wo klemmt es, welche Kraft braucht es? |
-| Elektronik | `elektronik` | v3.1 | Hält der Akku lange genug, reicht der Strom, wird etwas zu heiß? |
+| Gefäß | `gefaess` | v1.18 | Wie viel passt rein, wo sind Eichstriche, wann gießt es aus, kippt es um, schwappt es beim Tragen über? |
+| Licht | `licht` | v2.10 | Wie verteilt der Schirm das Licht, wird der Tisch hell genug, blendet es? |
+| Statik | `last` | v1.11 | Hält das Brett/der Balken, wie stark hängt es durch, schwingt es? |
+| Mechanik | `mechanismus` | v1.9 | Wie bewegt sich das Getriebe, wo klemmt es, welche Kraft braucht es? |
+| Elektronik | `elektronik` | v3.3 | Hält der Akku lange genug, reicht der Strom, wird etwas zu heiß? |
 
 ## Roadmap (21.11.2026, nach Persona A)
 **Moratorium auf Tiefe:** In Gefäß und Licht keine neuen Physik-Verfeinerungen, bis die Punkte „Jetzt“ erledigt sind. Fehlerbehebungen und Bedienung gehen immer.
