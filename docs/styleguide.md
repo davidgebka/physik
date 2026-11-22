@@ -43,6 +43,7 @@ Nur diese Farben sind erlaubt. Module definieren **keine eigenen Farben** in `:r
 | `--mut` | `#767676` | Tertiär: deaktiviert, Hilfslinien, Vergleichskurven, Spiegelseite | 4,5:1 |
 | `--dot` | `#c8c8c8` | Rasterpunkte der Zeichenfläche (fein) und der Diagramme | – (nur Raster) |
 | `--dot-bg` | `#dcdcdc` | Rasterpunkte der Seite (heller, liegt auch hinter Text) | – (nur Raster) |
+| `--dot-sub` | `#e8e8e8` | Zwischenraster der Zeichenflächen (halber Abstand, am hellsten) | – (nur Raster) |
 | `--fill` | `#f0f0f0` | neutrale Fläche: ternäre Glieder, markierte Bereiche, Fortschritts-Hintergrund | – |
 | `--ctl` | `#111111` | **Bedienung aktiv**: gewählter Button/Reiter, ausgewählter Griff, Freihandstrich, Antriebsglied, Regler, Häkchen | 18,9:1 |
 | `--ctl-ink` | `#ffffff` | Schrift und Symbole auf `--ctl` | 18,9:1 |
@@ -126,7 +127,7 @@ Nur diese Farben sind erlaubt. Module definieren **keine eigenen Farben** in `:r
 - Keine Radien, keine Schatten, keine Verläufe (außer Falschfarbe und Feldbild).
 
 ## 7. Zeichenfläche (Editor-Canvas)
-- **Raster = Maßstab = Seitenraster** (22.11.2026): Maßstab nur in Stufen „1 Seitenpunkt (24 px) = s mm“, s = 1 · 1,5 · 2 · 2,5 · 3 · 4 · 5 · 6 · 8 × 10ⁿ; Ursprung auf einem Seitenpunkt. `dpSnap(cv, k, ox, oy, near)` rastet die Ansicht ein (Einpassen: nächstkleinere Stufe, nach Zoomen: nächstgelegene; Bildmitte bleibt), `dpDots(ctx, w, h, k, ox, oy)` zeichnet die feinen Punkte (Ø 2 px, `--dot`, etwas dunkler als die Seite – zeigt die Zeichenfläche) genau auf die Seitenpunkte, jeden 5. ab Ursprung grob (Ø 3 px, `--mut`). Maßstab als Text in einer unteren Ecke über `dpScale(s)`: „1 Punkt = 2,5 mm“. Elektronik: 1 Rasterschritt = ½, 1 oder 2 Seitenpunkte.
+- **Raster = Maßstab = Seitenraster** (22.11.2026): Maßstab nur in Stufen „1 Seitenpunkt (24 px) = s mm“, s = 1 · 1,5 · 2 · 2,5 · 3 · 4 · 5 · 6 · 8 × 10ⁿ; Ursprung auf einem Seitenpunkt. `dpSnap(cv, k, ox, oy, near)` rastet die Ansicht ein (Einpassen: nächstkleinere Stufe, nach Zoomen: nächstgelegene; Bildmitte bleibt), `dpDots(ctx, w, h, k, ox, oy)`: die Seitenpunkte sind das Raster, dazu ein **Zwischenraster** auf halbem Abstand (Ø 2 px, `--dot-sub`, heller als die Seite; `dpSubDots`) – daran erkennt man die Zeichenfläche (Wunsch des Nutzers 22.11.2026) –, jeder 5. Punkt ab Ursprung grob (Ø 3 px, `--mut`). Maßstab als Text in einer unteren Ecke über `dpScale(s)`: „1 Punkt = 2,5 mm“. Elektronik: 1 Rasterschritt = ½, 1 oder 2 Seitenpunkte.
 - Kontur `--ink` 2 px (Hauptkörper 2,5 px); Hilfslinien und Achse `--mut` 1 px [2,4].
 - Medium: Familie, Fläche `--<familie>-a`.
 - **Griffe** (Stützpunkte): Quadrat 8 × 8 px `--bg` mit 1,5 px `--ink`; ausgewählt 10 × 10 px `--ctl` gefüllt. **Gelenke** (Mechanismen): Kreis r 5, sonst wie Griffe.

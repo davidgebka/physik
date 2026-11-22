@@ -84,7 +84,7 @@ function dpPhase(cv) { const r = cv.getBoundingClientRect(), m = v => ((-v % DP_
 // Ansicht einrasten: k [px/mm] auf die nächste Stufe (abgerundet = Inhalt passt weiter; near = nächstgelegene, nach Zoomen),
 // Bildmitte bleibt, Ursprung (ox, oy) auf den nächsten Seitenpunkt. Liefert [k, ox, oy]; idempotent. steps z. B. [1, 2, 5] (Elektronik).
 function dpSnap(cv, k, ox, oy, near, steps = DP_STEPS) {
-  if (dpPinching || !(k > 0)) return [k, ox, oy];
+  if (dpPinching || !(k > 0) || !isFinite(k)) return [k, ox, oy];
   const [px, py, r] = dpPhase(cv), s0 = DP_U / k, p = 10 ** Math.floor(Math.log10(s0) + 1e-9);
   const c = steps.map(v => v * p).concat(10 * p);
   const s = near ? c.reduce((a, b) => Math.abs(Math.log(b / s0)) < Math.abs(Math.log(a / s0)) ? b : a)
@@ -92,18 +92,29 @@ function dpSnap(cv, k, ox, oy, near, steps = DP_STEPS) {
   const k2 = DP_U / s, cx = r.width / 2, cy = r.height / 2, al = (v, q) => q + Math.round((v - q) / DP_U) * DP_U;
   return [k2, al(cx - (cx - ox) * k2 / k, px), al(cy - (cy - oy) * k2 / k, py)];
 }
-// Punktraster in mm (Styleguide § 7): Bildschirm = ox + x·k, oy − y·k. Eingerastet (dpSnap): Canvas durchsichtig, feine Punkte
-// (--dot) genau auf den Seitenpunkten, jeder 5. ab Ursprung grob (--mut); liefert s (mm je Punkt). Sonst (Zoomen mit zwei Fingern)
-// deckend mit eigenem Raster: fein 10 mm, verfünffacht bis ≥ 8 px. Liefert die feine Stufe in mm.
+// Zwischenraster der Zeichenflächen: hellste Punkte (--dot-sub) auf halbem Seitenrasterabstand – macht die Zeichenfläche
+// erkennbar, ohne das durchlaufende Seitenraster zu unterbrechen
+function dpSubDots(ctx, w, h) {
+  const [px, py] = dpPhase(ctx.canvas), d = DP_U / 2, x0 = px % d, y0 = py % d; ctx.beginPath();
+  for (let x = x0, i = Math.round((x0 - px) / d); x <= w; x += d, i++) for (let y = y0, j = Math.round((y0 - py) / d); y <= h; y += d, j++) {
+    if (!(i & 1) && !(j & 1)) continue; // Seitenpunkte liegen schon darunter
+    ctx.moveTo(x + 1, y); ctx.arc(x, y, 1, 0, 7);
+  }
+  ctx.fillStyle = css('--dot-sub'); ctx.fill();
+}
+// Punktraster in mm (Styleguide § 7): Bildschirm = ox + x·k, oy − y·k. Eingerastet (dpSnap): Canvas durchsichtig, die Seitenpunkte
+// sind das Raster (1 Punkt = s mm), dazu das Zwischenraster (s/2) und jeder 5. Punkt ab Ursprung grob (--mut); liefert s.
+// Sonst (Zoomen mit zwei Fingern) deckend mit eigenem Raster: fein 10 mm (--dot), verfünffacht bis ≥ 8 px; liefert die feine Stufe.
 function dpDots(ctx, w, h, k, ox, oy) {
   const cv = ctx.canvas, [px, py] = dpPhase(cv), s = DP_U / k, p = 10 ** Math.floor(Math.log10(s) + 1e-9);
   const on = (v, q) => Math.abs(((v - q) % DP_U + DP_U + DP_U / 2) % DP_U - DP_U / 2) < 0.01;
   const snapped = !dpPinching && DP_STEPS.some(v => Math.abs(v * p / s - 1) < 1e-6) && on(ox, px) && on(oy, py);
   cv.style.background = snapped ? '' : 'var(--bg)';
+  if (snapped) dpSubDots(ctx, w, h);
   const f = snapped ? s : (() => { let f = 10; while (f * k < 8) f *= 5; return f; })(), d = f * k;
   const i0 = Math.ceil(-ox / d - 1e-6), i1 = Math.floor((w - ox) / d + 1e-6);
   const j0 = Math.ceil((oy - h) / d - 1e-6), j1 = Math.floor(oy / d + 1e-6);
-  for (const big of [false, true]) { // je Stufe ein Pfad: ein fill() statt eines je Punkt
+  for (const big of snapped ? [true] : [false, true]) { // je Stufe ein Pfad: ein fill() statt eines je Punkt
     ctx.beginPath();
     for (let i = i0; i <= i1; i++) for (let j = j0; j <= j1; j++) {
       if ((i % 5 === 0 && j % 5 === 0) !== big) continue;
