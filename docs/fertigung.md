@@ -2,7 +2,7 @@
 
 Vom Modul-Chat gepflegt (Branch `modul/fertigung`). Verbindliche Konventionen stehen in `docs/konzept.md`.
 
-**Stand:** v1.1 (22.11.2026), Key `fertigung`, Hash `#f=`. In `DP_MODULES`, Familie Werkstoff `--mat`; Werkstoffe mit `base` auf `shared/materials.js`.
+**Stand:** v1.3 (22.11.2026), Key `fertigung`, Hash `#f=`. In `DP_MODULES`, Modulfarbe `--fab` (Familie Werkstoff); Werkstoffe mit `base` auf `shared/materials.js`.
 
 ## Entwurfsfrage
 „Lässt sich das so herstellen und verbinden, wie ich es gezeichnet habe?“ – Persona A legt im Entwurf Biegeradien, Schenkellängen, Lochabstände, Wanddicken und Verschraubungen fest; falsch gewählt fällt das erst beim Fertiger auf. Nachschlagewerk mit Urteil, keine Umform- oder Festigkeitssimulation.
@@ -93,15 +93,15 @@ Faustregeln für Luftbiegen auf der Abkantbank und für Standardgewinde; keine B
 ## v1.2 (22.11.2026, Style-Chat: eigene Modulfarbe)
 - Farbe `--fab` `#9e366f` statt `--mat` (`FAM`): helleres Bordeaux in der Familie Werkstoff, unterscheidbar von Material. Nur Farbtoken, Rechnung unverändert, Tests grün.
 
+## v1.3 (22.11.2026, Eingaben)
+- **Fehler behoben:** Dicke war auf 12 mm begrenzt; größere Eingaben (z. B. 20) wurden still verworfen, es blieb der Wert des ersten Tastendrucks (gemeldet am Telefon). Jetzt bis 60 mm (Kunststoffwände, Dome).
+- **Alle Zahlenfelder:** Wert außerhalb des Bereichs wird rot markiert mit Hinweis, beim Verlassen des Felds auf die Grenze gesetzt – nie mehr still verworfen.
+- Zuschnitt „–“ statt negativer Länge, wenn ein Schenkel geometrisch zu kurz ist.
+- Browser (390 px): Dicke 20 → übernommen, 80 → markiert, beim Verlassen 60; Konsole fehlerfrei.
+
 ## Offen (Pareto)
 1. ~~Registry-Eintrag, eigene Farbe, gemeinsame Materialschlüssel~~ – erledigt 22.11.2026 (v1.1, Familie Werkstoff `--mat`).
 2. Werte einzeln gegen Quellen prüfen (Mindestradien, Rückfederung, Einschraubtiefe), Quelle je Wert.
 3. Vorlagen-Galerie, Rückgängig, Stand merken (`dpGallery`, `dpHistory`, `dpCompare`).
 4. Editor direkt: Schenkel ziehen, Löcher auf der Abwicklung setzen und gegen die Sperrzone prüfen; Winkel je Biegung.
 5. Weitere Werkzeuge nach Prüffrage (Holz verschrauben, Schneiden, Passungen, 3D-Druck, Spritzguss).
-
-## v1.1 (22.11.2026)
-- **Fehler behoben:** Dicke war auf 12 mm begrenzt; größere Eingaben (z. B. 20) wurden still verworfen, es blieb der Wert des ersten Tastendrucks (gemeldet am Telefon). Jetzt bis 60 mm (Kunststoffwände, Dome).
-- **Alle Zahlenfelder:** Wert außerhalb des Bereichs wird rot markiert mit Hinweis, beim Verlassen des Felds auf die Grenze gesetzt – nie mehr still verworfen.
-- Zuschnitt „–“ statt negativer Länge, wenn ein Schenkel geometrisch zu kurz ist.
-- Browser (390 px): Dicke 20 → übernommen, 80 → markiert, beim Verlassen 60; Konsole fehlerfrei.

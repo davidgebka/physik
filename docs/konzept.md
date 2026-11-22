@@ -1,4 +1,4 @@
-| Fertigung | `fertigung` | v1.1 | Lässt sich das so herstellen und verbinden, wie ich es gezeichnet habe? |
+| Fertigung | `fertigung` | v1.3 | Lässt sich das so herstellen und verbinden, wie ich es gezeichnet habe? |
 # Designphysik – Konzept, Architektur, Konventionen
 
 Zentrales Dokument, kurz gehalten. Jede Sitzung liest es zuerst (siehe `CLAUDE.md`). Hier stehen nur Ziel, Regeln und Planung; Modulstände in `docs/<modul>.md`, Integrations-Historie in `docs/historie.md`.
