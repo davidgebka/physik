@@ -4,7 +4,7 @@
    Schriftstufen (§ 5): 12 Notiz/Achse · 14 Text/Bedienung · 18 Urteil/Tabellenwert · 28 Hauptkennwert. */
 :root{
   --u:24px;--h:24px;--pad:24px;--gx:0px; /* --pad Seitenrand, --gx waagerechte Lage des Seitenrasters (Telefon: Punkte auf dem 12-px-Rand) */
-  --bg:#ffffff;--ink:#111111;--ink2:#4d4d4d;--mut:#767676;--dot:#c8c8c8;--dot-bg:#dcdcdc;--fill:#f0f0f0;
+  --bg:#ffffff;--ink:#111111;--ink2:#4d4d4d;--mut:#767676;--dot:#c8c8c8;--dot-bg:#dcdcdc;--dot-sub:#e8e8e8;--fill:#f0f0f0;
   --ctl:#111111;--ctl-ink:#ffffff;
   --warn:#d32f2f;--warn-a:rgba(211,47,47,.12);
   --water:#1f6fe0;--water-a:rgba(31,111,224,.28);

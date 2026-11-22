@@ -563,7 +563,6 @@ function fit(full) {
 function makeT(w, h) {
   const v = UI.view, k0 = Math.min(w / (v.x1 - v.x0), h / (v.y1 - v.y0));
   const [k, ox, oy] = dpSnap(cv, k0, w / 2 - k0 * (v.x0 + v.x1) / 2, h / 2 + k0 * (v.y0 + v.y1) / 2, UI.zoomed); // Raster auf das Seitenraster
-  if (!dpPinching) UI.view = { x0: -ox / k, x1: (w - ox) / k, y0: (oy - h) / k, y1: oy / k }; // sichtbarer Ausschnitt, damit Zoomen ohne Sprung beginnt
   return { k, ox, oy, f: p => [ox + k * p[0], oy - k * p[1]], inv: (sx, sy) => [(sx - ox) / k, (oy - sy) / k] };
 }
 
@@ -810,7 +809,8 @@ const snap = v => Math.round(v);
 // Finger (docs/mobil-editor.md): ins Leere wischen scrollt die Seite, zwei Finger zoomen/verschieben, Lupe beim Ziehen, Kontextleiste an der Auswahl
 let tpos = null; const ctxBar = dpCtxBar(cv);
 dpTouchGuard(cv, () => !!UI.drag);
-dpPinch(cv, () => { if (UI.drag) { const d = UI.drag; UI.drag = null; if (d.move) save(); else recompute(true); } },
+dpPinch(cv, () => { const T = UI.T, [x0, y0] = T.inv(0, cv.clientHeight), [x1, y1] = T.inv(cv.clientWidth, 0); UI.view = { x0, x1, y0, y1 }; // sichtbarer (eingerasteter) Ausschnitt: Zoomen beginnt ohne Sprung
+  if (UI.drag) { const d = UI.drag; UI.drag = null; if (d.move) save(); else recompute(true); } },
   (f, cx, cy, dx, dy) => { const v = UI.view, T = UI.T, [wx, wy] = T.inv(cx, cy), k = T.k * f, z = (a, c) => c + (a - c) / f;
     UI.view = { x0: z(v.x0, wx) - dx / k, x1: z(v.x1, wx) - dx / k, y0: z(v.y0, wy) + dy / k, y1: z(v.y1, wy) + dy / k }; UI.zoomed = true; drawEd(); });
 cv.addEventListener('pointerdown', e => { tpos = e.pointerType === 'touch' ? evPos(e) : null; }, true);

@@ -544,7 +544,6 @@ function makeT(w, h) {
   const v = UI.view, k0 = Math.min(w / (v.x1 - v.x0), h / (v.y1 - v.y0), 56);
   // Raster auf das Seitenraster: 1 Rasterschritt = ½, 1 oder 2 Seitenpunkte, Ursprung auf einem Seitenpunkt
   const [k, ox, oy] = dpSnap(cv, k0, w / 2 - (v.x0 + v.x1) / 2 * k0, h / 2 - (v.y0 + v.y1) / 2 * k0, UI.zoomed, [1, 2, 5]);
-  if (!dpPinching) UI.view = { x0: -ox / k, x1: (w - ox) / k, y0: -oy / k, y1: (h - oy) / k }; // sichtbarer Ausschnitt, damit Zoomen ohne Sprung beginnt
   return { k, f: q => [ox + q[0] * k, oy + q[1] * k], inv: (sx, sy) => [(sx - ox) / k, (sy - oy) / k] };
 }
 
@@ -556,6 +555,7 @@ function drawAll() { drawEd(); renderStats(); renderSel(); }
 function drawEd() {
   const { ctx, w, h } = prep(cv), TT = makeT(w, h), T = TT.f, k = TT.k; UI.T = TT;
   cv.style.background = dpPinching ? 'var(--bg)' : ''; // eingerastet durchsichtig (Seitenraster), beim Zoomen deckend
+  if (!dpPinching) dpSubDots(ctx, w, h); // Zwischenraster: Zeichenfläche erkennbar
   // Rasterpunkte
   const [gx0, gy0] = TT.inv(0, 0), [gx1, gy1] = TT.inv(w, h);
   ctx.fillStyle = css('--dot'); ctx.beginPath();
@@ -740,7 +740,8 @@ function addWire(a, b) { if (!same(a, b) && !S.wires.some(q => (same([q[0], q[1]
 // Finger (docs/mobil-editor.md): ins Leere wischen scrollt die Seite, zwei Finger zoomen/verschieben, Lupe beim Ziehen, Kontextleiste an der Auswahl
 let tpos = null; const ctxBar = dpCtxBar(cv);
 dpTouchGuard(cv, () => !!UI.drag);
-dpPinch(cv, () => { if (UI.drag) { UI.drag = null; UI.pend = null; recompute(); } },
+dpPinch(cv, () => { const T = UI.T, [x0, y0] = T.inv(0, 0), [x1, y1] = T.inv(cv.clientWidth, cv.clientHeight); UI.view = { x0, x1, y0, y1 }; // sichtbarer (eingerasteter) Ausschnitt: Zoomen beginnt ohne Sprung
+  if (UI.drag) { UI.drag = null; UI.pend = null; recompute(); } },
   (f, cx, cy, dx, dy) => { const v = UI.view, T = UI.T, [wx, wy] = T.inv(cx, cy), k = T.k * f, z = (a, c) => c + (a - c) / f;
     UI.view = { x0: z(v.x0, wx) - dx / k, x1: z(v.x1, wx) - dx / k, y0: z(v.y0, wy) - dy / k, y1: z(v.y1, wy) - dy / k }; UI.zoomed = true; drawEd(); });
 cv.addEventListener('pointerdown', e => { tpos = e.pointerType === 'touch' ? evPos(e) : null; }, true);
