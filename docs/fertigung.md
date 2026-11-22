@@ -2,7 +2,7 @@
 
 Vom Modul-Chat gepflegt (Branch `modul/fertigung`). Verbindliche Konventionen stehen in `docs/konzept.md`.
 
-**Stand:** v0 – Konzept (22.11.2026), noch kein Code. Key `fertigung`, Hash `#f=`, eigene Farbfamilie (Vorschlag `--fab`, Wunsch an Style-Chat).
+**Stand:** v1 (22.11.2026), Key `fertigung`, Hash `#f=`. Noch nicht in `DP_MODULES` (Wunsch an den zentralen Chat); Farbe vorläufig `--load`, eigene Familie Wunsch an den Style-Chat.
 
 ## Entwurfsfrage
 „Lässt sich das so herstellen und verbinden, wie ich es gezeichnet habe?“ – Persona A legt im Entwurf Biegeradien, Schenkellängen, Lochabstände, Wanddicken und Verschraubungen fest; falsch gewählt fällt das erst beim Fertiger auf. Nachschlagewerk mit Urteil, keine Umform- oder Festigkeitssimulation.
@@ -67,7 +67,29 @@ Technik: Tabellen und Formeln im CORE von `fertigung/index.html`; Oberfläche je
 - Daten: Werte aus Normen/Herstellerangaben übernehmen, nicht Tabellen abschreiben; Quelle je Wert.
 
 ## Urteilsschwellen (Herkunft)
-(werden mit v1 eingetragen: Mindestbiegeradius je Werkstoff/Zustand, Mindestschenkel ≈ 4·s + r (Heuristik, Matrizenbreite), Lochabstand ≈ 2·s + r (Heuristik), Einschraubtiefe Stahl ≈ 1·d, Alu ≈ 2·d, Kunststoff herstellerabhängig.)
+- **Biegen kritisch:** Innenradius < r_min (Faktor × s je Werkstoff/Zustand: DC01 0,5 · 1.4301 1 · Alu 5754 H111 1 · Alu 6061-T6 2,5 · CuZn37 halbhart 1 · Cu weich 0,5; Heuristik nach Fertigertabellen, Luftbiegen quer zur Walzrichtung) · Schenkel (Außenmaß) < r + 4·s (Heuristik: Auflage auf Matrize V ≈ 8·s) · gerades Stück < 0 (geometrisch).
+- **Biegen knapp:** r < 1,25·r_min (Heuristik) · Kunststoff (Gültigkeitswächter: nicht abkanten).
+- **Lochabstand** ≥ r + 2·s vom Lochrand zur Innenseite des Nachbarschenkels (Heuristik); Sperrzone in der Abwicklung entsprechend.
+- **Rückfederung:** Tabellenwert bei 90° und r ≤ s (DC01 1° · 1.4301 2,5° · Alu weich 1,5° · Alu T6 3° · Messing 1,5° · Cu 0,5°; Heuristik), linear mit r/s und β/90 (Gardiner, elastische Biegetheorie).
+- **Gewinde passt:** Gewindelänge ≥ Einschraubtiefe = Faktor × d (Stahl 1 · Edelstahl 1 · Alu weich 2 · Alu T6 1,5 · Messing 1,25 · Kupfer 2 · Kunststoff 2,5; Richtwerte Schraubenhersteller für 8.8, Größenordnung VDI 2230). **Knapp:** ≥ 3 Gänge (Heuristik). **Kritisch:** < 3 Gänge. Kunststoff höchstens knapp (Verschleiß).
+- **Normwerte:** Kernloch DIN 336, Gewindeformer ≈ d − P/2 (Werkzeughersteller), Durchgangsloch ISO 273, Senkung ISO 15065, Steigung DIN 13.
+- **Alternativen** (Richtwerte, Herstellerangaben streuen): Einpressmutter ab Blech 0,8 (≤ M5) / 1,4 (M6–M8) / 2,3 mm (M10–M12); Durchzug 0,5–2,5 mm, ≤ M8; Nietmutter 0,5–4 mm; Drahtgewinde Wand ≥ 1,5·d; Einschmelzmutter ≥ 1,2·d; Gewindeformschraube Kunststoff Loch ≈ 0,8·d, Tiefe ≥ 2·d.
 
 ## Modell & Gültigkeit (Entwurf)
 Faustregeln für Luftbiegen auf der Abkantbank und für Standardgewinde; keine Biegesimulation, keine Festigkeit der Verschraubung, keine Toleranzkette. Weiterführend: SendCutSend-Biegerechner, rechner-portal (DIN 13), TRUMPF-Biegewerkzeug-Handbuch, Datenblätter der Einpressmutter-Hersteller.
+
+## v1 (22.11.2026)
+- **Werkzeuge** Biegen und Gewinde, Material und Dicke oben gemeinsam; 8 Werkstoffe mit Zustand (6 Metalle, ABS, PA6).
+- **Biegen:** Profil L/U/Z/Hut, Schenkel als Außenmaß, Winkel und Innenradius für alle Biegungen; Profil maßstäblich im Punktraster, zu kurze Schenkel und zu enge Radien rot. Abwicklung maßstäblich mit Biegebereich, Biegelinie und Sperrzone für Löcher; Export als SVG in mm (Umriss + Biegelinien). Materialwechsel setzt den Radius auf die sichere Seite.
+- **Gewinde:** M2–M12, Schnitt durch die Wand mit fehlender Einschraubtiefe; Kennwerte Kernloch (geschnitten/geformt bzw. Formschraube in Kunststoff), Durchgangsloch, Einschraubtiefe, Gänge; Tabelle der Alternativen mit „geht“ je Dicke.
+- **CORE:** `kDin`, `arc`, `setback`, `unfold`, `rMin`, `flangeMin`, `holeMin`, `springback`, `pitch`, `coreCut`, `coreForm`, `coreScrewPlastic`, `engage`, `thrLevel`, `alts`; Tabellen `MAT`, `THR`, `CLR`, `CSK`.
+- **test.js:** DIN 6935 (k, Stetigkeit bei r/s = 5), Bogen der neutralen Faser, Zuschnitt L-Winkel und U-Profil gegen Formel, Winkel 0, Rücksprung; Mindestradius/-schenkel, Rückfederung linear; Kernloch M3/M8/M10 und ≈ d − P für alle, Gewindeformer ±0,1 mm, ISO 273 geordnet; Urteile Stahl/Alu/Kunststoff, Alternativen; Datenprüfung.
+- **Browser** (Chromium headless, file://, 1280 und 390 px): beide Werkzeuge, Materialwechsel, Urteile, Link; kein Überlaufen, Konsole fehlerfrei.
+- **Datei:** `{type:"designphysik/fertigung", version:1, tool, mat, s, prof, legs, ang, r, B, d}`, Eingang validiert.
+
+## Offen (Pareto)
+1. Registry-Eintrag, eigene Farbe (Wünsche an shared), gemeinsame Materialschlüssel mit Material.
+2. Werte einzeln gegen Quellen prüfen (Mindestradien, Rückfederung, Einschraubtiefe), Quelle je Wert.
+3. Vorlagen-Galerie, Rückgängig, Stand merken (`dpGallery`, `dpHistory`, `dpCompare`).
+4. Editor direkt: Schenkel ziehen, Löcher auf der Abwicklung setzen und gegen die Sperrzone prüfen; Winkel je Biegung.
+5. Weitere Werkzeuge nach Prüffrage (Holz verschrauben, Schneiden, Passungen, 3D-Druck, Spritzguss).

@@ -91,5 +91,5 @@ Bei Zielkonflikten entscheidet A.
 
 Offen:
 - **Fertigung (neues Modul, 22.11.2026):** Eintrag `fertigung` in `DP_MODULES` mit eigener Farbfamilie; Konzept in `docs/fertigung.md`.
-- **Style-Chat:** Farbtoken für Fertigung (`--fab`/`--fab-a`), sinnvollerweise zusammen mit der noch offenen eigenen Familie für Material; deutlich abgesetzt von `--warn` und `--light`.
+- **Style-Chat:** Farbtoken für Fertigung (`--fab`/`--fab-a`), zusammen mit der noch offenen Familie für Material. Achtung Styleguide §3: höchstens sechs Familien (heute fünf); freie Farbtöne mit ≥ 30° Abstand etwa bei 110° (Oliv) und 350°. Entweder Grenze auf sieben anheben oder Material und Fertigung teilen sich eine Familie „Werkstoff“.
 - **Materialschlüssel in `shared/`** (Fertigung ist der zweite Nutzer nach Material): nur Schlüssel, Name, Familie, mit Werkstoffzustand im Schlüssel (z. B. `alu-6061-t6`); modulspezifische Werte bleiben im jeweiligen CORE. Mit dem Material-Chat abstimmen.
