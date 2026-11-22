@@ -155,3 +155,40 @@ const regM = rt => (m => (m.wires = Core.tidy(m), m))({ parts: [{ t: 'bat', x: 0
 { const m = { parts: [{ t: 'bat', x: 0, y: 0, r: 0, cell: 'e9v' }, { t: 'r', x: 0, y: 2, r: 0, R: 330, Pn: 0.25 }, { t: 'led', x: 2, y: 2, r: 0, col: 'rot' }], wires: [[0, 0, 0, 2], [4, 2, 4, 0], [4, 0, 2, 0]] };
   const a = Core.analyze(m), o = a.parts[1]; check('Widerstand: ΔT = P · 100 K / Nennleistung', o.dT, o.I * o.I * 330 * 100 / 0.25, 1e-9); ok('wärmste Stelle = Widerstand', a.hot.i === 1 && Math.abs(a.hot.T - 25 - o.dT) < 1e-9); }
 { const a = Core.analyze(regM('l7805')); check('7805: ΔT = Verlust · 65 K/W', a.parts[1].dT, a.parts[1].P * 65, 1e-9); }
+
+// ---- Grundschaltungen und neue Bauteile ----
+// Diode: I(Vf) = In; Verpolschutz 9 V + 1N5819 + 100 Ω gegen Bisektion; verpolt sperrt
+for (const D of Object.values(Core.DIODES)) check(`Diode ${D.n}: I(Vf) = In`, Core.ledIV(D, D.Vf)[0], D.In, 1e-9);
+function diodeRef(U, R, D) { const Is = D.In / Math.expm1((D.Vf - D.In * D.Rs) / D.nvt); let lo = 0, hi = U / R;
+  for (let i = 0; i < 200; i++) { const I = (lo + hi) / 2; (I * (R + D.Rs) + D.nvt * Math.log1p(I / Is) > U ? hi = I : lo = I); } return (lo + hi) / 2; }
+{ const D = Core.DIODES.s5819, r = S(3, [{ k: 'src', a: 2, b: 0, U: 9, Ri: 1.7 }, { k: 'led', a: 2, b: 1, L: D }, { k: 'g', a: 1, b: 0, g: 0.01 }]); check('Verpolschutz-Diode: Strom', r.I[2], diodeRef(9, 101.7, D), 1e-6);
+  const v = S(3, [{ k: 'src', a: 2, b: 0, U: 9, Ri: 1.7 }, { k: 'led', a: 1, b: 2, L: D }, { k: 'g', a: 1, b: 0, g: 0.01 }]); ok('verpolt: Schottky sperrt (Sperrstrom < 50 µA)', Math.abs(v.I[2]) < 5e-5); }
+// LED-Streifen: bei Nennspannung N·20 mA (5 m × 20 Segmente = 2 A), bei 10,5 V weniger
+{ const st = Core.strip({ st: 's12', len: 5 }); check('LED-Streifen 5 m 12 V: 2 A bei 12 V', Core.ledIV(st.L, 12)[0], 2, 1e-9);
+  check('LED-Streifen: je Segment wie 3 LEDs + Widerstand', Core.ledIV(st.L, 10.5)[0] / 100, Core.ledIV({ Vf: 12, In: 0.02, Rs: 150, nvt: 0.18 }, 10.5)[0], 1e-9); }
+// Fotowiderstand: 15 kΩ bei 10 lx, Potenzgesetz, Deckel 1 MΩ
+check('LDR 10 lx', Core.ldrR(10), 15e3); check('LDR 1000 lx', Core.ldrR(1000), 15e3 * Math.pow(100, -0.7)); check('LDR dunkel ≤ 1 MΩ', Core.ldrR(0.001), 1e6);
+// Poti: Widerstand nach Stellung; Leistung im genutzten Teil
+check('Poti 1 kΩ auf 30 %', Core.potR({ R: 1000, pos: 30 }), 300.5);
+{ const a = Core.analyze(loop({ cell: 'aa', n: 4 }, { t: 'pot', R: 100, pos: 20, Pn: 0.5 }, [])); ok('Poti 20 Ω direkt an 6 V: wird heiß (kritisch)', a.parts[1].lv === 2 && /Poti wird heiß/.test(a.parts[1].msg)); }
+// Summer und Lautsprecher-Verstärker
+{ const a = Core.analyze(loop({ cell: 'psu12' }, { t: 'buz', Un: 12, In: 0.03 })); check('Summer 12 V: 30 mA', a.parts[1].I, 12 / (400 + 0.1), 1e-6); }
+{ const a = Core.analyze(loop({ cell: 'usb' }, { t: 'spk', Un: 5, Pmax: 3, vol: 'mittel' })), g = (0.05 + 3 / 8 / 0.85) / 25, gp = (0.05 + 3 / 0.85) / 25;
+  check('Lautsprecher mittel: Strom', a.parts[1].I, 5 * g / (1 + 0.1 * g), 1e-6); check('Lautsprecher: Spitzenstrom bei voller Leistung', a.parts[1].Is, 5 * gp / (1 + 0.1 * gp), 1e-6); }
+// Wechselschaltung: Lampe an, wenn die Stellungen verschieden sind; jeder Schalter schaltet um
+const wech = (p1, p2) => (m => (m.wires = Core.tidy(m), m))({ parts: [{ t: 'bat', x: 0, y: 2, r: 1, cell: 'aa', n: 2 }, { t: 'sw3', x: 2, y: 0, r: 0, pos3: p1 }, { t: 'sw3', x: 8, y: 0, r: 2, pos3: p2 }, { t: 'lamp', x: 10, y: 2, r: 1, Un: 3, Pn: 0.9 }],
+  wires: [[0, 2, 0, 0], [0, 0, 2, 0], [4, -1, 6, -1], [4, 1, 6, 1], [8, 0, 10, 0], [10, 0, 10, 2], [10, 4, 10, 6], [10, 6, 0, 6], [0, 6, 0, 4]] });
+{ const on = (a, b) => Core.analyze(wech(a, b)).parts[3].I > 0.1; ok('Wechselschaltung: a/b an, b/a an, a/a aus, b/b aus', on('a', 'b') && on('b', 'a') && !on('a', 'a') && !on('b', 'b')); }
+// Relais: Spulenstrom, Kontakt zu bei Nennspannung, offen bei 2 V; Freilaufdiode
+const relM = cell => (m => (m.wires = Core.tidy(m), m))({ parts: [{ t: 'bat', x: 0, y: 2, r: 1, cell, n: 1 }, { t: 'rel', x: 4, y: 2, r: 0, rt2: 'r5' }, { t: 'bat', x: 12, y: 2, r: 1, cell: 'psu12', n: 1 }, { t: 'lamp', x: 8, y: 4, r: 0, Un: 12, Pn: 5 }],
+  wires: [[0, 2, 4, 2], [0, 4, 4, 4], [6, 2, 6, 0], [6, 0, 12, 0], [12, 0, 12, 2], [6, 4, 8, 4], [10, 4, 12, 4]] }); // Spulenkreis USB, Lastkreis 12 V getrennt
+{ const a = Core.analyze(relM('usb')); check('Relais 5 V: Spulenstrom 70 mA', a.parts[1].I, 0.07, 3e-3); ok('Relais zieht an: Lampe im zweiten Kreis an', a.parts[3].I > 0.3); }
+{ const a = Core.analyze(relM('aa')); ok('Relais an 1,5 V: Kontakt offen, Lampe aus; Hinweis „zieht nicht sicher an“', Math.abs(a.parts[3].I) < 1e-3 && /zieht nicht/.test(a.parts[1].msg)); }
+// Freilaufdiode: Relais am Transistor ohne Diode → knapp; mit Diode über der Spule → kein Hinweis
+const frei = diode => (m => (m.wires = Core.tidy(m), m))({ parts: [{ t: 'bat', x: 0, y: 2, r: 1, cell: 'usb', n: 1 }, { t: 'rel', x: 4, y: 0, r: 0, rt2: 'r5' }, { t: 'tr', x: 2, y: 4, r: 0, tt: 'bc547' }, { t: 'r', x: 1, y: 0, r: 1, R: 1000, Pn: 0.25 }].concat(diode ? [{ t: 'dio', x: 3, y: 2, r: 3, dt: 'n4007' }] : []),
+  wires: [[0, 2, 0, 0], [0, 0, 4, 0], [4, 2, 4, 3], [1, 2, 1, 4], [1, 4, 2, 4], [4, 5, 4, 6], [4, 6, 0, 6], [0, 6, 0, 4]].concat(diode ? [[3, 2, 4, 2]] : []) });
+{ const a = Core.analyze(frei(false)); ok('Relais am Transistor ohne Diode: „Freilaufdiode fehlt“', a.issues.some(i => /Freilaufdiode/.test(i[1])) && a.parts[1].on); }
+{ const a = Core.analyze(frei(true)); ok('mit Diode über der Spule: kein Hinweis, Diode sperrt', !a.issues.some(i => /Freilaufdiode/.test(i[1])) && Math.abs(a.parts[4].I) < 1e-6); }
+// Taster: im Ruhezustand offen
+{ const m = loop({ cell: 'aa', n: 2 }, { t: 'lamp', Un: 3, Pn: 0.9 }, [{ t: 'btn', x: 4, y: 0, r: 1, on: true }]); m.wires = [[0, 0, 4, 0], [4, 2, 0, 2], [2, 0, 2, 2]]; m.hday = 1;
+  const a = Core.analyze(m); ok('Taster gedrückt: Lampe an; Ruhe: offen', a.parts[1].I > 0.1 && a.Ir < 1e-9); }

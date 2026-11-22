@@ -20,10 +20,15 @@
     <div class="row"><button id="tpl"></button><button id="cmp"></button><button id="undo" class="q ico" data-i="undo" disabled>Rückgängig</button></div>
     <div class="row"><span class="seg" id="tools">
       <button data-t="drag" class="on">Ziehen</button><button data-t="wire">Leitung</button><button data-t="del">Löschen</button>
-    </span><span class="seg" id="parts">
-      <button data-t="bat">Batterie</button><button data-t="sw">Schalter</button><button data-t="r">Widerstand</button><button data-t="led">LED</button><button data-t="lamp">Lampe</button><button data-t="mot">Motor</button><button data-t="cab">Kabel</button>
-    </span><span class="seg" id="parts2">
-      <button data-t="mcu">Mikrocontroller</button><button data-t="tr">Transistor</button><button data-t="reg">Wandler</button>
+    </span></div>
+    <div class="row" id="pal"><span class="seg">
+      <button data-t="bat">Batterie</button><button data-t="sw">Schalter</button><button data-t="btn">Taster</button><button data-t="sw3">Wechsel&shy;schalter</button>
+    </span><span class="seg">
+      <button data-t="r">Widerstand</button><button data-t="pot">Poti</button><button data-t="ldr">Foto&shy;widerstand</button><button data-t="dio">Diode</button><button data-t="cab">Kabel</button>
+    </span><span class="seg">
+      <button data-t="led">LED</button><button data-t="strip">LED-Streifen</button><button data-t="lamp">Lampe</button><button data-t="mot">Motor</button><button data-t="buz">Summer</button><button data-t="spk">Laut&shy;sprecher</button>
+    </span><span class="seg">
+      <button data-t="mcu">Mikrocontroller</button><button data-t="tr">Transistor</button><button data-t="rel">Relais</button><button data-t="reg">Wandler</button>
     </span></div>
     <canvas id="ed" role="img"></canvas>
     <div class="row sel" id="selp"></div>
@@ -47,12 +52,13 @@
     <h3>Modell</h3><p>Gleichstrom im eingeschwungenen Zustand: Knotenanalyse mit Newton-Verfahren für die nichtlinearen Bauteile. Leitungen sind ideal (0 Ω). Verbunden ist, was sich einen Rasterpunkt teilt: Leitungsenden, Abzweige und Bauteilanschlüsse, auch mitten auf einer Leitung. Kreuzende Leitungen ohne Knotenpunkt sind nicht verbunden. Kein Wechselstrom, kein Ein- und Ausschwingen.</p>
     <h3>Quellen</h3><p>Leerlaufspannung mit Innenwiderstand, Zellen in Reihe addieren beides. Kapazität, Innenwiderstand und Dauerstrom sind Richtwerte für neue Zellen bei Raumtemperatur. <i>Laufzeit</i> = Kapazität / Strom: obere Abschätzung, denn bei hohem Strom, Kälte und alten Zellen liefern vor allem Alkali-Zellen deutlich weniger, und die Spannung sinkt beim Entladen. Netzteile: feste Spannung, kleiner Innenwiderstand, Grenzstrom.</p>
     <h3>Bauteile</h3><p><i>LED</i>: Diodenkennlinie mit Bahnwiderstand, angepasst an die Flussspannung beim Nennstrom (5 mm: 20 mA, Grenze 30 mA). Helligkeit ≈ Strom / Nennstrom. <i>Glühlampe</i>: Strom ∝ Spannung^0,6 (warmer Faden), Licht ∝ Spannung^3,4. <i>Motor</i> mit Last proportional zur Drehzahl (Lüfter, Rad): im Lauf wie ein Widerstand Nennspannung / Laufstrom, beim Anlauf zieht er den Anlaufstrom (Ankerwiderstand). <i>Kabel</i>: Kupfer, ein Leiter, R = 0,0175 Ω·mm²/m · Länge / Querschnitt. <i>Schalter</i>: 10 mΩ geschlossen.</p>
+    <h3>Weitere Bauteile</h3><p><i>Taster</i>: wie ein Schalter, im Ruhezustand immer offen. <i>Wechselschalter</i>: verbindet den gemeinsamen Anschluss mit A oder B (Treppenhaus-Schaltung). <i>Poti</i> als einstellbarer Vorwiderstand (Schleifer 0,5 Ω); die Leistung sitzt im genutzten Teil der Bahn, darum sinkt die zulässige Leistung mit der Stellung. <i>Fotowiderstand</i> (Typ GL5528): ≈ 15 kΩ bei 10 lx, R ∝ Beleuchtungsstärke^−0,7, höchstens 1 MΩ. <i>Diode</i>: Kennlinie wie die LED (1N4007 1 V, Schottky 1N5819 0,45 V bei 1 A), Sperrspannung. <i>LED-Streifen</i>: Segmente aus LEDs in Reihe mit Vorwiderstand (12 V: 3 LEDs, 20 Segmente/m, 4,8 W/m), darum fällt die Helligkeit unter Nennspannung schnell. <i>Summer</i> (aktiv, Gleichspannung): wie ein Widerstand Nennspannung/Strom. <i>Lautsprecher</i> mit Verstärker: mittlere Leistung bei Musik (leise 1/30, mittel 1/8, laut 1/3 der Nennleistung, Verstärker 85 %, 10 mA Ruhe), Spitzen mit voller Nennleistung; kein Ton, keine Wechselspannung. <i>Relais</i>: Spule als Widerstand, Kontakt schließt ab 75 % der Spulenspannung. <i>Freilaufdiode</i>: schaltet ein Transistor oder Pin ein Relais oder einen Motor, braucht die Spule eine Diode in Sperrrichtung parallel – sonst Hinweis (die Spannungsspitze selbst wird nicht gerechnet).</p>
     <h3>Betrieb und Ruhe</h3><p>„Betrieb h/Tag“: so lange gilt die Schaltung wie gezeichnet, die übrige Zeit der Ruhezustand – alle Schalter offen, Mikrocontroller im tiefsten Schlafmodus (Platine mit Spannungsregler, USB-Chip und LED: Arduino Uno ≈ 35 mA, Nano ≈ 7 mA, ESP32 DevKit ≈ 10 mA, Pico ≈ 2 mA; Raspberry Pi ohne Schlafmodus), Pins aus. Laufzeit = Kapazität / mittlerer Strom. Selbstentladung und Alterung sind nicht gerechnet (bei Monaten Laufzeit wichtig: NiMH verliert ≈ 20 %/Monat, Alkali und Lithium ≈ 2 %/Jahr).</p>
     <h3>Erwärmung</h3><p>Temperatur = 25 °C + Verlustleistung × Wärmewiderstand zur Luft ohne Kühlkörper: Widerstand +100 K bei Nennleistung, TO-220 (7805, MOSFET) 62–65 K/W, SOT-223 (AMS1117) ≈ 90 K/W, TO-92 (BC547, 2N2222) ≈ 200 K/W, Wandlermodul ≈ 40 K/W. Richtwerte für freie Luft; im geschlossenen Gehäuse deutlich wärmer. Über 85 °C markiert.</p>
     <h3>Mikrocontroller, Wandler, Transistor</h3><p><i>Mikrocontroller</i> (Arduino, ESP32, Pico, Raspberry Pi) als Block: mittlere Stromaufnahme an der Versorgung (WLAN-Spitzen, Peripherie und Schlafmodi nicht gerechnet), erlaubter Spannungsbereich am jeweiligen Pin, ein Ausgangspin als Spannungsquelle (5 bzw. 3,3 V mit Innenwiderstand), dessen Strom aus der Versorgung kommt. Antippen schaltet den Pin. Kein Programm, keine Pegel- oder Zeitabläufe. <i>Linearregler</i>: Ausgang = Sollspannung, solange der Eingang um den Dropout höher liegt; Eingangsstrom = Ausgangsstrom + Eigenverbrauch, die Differenz wird Wärme. <i>Step-down/Step-up</i>: Eingangsleistung = Ausgangsleistung / Wirkungsgrad (fest). <i>MOSFET</i>: Widerstand Ron, sobald die Gatespannung über der Schaltschwelle liegt (weicher Übergang); Standardtypen brauchen ≈ 10 V, Logik-Pegel-Typen schalten mit 3,3–5 V. <i>NPN</i>: Kollektorstrom = Stromverstärkung × Basisstrom, begrenzt durch die Last (Sättigung ≈ 0,1 V). Grenzen ohne Kühlkörper (Richtwerte).</p>
     <h3>Urteil</h3><p>Kritisch: Quelle über Dauerstrom oder Kurzschluss (Klemmenspannung unter der Hälfte), LED über Grenzstrom, Widerstand über Nennleistung, Lampe über 110 % und Motor über 150 % der Nennspannung, Kabel über 15 A/mm², Laufzeit unter halbem Soll, Mikrocontroller außerhalb seines Spannungsbereichs oder Pin über Grenzstrom, Wandler über Grenzstrom oder Eingangsspannung, Linearregler über Verlustleistung, Transistor über Grenzstrom oder Verlustleistung. Knapp: Quelle über 80 % oder Spannungseinbruch über 15 %, Anlaufstrom über Dauerstrom, LED über 120 % Nennstrom, verpolt oder fast dunkel, Widerstand über 70 %, Lampe unter 90 % der Nennspannung (≈ 70 % Licht), Motor unter 50 % bzw. über 120 %, Kabel über 8 A/mm² oder mehr als 10 % Spannungsverlust, Laufzeit unter Soll, offener Anschluss, Pin über empfohlenem Strom, Linearregler über 60 % Verlust, Wandler-Ausgang unter 95 % (Eingang zu niedrig), Transistor über 50 % Verlust, MOSFET nicht ganz durchgeschaltet, NPN nicht gesättigt.</p>
     <h3>Nicht enthalten</h3><p>230-V-Netzspannung und Transformatoren (Elektrofachkraft; hier nur Netzteile mit Ausgangsspannung) · Code ausführen (dafür Wokwi oder Tinkercad Circuits) · Platinen (Fritzing, KiCad) · Kondensatoren, Spulen, Schwingkreise, Zeitverläufe (Falstad CircuitJS) · Erwärmung in °C, Belastbarkeit von Schaltern und Steckern, Entladekurven.</p>
-    <h3>Bedienung</h3><p>Bauteil wählen und auf einen Rasterpunkt tippen. Leitung: von Punkt zu Punkt ziehen oder Punkte nacheinander antippen (gleichen Punkt erneut antippen oder Esc beendet). Ziehen verschiebt Bauteile samt angeschlossenen Leitungsenden; Schalter antippen schaltet. Ein Bauteil, das auf eine Leitung gesetzt wird, wird eingefügt: Die Leitung wird an seinen Anschlüssen aufgetrennt. Ausgewähltes Bauteil: Werte in der Zeile unter dem Plan, „Drehen“ bzw. Taste R, Entf löscht.</p>
+    <h3>Bedienung</h3><p>Bauteil wählen und auf einen Rasterpunkt tippen. Leitung: von Punkt zu Punkt ziehen oder Punkte nacheinander antippen (gleichen Punkt erneut antippen oder Esc beendet). Ziehen verschiebt Bauteile samt angeschlossenen Leitungsenden; Schalter, Taster und Wechselschalter antippen schaltet, Mikrocontroller antippen schaltet den Pin. Ein Bauteil, das auf eine Leitung gesetzt wird, wird eingefügt: Die Leitung wird an seinen Anschlüssen aufgetrennt. Ausgewähltes Bauteil: Werte in der Zeile unter dem Plan, „Drehen“ bzw. Taste R, Entf löscht.</p>
     </div></details>
   </section>
 </main>
@@ -110,6 +116,25 @@ const Core = (() => {
     n2222: { n: 'NPN (2N2222)', k: 'npn', beta: 100, Imax: 0.6, Pmax: 0.5, Rth: 200 }
   };
   const BE = { Vf: 0.65, In: 1e-3, Rs: 10, nvt: 0.026 }; // Basis-Emitter-Diode: 0,65 V bei 1 mA
+  // Dioden: Flussspannung Vf beim Nennstrom In (Datenblatt typisch), Sperrspannung VR
+  const DIODES = {
+    n4007: { n: '1N4007 (Gleichrichter)', Vf: 1.0, In: 1, Imax: 1, Rs: 0.03, nvt: 0.05, VR: 1000 },
+    s5819: { n: '1N5819 (Schottky)', Vf: 0.45, In: 1, Imax: 1, Rs: 0.05, nvt: 0.035, VR: 40 }
+  };
+  // LED-Streifen: je Segment Vk (LEDs in Reihe) + Vorwiderstand, 20 mA bei Nennspannung; seg Segmente je Meter
+  const STRIPS = {
+    s12: { n: 'LED-Streifen 12 V (4,8 W/m)', Un: 12, Vk: 9, seg: 20, Is: 0.02 },
+    s24: { n: 'LED-Streifen 24 V (4,8 W/m)', Un: 24, Vk: 18, seg: 10, Is: 0.02 }
+  };
+  // Relais: Spule Un, Spulenstrom Ic; zieht ab 75 % Un an; Kontakt (Schließer) bis Imax
+  const RELAYS = {
+    r5: { n: 'Relais 5 V (Spule 70 mA)', Un: 5, Ic: 0.07, Imax: 10 },
+    r12: { n: 'Relais 12 V (Spule 30 mA)', Un: 12, Ic: 0.03, Imax: 10 }
+  };
+  const VOL = { leise: 1 / 30, mittel: 1 / 8, laut: 1 / 3 }; // mittlere Leistung / Nennleistung bei Musik (Richtwert)
+  const ldrR = lx => Math.min(1e6, 15e3 * Math.pow(Math.max(lx, 0.01) / 10, -0.7)); // Fotowiderstand GL5528: ≈ 15 kΩ bei 10 lx
+  const strip = p => { const S = STRIPS[p.st] || STRIPS.s12, N = Math.max(p.len, 0.01) * S.seg; return { S, N, L: { Vf: S.Un, In: N * S.Is, Rs: (S.Un - S.Vk) / S.Is / N, nvt: 0.06 * S.Vk / 3 } }; };
+  const potR = p => p.R * p.pos / 100 + 0.5; // Schleifer 0,5 Ω
   // LEDs: Flussspannung Vf beim Nennstrom In, Grenze Imax, Bahnwiderstand Rs (5-mm-Standard; Power-LED 1 W)
   const LEDS = {
     rot:  { n: 'rot',   Vf: 2.0, In: 0.02, Imax: 0.03, Rs: 10 },
@@ -127,7 +152,7 @@ const Core = (() => {
   const LAMP_EXP = 0.6;   // Glühlampe: I ∝ U^0,6 (Wolfram, warmer Faden)
   const DIR = [[1, 0], [0, 1], [-1, 0], [0, -1]];
 
-  const TERMS = { tr: [[0, 0], [2, -1], [2, 1]], reg: [[0, 0], [4, 0], [2, 2]], mcu: [[0, 0], [0, 2], [4, 1]] }, T2 = [[0, 0], [2, 0]];
+  const TERMS = { tr: [[0, 0], [2, -1], [2, 1]], reg: [[0, 0], [4, 0], [2, 2]], mcu: [[0, 0], [0, 2], [4, 1]], sw3: [[0, 0], [2, -1], [2, 1]], rel: [[0, 0], [0, 2], [2, 0], [2, 2]] }, T2 = [[0, 0], [2, 0]];
   // Punkt (u, v) in Bauteil-Koordinaten → Raster (auch für Zeichnen mit Bruchteilen)
   const place = (p, [u, v]) => { const [c, s] = DIR[((p.r | 0) % 4 + 4) % 4]; return [p.x + u * c - v * s, p.y + u * s + v * c]; };
   const term = p => (TERMS[p.t] || T2).map(q => place(p, q));
@@ -157,6 +182,10 @@ const Core = (() => {
     const x = (Vt - Vo) / 0.05, Io = x > 0 ? x * x / (x + 1e-4) : 0, q = R.Iq * th(Vi / 0.3); // Ausgang 0,05 Ω, speist nicht zurück; Io(0) = 0 exakt (sonst Strom aus dem Nichts)
     const Iin = R.k === 'lin' ? Io + q : Vo * Io / (R.eta * smax(Vi, 0.5)) + q;
     return [Iin, -Io, Io - Iin]; }; }
+  // Wechselschalter: gemeinsamer Anschluss an A oder B
+  function sw3F(pos) { return V => { const k = pos === 'b' ? 2 : 1, I = (V[0] - V[k]) / R_SW, o = [I, 0, 0]; o[k] = -I; return o; }; }
+  // Relais: Spule (Widerstand Un/Ic), Kontakt schließt ab 75 % Un (weicher Übergang)
+  function relF(Rl) { return V => { const Uc = V[0] - V[1], Ic = Uc * Rl.Ic / Rl.Un, g = sig((Math.hypot(Uc, 1e-3) - 0.75 * Rl.Un) / (0.03 * Rl.Un)) / R_SW, Ik = g * (V[2] - V[3]); return [Ic, -Ic, Ik, -Ik]; }; }
   function trF(T) { return V => { const Vc = V[1] - V[2];
     if (T.k === 'mos') { const Id = sig((V[0] - V[2] - T.Vm) / T.w) * Vc / T.Ron; return [0, Id, -Id]; }
     const Ib = ledIV(BE, V[0] - V[2])[0], Ic = Ib * Math.tanh(Vc / 0.1) * (1 + (T.beta - 1) * sig(Vc / 0.02)); return [Ib, Ic, -Ib - Ic]; }; } // rückwärts (Uce < 0) Verstärkung ≈ 1
@@ -185,6 +214,15 @@ const Core = (() => {
         case 'mcu': { const B = BOARDS[p.board] || BOARDS.uno; return { k: 'nl', n: N, f: rest ? mcuF({ ...B, I0: B.Isl }, false) : mcuF(B, p.hi) }; }
         case 'reg': return { k: 'nl', n: N, f: regF(REGS[p.rt] || REGS.buck5) };
         case 'tr': return { k: 'nl', n: N, f: trF(TRANS[p.tt] || TRANS.irlz) };
+        case 'sw3': return { k: 'nl', n: N, f: sw3F(p.pos3) };
+        case 'rel': return { k: 'nl', n: N, f: relF(RELAYS[p.rt2] || RELAYS.r5) };
+        case 'btn': return { k: 'g', a, b, g: p.on && !rest ? 1 / R_SW : 0 };
+        case 'pot': return { k: 'g', a, b, g: 1 / potR(p) };
+        case 'ldr': return { k: 'g', a, b, g: 1 / ldrR(p.lx) };
+        case 'buz': return { k: 'g', a, b, g: p.In / p.Un };
+        case 'spk': return { k: 'g', a, b, g: (0.01 * p.Un + p.Pmax * (start ? 1 : VOL[p.vol] || VOL.mittel) / 0.85) / (p.Un * p.Un) }; // Verstärker 85 %, 10 mA Ruhe; Spitze = Nennleistung
+        case 'dio': return { k: 'led', a, b, L: DIODES[p.dt] || DIODES.n4007 };
+        case 'strip': return { k: 'led', a, b, L: strip(p).L };
         case 'bat': { const c = cell(p); return { k: 'src', a, b, U: c.U, Ri: c.Ri }; }
         case 'r': return { k: 'g', a, b, g: 1 / Math.max(p.R, 1e-6) };
         case 'sw': return { k: 'g', a, b, g: p.on && !rest ? 1 / R_SW : 0 };
@@ -272,7 +310,8 @@ const Core = (() => {
   function analyze(m) {
     const net = netlist(m), r = solve(net);
     if (r.err) return { err: r.err, parts: [], issues: [[2, r.err, -1]] };
-    const hasMot = m.parts.some(p => p.t === 'mot'), rs = hasMot ? solve(netlist(m, true)) : null;
+    const hasMot = m.parts.some(p => p.t === 'mot' || p.t === 'spk'), rs = hasMot ? solve(netlist(m, true)) : null;
+    const peak = m.parts.some(p => p.t === 'mot') ? (m.parts.some(p => p.t === 'spk') ? 'Motoranlauf, laute Stellen' : 'Motoranlauf') : 'laute Stellen';
     const f2 = v => (Math.round(v * 100) / 100).toString().replace('.', ','), mA = I => { const x = Math.abs(I); return x >= 1 ? f2(x) + ' A' : x >= 0.01 ? Math.round(x * 1000) + ' mA' : (Math.round(x * 10000) / 10).toString().replace('.', ',') + ' mA'; };
     const Umax = Math.max(0, ...m.parts.filter(p => p.t === 'bat').map(p => cell(p).U));
     const issues = [], parts = m.parts.map((p, i) => {
@@ -308,7 +347,7 @@ const Core = (() => {
           const c = cell(p), Is = rs ? rs.I[i] : I; o.P = U * I; o.cell = c; o.Uk = U;
           if (c.C && I > 1e-6) o.h = c.C / 1000 / I;
           if (I > c.Imax) set(2, U < 0.5 * c.U ? `Kurzschluss: ${mA(I)} aus ${c.n}` : `${c.n} überlastet: ${mA(I)} > ${mA(c.Imax)}`);
-          else if (Is > c.Imax) set(1, `Beim Anlauf zieht der Motor ${mA(Is)} – Spannung bricht kurz ein`);
+          else if (Is > c.Imax) set(1, peak === 'Motoranlauf' ? `Beim Anlauf zieht der Motor ${mA(Is)} – Spannung bricht kurz ein` : `Spitzenstrom ${mA(Is)} (${peak}) – Spannung bricht kurz ein`);
           else if (I > 0.8 * c.Imax) set(1, `${c.n} nahe der Grenze (${mA(I)} von ${mA(c.Imax)})`);
           else if (I > 1e-3 && U < 0.85 * c.U) set(1, `Spannung bricht unter Last auf ${f2(U)} V ein`);
           if (I < -1e-4) set(1, `${c.n} wird rückwärts geladen (${mA(I)}) – Quellen gegeneinander?`);
@@ -334,17 +373,52 @@ const Core = (() => {
           else if (x > 1.2) set(1, 'Motor läuft zu schnell und wird heiß');
           else if (x > 0.05 && x < 0.5) set(1, `Motor läuft kaum an (${Math.round(x * 100)} % Drehzahl)`);
           break; }
+        case 'pot': { const fr = Math.max(p.pos / 100, 0.05); o.Pn = p.Pn * fr; o.Reff = potR(p); // Leistung sitzt im genutzten Teil der Bahn
+          if (o.P > o.Pn) set(2, `Poti wird heiß: ${f2(o.P)} W im genutzten Teil (zulässig ${f2(o.Pn)} W)`);
+          else if (o.P > 0.7 * o.Pn) set(1, `Poti wird warm: ${f2(o.P)} W von ${f2(o.Pn)} W`);
+          break; }
+        case 'ldr': o.Reff = ldrR(p.lx); if (o.P > 0.1) set(2, `Fotowiderstand überlastet: ${f2(o.P)} W > 0,1 W`); break;
+        case 'buz': { const x = Math.abs(U) / p.Un; o.rel = x;
+          if (x > 1.3) set(2, `Summer überlastet (${f2(Math.abs(U))} V an ${f2(p.Un)}-V-Summer)`);
+          else if (x > 0.05 && x < 0.7) set(1, `Summer leise oder stumm (${Math.round(x * 100)} % der Spannung)`);
+          break; }
+        case 'spk': { const x = Math.abs(U) / p.Un; o.rel = x; o.Is = rs ? rs.I[i] : 0;
+          if (x > 1.2) set(2, `Verstärker: ${f2(Math.abs(U))} V – zu viel für ${f2(p.Un)} V`);
+          else if (x > 0.05 && x < 0.8) set(1, `Verstärker bekommt nur ${f2(Math.abs(U))} V – verzerrt oder schaltet ab`);
+          break; }
+        case 'dio': { const D = DIODES[p.dt] || DIODES.n4007;
+          if (I > D.Imax) set(2, `Diode überlastet: ${mA(I)} > ${mA(D.Imax)}`);
+          else if (U < -D.VR) set(2, `Diode schlägt durch: ${f2(-U)} V > ${f2(D.VR)} V Sperrspannung`);
+          break; }
+        case 'strip': { const { S, N } = strip(p); o.rel = Math.max(0, I) / (N * S.Is); o.W = U * I / Math.max(p.len, 0.01);
+          if (U > 1.15 * S.Un) set(2, `LED-Streifen überspannt: ${f2(U)} V an ${f2(S.Un)}-V-Streifen`);
+          else if (o.rel > 1.2) set(1, `LED-Streifen zu hell betrieben – LEDs leben kürzer`);
+          else if (U > 0.5 * S.Vk && o.rel < 0.8) set(1, `LED-Streifen dunkler: ${Math.round(o.rel * 100)} % (${f2(U)} V statt ${f2(S.Un)} V)`);
+          break; }
+        case 'sw3': { const k = p.pos3 === 'b' ? 2 : 1; Object.assign(o, { U: U[0] - U[k], I: I[0], P: Math.abs((U[0] - U[k]) * I[0]) }); break; }
+        case 'rel': { const Rl = RELAYS[p.rt2] || RELAYS.r5, Uc = U[0] - U[1]; Object.assign(o, { U: Uc, I: I[0], P: Math.abs(Uc * I[0]), Ik: I[2], on: Math.abs(Uc) > 0.75 * Rl.Un });
+          if (Math.abs(I[2]) > Rl.Imax) set(2, `Relaiskontakt überlastet: ${mA(I[2])} > ${mA(Rl.Imax)}`);
+          else if (Math.abs(Uc) > 1.3 * Rl.Un) set(2, `Relaisspule überspannt: ${f2(Math.abs(Uc))} V an ${f2(Rl.Un)}-V-Relais`);
+          else if (Math.abs(Uc) > 0.2 * Rl.Un && !o.on) set(1, `Relais zieht nicht an: ${f2(Math.abs(Uc))} V an der Spule (braucht ${f2(0.75 * Rl.Un)} V)`);
+          break; }
         case 'cab': { const J = Math.abs(I) / p.A; o.J = J;
           if (J > 15) set(2, `Kabel wird heiß: ${f2(J)} A/mm²`);
           else if (J > 8) set(1, `Kabel wird warm: ${f2(J)} A/mm²`);
           else if (Umax && Math.abs(U) > 0.1 * Umax) set(1, `Kabel verliert ${f2(Math.abs(U))} V`);
           break; }
       }
-      const Rth = p.t === 'r' ? 100 / p.Pn : p.t === 'tr' ? (TRANS[p.tt] || TRANS.irlz).Rth : p.t === 'reg' ? (REGS[p.rt] || REGS.buck5).Rth : 0; // Widerstand: +100 K bei Nennleistung
+      const Rth = p.t === 'r' ? 100 / p.Pn : p.t === 'pot' ? 100 / o.Pn : p.t === 'dio' ? 65 : p.t === 'tr' ? (TRANS[p.tt] || TRANS.irlz).Rth : p.t === 'reg' ? (REGS[p.rt] || REGS.buck5).Rth : 0; // Widerstand: +100 K bei Nennleistung
       if (Rth && o.P > 0) o.dT = o.P * Rth;
       if (o.lv) issues.push([o.lv, o.msg, i]);
       return o;
     });
+    // Freilaufdiode: Spule (Relais, Motor), die ein Transistor oder ein Pin schaltet, braucht eine Diode über der Spule
+    { const N = net.el, nodesOf = i => N[i].k === 'nl' ? N[i].n : [N[i].a, N[i].b];
+      const sw = new Set(); m.parts.forEach((p, i) => { if (p.t === 'tr') sw.add(N[i].n[1]); if (p.t === 'mcu') sw.add(N[i].n[2]); });
+      m.parts.forEach((p, i) => { if (p.t !== 'rel' && p.t !== 'mot') return; const [x, y] = nodesOf(i).slice(0, 2);
+        if (!sw.has(x) && !sw.has(y)) return;
+        const has = m.parts.some((q, j) => q.t === 'dio' && ((N[j].a === x && N[j].b === y) || (N[j].a === y && N[j].b === x)));
+        if (!has) { const t = 'Freilaufdiode fehlt – beim Abschalten entsteht eine Spannungsspitze'; if (parts[i].lv < 1) { parts[i].lv = 1; parts[i].msg = t; } issues.push([1, t, i]); } }); }
     // Betrieb hday Stunden am Tag, sonst Ruhezustand: mittlerer Strom je Batterie, Laufzeit = C / Mittel
     const d = m.hday > 0 && m.hday < 24 ? m.hday / 24 : 1, rr = d < 1 ? solve(netlist(m, false, true)) : null;
     parts.forEach((o, i) => { if (m.parts[i].t !== 'bat') return; o.h0 = o.h; o.Ir = rr && !rr.err ? rr.I[i] : o.I; o.Iavg = d * o.I + (1 - d) * o.Ir;
@@ -376,7 +450,7 @@ const Core = (() => {
     return out;
   }
 
-  return { T_AMB, CELLS, LEDS, BOARDS, REGS, TRANS, BE, NVT, ledIs, RHO_CU, R_SW, TERMS, place, term, cell, ledIV, lampIV, mcuF, regF, trF, netlist, solve, analyze, tidy };
+  return { T_AMB, CELLS, LEDS, BOARDS, REGS, TRANS, BE, DIODES, STRIPS, RELAYS, VOL, ldrR, strip, potR, sw3F, relF, NVT, ledIs, RHO_CU, R_SW, TERMS, place, term, cell, ledIV, lampIV, mcuF, regF, trF, netlist, solve, analyze, tidy };
 })();
 if (typeof module !== 'undefined') module.exports = Core;
 // === CORE END
@@ -388,9 +462,11 @@ const fU = U => (Math.abs(U) >= 10 ? nf1 : nf2).format(U) + ' V';
 const fP = P => P >= 1 ? nf2.format(P) + ' W' : nf0.format(P * 1000) + ' mW';
 const fh = h => h < 1 ? nf0.format(h * 60) + ' min' : h < 48 ? nf1.format(h) + ' h' : nf1.format(h / 24) + ' Tage';
 const fN = v => String(+(+v).toPrecision(4)).replace('.', ',');
-const NAME = { bat: 'Batterie', sw: 'Schalter', r: 'Widerstand', led: 'LED', lamp: 'Glühlampe', mot: 'Motor', cab: 'Kabel', mcu: 'Mikrocontroller', tr: 'Transistor', reg: 'Wandler' };
-const DEF = { bat: { cell: 'aa', n: 2 }, sw: { on: true }, r: { R: 330, Pn: 0.25 }, led: { col: 'rot' }, lamp: { Un: 3, Pn: 0.9 }, mot: { Un: 3, In: 0.25, Ia: 1.5 }, cab: { L: 5, A: 0.25 }, mcu: { board: 'uno', hi: true }, tr: { tt: 'irlz' }, reg: { rt: 'buck5' } };
-const LIST = { cell: Core.CELLS, col: Core.LEDS, board: Core.BOARDS, tt: Core.TRANS, rt: Core.REGS }; // Auswahlparameter → Tabelle
+const NAME = { bat: 'Batterie', sw: 'Schalter', r: 'Widerstand', led: 'LED', lamp: 'Glühlampe', mot: 'Motor', cab: 'Kabel', mcu: 'Mikrocontroller', tr: 'Transistor', reg: 'Wandler', btn: 'Taster', sw3: 'Wechselschalter', pot: 'Poti', ldr: 'Fotowiderstand', dio: 'Diode', strip: 'LED-Streifen', buz: 'Summer', spk: 'Lautsprecher', rel: 'Relais' };
+const DEF = { bat: { cell: 'aa', n: 2 }, sw: { on: true }, r: { R: 330, Pn: 0.25 }, led: { col: 'rot' }, lamp: { Un: 3, Pn: 0.9 }, mot: { Un: 3, In: 0.25, Ia: 1.5 }, cab: { L: 5, A: 0.25 }, mcu: { board: 'uno', hi: true }, tr: { tt: 'irlz' }, reg: { rt: 'buck5' },
+  btn: { on: false }, sw3: { pos3: 'a' }, pot: { R: 1000, pos: 50, Pn: 0.5 }, ldr: { lx: 300 }, dio: { dt: 'n4007' }, strip: { st: 's12', len: 1 }, buz: { Un: 5, In: 0.03 }, spk: { Un: 5, Pmax: 3, vol: 'mittel' }, rel: { rt2: 'r5' } };
+const LUX = [[1, 'Nacht (1 lx)'], [10, 'Dämmerung (10 lx)'], [300, 'Zimmer (300 lx)'], [10000, 'Tageslicht (10 000 lx)']];
+const LIST = { cell: Core.CELLS, col: Core.LEDS, board: Core.BOARDS, tt: Core.TRANS, rt: Core.REGS, dt: Core.DIODES, st: Core.STRIPS, rt2: Core.RELAYS, vol: Core.VOL, pos3: { a: 1, b: 1 } }; // Auswahlparameter → Tabelle
 const PN = [0.125, 0.25, 0.5, 1, 2, 5], AQ = [0.14, 0.25, 0.5, 0.75, 1, 1.5, 2.5];
 const pv = (p, s) => { // Beschriftung: Wert oben
   switch (p.t) {
@@ -404,6 +480,15 @@ const pv = (p, s) => { // Beschriftung: Wert oben
     case 'mcu': return Core.BOARDS[p.board].n;
     case 'tr': return Core.TRANS[p.tt].n;
     case 'reg': return Core.REGS[p.rt].n;
+    case 'btn': return p.on ? 'gedrückt' : 'los';
+    case 'sw3': return 'Stellung ' + p.pos3.toUpperCase();
+    case 'pot': return (p.R >= 1000 ? fN(p.R / 1000) + ' kΩ' : fN(p.R) + ' Ω') + ' · ' + nf0.format(p.pos) + ' %';
+    case 'ldr': return (LUX.find(l => l[0] === p.lx) || [0, nf0.format(p.lx) + ' lx'])[1].replace(/ \(.*/, '');
+    case 'dio': return Core.DIODES[p.dt].n.replace(/ \(.*/, '');
+    case 'strip': return fN(p.len) + ' m · ' + fN(Core.STRIPS[p.st].Un) + ' V';
+    case 'buz': return 'Summer ' + fN(p.Un) + ' V';
+    case 'spk': return fN(p.Pmax) + ' W · ' + p.vol;
+    case 'rel': return Core.RELAYS[p.rt2].n.replace(/ \(.*/, '');
   }
 };
 
@@ -425,33 +510,56 @@ function branches(bat, list) {
     list[i].forEach((o, j) => parts.push(P(o.t, x, 2 * j, 1, o))); if (list[i].length < 3) wires.push([x, 2 * list[i].length, x, 6]); });
   return { parts, wires };
 }
-const TPLS = [['Prinzipien', [
+const TPLS = [['Grundschaltungen', [
+  ['reihe', 'Lampen in Reihe', 'zwei 3-V-Lampen an 6 V', () => ring({ cell: 'aa', n: 4 }, [{ t: 'lamp' }], { t: 'lamp' })],
+  ['par', 'Lampen parallel', 'jede Lampe an voller Spannung', () => branches({ cell: 'aa', n: 2 }, [[{ t: 'lamp' }], [{ t: 'lamp' }]])],
+  ['teiler', 'Spannungsteiler', '9 V über 10 kΩ und 4,7 kΩ', () => ring({ cell: 'e9v' }, [{ t: 'r', R: 10000 }], { t: 'r', R: 4700 })],
+  ['batpar', 'Batterien parallel', 'doppelte Laufzeit, gleiche Spannung', () => ({ parts: [BAT({ cell: 'aa', n: 2 }), P('bat', 2, 2, 1, { cell: 'aa', n: 2 }), P('lamp', 6, 2, 1)],
+    wires: [...W([0, 2], [0, 0], [6, 0], [6, 2]), [2, 0, 2, 2], ...W([0, 4], [0, 6], [6, 6], [6, 4]), [2, 4, 2, 6]] })],
+  ['und', 'UND: Schalter in Reihe', 'Licht nur, wenn beide zu sind', () => { const m = ring({ cell: 'aa', n: 2 }, [{ t: 'sw' }, { t: 'sw' }], { t: 'lamp' }); return m; }],
+  ['oder', 'ODER: Schalter parallel', 'einer von beiden genügt', () => ({ parts: [BAT({ cell: 'aa', n: 2 }), P('sw', 2, 0, 0, { on: false }), P('sw', 2, -2, 0), P('lamp', 6, 2, 1)],
+    wires: [...W([0, 2], [0, 0], [2, 0]), ...W([2, 0], [2, -2]), ...W([4, -2], [4, 0]), ...W([4, 0], [6, 0], [6, 2]), ...W([6, 4], [6, 6], [0, 6], [0, 4])] })],
+  ['wechsel', 'Wechselschaltung', 'Treppenhaus: an zwei Stellen schalten', () => ({ parts: [BAT({ cell: 'aa', n: 2 }), P('sw3', 2, 0, 0, { pos3: 'a' }), P('sw3', 8, 0, 2, { pos3: 'b' }), P('lamp', 10, 2, 1)],
+    wires: [...W([0, 2], [0, 0], [2, 0]), [4, -1, 6, -1], [4, 1, 6, 1], ...W([8, 0], [10, 0], [10, 2]), ...W([10, 4], [10, 6], [0, 6], [0, 4])] })],
+  ['verpol', 'Verpolschutz mit Diode', 'Schottky: wenig Verlust', () => ring({ cell: 'e9v' }, [{ t: 'dio', dt: 's5819' }, { t: 'sw' }], { t: 'mot', Un: 9, In: 0.1, Ia: 0.3 })],
+  ['dimled', 'Poti dimmt LED', '1 kΩ + 220 Ω Schutz', () => ring({ cell: 'e9v' }, [{ t: 'pot', R: 1000, pos: 50 }, { t: 'r', R: 220 }], { t: 'led' })],
+  ['daemmer', 'Dämmerungsschalter', 'Fotowiderstand + Transistor: LED nachts an', () => ({
+    parts: [BAT({ cell: 'e9v' }), P('r', 4, -2, 1, { R: 10000 }), P('ldr', 4, 0, 1, { lx: 1 }), P('r', 7, 0, 0, { R: 1000 }), P('tr', 9, 1, 0, { tt: 'bc547' }), P('r', 11, -4, 1, { R: 330 }), P('led', 11, -2, 1)],
+    wires: [...W([0, 2], [0, -4], [11, -4]), [4, -4, 4, -2], [4, 0, 7, 0], [9, 0, 9, 1], [4, 2, 4, 6], [11, 2, 11, 6], ...W([0, 4], [0, 6], [11, 6])] })]
+]], ['Prinzipien', [
   ['ledr', 'LED mit Vorwiderstand', '9 V, 330 Ω: 20 mA', () => ring({ cell: 'e9v' }, [{ t: 'r', R: 330 }], { t: 'led', col: 'rot' })],
   ['led0', 'LED ohne Vorwiderstand', 'nur die Batterie begrenzt', () => ring({ cell: 'e9v' }, [], { t: 'led', col: 'rot' })],
   ['led2', 'Zwei LEDs, ein Widerstand', 'die rote nimmt sich alles', () => ({ parts: [BAT({ cell: 'usb' }), P('r', 2, 0, 0, { R: 150 }), P('led', 6, 0, 1, { col: 'rot' }), P('led', 9, 0, 1, { col: 'blau' })],
     wires: [...W([0, 2], [0, 0], [2, 0]), ...W([4, 0], [6, 0], [9, 0]), [6, 2, 6, 6], [9, 2, 9, 6], ...W([0, 4], [0, 6], [6, 6], [9, 6])] })],
-  ['reihe', 'Lampen in Reihe', 'zwei 3-V-Lampen an 6 V', () => ring({ cell: 'aa', n: 4 }, [{ t: 'lamp' }], { t: 'lamp' })],
   ['kab', 'Langes dünnes Kabel', '12 V, 20 W, 2 × 10 m · 0,14 mm²', () => { const m = ring({ cell: 'psu12' }, [{ t: 'cab', L: 10, A: 0.14 }], { t: 'lamp', Un: 12, Pn: 20 });
     m.parts.push(P('cab', 4, 6, 2, { L: 10, A: 0.14 })); m.wires = m.wires.filter(q => !(q[1] === 6 && q[3] === 6)).concat(W([0, 6], [2, 6]), W([4, 6], [6, 6])); return m; }],
+  ['dimlamp', 'Poti als Lampendimmer', 'die Wärme landet im Poti', () => ring({ cell: 'aa', n: 4 }, [{ t: 'pot', R: 47, pos: 30 }], { t: 'lamp', Un: 6, Pn: 3 })],
   ['knopf', 'Knopfzelle + LED', 'ohne Widerstand, CR2032', () => ring({ cell: 'cr2032' }, [], { t: 'led', col: 'rot' })]
 ]], ['Mikrocontroller', [
   ['unoled', 'Arduino + LED', '9-V-Block, 220 Ω am Pin', () => ({ parts: [BAT({ cell: 'e9v' }), P('mcu', 3, 2, 0), P('r', 7, 3, 0, { R: 220 }), P('led', 9, 3, 0)],
     wires: [...W([0, 2], [3, 2]), ...W([0, 4], [3, 4]), ...W([11, 3], [11, 6], [3, 6], [3, 4])] })],
   ['unomot', 'Motor direkt am Pin', 'zu viel Strom für den Pin', () => ({ parts: [BAT({ cell: 'psu12' }), P('mcu', 3, 2, 0), P('mot', 7, 3, 0)],
     wires: [...W([0, 2], [3, 2]), ...W([0, 4], [3, 4]), ...W([9, 3], [9, 6], [3, 6], [3, 4])] })],
-  ['unofet', 'Arduino schaltet Lüfter', 'Logik-Pegel-MOSFET, 12 V', () => ({ parts: [BAT({ cell: 'psu12' }), P('mcu', 3, 2, 0), P('r', 7, 3, 0, { R: 220 }), P('tr', 10, 4, 0), P('mot', 12, 0, 1, { Un: 12, In: 0.1, Ia: 0.3 })],
-    wires: [...W([0, 2], [0, 0], [12, 0]), [3, 0, 3, 2], [3, 4, 3, 6], ...W([0, 4], [0, 6], [12, 6]), [12, 2, 12, 3], [12, 5, 12, 6], ...W([9, 3], [9, 4], [10, 4])] })],
+  ['unofet', 'Arduino schaltet Lüfter', 'MOSFET + Freilaufdiode, 12 V', () => ({ parts: [BAT({ cell: 'psu12' }), P('mcu', 3, 2, 0), P('r', 7, 3, 0, { R: 220 }), P('tr', 10, 4, 0), P('mot', 12, 0, 1, { Un: 12, In: 0.1, Ia: 0.3 }), P('dio', 14, 2, 3)],
+    wires: [...W([0, 2], [0, 0], [14, 0]), [3, 0, 3, 2], [3, 4, 3, 6], ...W([0, 4], [0, 6], [12, 6]), [12, 2, 12, 3], [12, 5, 12, 6], ...W([9, 3], [9, 4], [10, 4]), [14, 2, 12, 2]] })],
   ['espfet', 'ESP32 + Standard-MOSFET', '3,3 V am Gate reichen nicht', () => ({ parts: [BAT({ cell: 'psu12' }), P('reg', 4, 3, 0, { rt: 'buck5' }), P('mcu', 10, 2, 0, { board: 'esp32' }), P('tr', 15, 4, 0, { tt: 'irf' }), P('lamp', 17, 0, 1, { Un: 12, Pn: 20 })],
     wires: [...W([0, 2], [0, 0], [17, 0]), [4, 0, 4, 3], ...W([8, 3], [8, 2], [10, 2]), ...W([0, 4], [0, 7], [17, 7]), [6, 5, 6, 7], [10, 4, 10, 7], [17, 2, 17, 3], [17, 5, 17, 7], ...W([14, 3], [14, 4], [15, 4])] })],
   ['pico', 'Pico am LiPo', 'Laufzeit mit Mikrocontroller', () => ({ parts: [BAT({ cell: 'lipo' }), P('mcu', 3, 2, 0, { board: 'pico' }), P('r', 7, 3, 0, { R: 330 }), P('led', 9, 3, 0)],
     wires: [...W([0, 2], [3, 2]), ...W([0, 4], [3, 4]), ...W([11, 3], [11, 6], [3, 6], [3, 4])], soll: 24 })],
   ['espbat', 'ESP32-Sensor auf Batterie', '½ h am Tag – der Ruhestrom zählt', () => ({ parts: [BAT({ cell: 'aanimh', n: 4 }), P('mcu', 3, 2, 0, { board: 'esp32', hi: false })], wires: [...W([0, 2], [3, 2]), ...W([0, 4], [3, 4])], hday: 0.5, soll: 720 })],
+  ['relais', 'Arduino schaltet Lampe per Relais', 'Transistor, Freilaufdiode, getrennter 12-V-Kreis', () => ({
+    parts: [BAT({ cell: 'usb' }), P('mcu', 3, 2, 0, { board: 'uno5' }), P('r', 7, 3, 0, { R: 1000 }), P('tr', 9, 3, 0, { tt: 'bc547' }), P('rel', 11, 0, 0, { rt2: 'r5' }), P('dio', 10, 2, 3), P('bat', 21, 2, 1, { cell: 'psu12', n: 1 }), P('lamp', 17, 2, 1, { Un: 12, Pn: 5 })],
+    wires: [...W([0, 2], [3, 2]), ...W([0, 4], [3, 4]), ...W([0, 2], [0, 0], [11, 0]), [10, 2, 11, 2], ...W([11, 4], [11, 6], [3, 6], [3, 4]), ...W([13, 0], [21, 0], [21, 2]), [13, 2, 17, 2], ...W([17, 4], [17, 7], [21, 7], [21, 4])] })],
   ['pibank', 'Raspberry Pi an Powerbank', 'wie lange läuft er?', () => ({ parts: [BAT({ cell: 'pbank' }), P('mcu', 3, 2, 0, { board: 'pi4', hi: false })], wires: [...W([0, 2], [3, 2]), ...W([0, 4], [3, 4])], soll: 8 })],
   ['lin', 'Linearregler 12 → 5 V', 'Pi 4 am 7805: wird heiß', () => ({ parts: [BAT({ cell: 'psu12' }), P('reg', 2, 0, 0, { rt: 'l7805' }), P('mcu', 8, 2, 0, { board: 'pi4', hi: false })],
     wires: [...W([0, 2], [0, 0], [2, 0]), ...W([6, 0], [8, 0], [8, 2]), ...W([8, 4], [8, 6], [0, 6], [0, 4]), [4, 2, 4, 6]] })],
   ['buck', 'Step-down 12 → 5 V', 'Pi 4 am Step-down: passt', () => ({ parts: [BAT({ cell: 'psu12' }), P('reg', 2, 0, 0, { rt: 'buck5' }), P('mcu', 8, 2, 0, { board: 'pi4', hi: false })],
     wires: [...W([0, 2], [0, 0], [2, 0]), ...W([6, 0], [8, 0], [8, 2]), ...W([8, 4], [8, 6], [0, 6], [0, 4]), [4, 2, 4, 6]] })]
 ]], ['Produkte', [
+  ['klingel', 'Türklingel', 'Taster + Summer, 4 × AA', () => ring({ cell: 'aa', n: 4 }, [{ t: 'btn', on: true }], { t: 'buz', Un: 6, In: 0.03 })],
+  ['box', 'Bluetooth-Box', '18650, 5 W, mittlere Lautstärke', () => { const m = ring({ cell: 'li18650', n: 1 }, [{ t: 'sw' }], { t: 'spk', Un: 3.7, Pmax: 5, vol: 'mittel' }); m.soll = 10; return m; }],
+  ['strip', 'LED-Streifen 5 m', '24 W am 2-A-Netzteil', () => ring({ cell: 'psu12' }, [{ t: 'sw' }], { t: 'strip', st: 's12', len: 5 })],
+  ['kette', 'Lichterkette in Reihe', '3 weiße LEDs + 120 Ω an 12 V', () => ring({ cell: 'psu12' }, [{ t: 'r', R: 120 }, { t: 'led', col: 'weiss' }, { t: 'led', col: 'weiss' }], { t: 'led', col: 'weiss' })],
   ['torch', 'Taschenlampe', '2 × AA, Glühlampe 3 V', () => ring({ cell: 'aa', n: 2 }, [{ t: 'sw' }], { t: 'lamp' })],
   ['usbl', 'USB-Leuchte', '3 weiße LEDs, je 100 Ω', () => branches({ cell: 'usb' }, [0, 1, 2].map(() => [{ t: 'r', R: 100 }, { t: 'led', col: 'weiss' }]))],
   ['nacht', 'Nachtlicht', '18650, 8 h je Nacht', () => { const m = ring({ cell: 'li18650', n: 1 }, [{ t: 'sw' }, { t: 'r', R: 47 }], { t: 'led', col: 'weiss' }); m.hday = 8; return m; }],
@@ -523,7 +631,7 @@ function drawEd() {
   if (!S.parts.length) { ctx.font = DP_CFONT; ctx.fillStyle = css('--ink2'); ctx.textAlign = 'left'; ctx.fillText('Leer: Bauteil wählen und auf einen Punkt tippen', 8, h - 8); }
 }
 // Mehrpole (Mikrocontroller, Wandler, Transistor): in Bauteil-Koordinaten zeichnen, Beschriftung rechts daneben
-const MBOX = { mcu: [[0.5, -0.5], [3.5, -0.5], [3.5, 2.5], [0.5, 2.5]], reg: [[0.5, -0.6], [3.5, -0.6], [3.5, 0.6], [0.5, 0.6]], tr: [[0.6, -0.8], [2.1, -0.8], [2.1, 0.8], [0.6, 0.8]] };
+const MBOX = { sw3: [[0.2, -1], [2.1, -1], [2.1, 1], [0.2, 1]], rel: [[-0.4, -0.1], [2.4, -0.1], [2.4, 2.1], [-0.4, 2.1]], mcu: [[0.5, -0.5], [3.5, -0.5], [3.5, 2.5], [0.5, 2.5]], reg: [[0.5, -0.6], [3.5, -0.6], [3.5, 0.6], [0.5, 0.6]], tr: [[0.6, -0.8], [2.1, -0.8], [2.1, 0.8], [0.6, 0.8]] };
 function drawMulti(ctx, p, i, T, k) {
   const Q = q => T(Core.place(p, q)), o = A && A.parts[i], warn = o && o.lv, sel = UI.sel && UI.sel.t === 'p' && UI.sel.i === i, ink = css(warn ? '--warn' : '--ink');
   const path = q => { ctx.beginPath(); q.forEach((r, j) => j ? ctx.lineTo(...Q(r)) : ctx.moveTo(...Q(r))); };
@@ -537,6 +645,11 @@ function drawMulti(ctx, p, i, T, k) {
       if (p.hi) { ctx.fillStyle = ink; const [x, y] = Q([3.5, 1]); ctx.fillRect(x - 3, y - 3, 6, 6); } break; }
     case 'reg': { const R = Core.REGS[p.rt]; line([0, 0], [0.5, 0]); line([3.5, 0], [4, 0]); line([2, 0.6], [2, 2]); box(MBOX.reg);
       txt((R.k === 'lin' ? 'Linear ' : R.k === 'buck' ? 'Step-down ' : 'Step-up ') + fN(R.Vset) + ' V', [2, 0], small); break; }
+    case 'sw3': { const b = p.pos3 === 'b' ? 0.5 : -0.5; line([0, 0], [0.6, 0]); line([2, -1], [2, -0.5], [1.6, -0.5]); line([2, 1], [2, 0.5], [1.6, 0.5]); line([0.6, 0], [1.6, b]);
+      ctx.fillStyle = ink; [[0.6, 0], [1.6, -0.5], [1.6, 0.5]].forEach(q => { ctx.beginPath(); ctx.arc(...Q(q), 2.5, 0, 7); ctx.fill(); }); txt('A', [1.6, -0.82], small); txt('B', [1.6, 0.82], small); break; }
+    case 'rel': { const on = o && o.on; line([0, 0], [0, 0.65]); line([0, 1.35], [0, 2]); box([[-0.3, 0.65], [0.3, 0.65], [0.3, 1.35], [-0.3, 1.35]]);
+      line([2, 0], [2, 0.6]); line([2, 2], [2, 1.4]); line([2, 1.4], on ? [2, 0.6] : [1.65, 0.7]);
+      ctx.lineWidth = 1; ctx.setLineDash([3, 3]); line([0.3, 1], [on ? 2 : 1.82, 1]); ctx.setLineDash([]); break; }
     case 'tr': { const Tt = Core.TRANS[p.tt]; ctx.beginPath(); ctx.arc(...Q([1.4, 0]), 0.75 * k, 0, 7); ctx.fill(); ctx.stroke();
       if (Tt.k === 'mos') { line([0, 0], [0.75, 0]); line([0.75, -0.4], [0.75, 0.4]); line([0.95, -0.5], [0.95, 0.5]); line([0.95, -0.3], [2, -0.3], [2, -1]); line([0.95, 0.3], [2, 0.3], [2, 1]); }
       else { line([0, 0], [0.95, 0]); line([0.95, -0.45], [0.95, 0.45]); line([0.95, -0.2], [2, -0.8], [2, -1]); line([0.95, 0.2], [2, 0.8], [2, 1]);
@@ -545,9 +658,9 @@ function drawMulti(ctx, p, i, T, k) {
   }
   // Beschriftung: Mikrocontroller unter, Wandler über dem Kasten, Transistor rechts daneben (Bildschirm, nicht mitgedreht)
   const pts = MBOX[p.t].map(Q), x0 = Math.min(...pts.map(q => q[0])), x1 = Math.max(...pts.map(q => q[0])), y0 = Math.min(...pts.map(q => q[1])), y1 = Math.max(...pts.map(q => q[1]));
-  const rows = p.t === 'tr' && k >= 28 ? [[Core.TRANS[p.tt].n.replace(/ \(.*/, ''), '--ink2']] : [];
+  const side = p.t === 'tr' || p.t === 'sw3' || p.t === 'rel', rows = side && k >= 28 ? [[p.t === 'tr' ? Core.TRANS[p.tt].n.replace(/ \(.*/, '') : pv(p), '--ink2']] : [];
   if (o) {
-    const r = p.t === 'mcu' ? fU(o.U) + ' · ' + fI(o.I) : p.t === 'reg' ? 'aus ' + fU(o.U) + ' · ' + fI(o.I) : fI(o.I) + (o.P > 0.01 ? ' · ' + fP(o.P) : '');
+    const r = p.t === 'mcu' ? fU(o.U) + ' · ' + fI(o.I) : p.t === 'reg' ? 'aus ' + fU(o.U) + ' · ' + fI(o.I) : p.t === 'rel' ? 'Spule ' + fI(o.I) + (o.on ? ' · Kontakt ' + fI(o.Ik) : ' · offen') : p.t === 'sw3' ? fI(o.I) : fI(o.I) + (o.P > 0.01 ? ' · ' + fP(o.P) : '');
     rows.push([(warn ? '⚠ ' : '') + r, warn ? '--warn' : '--ink']);
     if (p.t === 'mcu' && Math.abs(o.pin) > 1e-6) rows.push(['Pin ' + fI(o.pin), '--ink']);
     if (p.t === 'reg' && o.I > 1e-4) rows.push([(Core.REGS[p.rt].k === 'lin' ? '' : 'η ' + nf0.format(o.eta * 100) + ' % · ') + 'Verlust ' + fP(o.P) + (o.dT > 20 ? ' · ' + nf0.format(Core.T_AMB + o.dT) + ' °C' : ''), '--ink2']);
@@ -555,7 +668,7 @@ function drawMulti(ctx, p, i, T, k) {
   }
   ctx.font = DP_CFONT; ctx.textBaseline = 'middle';
   rows.forEach(([t, c], j) => { ctx.fillStyle = css(c);
-    if (p.t === 'tr') { ctx.textAlign = 'left'; ctx.fillText(t, x1 + 8, (y0 + y1) / 2 + (j - (rows.length - 1) / 2) * 16); }
+    if (side) { ctx.textAlign = 'left'; ctx.fillText(t, x1 + 8, (y0 + y1) / 2 + (j - (rows.length - 1) / 2) * 16); }
     else { ctx.textAlign = 'center'; ctx.fillText(t, (x0 + x1) / 2, p.t === 'mcu' ? y1 + 12 + j * 16 : y0 - 12 - (rows.length - 1 - j) * 16); } });
   ctx.textBaseline = 'alphabetic';
 }
@@ -578,6 +691,19 @@ function drawPart(ctx, p, i, T, k) {
       line(L(0.3, -0.3), L(0.3, 0.3)); ctx.lineWidth = 1.5; line(L(0, -0.4), L(0.25, -0.65)); line(L(0.2, -0.35), L(0.45, -0.6)); break;
     case 'lamp': glow(0.75); leads(0.4); ctx.beginPath(); ctx.arc(...C, 0.4 * k, 0, 7); ctx.fill(); ctx.stroke(); const d = 0.28; line(L(-d, -d), L(d, d)); line(L(-d, d), L(d, -d)); break;
     case 'mot': leads(0.45); ctx.beginPath(); ctx.arc(...C, 0.45 * k, 0, 7); ctx.fill(); ctx.stroke(); ctx.font = '700 ' + Math.round(0.45 * k) + 'px system-ui, sans-serif'; ctx.fillStyle = ink; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('M', ...C); ctx.textBaseline = 'alphabetic'; break;
+    case 'btn': leads(0.5); [-0.5, 0.5].forEach(s => { ctx.beginPath(); ctx.arc(...L(s, 0), 2.5, 0, 7); ctx.fillStyle = ink; ctx.fill(); });
+      { const t = p.on ? -0.08 : -0.38; line(L(-0.6, t), L(0.6, t)); line(L(0, t), L(0, -0.75)); } break;
+    case 'pot': case 'ldr': leads(0.5); ctx.beginPath(); [L(-0.5, -0.18), L(0.5, -0.18), L(0.5, 0.18), L(-0.5, 0.18)].forEach((r, j) => j ? ctx.lineTo(...r) : ctx.moveTo(...r)); ctx.closePath(); ctx.fill(); ctx.stroke();
+      ctx.lineWidth = 1.5; const arrow = (a, b) => { line(a, b); const dx = b[0] - a[0], dy = b[1] - a[1], l = Math.hypot(dx, dy) || 1, ux2 = dx / l, uy2 = dy / l;
+        line([b[0] - 7 * ux2 - 3.5 * uy2, b[1] - 7 * uy2 + 3.5 * ux2], b, [b[0] - 7 * ux2 + 3.5 * uy2, b[1] - 7 * uy2 - 3.5 * ux2]); };
+      if (p.t === 'pot') arrow(L(-0.5, 0.45), L(0.55, -0.45)); else { arrow(L(-0.55, -0.9), L(-0.25, -0.28)); arrow(L(-0.1, -0.9), L(0.2, -0.28)); } break;
+    case 'dio': leads(0.3); ctx.beginPath(); [L(-0.3, -0.3), L(0.3, 0), L(-0.3, 0.3)].forEach((r, j) => j ? ctx.lineTo(...r) : ctx.moveTo(...r)); ctx.closePath(); ctx.fill(); ctx.stroke(); line(L(0.3, -0.3), L(0.3, 0.3)); break;
+    case 'strip': glow(0.9); leads(0.8); ctx.beginPath(); [L(-0.8, -0.16), L(0.8, -0.16), L(0.8, 0.16), L(-0.8, 0.16)].forEach((r, j) => j ? ctx.lineTo(...r) : ctx.moveTo(...r)); ctx.closePath(); ctx.fill(); ctx.stroke();
+      [-0.5, -0.17, 0.17, 0.5].forEach(s => { ctx.beginPath(); ctx.arc(...L(s, 0), 2.2, 0, 7); ctx.fillStyle = ink; ctx.fill(); }); break;
+    case 'buz': leads(0.4); { const q = []; for (let a = 0; a <= 8; a++) { const th = Math.PI * a / 8; q.push(L(-0.4 * Math.cos(th), 0.2 - 0.45 * Math.sin(th))); }
+      ctx.beginPath(); q.forEach((r, j) => j ? ctx.lineTo(...r) : ctx.moveTo(...r)); ctx.closePath(); ctx.fill(); ctx.stroke(); line(L(-0.4, 0), L(-0.4, 0.2)); line(L(0.4, 0), L(0.4, 0.2)); } break;
+    case 'spk': leads(0.3); ctx.beginPath(); [L(-0.3, -0.18), L(-0.05, -0.18), L(-0.05, 0.18), L(-0.3, 0.18)].forEach((r, j) => j ? ctx.lineTo(...r) : ctx.moveTo(...r)); ctx.closePath(); ctx.fill(); ctx.stroke();
+      ctx.beginPath(); [L(-0.05, -0.18), L(0.3, -0.48), L(0.3, 0.48), L(-0.05, 0.18)].forEach((r, j) => j ? ctx.lineTo(...r) : ctx.moveTo(...r)); ctx.closePath(); ctx.fill(); ctx.stroke(); break;
     case 'cab': ctx.lineWidth = sel ? 5 : 4; ctx.strokeStyle = css(warn ? '--warn' : '--ink2'); line(A0, B0); ctx.strokeStyle = css('--bg'); ctx.lineWidth = 1.5; ctx.setLineDash([4, 4]); line(L(-0.8, 0), L(0.8, 0)); ctx.setLineDash([]); break;
   }
   // Beschriftung: waagrecht Wert oben, Ergebnis unten; senkrecht beides rechts daneben
@@ -586,7 +712,7 @@ function drawPart(ctx, p, i, T, k) {
     if (vert) { ctx.textAlign = 'left'; ctx.fillText(t, C[0] + 0.6 * k, C[1] + side * 9); } else { ctx.textAlign = 'center'; ctx.fillText(t, C[0], C[1] + side * 0.72 * k); }
     ctx.textBaseline = 'alphabetic'; };
   ctx.font = DP_CFONT; if (k >= 28) lab(pv(p, true), -1, css('--ink2')); // eng (Telefon): nur Ergebnisse, Werte in der Auswahlzeile
-  if (o) { const r = p.t === 'bat' ? fU(o.U) + ' · ' + fI(o.I) : p.t === 'cab' ? 'ΔU ' + fU(Math.abs(o.U)) : p.t === 'sw' ? (p.on ? fI(o.I) : '') : fI(o.I) + (o.dT > 20 ? ' · ' + nf0.format(Core.T_AMB + o.dT) + ' °C' : '');
+  if (o) { const r = p.t === 'bat' || p.t === 'r' || p.t === 'pot' || p.t === 'ldr' ? fU(Math.abs(o.U)) + ' · ' + fI(o.I) + (o.dT > 20 ? ' · ' + nf0.format(Core.T_AMB + o.dT) + ' °C' : '') : p.t === 'btn' ? (p.on ? fI(o.I) : '') : p.t === 'cab' ? 'ΔU ' + fU(Math.abs(o.U)) : p.t === 'sw' ? (p.on ? fI(o.I) : '') : fI(o.I) + (o.dT > 20 ? ' · ' + nf0.format(Core.T_AMB + o.dT) + ' °C' : '');
     if (r || warn) lab((warn ? '⚠ ' : '') + r, 1, css(warn ? '--warn' : '--ink')); }
 }
 
@@ -619,7 +745,8 @@ function renderStats() {
   const more = S.parts.map((p, i) => { const o = A.parts[i];
     return { l: NAME[p.t] + ' ' + (i + 1) + ' <small>' + pv(p) + '</small>', v: (p.t === 'bat' ? fU(o.U) : fU(Math.abs(o.U))) + ' · ' + fI(o.I) + ' · ' + fP(Math.abs(o.P)),
       n: o.msg ? '⚠ ' + o.msg : p.t === 'mcu' ? 'Pin ' + fI(o.pin) + ' · ' + fU(o.Vpin) : p.t === 'reg' ? 'ein ' + fU(o.Vi) + ' · ' + fI(o.Iin) + ' · Verlust ' + fP(o.P) + (o.Iin > 1e-6 ? ' · η ' + nf0.format(o.eta * 100) + ' %' : '')
-        : p.t === 'tr' ? 'Steuerung ' + fU(o.Vg) + (Core.TRANS[p.tt].k === 'npn' ? ' · ' + fI(o.Ig) : '') : p.t === 'led' || p.t === 'lamp' ? nf0.format(o.rel * 100) + ' % Licht' : p.t === 'mot' ? nf0.format(o.rel * 100) + ' % Drehzahl, Anlauf ' + fI(o.Is) : p.t === 'bat' && o.h != null ? fh(o.h) : '', w: !!o.lv }; });
+        : p.t === 'pot' || p.t === 'ldr' ? fN(o.Reff) + ' Ω' : p.t === 'strip' ? nf0.format(o.rel * 100) + ' % Licht · ' + fP(o.W) + '/m' : p.t === 'spk' ? 'Spitze ' + fI(o.Is) : p.t === 'buz' ? nf0.format(o.rel * 100) + ' % Spannung'
+        : p.t === 'rel' ? (o.on ? 'zieht an · Kontakt ' + fI(o.Ik) : 'abgefallen') : p.t === 'tr' ? 'Steuerung ' + fU(o.Vg) + (Core.TRANS[p.tt].k === 'npn' ? ' · ' + fI(o.Ig) : '') : p.t === 'led' || p.t === 'lamp' ? nf0.format(o.rel * 100) + ' % Licht' : p.t === 'mot' ? nf0.format(o.rel * 100) + ' % Drehzahl, Anlauf ' + fI(o.Is) : p.t === 'bat' && o.h != null ? fh(o.h) : '', w: !!o.lv }; });
   $('stats').innerHTML = dpStats(vh, main, more, 'elek');
 }
 
@@ -641,6 +768,15 @@ function renderSel() {
     case 'cab': h += num('pL', p.L, 'm') + ` <select id="pq">${opts(AQ.map(v => [v, v]), p.A, v => fN(v) + ' mm²')}</select>`; break;
     case 'mcu': { const B = Core.BOARDS[p.board]; h += `<select id="pb">${opts(Object.entries(Core.BOARDS).map(([k, b]) => [k, b.n]), p.board)}</select><button id="ph" class="${p.hi ? 'on' : ''}">Pin ${p.hi ? 'an' : 'aus'}</button>`
       + `<span class="note">${B.vp} ${fN(B.Vmin)}–${fN(B.Vmax)} V · ≈ ${fI(B.I0)} · Pin ${fN(B.Vio)} V, bis ${fI(B.In)}</span>`; break; }
+    case 'btn': h += `<button id="po" class="${p.on ? 'on' : ''}">${p.on ? 'gedrückt' : 'losgelassen'}</button><span class="note">im Ruhezustand immer los</span>`; break;
+    case 'sw3': h += `<span class="seg"><button id="pa" class="${p.pos3 === 'a' ? 'on' : ''}">A</button><button id="pz" class="${p.pos3 === 'b' ? 'on' : ''}">B</button></span>`; break;
+    case 'pot': h += num('pR', p.R, 'Ω') + ` <select id="pP">${opts(PN.map(v => [v, v]), p.Pn, v => fN(v) + ' W')}</select> <input type="range" id="pp" min="1" max="100" step="1" value="${p.pos}" style="width:120px" aria-label="Stellung"> <span class="note" id="ppo">${nf0.format(p.pos)} % = ${fN(Core.potR(p))} Ω</span>`; break;
+    case 'ldr': h += `<select id="px">${opts(LUX, p.lx)}</select><span class="note">${fN(Core.ldrR(p.lx) / 1000)} kΩ</span>`; break;
+    case 'dio': h += `<select id="pd">${opts(Object.entries(Core.DIODES).map(([k, d]) => [k, `${d.n}, ${fN(d.Vf)} V bei ${fI(d.In)}`]), p.dt)}</select>`; break;
+    case 'strip': h += `<select id="ps">${opts(Object.entries(Core.STRIPS).map(([k, x]) => [k, x.n]), p.st)}</select> ` + num('pL2', p.len, 'm'); break;
+    case 'buz': h += num('pU', p.Un, 'V') + ' ' + num('pI', p.In, 'A'); break;
+    case 'spk': h += num('pU', p.Un, 'V') + ' ' + num('pW2', p.Pmax, 'W') + ` <select id="pv">${opts(Object.keys(Core.VOL).map(k => [k, k]), p.vol)}</select><span class="note">Verstärker + Box, Leistung im Mittel</span>`; break;
+    case 'rel': h += `<select id="pq2">${opts(Object.entries(Core.RELAYS).map(([k, x]) => [k, x.n]), p.rt2)}</select>`; break;
     case 'tr': h += `<select id="pt">${opts(Object.entries(Core.TRANS).map(([k, t]) => [k, t.n]), p.tt)}</select>`; break;
     case 'reg': h += `<select id="pg">${opts(Object.entries(Core.REGS).map(([k, r]) => [k, r.n]), p.rt)}</select>`; break;
   }
@@ -651,6 +787,9 @@ function renderSel() {
   bind('pc', 'cell', String, v => !!Core.CELLS[v]); bind('pn', 'n', v => Math.round(+v), v => v >= 1 && v <= 12);
   bind('pb', 'board', String, v => !!Core.BOARDS[v]); bind('pt', 'tt', String, v => !!Core.TRANS[v]); bind('pg', 'rt', String, v => !!Core.REGS[v]);
   if ($('ph')) $('ph').onclick = () => { p.hi = !p.hi; recompute(); };
+  bind('px', 'lx'); bind('pd', 'dt', String, v => !!Core.DIODES[v]); bind('ps', 'st', String, v => !!Core.STRIPS[v]); bind('pL2', 'len'); bind('pW2', 'Pmax'); bind('pv', 'vol', String, v => !!Core.VOL[v]); bind('pq2', 'rt2', String, v => !!Core.RELAYS[v]);
+  if ($('pa')) { $('pa').onclick = () => { p.pos3 = 'a'; recompute(); }; $('pz').onclick = () => { p.pos3 = 'b'; recompute(); }; }
+  if ($('pp')) { $('pp').oninput = e => { p.pos = +e.target.value; A = Core.analyze(S); drawEd(); renderStats(); $('ppo').textContent = nf0.format(p.pos) + ' % = ' + fN(Core.potR(p)) + ' Ω'; }; $('pp').onchange = () => recompute(); }
   bind('pR', 'R'); bind('pP', 'Pn'); bind('pl', 'col', String, v => !!Core.LEDS[v]); bind('pU', 'Un'); bind('pW', 'Pn'); bind('pI', 'In'); bind('pA', 'Ia'); bind('pL', 'L'); bind('pq', 'A');
   if ($('po')) $('po').onclick = () => { p.on = !p.on; recompute(); };
   $('prot').onclick = () => rotate(s.i); $('pdel').onclick = () => delPart(s.i);
@@ -704,7 +843,7 @@ cv.addEventListener('pointermove', e => {
 function endDrag(e) {
   const d = UI.drag; UI.drag = null; if (!d) return;
   if (d.wire) { const g = UI.hover || d.from; if (!same(g, d.from)) { addWire(d.from, g); UI.pend = null; recompute(); } return; }
-  if (!d.moved) { const p = d.i != null && S.parts[d.i]; if (p && p.t === 'sw') { p.on = !p.on; recompute(); } else if (p && p.t === 'mcu') { p.hi = !p.hi; recompute(); } return; }
+  if (!d.moved) { const p = d.i != null && S.parts[d.i]; if (p && (p.t === 'sw' || p.t === 'btn')) { p.on = !p.on; recompute(); } else if (p && p.t === 'sw3') { p.pos3 = p.pos3 === 'a' ? 'b' : 'a'; recompute(); } else if (p && p.t === 'mcu') { p.hi = !p.hi; recompute(); } return; }
   S.wires = S.wires.filter(q => q[0] !== q[2] || q[1] !== q[3]); // zusammengeschobene Leitungen entfallen
   recompute();
 }
@@ -716,9 +855,9 @@ window.addEventListener('keydown', e => {
   else if (UI.sel && (e.key === 'Delete' || e.key === 'Backspace')) { e.preventDefault(); if (UI.sel.t === 'p') delPart(UI.sel.i); else { S.wires.splice(UI.sel.i, 1); UI.sel = null; recompute(); } }
   else if (UI.sel && UI.sel.t === 'p' && e.key.toLowerCase() === 'r' && !e.ctrlKey && !e.metaKey) rotate(UI.sel.i);
 });
-document.querySelectorAll('#tools button, #parts button, #parts2 button').forEach(b => b.onclick = () => {
+document.querySelectorAll('#tools button, #pal button').forEach(b => b.onclick = () => {
   UI.tool = b.dataset.t; UI.pend = null;
-  document.querySelectorAll('#tools button, #parts button, #parts2 button').forEach(x => x.classList.toggle('on', x === b)); drawEd(); renderSel();
+  document.querySelectorAll('#tools button, #pal button').forEach(x => x.classList.toggle('on', x === b)); drawEd(); renderSel();
 });
 $('soll').onchange = e => { const v = +e.target.value; S.soll = v > 0 && isFinite(v) ? v : 0; recompute(); };
 $('hday').onchange = e => { const v = +e.target.value; S.hday = v > 0 && v < 24 ? v : 0; e.target.value = S.hday || ''; recompute(); };
