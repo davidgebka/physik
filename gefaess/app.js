@@ -308,6 +308,7 @@ function drawParts(ctx, T, sc) {
   if (S.lid && G.samp) { const r = G.samp[G.samp.length - 1].x; ctx.strokeStyle = css('--ink'); ctx.lineWidth = 3; polyPath(ctx, [{ x: -r, z: G.ztop }, { x: r, z: G.ztop }], T); ctx.stroke(); }
 }
 function drawPoints(ctx, closed) {
+  $('ptDel').disabled = !(S.mode === 'edit' && S.sel >= 0 && P().length > minPts());
   if (S.mode !== 'edit') return;
   const pts = P();
   if (isPlan() ? S.psmooth : isTube() ? S.tsmooth : mirror() && S.smooth) { ctx.strokeStyle = css('--mut'); ctx.lineWidth = 1; polyPath(ctx, pts, w2s); if (closed) ctx.closePath(); ctx.stroke(); }
@@ -442,14 +443,15 @@ ed.addEventListener('pointerdown', e => {
   let i = hitPoint(sx, sy);
   const now = performance.now(), pts = P();
   if (i >= 0 && lastTap.i === i && now - lastTap.t < 350) {
-    if (pts.length > minPts()) { pushUndo(); pts.splice(i, 1); S.sel = -1; changed(); }
+    S.sel = i; delSel();
     lastTap = { t: 0, i: -1 }; return;
   }
   lastTap = { t: now, i };
   pend = snap();
-  if (i < 0) {
+  if (i < 0) { // auf der Linie einfügen; ins Leere nur anhängen, solange die Kontur noch unvollständig ist, sonst Auswahl aufheben
+    const sgi = hitSegment(wp, false);
+    if (sgi < 0 && pts.length >= minPts()) { pend = null; S.sel = -1; drawEditor(); return; }
     pushUndo(pend); pend = null;
-    const sgi = hitSegment(wp, isPlan());
     if (sgi >= 0) { pts.splice(sgi + 1, 0, snapP(wp)); i = sgi + 1; }
     else { pts.push(snapP(wp)); i = pts.length - 1; }
     changed();
@@ -461,7 +463,7 @@ function hover(sx, sy, wp) {
   let h = null, c = 'crosshair';
   if (S.mode === 'edit') { const i = hitPoint(sx, sy);
     if (i >= 0) { h = { i }; c = 'grab'; }
-    else { const q = snapP(wp); h = hitSegment(wp, isPlan()) >= 0 ? { p: mirror() && wp.x < 0 ? { x: -q.x, z: q.z } : q } : null; c = 'copy'; } }
+    else { const q = snapP(wp), on = hitSegment(wp, false) >= 0; h = on ? { p: mirror() && wp.x < 0 ? { x: -q.x, z: q.z } : q } : null; c = on || P().length < minPts() ? 'copy' : 'default'; } }
   ed.style.cursor = c;
   if (JSON.stringify(h) !== JSON.stringify(hov)) { hov = h; drawEditor(); }
 }
@@ -511,10 +513,11 @@ ed.addEventListener('pointercancel', endPointer);
 
 window.addEventListener('keydown', e => {
   if (dpUndoKey(e)) { e.preventDefault(); undo(); }
-  else if ((e.key === 'Delete' || e.key === 'Backspace') && S.sel >= 0 && P().length > minPts() && !/^(INPUT|SELECT|TEXTAREA)$/.test(document.activeElement.tagName)) {
-    pushUndo(); P().splice(S.sel, 1); S.sel = -1; changed();
-  }
+  else if ((e.key === 'Delete' || e.key === 'Backspace') && !dpEditing()) delSel();
 });
+// ausgewählten Punkt löschen (Knopf „Punkt löschen“, Entf, Doppeltipp)
+function delSel() { if (S.sel < 0 || P().length <= minPts()) return; pushUndo(); P().splice(S.sel, 1); S.sel = -1; changed(); }
+$('ptDel').onclick = delSel;
 function undo() {
   if (!S.undo.length) return;
   const [k, part, pts, plan, spout, handle, lid = S.lid, H = S.H, psi = S.psi, psmooth = S.psmooth, smooth = S.smooth,
@@ -792,9 +795,9 @@ function setKind(k, quiet) {
   $('smooth').checked = p ? S.psmooth : t ? S.tsmooth : S.smooth;
   $('edT').textContent = p ? 'Grundriss, senkrechte Wand' : t ? 'zwei Konturen, Kreisquerschnitte' : 'Innenkontur, rotationssymmetrisch';
   // kurzer Hinweis; ausführlich unter „Modell & Gültigkeit → Bedienung“
-  noteTxt = $('edNote').textContent = p ? 'Geschlossene Kontur von oben zeichnen · Punkte ziehen, tippen fügt ein, Doppeltipp löscht · Pfeil = Seite, die beim Kippen absinkt.'
+  noteTxt = $('edNote').textContent = p ? 'Geschlossene Kontur von oben zeichnen · Punkte ziehen, auf die Linie tippen fügt ein · Pfeil = Seite, die beim Kippen absinkt.'
     : t ? 'Erst „hinten“, dann „vorne“ (Ausgießseite) vom Boden zur Mündung zeichnen · Punkte wie beim Profil.'
-    : 'Innenkontur vom Boden zum Rand zeichnen – sie wird gespiegelt · Punkte ziehen, auf die Linie tippen fügt ein, Doppeltipp löscht.';
+    : 'Innenkontur vom Boden zum Rand zeichnen – sie wird gespiegelt · Punkte ziehen, auf die Linie tippen fügt ein.';
   if (!quiet) { S.fill = null; S.theta = 0; $('tilt').value = 0; recompute(); fitView(); drawAll(); }
 }
 // Bearbeitungsziel im Drehkörper: Körper, Tülle oder Henkel (fehlendes Teil wird mit Vorschlag angelegt)

@@ -28,6 +28,8 @@ select{max-width:100%}
     <h2>Balken <small>Seitenansicht, mm</small></h2>
     <div class="row">
       <span class="seg" id="tools"><button data-t="drag" class="on">Ziehen</button><button data-t="sup">+ Lager</button><button data-t="pl">+ Last</button><button data-t="ql">+ Strecke</button><button data-t="del">Löschen</button></span>
+    </div>
+    <div class="row">
       <button id="tpl"></button><button id="cmp"></button><button id="undo" class="q ico" data-i="undo" disabled>Rückgängig</button>
     </div>
     <canvas id="ed" role="img"></canvas>
@@ -581,7 +583,17 @@ function drawEd() {
   xs.forEach(x => { ctx.moveTo(x * k, Yd - 4); ctx.lineTo(x * k, Yd + 4); }); ctx.stroke();
   for (let i = 1; i < xs.length; i++) if ((xs[i] - xs[i - 1]) * k > 30) text((xs[i] + xs[i - 1]) / 2 * k, Yd + 14, nf0.format(xs[i] - xs[i - 1]), 'center');
   scr();
+  const dh = UI.tool === 'del' && UI.delHov; if (dh) { const b = hbox(g, dh); if (b) delMark(ctx, ...g.tf(b[0], b[1]), ...g.tf(b[2], b[3])); }
 }
+// Lösch-Vorschau: Ziel unter dem Zeiger blass, gestrichelt umrahmt (Bildschirmkoordinaten)
+function delMark(ctx, x0, y0, x1, y1) { const p = 6, x = Math.min(x0, x1) - p, y = Math.min(y0, y1) - p, w = Math.abs(x1 - x0) + 2 * p, h = Math.abs(y1 - y0) + 2 * p;
+  ctx.save(); ctx.globalAlpha = 0.65; ctx.fillStyle = css('--bg'); ctx.fillRect(x, y, w, h); ctx.globalAlpha = 1;
+  ctx.setLineDash([4, 3]); ctx.strokeStyle = css('--ink'); ctx.lineWidth = 1; ctx.strokeRect(Math.round(x) + 0.5, Math.round(y) + 0.5, Math.round(w), Math.round(h)); ctx.restore(); }
+// Umriss eines Treffers in Balkenkoordinaten [X0, Y0, X1, Y1] (wie hit)
+function hbox(g, h) { const k = g.k, th = thick(g);
+  if (h.t === 'p') { const o = S.pl[h.i]; return o && [o.x * k - 10, -th / 2 - 46, o.x * k + 10, -th / 2]; }
+  if (h.t === 's') { const o = S.sup[h.i]; return o && [o.x * k - 12, th / 2, o.x * k + 12, th / 2 + 28]; }
+  const o = qBands(g).find(b => b.i === h.i); return o && [S.ql[h.i].a * k, o.Y0 - o.hq, S.ql[h.i].b * k, o.Y0]; }
 function secPath(ctx, s, P) { // Querschnittsumriss; P(x, y) in mm (x quer, y ab Unterkante) → Bildschirm
   const poly = pts => { pts.forEach(([x, y], i) => { const [a, b] = P(x, y); i ? ctx.lineTo(a, b) : ctx.moveTo(a, b); }); ctx.closePath(); };
   const rect = (x0, y0, x1, y1) => poly([[x0, y0], [x1, y0], [x1, y1], [x0, y1]]);
@@ -796,7 +808,7 @@ function evLocal(e) { const r = cv.getBoundingClientRect(); return UI.G.inv(e.cl
 cv.addEventListener('pointerdown', e => {
   if (R.err && R.err.startsWith('Querschnitt')) return;
   const [X, Y] = evLocal(e), x = X / UI.G.k, hh = hit(X, Y); cv.setPointerCapture(e.pointerId);
-  if (UI.tool === 'del') { if (hh) { del(hh.t, hh.i); recompute(); } return; }
+  if (UI.tool === 'del') { if (hh) { UI.delHov = null; del(hh.t, hh.i); recompute(); } return; }
   if (UI.tool !== 'drag') {
     if (x < -0.02 * S.L || x > 1.02 * S.L) return;
     const xs = snap(x);
@@ -814,7 +826,8 @@ cv.addEventListener('pointerdown', e => {
 let raf = 0;
 // Cursor beim Überfahren (Maus) zeigt, was ein Klick tut
 function cursor(e) {
-  if (!UI.G) return; const [X, Y] = evLocal(e), x = X / UI.G.k, hh = hit(X, Y);
+  if (!UI.G) return; const [X, Y] = evLocal(e), x = X / UI.G.k, hh = hit(X, Y), dh = UI.tool === 'del' && hh ? { t: hh.t, i: hh.i } : null;
+  if (JSON.stringify(dh) !== JSON.stringify(UI.delHov || null)) { UI.delHov = dh; drawEd(); }
   cv.style.cursor = UI.tool === 'drag' ? (!hh ? 'default' : hh.mode === 'a' || hh.mode === 'b' ? 'ew-resize' : 'grab')
     : UI.tool === 'del' ? (hh ? 'pointer' : 'default') : x < -0.02 * S.L || x > 1.02 * S.L ? 'not-allowed' : 'copy';
 }

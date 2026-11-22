@@ -29,6 +29,7 @@
     <div class="row">
       <button id="preset"></button><button id="cmp"></button>
       <button id="undo" class="q ico" data-i="undo" title="Rückgängig (Strg+Z)">Rückgängig</button>
+      <button id="ptDel" class="q ico" data-i="close" title="Ausgewählten Punkt löschen (Entf oder Doppeltipp)" disabled>Punkt löschen</button>
       <button id="fitB" class="q ico" data-i="fit">Einpassen</button>
     </div>
     <canvas id="ed" role="img"></canvas>
@@ -98,7 +99,7 @@
   <section class="panel wide model">
     <h2>Modell &amp; Gültigkeit</h2>
     <details data-k="model"><summary>Wie gerechnet wird, Begriffe, Grenzen und weiterführende Werkzeuge</summary><div class="txt">
-    <h3>Bedienung</h3><p>Freihand: Schirmprofil zeichnen; mit „Symmetrie an“ egal auf welcher Seite – es wird gespiegelt. „Symmetrie aus“: einen Querschnitt zeichnen, der in die Länge gezogen wird (lange Leuchte, z.&nbsp;B. über einem Esstisch; Enden offen, Lampe als leuchtender Stab über die ganze Länge). Mehrere Schirme: „+ Schirm“ legt einen neuen an; Tippen auf einen Schirm wählt ihn aus, das Material gilt für den ausgewählten. Punkte: ziehen verschiebt, auf die Linie tippen fügt ein, ins Leere tippen hängt an, Doppeltippen löscht. Den gelben Punkt (Lampe) ziehen; nahe der Achse rastet er ein. Innenseite = die Seite zur Lampe hin. Raster 10&nbsp;mm.</p>
+    <h3>Bedienung</h3><p>Freihand: Schirmprofil zeichnen; mit „Symmetrie an“ egal auf welcher Seite – es wird gespiegelt. „Symmetrie aus“: einen Querschnitt zeichnen, der in die Länge gezogen wird (lange Leuchte, z.&nbsp;B. über einem Esstisch; Enden offen, Lampe als leuchtender Stab über die ganze Länge). Mehrere Schirme: „+ Schirm“ legt einen neuen an; Tippen auf einen Schirm wählt ihn aus, das Material gilt für den ausgewählten. Punkte: ziehen verschiebt, auf die Linie tippen fügt ein, ins Leere tippen hebt die Auswahl auf (bei einem neuen Schirm setzt es die ersten zwei Punkte); „Punkt löschen“ (oder Entf, Doppeltippen) entfernt den ausgewählten Punkt. Den gelben Punkt (Lampe) ziehen; nahe der Achse rastet er ein. Innenseite = die Seite zur Lampe hin. Raster 10&nbsp;mm.</p>
     <h3>So wird gerechnet</h3><p>Mit Symmetrie wird das gezeichnete Profil um die Achse gedreht. Alle Schirme sind dünne Schalen ohne Wandstärke, jeder mit eigenem Material; mehrere Schirme beleuchten sich gegenseitig. Das Werkzeug schickt von der Lampe aus Millionen einzelner Lichtteilchen in zufällige Richtungen und verfolgt jedes in 3D (<a href="https://de.wikipedia.org/wiki/Monte-Carlo-Simulation" target="_blank" rel="noopener">Monte-Carlo-Simulation</a>): Trifft es auf einen Schirm, wird es je nach Material gestreut, gespiegelt, durchgelassen oder geschluckt – bis es den Schirm verlässt. Aus allen Teilchen zusammen ergibt sich, wie viel Licht in welche Richtung geht. Weil der Zufall mitspielt, wird das Bild mit der Zeit ruhiger; ±σ gibt die verbleibende Unsicherheit an. <b>Lichtfeld</b>: zeigt, wie hell es im Raum rund um die Leuchte ist – im Schnitt durch die Leuchte, mit Lichtkegel und Schatten. Es wird nur gerechnet, solange die Ansicht offen ist, und braucht mindestens 1 Mio. Lichtteilchen. Grundlagen und Prüffälle: <code>docs/licht-grundlagen.md</code>, <code>licht/test.js</code>.</p>
     <h3>Begriffe</h3><p><a href="https://de.wikipedia.org/wiki/Lichtstrom" target="_blank" rel="noopener">Lichtstrom</a> [lm, Lumen]: die gesamte Lichtmenge, die die Lampe abgibt (steht auf der Verpackung). <a href="https://de.wikipedia.org/wiki/Lichtstärke_(Photometrie)" target="_blank" rel="noopener">Lichtstärke</a> [cd, Candela]: wie viel Licht in eine bestimmte Richtung geht. Die <a href="https://de.wikipedia.org/wiki/Lichtverteilungskurve" target="_blank" rel="noopener">Lichtverteilungskurve</a> (LVK) zeigt die Lichtstärke für jede Richtung; 0° = senkrecht nach unten. C0–C180 und C90–C270 sind zwei senkrecht zueinander stehende Schnitte durch die Leuchte (gleich, solange die Lampe auf der Achse sitzt; bei der langen Leuchte quer und längs). cd/klm = Lichtstärke je 1000&nbsp;lm Lampe – so lassen sich Schirme unabhängig von der Lampe vergleichen. <a href="https://de.wikipedia.org/wiki/Beleuchtungsstärke" target="_blank" rel="noopener">Beleuchtungsstärke</a> [lx, Lux]: wie viel Licht auf einer Fläche ankommt, etwa auf dem Tisch (Essen ca. 200&nbsp;lx, Lesen ca. 500&nbsp;lx). <a href="https://de.wikipedia.org/wiki/Leuchtdichte" target="_blank" rel="noopener">Leuchtdichte</a> [cd/m²]: wie hell eine Fläche für das Auge aussieht – hohe Werte blenden. Wirkungsgrad: Anteil des Lampenlichts, der die Leuchte verlässt; der Rest wird im Schirm geschluckt. Abschirmwinkel: wie weit man von der Waagrechten nach oben schauen muss, bis man die Lampe direkt sieht.</p>
     <h3>Materialwerte</h3><p>Jedes Material teilt auftreffendes Licht auf: gestreut zurückgeworfen (wie eine weiße Wand), gespiegelt (wie ein Spiegel), gestreut durchgelassen (wie Milchglas), klar durchgelassen (wie Fensterglas); der Rest wird geschluckt. Die Werte sind Richtwerte und meist die größte Fehlerquelle: Opalglas lässt 30–65&nbsp;% durch, weiß lackiert wirft 75–90&nbsp;% zurück, gebürstetes Aluminium 55–58&nbsp;%, Spiegelaluminium 75–95&nbsp;%, Klarglas lässt 80–90&nbsp;% durch (IES-Materialtabelle, UNCG eLight, „Material Properties“). Wie viel gebürstetes Aluminium streut und wie viel es spiegelt, ist geschätzt. <b>Papier, Stoff, Filz, satiniertes Acryl und halbdurchsichtiger Kunststoff sind Schätzwerte</b> – sie schwanken stark mit Dicke, Webart und Farbe. Eigene Messwerte unter „Erweitert“ eintragen.</p>
@@ -721,6 +722,7 @@ function drawEditor() {
       }
     }
   }
+  $('ptDel').disabled = !(S.mode === 'edit' && S.sel >= 0 && cur().pts.length > 2);
   if (S.mode === 'edit' && !stroke) S.parts.forEach((pt, pi) => pt.pts.forEach((p, i) => {
     const [sx, sy] = w2s(p), on = pi === S.cur;
     const a = on && i === S.sel ? 5 : on ? 4 : 2.5; ctx.beginPath(); ctx.rect(Math.round(sx) - a, Math.round(sy) - a, 2 * a, 2 * a);
@@ -784,14 +786,15 @@ ed.addEventListener('pointerdown', e => {
   let [pi, i] = hitPoint(sx, sy);
   const now = performance.now();
   if (i >= 0 && lastTap.i === i && lastTap.p === pi && now - lastTap.t < 350) {
-    if (S.parts[pi].pts.length > 2) { pushUndo(); S.parts[pi].pts.splice(i, 1); S.sel = -1; changed(); }
+    S.cur = pi; S.sel = i; delSel();
     lastTap = { t: 0, i: -1, p: -1 }; return;
   }
   lastTap = { t: now, i, p: pi };
   pend = snap();
-  if (i < 0) {
-    pushUndo(pend); pend = null;
+  if (i < 0) { // auf der Linie einfügen; ins Leere nur anhängen, solange der Schirm noch keine zwei Punkte hat, sonst Auswahl aufheben
     const [si, sgi] = hitSegment(wp);
+    if (sgi < 0 && cur().pts.length >= 2) { pend = null; S.sel = -1; drawEditor(); return; }
+    pushUndo(pend); pend = null;
     if (sgi >= 0) { pi = si; S.parts[pi].pts.splice(sgi + 1, 0, snapP(wp)); i = sgi + 1; }
     else { pi = S.cur; cur().pts.push(snapP(wp)); i = cur().pts.length - 1; }
     changed();
@@ -805,7 +808,7 @@ function hover(sx, sy, wp) {
   if (Math.hypot(sx - lx, sy - ly) < 16) { h = { src: 1 }; c = 'grab'; }
   else if (S.mode === 'edit') { const [pi, i] = hitPoint(sx, sy);
     if (i >= 0) { h = { pi, i }; c = 'grab'; }
-    else { const q = snapP(wp); h = hitSegment(wp)[1] >= 0 ? { p: S.sym && wp.x < 0 ? { x: -q.x, z: q.z } : q } : null; c = 'copy'; } }
+    else { const q = snapP(wp), on = hitSegment(wp)[1] >= 0; h = on ? { p: S.sym && wp.x < 0 ? { x: -q.x, z: q.z } : q } : null; c = on || cur().pts.length < 2 ? 'copy' : 'default'; } }
   ed.style.cursor = c;
   if (JSON.stringify(h) !== JSON.stringify(hov)) { hov = h; drawEditor(); }
 }
@@ -842,10 +845,11 @@ ed.addEventListener('pointerup', endPointer);
 ed.addEventListener('pointercancel', endPointer);
 window.addEventListener('keydown', e => {
   if (dpUndoKey(e)) { e.preventDefault(); undo(); }
-  else if ((e.key === 'Delete' || e.key === 'Backspace') && S.sel >= 0 && cur().pts.length > 2 && !/INPUT|SELECT/.test(document.activeElement.tagName)) {
-    pushUndo(); cur().pts.splice(S.sel, 1); S.sel = -1; changed();
-  }
+  else if ((e.key === 'Delete' || e.key === 'Backspace') && !dpEditing()) delSel();
 });
+// ausgewählten Punkt löschen (Knopf „Punkt löschen“, Entf, Doppeltipp)
+function delSel() { if (S.sel < 0 || cur().pts.length <= 2) return; pushUndo(); cur().pts.splice(S.sel, 1); S.sel = -1; changed(); }
+$('ptDel').onclick = delSel;
 function undo() { if (!S.undo.length) return; Object.assign(S, JSON.parse(S.undo.pop())); S.sel = -1; fitView(); changed(); }
 // later: Ziehen – höchstens ein Neustart je Bild (Abschirmwinkel, Worker, Zeichnen)
 let dirty = false, craf = 0;
@@ -995,7 +999,7 @@ function drawAll() { drawEditor(); drawLvk(); drawE(); drawStats(); }
 // ---- Bedienelemente ----
 // kurzer Hinweis je Werkzeug (ausführlich unter „Modell & Gültigkeit → Bedienung“)
 function hint() { $('hint').textContent = S.mode === 'draw' ? (S.sym ? 'Profil in einem Zug zeichnen – egal auf welcher Seite, es wird gespiegelt.' : 'Querschnitt in einem Zug zeichnen – er wird entlang der Länge gezogen.')
-  : 'Punkte ziehen · auf die Linie tippen fügt ein · Doppeltipp löscht · gelben Punkt (Lampe) ziehen.'; }
+  : 'Punkte ziehen · auf die Linie tippen fügt ein · gelben Punkt (Lampe) ziehen.'; }
 function setMode(m) { S.mode = m; $('mDraw').classList.toggle('on', m === 'draw'); $('mEdit').classList.toggle('on', m === 'edit'); hint(); drawEditor(); }
 $('mDraw').onclick = () => setMode('draw');
 $('mEdit').onclick = () => setMode('edit');
