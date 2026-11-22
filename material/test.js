@@ -65,3 +65,5 @@ check('Schlüssel eindeutig', new Set(MAT.map(m => m.k)).size, MAT.length);
 check('100 Materialien', MAT.length, 100);
 check('jede Kategorie belegt', new Set(MAT.map(m => m.fam)).size, FAM.length);
 check('EPS fühlt sich warm an (> 30 °C)', +(T('eps') > 30), 1);
+// Prüfvermerk: wenn vorhanden, ein nichtleerer Text (Quelle des Abgleichs)
+check('Prüfvermerke gültig', MAT.filter(m => 'chk' in m && !(typeof m.chk === 'string' && m.chk.length > 10)).length, 0);
