@@ -99,3 +99,9 @@ Faustregeln für Luftbiegen auf der Abkantbank und für Standardgewinde; keine B
 3. Vorlagen-Galerie, Rückgängig, Stand merken (`dpGallery`, `dpHistory`, `dpCompare`).
 4. Editor direkt: Schenkel ziehen, Löcher auf der Abwicklung setzen und gegen die Sperrzone prüfen; Winkel je Biegung.
 5. Weitere Werkzeuge nach Prüffrage (Holz verschrauben, Schneiden, Passungen, 3D-Druck, Spritzguss).
+
+## v1.1 (22.11.2026)
+- **Fehler behoben:** Dicke war auf 12 mm begrenzt; größere Eingaben (z. B. 20) wurden still verworfen, es blieb der Wert des ersten Tastendrucks (gemeldet am Telefon). Jetzt bis 60 mm (Kunststoffwände, Dome).
+- **Alle Zahlenfelder:** Wert außerhalb des Bereichs wird rot markiert mit Hinweis, beim Verlassen des Felds auf die Grenze gesetzt – nie mehr still verworfen.
+- Zuschnitt „–“ statt negativer Länge, wenn ein Schenkel geometrisch zu kurz ist.
+- Browser (390 px): Dicke 20 → übernommen, 80 → markiert, beim Verlassen 60; Konsole fehlerfrei.

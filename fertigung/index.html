@@ -11,6 +11,7 @@
 #flat{--ar:3}
 @media(max-width:860px){#flat{--ar:1.5}}
 [hidden]{display:none!important}
+input[aria-invalid=true]{outline:2px solid var(--warn);outline-offset:-2px}
 .pair input{width:72px}
 #legs .pair input{width:64px}
 select{max-width:100%}
@@ -23,7 +24,7 @@ select{max-width:100%}
     <h2>Werkstück</h2>
     <div class="row">
       <label class="pair note">Material <select id="mat"></select></label>
-      <label class="pair note">Dicke <input type="number" id="s" min="0.3" max="12" step="0.1"> mm</label>
+      <label class="pair note">Dicke <input type="number" id="s" min="0.3" max="60" step="0.1"> mm</label>
     </div>
     <div class="row"><span class="seg" id="tool"><button data-t="bend">Biegen</button><button data-t="thr">Gewinde</button></span></div>
     <div class="row" id="bendC">
@@ -278,7 +279,7 @@ function stats() {
   if (S.tool === 'bend') {
     const u = G.u, met = M.kind === 'metall';
     $('stats').innerHTML = dpStats(dpVerdict(G.lv, G.txt), [
-      { l: 'Zuschnitt', v: fmt(u.L) + ' mm', n: `× ${fmt(S.B, 0)} mm Breite`, t: 'Länge des flachen Blechs vor dem Biegen (Abwicklung)' },
+      { l: 'Zuschnitt', v: G.neg.some(Boolean) ? '–' : fmt(u.L) + ' mm', w: G.neg.some(Boolean), n: `× ${fmt(S.B, 0)} mm Breite`, t: 'Länge des flachen Blechs vor dem Biegen (Abwicklung)' },
       { l: 'Innenradius', v: fmt(S.r) + ' mm', n: met ? `mind. ${fmt(G.rmin)} mm` : '–', w: met && S.r < G.rmin * (1 - 1e-9), t: 'Radius an der Innenseite der Biegung; zu eng → außen Risse' },
       { l: 'Kürzester Schenkel', v: fmt(G.legMin) + ' mm', n: `mind. ${fmt(G.fmin)} mm`, w: G.short.some(Boolean), t: 'Das Blech muss beim Abkanten auf beiden Kanten der Matrize aufliegen' },
       { l: 'Überbiegen', v: met ? '≈ ' + fmt(G.sb) + ' °' : '–', n: 'Rückfederung', t: 'Das Blech federt nach dem Biegen auf; so viel weiter biegen' }
@@ -313,6 +314,7 @@ function stats() {
 // ---- Bedienung ----
 function legsUi() {
   $('legs').innerHTML = S.legs.map((l, i) => `<label class="pair note">${LEG[i]} <input type="number" data-l="${i}" min="1" max="3000" step="1" value="${l}"> mm</label>`).join('');
+  $('legs').querySelectorAll('input').forEach(el => field(el, 1, 3000, v => { S.legs[el.dataset.l] = v; }));
 }
 function syncUi() {
   $('mat').value = S.mat; $('s').value = S.s; $('ang').value = S.ang; $('r').value = S.r; $('B').value = S.B; $('d').value = S.d;
@@ -330,7 +332,7 @@ const num = (v, lo, hi, def) => { v = +v; return isFinite(v) && v >= lo && v <= 
 function parse(o) {
   if (!o || o.type !== 'designphysik/fertigung') return null;
   const p = PROF[o.prof] ? o.prof : 'U', legs = Array.isArray(o.legs) && o.legs.length === PROF[p].legs.length ? o.legs.map(x => num(x, 1, 3000, 20)) : PROF[p].legs.slice();
-  return { tool: o.tool === 'thr' ? 'thr' : 'bend', mat: Core.MAT[o.mat] ? o.mat : 'dc01', s: num(o.s, 0.3, 12, 1.5), prof: p, legs, ang: num(o.ang, 15, 135, 90),
+  return { tool: o.tool === 'thr' ? 'thr' : 'bend', mat: Core.MAT[o.mat] ? o.mat : 'dc01', s: num(o.s, 0.3, 60, 1.5), prof: p, legs, ang: num(o.ang, 15, 135, 90),
     r: num(o.r, 0.1, 100, 1.5), B: num(o.B, 1, 3000, 50), d: Core.THR.some(t => t[0] === +o.d) ? +o.d : 4 };
 }
 const exportObj = () => ({ type: 'designphysik/fertigung', version: 1, ...S });
@@ -340,9 +342,18 @@ $('d').innerHTML = Core.THR.map(([d, p]) => `<option value="${d}">M${fmt(d)} × 
 $('tool').onclick = e => { const b = e.target.closest('button'); if (!b) return; S.tool = b.dataset.t; syncUi(); update(); };
 $('prof').onclick = e => { const b = e.target.closest('button'); if (!b) return; S.prof = b.dataset.p; S.legs = PROF[S.prof].legs.slice(); syncUi(); update(); };
 $('mat').onchange = () => { S.mat = $('mat').value; const M = Core.MAT[S.mat]; if (M.kind === 'metall' && S.r < 1.25 * Core.rMin(S.mat, S.s)) S.r = Math.max(Math.ceil(2.5 * Core.rMin(S.mat, S.s)) / 2, S.s); syncUi(); update(); }; // Radius auf die sichere Seite, halbe mm
-for (const [id, lo, hi] of [['s', 0.3, 12], ['ang', 15, 135], ['r', 0.1, 100], ['B', 1, 3000]]) $(id).oninput = () => { const v = num($(id).value, lo, hi, NaN); if (isFinite(v)) { S[id] = v; update(); } };
+// Zahlenfeld: gültige Eingabe sofort übernehmen; außerhalb des Bereichs rot markieren (nicht still verwerfen) und beim Verlassen auf die Grenze setzen
+function field(el, lo, hi, set) {
+  const msg = `${fmt(lo, 2)} bis ${fmt(hi, 0)}`;
+  el.oninput = () => { const v = num(el.value, lo, hi, NaN), bad = el.value !== '' && !isFinite(v);
+    el.setAttribute('aria-invalid', bad); el.title = bad ? 'Erlaubt: ' + msg : '';
+    if (isFinite(v)) { set(v); update(); } else if (bad) $('hint').textContent = `⚠ Wert außerhalb des Bereichs (${msg}) – beim Verlassen des Felds begrenzt.`; };
+  el.onchange = () => { let v = +el.value; if (!isFinite(v) || el.value === '') return syncUi();
+    v = Math.min(hi, Math.max(lo, v)); el.value = v; el.setAttribute('aria-invalid', false); el.title = ''; set(v); update(); };
+}
+for (const [id, lo, hi] of [['s', 0.3, 60], ['ang', 15, 135], ['r', 0.1, 100], ['B', 1, 3000]]) field($(id), lo, hi, v => { S[id] = v; });
 $('d').onchange = () => { S.d = +$('d').value; update(); };
-$('legs').oninput = e => { const i = e.target.dataset.l; if (i == null) return; const v = num(e.target.value, 1, 3000, NaN); if (isFinite(v)) { S.legs[i] = v; update(); } };
+
 $('exp').onclick = () => dpDownload(exportObj(), 'fertigung.json');
 $('imp').onclick = () => $('impF').click();
 $('impF').onchange = e => { const f = e.target.files[0]; if (!f) return; f.text().then(t => { let m = null; try { m = parse(JSON.parse(t)); } catch {} if (m) { Object.assign(S, m); syncUi(); update(); $('fileN').textContent = f.name; } else $('fileN').textContent = 'Datei nicht erkannt'; }); e.target.value = ''; };
