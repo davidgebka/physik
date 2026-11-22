@@ -28,9 +28,10 @@ function chart(cv, o) {
   ctx.textAlign = 'center'; ctx.fillText(o.xl, (m.l + w - m.r) / 2, h - 3);
   ctx.save(); ctx.translate(10, (m.t + h - m.b) / 2); ctx.rotate(-Math.PI / 2); ctx.fillText(o.yl, 0, 0); ctx.restore();
   ctx.textAlign = 'left';
-  // Raster: Punkte an den Tick-Kreuzungen, Achsen links und unten (Styleguide § 8)
-  ctx.fillStyle = css('--dot'); ctx.beginPath(); for (const x of xt) for (const y of yt) { const px = Math.round(x) + .5, py = Math.round(y) + .5; ctx.moveTo(px + 1, py); ctx.arc(px, py, 1, 0, 7); } ctx.fill();
-  ctx.strokeStyle = css('--ink'); ctx.beginPath(); ctx.moveTo(m.l + .5, m.t); ctx.lineTo(m.l + .5, h - m.b + .5); ctx.lineTo(w - m.r, h - m.b + .5); ctx.stroke();
+  // Achsen links und unten mit Teilstrichen; als Raster dient das durchlaufende Seitenraster (Styleguide § 8)
+  ctx.strokeStyle = css('--ink'); ctx.beginPath(); ctx.moveTo(m.l + .5, m.t); ctx.lineTo(m.l + .5, h - m.b + .5); ctx.lineTo(w - m.r, h - m.b + .5);
+  for (const x of xt) { const px = Math.round(x) + .5; ctx.moveTo(px, h - m.b + .5); ctx.lineTo(px, h - m.b + 4.5); }
+  for (const y of yt) { const py = Math.round(y) + .5; ctx.moveTo(m.l + .5, py); ctx.lineTo(m.l - 3.5, py); } ctx.stroke();
   for (const sr of o.series) {
     if (!sr.pts.length) continue;
     ctx.beginPath(); sr.pts.forEach(([a, b], i) => i ? ctx.lineTo(X(a), Y(b)) : ctx.moveTo(X(a), Y(b)));

@@ -561,8 +561,9 @@ function fit(full) {
     : { x0: Math.min(v.x0, x0 - m), x1: Math.max(v.x1, x1 + m), y0: Math.min(v.y0, y0 - m), y1: Math.max(v.y1, y1 + m) };
 }
 function makeT(w, h) {
-  const v = UI.view, k = Math.min(w / (v.x1 - v.x0), h / (v.y1 - v.y0));
-  const ox = w / 2 - k * (v.x0 + v.x1) / 2, oy = h / 2 + k * (v.y0 + v.y1) / 2;
+  const v = UI.view, k0 = Math.min(w / (v.x1 - v.x0), h / (v.y1 - v.y0));
+  const [k, ox, oy] = dpSnap(cv, k0, w / 2 - k0 * (v.x0 + v.x1) / 2, h / 2 + k0 * (v.y0 + v.y1) / 2, UI.zoomed); // Raster auf das Seitenraster
+  if (!dpPinching) UI.view = { x0: -ox / k, x1: (w - ox) / k, y0: (oy - h) / k, y1: oy / k }; // sichtbarer Ausschnitt, damit Zoomen ohne Sprung beginnt
   return { k, ox, oy, f: p => [ox + k * p[0], oy - k * p[1]], inv: (sx, sy) => [(sx - ox) / k, (oy - sy) / k] };
 }
 
@@ -590,7 +591,7 @@ function drawEd() {
   const { ctx, w, h } = prep(cv), TT = makeT(w, h), T = TT.f; UI.T = TT;
   // Punktraster (Styleguide § 7)
   const f = dpDots(ctx, w, h, TT.k, TT.ox, TT.oy);
-  ctx.font = DP_CFONT; ctx.fillStyle = css('--ink2'); ctx.fillText(`1 Punkt = ${nf0.format(f)} mm`, 6, h - 6);
+  ctx.font = DP_CFONT; ctx.fillStyle = css('--ink2'); ctx.fillText(dpScale(f), 6, h - 6);
   const Xa = curX(), tags = [];
   if (ok()) {
     // Geisterlagen mit Namen am äußersten beweglichen Punkt (sonst rätselhafte gestrichelte Linien)

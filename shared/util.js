@@ -74,23 +74,48 @@ function prep(cv) {
   const ctx = cv.getContext('2d'); ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, r.width, r.height);
   return { ctx, w: r.width, h: r.height };
 }
-// Punktraster in mm (Styleguide § 7): Bildschirm = ox + x·k, oy − y·k; fein 10 mm (--dot), grob 5 × fein (--mut).
-// Feine Stufe verfünffacht sich, bis die Punkte ≥ 8 px auseinander liegen. Liefert die feine Stufe in mm.
+// Seitenraster (Styleguide § 2): Punkte alle DP_U px ab Dokumentursprung. Zeichenflächen sind durchsichtig und legen ihr
+// mm-Raster genau darauf: Maßstab nur in Stufen „1 Seitenpunkt = s mm“, Ursprung auf einem Seitenpunkt (dpSnap).
+const DP_U = 24, DP_STEPS = [1, 1.5, 2, 2.5, 3, 4, 5, 6, 8]; // s = Stufe × 10^n mm je Seitenpunkt
+let dpPinching = false; // während zwei Finger zoomen: frei, Raster eigenes (deckend); danach rastet die Ansicht ein
+// Canvas-px des ersten Seitenpunkts (Phase des Seitenrasters im Canvas)
+function dpPhase(cv) { const r = cv.getBoundingClientRect(), m = v => ((-v % DP_U) + DP_U) % DP_U; return [m(r.left + scrollX), m(r.top + scrollY), r]; }
+// Ansicht einrasten: k [px/mm] auf die nächste Stufe (abgerundet = Inhalt passt weiter; near = nächstgelegene, nach Zoomen),
+// Bildmitte bleibt, Ursprung (ox, oy) auf den nächsten Seitenpunkt. Liefert [k, ox, oy]; idempotent. steps z. B. [1, 2, 5] (Elektronik).
+function dpSnap(cv, k, ox, oy, near, steps = DP_STEPS) {
+  if (dpPinching || !(k > 0)) return [k, ox, oy];
+  const [px, py, r] = dpPhase(cv), s0 = DP_U / k, p = 10 ** Math.floor(Math.log10(s0) + 1e-9);
+  const c = steps.map(v => v * p).concat(10 * p);
+  const s = near ? c.reduce((a, b) => Math.abs(Math.log(b / s0)) < Math.abs(Math.log(a / s0)) ? b : a)
+    : c.find(v => v >= s0 * (1 - 1e-9));
+  const k2 = DP_U / s, cx = r.width / 2, cy = r.height / 2, al = (v, q) => q + Math.round((v - q) / DP_U) * DP_U;
+  return [k2, al(cx - (cx - ox) * k2 / k, px), al(cy - (cy - oy) * k2 / k, py)];
+}
+// Punktraster in mm (Styleguide § 7): Bildschirm = ox + x·k, oy − y·k. Eingerastet (dpSnap): Canvas durchsichtig, feine Punkte
+// (--dot) genau auf den Seitenpunkten, jeder 5. ab Ursprung grob (--mut); liefert s (mm je Punkt). Sonst (Zoomen mit zwei Fingern)
+// deckend mit eigenem Raster: fein 10 mm, verfünffacht bis ≥ 8 px. Liefert die feine Stufe in mm.
 function dpDots(ctx, w, h, k, ox, oy) {
-  let f = 10; while (f * k < 8) f *= 5;
-  const i0 = Math.ceil(-ox / (f * k)), i1 = Math.floor((w - ox) / (f * k));
-  const j0 = Math.ceil((oy - h) / (f * k)), j1 = Math.floor(oy / (f * k));
+  const cv = ctx.canvas, [px, py] = dpPhase(cv), s = DP_U / k, p = 10 ** Math.floor(Math.log10(s) + 1e-9);
+  const on = (v, q) => Math.abs(((v - q) % DP_U + DP_U + DP_U / 2) % DP_U - DP_U / 2) < 0.01;
+  const snapped = !dpPinching && DP_STEPS.some(v => Math.abs(v * p / s - 1) < 1e-6) && on(ox, px) && on(oy, py);
+  cv.style.background = snapped ? '' : 'var(--bg)';
+  const f = snapped ? s : (() => { let f = 10; while (f * k < 8) f *= 5; return f; })(), d = f * k;
+  const i0 = Math.ceil(-ox / d - 1e-6), i1 = Math.floor((w - ox) / d + 1e-6);
+  const j0 = Math.ceil((oy - h) / d - 1e-6), j1 = Math.floor(oy / d + 1e-6);
   for (const big of [false, true]) { // je Stufe ein Pfad: ein fill() statt eines je Punkt
     ctx.beginPath();
     for (let i = i0; i <= i1; i++) for (let j = j0; j <= j1; j++) {
       if ((i % 5 === 0 && j % 5 === 0) !== big) continue;
-      const x = Math.round(ox + i * f * k) + .5, y = Math.round(oy - j * f * k) + .5, r = big ? 1.5 : 1;
+      // eingerastet genau wie die Seitenpunkte (Mitte auf der Pixelkante), sonst auf die Pixelmitte
+      const x = snapped ? ox + i * d : Math.round(ox + i * d) + .5, y = snapped ? oy - j * d : Math.round(oy - j * d) + .5, r = big ? 1.5 : 1;
       ctx.moveTo(x + r, y); ctx.arc(x, y, r, 0, 7);
     }
     ctx.fillStyle = css(big ? '--mut' : '--dot'); ctx.fill();
   }
   return f;
 }
+// Maßstab als Text: „1 Punkt = 2,5 mm“
+const dpScale = f => '1 Punkt = ' + new Intl.NumberFormat('de-DE', { maximumFractionDigits: 2 }).format(f) + ' mm';
 // Pfad aus Punkten; T: Punkt → [sx, sy]
 function polyPath(ctx, pts, T) { ctx.beginPath(); pts.forEach((p, i) => { const [x, y] = T(p); i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); }); }
 
@@ -238,10 +263,11 @@ function dpPinch(cv, start, move) {
   const pos = e => { const r = cv.getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top }; };
   const mid = () => { const [a, b] = [...P.values()]; return { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2, d: Math.hypot(a.x - b.x, a.y - b.y) || 1 }; };
   cv.addEventListener('pointerdown', e => { if (e.pointerType !== 'touch') return; P.set(e.pointerId, pos(e));
-    if (P.size === 2) { start(); last = mid(); } if (P.size > 1) e.stopImmediatePropagation(); }, true);
+    if (P.size === 2) { start(); last = mid(); dpPinching = true; } if (P.size > 1) e.stopImmediatePropagation(); }, true);
   cv.addEventListener('pointermove', e => { if (!P.has(e.pointerId)) return; P.set(e.pointerId, pos(e)); if (!last || P.size < 2) return;
     e.stopImmediatePropagation(); const m = mid(); move(Math.min(1.5, Math.max(0.67, m.d / last.d)), m.x, m.y, m.x - last.x, m.y - last.y); last = m; }, true);
-  const up = e => { if (!P.delete(e.pointerId)) return; if (last) { e.stopImmediatePropagation(); if (P.size < 2) last = null; } };
+  const up = e => { if (!P.delete(e.pointerId)) return; if (last) { e.stopImmediatePropagation(); // Ende: Ansicht einrasten (move ohne Änderung → Neuzeichnen mit dpSnap)
+    if (P.size < 2) { const m = last; last = null; dpPinching = false; move(1, m.x, m.y, 0, 0); } } };
   cv.addEventListener('pointerup', up, true); cv.addEventListener('pointercancel', up, true);
 }
 // Lupe beim Ziehen mit dem Finger: Ausschnitt um (x, y) doppelt groß in einer oberen Ecke, damit der Finger den Punkt nicht verdeckt.

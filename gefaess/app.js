@@ -285,11 +285,12 @@ let stroke = null, drag = -1, lastTap = { t: 0, i: -1 }, hov = null; // hov: Zei
 function drawEditor() {
   if (!V) fitView();
   const { ctx, w, h } = prep(ed);
+  [V.s, V.ox, V.oy] = dpSnap(ed, V.s, V.ox, V.oy, zoomed); // Raster auf das Seitenraster (Styleguide § 2)
   if (PH && PH.show) { const p = phBox(), [sx, sy] = w2s({ x: p.x0, z: p.z1 }); ctx.globalAlpha = PH.op; ctx.drawImage(PH.img, sx, sy, PH.w * V.s, PH.w * PH.ar * V.s); ctx.globalAlpha = 1; }
   // Punktraster (Styleguide § 7)
   const fDot = dpDots(ctx, w, h, V.s, V.ox, V.oy);
   ctx.font = DP_CFONT; ctx.fillStyle = css('--ink2'); ctx.textAlign = 'right';
-  ctx.fillText('1 Punkt = ' + nf0.format(fDot) + ' mm', w - 6, h - 6); ctx.textAlign = 'left';
+  ctx.fillText(dpScale(fDot), w - 6, h - 6); ctx.textAlign = 'left';
   if (isPlan()) drawPlan(ctx, w, h); else if (isTube()) drawTube(ctx, w, h); else drawProfile(ctx, w, h);
   if (stroke) {
     ctx.strokeStyle = css('--ctl'); ctx.lineWidth = 2.5; ctx.lineCap = 'round';
