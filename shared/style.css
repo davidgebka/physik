@@ -162,3 +162,8 @@ dialog.gal::backdrop{background:rgba(17,17,17,.4)}
 .menu>summary::-webkit-details-marker{display:none}
 .menu[open]>div{position:absolute;right:0;top:calc(var(--h) + 6px);z-index:4;background:var(--bg);border:1px solid var(--ink);display:flex;flex-direction:column;align-items:stretch;min-width:192px;padding:6px 0}
 .menu[open]>div button{justify-content:flex-start;height:var(--h)}
+
+/* Kontextleiste an der Auswahl (dpCtxBar, nur Finger): schwebt über dem Editor */
+.dp-ctx{position:absolute;z-index:3;display:flex;background:var(--bg)}
+.dp-ctx[hidden]{display:none}
+.dp-ctx button+button{border-left:0}

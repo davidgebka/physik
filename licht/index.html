@@ -22,12 +22,12 @@
   <section class="panel">
     <h2>Schirm <small id="edT">Profil, rotationssymmetrisch</small></h2>
     <div class="row">
-      <span class="seg"><button id="mDraw" data-i="pen">Freihand</button><button id="mEdit" class="on" data-i="pts">Punkte</button></span>
+      <span class="seg"><button id="mDraw" class="ico" data-i="pen">Freihand</button><button id="mEdit" class="on ico" data-i="pts">Punkte</button></span>
       <button id="sym" class="on" title="An: Profil wird um die Achse gedreht. Aus: Querschnitt frei zeichnen, entlang der Länge gezogen (Langfeldleuchte)."></button>
       <button id="addP" data-i="plus" title="Weiteren, getrennten Schirm anlegen und gleich freihand zeichnen">Schirm</button>
     </div>
     <div class="row">
-      <button id="preset"></button><button id="cmp"></button>
+      <button id="preset" class="ico"></button><button id="cmp" class="ico"></button>
       <button id="undo" class="q ico" data-i="undo" title="Rückgängig (Strg+Z)">Rückgängig</button>
       <button id="ptDel" class="q ico" data-i="close" title="Ausgewählten Punkt löschen (Entf oder Doppeltipp)" disabled>Punkt löschen</button>
       <button id="fitB" class="q ico" data-i="fit">Einpassen</button>
@@ -667,7 +667,7 @@ const ed = $('ed');
 let V = null;
 const MIR = () => S.sym ? [1, -1] : [1];
 function fitView() {
-  const r = ed.getBoundingClientRect(); if (!r.width) return;
+  const r = ed.getBoundingClientRect(); if (!r.width) return; zoomed = false;
   let mx = 60, zmin = S.src.z - 20, zmax = S.src.z + 20;
   S.parts.forEach(pt => pt.pts.forEach(p => { mx = Math.max(mx, Math.abs(p.x)); zmin = Math.min(zmin, p.z); zmax = Math.max(zmax, p.z); }));
   mx = Math.max(mx, Math.abs(S.src.x));
@@ -750,6 +750,7 @@ function drawEditor() {
     if (R.st.Lm >= LIM) { ctx.fillStyle = css('--warn'); ctx.fillText('⚠ rot: ≥ 20 000 cd/m²', 8, 56); }
   }
   if (!S.sym) { ctx.fillStyle = css('--ink2'); ctx.textAlign = 'right'; ctx.fillText('Querschnitt · Länge ' + nf0.format(S.len) + ' mm', w - 8, 16); ctx.textAlign = 'left'; }
+  touchUi(ctx);
 }
 const snap = () => JSON.stringify({ parts: S.parts, cur: S.cur, sym: S.sym, src: S.src });
 function pushUndo(sn) { S.undo.push(sn || snap()); if (S.undo.length > 100) S.undo.shift(); }
@@ -769,19 +770,30 @@ function rdp(pts, eps) {
   return rdp(pts.slice(0, idx + 1), eps).slice(0, -1).concat(rdp(pts.slice(idx), eps));
 }
 function hitPoint(sx, sy) { // → [Teil, Punkt]; aktueller Teil hat Vorrang bei Gleichstand
-  let best = [-1, -1], bd = 14;
+  let best = [-1, -1], bd = DP_HIT;
   S.parts.forEach((pt, pi) => pt.pts.forEach((p, i) => { for (const sg of MIR()) { const [px, py] = w2s({ x: sg * p.x, z: p.z }); const d = Math.hypot(px - sx, py - sy) - (pi === S.cur ? 0.5 : 0); if (d < bd) { bd = d; best = [pi, i]; } } }));
   return best;
 }
 function hitSegment(wp) {
-  const q = fold(wp); let best = [-1, -1], bd = 10 / V.s;
+  const q = fold(wp); let best = [-1, -1], bd = (DP_HIT - 4) / V.s;
   S.parts.forEach((pt, pi) => { for (let i = 0; i < pt.pts.length - 1; i++) { const d = distSeg(q, pt.pts[i], pt.pts[i + 1]); if (d < bd) { bd = d; best = [pi, i]; } } });
   return best;
+}
+// Finger (docs/mobil-editor.md): ins Leere wischen scrollt die Seite, zwei Finger zoomen/verschieben, Lupe beim Ziehen, Kontextleiste an der Auswahl
+let zoomed = false, tpos = null; const ctxBar = dpCtxBar(ed);
+dpTouchGuard(ed, () => drag >= 0 || dragSrc || !!stroke);
+dpPinch(ed, () => { stroke = null; if (drag >= 0 || dragSrc) { if (!pend) undo(); drag = -1; dragSrc = false; pend = null; } }, // Ein-Finger-Schritt zurücknehmen
+  (f, cx, cy, dx, dy) => { V = { s: V.s * f, ox: cx - (cx - V.ox) * f + dx, oy: cy - (cy - V.oy) * f + dy }; zoomed = true; drawEditor(); });
+ed.addEventListener('pointerdown', e => { tpos = e.pointerType === 'touch' ? evPos(e) : null; }, true);
+ed.addEventListener('pointermove', e => { if (tpos) tpos = evPos(e); }, true);
+function touchUi(ctx) {
+  if (tpos && (drag >= 0 || dragSrc || stroke)) dpLoupe(ctx, ...tpos);
+  if (S.mode === 'edit' && S.sel >= 0 && drag < 0 && !stroke && cur().pts[S.sel] && cur().pts.length > 2) ctxBar.show(...w2s(cur().pts[S.sel]), [['close', 'Löschen', delSel]]); else ctxBar.hide();
 }
 ed.addEventListener('pointerdown', e => {
   ed.setPointerCapture(e.pointerId);
   const [sx, sy] = evPos(e), wp = s2w(sx, sy), [lx, ly] = w2s(S.src);
-  hov = null; if (Math.hypot(sx - lx, sy - ly) < 16) { pend = snap(); dragSrc = true; ed.style.cursor = 'grabbing'; drawEditor(); return; }
+  hov = null; if (Math.hypot(sx - lx, sy - ly) < DP_HIT + 2) { pend = snap(); dragSrc = true; ed.style.cursor = 'grabbing'; drawEditor(); return; }
   if (S.mode === 'draw') { stroke = [fold(wp)]; drawEditor(); return; }
   let [pi, i] = hitPoint(sx, sy);
   const now = performance.now();
@@ -839,7 +851,7 @@ function endPointer() {
     stroke = null; changed(); fitView(); drawEditor();
   }
   if (drag >= 0) { drag = -1; const r = ed.getBoundingClientRect();
-    if (cur().pts.some(p => { const [x, y] = w2s(p); return x < 10 || x > r.width - 10 || y < 10 || y > r.height - 10; })) { fitView(); drawEditor(); } }
+    if (!zoomed && cur().pts.some(p => { const [x, y] = w2s(p); return x < 10 || x > r.width - 10 || y < 10 || y > r.height - 10; })) fitView(); drawEditor(); }
 }
 ed.addEventListener('pointerup', endPointer);
 ed.addEventListener('pointercancel', endPointer);
@@ -1103,7 +1115,8 @@ let linkT = 0;
 function linkLater() { clearTimeout(linkT); linkT = setTimeout(() => { if (S.parts.some(pt => pt.pts.length >= 2)) dpHashSet('l', snapshot()); }, 400); }
 // eingefügter Link im selben Tab (dpHashSet löst kein hashchange aus)
 window.addEventListener('hashchange', () => { const keep = snap(), d = dpHashGet('l'); if (d && apply(d)) { pushUndo(keep); syncCtl(); fitView(); restart(); } });
-window.addEventListener('resize', () => { fitView(); drawAll(); });
+let lastW = 0; // Telefon: Adressleiste ändert beim Scrollen nur die Höhe – dann Zoom behalten
+window.addEventListener('resize', () => { if (ed.clientWidth === lastW) return; lastW = ed.clientWidth; fitView(); drawAll(); });
 dpHeader('licht'); dpIcons();
 apply(dpHashGet('l') || {});
 syncCtl();

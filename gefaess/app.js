@@ -255,7 +255,7 @@ function fitView() {
   V = { s: sc, ox: r.width / 2 - (x0 + x1) / 2 * sc, oy: r.height / 2 + (z0 + z1) / 2 * sc };
 }
 function fitGeo() {
-  const r = ed.getBoundingClientRect(); if (!r.width) return;
+  const r = ed.getBoundingClientRect(); if (!r.width) return; zoomed = false;
   if (isPlan()) {
     const s = S.psmooth ? Core.closedSmooth(S.plan) : S.plan;
     let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
@@ -296,6 +296,7 @@ function drawEditor() {
     polyPath(ctx, stroke, w2s); ctx.stroke();
     if (mirror()) { polyPath(ctx, stroke.map(p => ({ x: -p.x, z: p.z })), w2s); ctx.globalAlpha = .4; ctx.stroke(); ctx.globalAlpha = 1; }
   }
+  touchUi(ctx);
 }
 // Tülle (Rohr), Henkel (Stab) und Deckel; T = Abbildung Gefäß → Bildschirm, sc = Pixel je mm
 function drawParts(ctx, T, sc) {
@@ -423,7 +424,7 @@ function pushUndo(sn) { S.undo.push(sn || snap()); if (S.undo.length > 100) S.un
 let pend = null; // Schnappschuss beim Antippen; erst beim ersten Verschieben als Rückgängig-Schritt
 function evPos(e) { const r = ed.getBoundingClientRect(); return [e.clientX - r.left, e.clientY - r.top]; }
 function hitPoint(sx, sy) {
-  let best = -1, bd = 14;
+  let best = -1, bd = DP_HIT;
   P().forEach((p, i) => {
     for (const sg of mirror() ? [1, -1] : [1]) { const [px, py] = w2s({ x: sg * p.x, z: p.z }); const d = Math.hypot(px - sx, py - sy); if (d < bd) { bd = d; best = i; } }
   });
@@ -431,11 +432,22 @@ function hitPoint(sx, sy) {
 }
 function hitSegment(wp, any) { // any: nächstes Segment ohne Abstandsgrenze (Grundriss: neue Punkte immer einfügen)
   const pts = P(), n = pts.length, q = mirror() ? { x: Math.abs(wp.x), z: wp.z } : wp;
-  let best = -1, bd = any ? Infinity : 10 / V.s;
+  let best = -1, bd = any ? Infinity : (DP_HIT - 4) / V.s;
   for (let i = 0; i < (isPlan() ? n : n - 1); i++) { const d = Core.distSeg(q, pts[i], pts[(i + 1) % n]); if (d < bd) { bd = d; best = i; } }
   return best;
 }
 
+// Finger (docs/mobil-editor.md): ins Leere wischen scrollt die Seite, zwei Finger zoomen/verschieben, Lupe beim Ziehen, Kontextleiste an der Auswahl
+let zoomed = false, tpos = null; const ctxBar = dpCtxBar(ed);
+dpTouchGuard(ed, () => drag >= 0 || !!stroke);
+dpPinch(ed, () => { stroke = null; if (drag >= 0) { if (!pend) undo(); drag = -1; pend = null; } }, // Ein-Finger-Schritt zurücknehmen
+  (f, cx, cy, dx, dy) => { V = { s: V.s * f, ox: cx - (cx - V.ox) * f + dx, oy: cy - (cy - V.oy) * f + dy }; zoomed = true; drawEditor(); });
+ed.addEventListener('pointerdown', e => { tpos = e.pointerType === 'touch' ? evPos(e) : null; }, true);
+ed.addEventListener('pointermove', e => { if (tpos) tpos = evPos(e); }, true);
+function touchUi(ctx) {
+  if (tpos && (drag >= 0 || stroke)) dpLoupe(ctx, ...tpos);
+  if (S.mode === 'edit' && S.sel >= 0 && drag < 0 && !stroke && P()[S.sel] && P().length > minPts()) ctxBar.show(...w2s(P()[S.sel]), [['close', 'Löschen', delSel]]); else ctxBar.hide();
+}
 ed.addEventListener('pointerdown', e => {
   ed.setPointerCapture(e.pointerId);
   const [sx, sy] = evPos(e), wp = s2w(sx, sy);
@@ -506,7 +518,7 @@ function endPointer() {
     stroke = null; changed(); fitView(); drawAll();
   }
   if (drag >= 0) { drag = -1; pend = null; ed.style.cursor = 'grab'; if (dirty) changed(); const r = ed.getBoundingClientRect();
-    if (P().some(p => { const [x, y] = w2s(p); return x < 10 || x > r.width - 10 || y < 10 || y > r.height - 10; })) { fitView(); drawAll(); } }
+    if (!zoomed && P().some(p => { const [x, y] = w2s(p); return x < 10 || x > r.width - 10 || y < 10 || y > r.height - 10; })) { fitView(); drawAll(); } else drawEditor(); }
 }
 ed.addEventListener('pointerup', endPointer);
 ed.addEventListener('pointercancel', endPointer);
@@ -1104,7 +1116,8 @@ $('share').onclick = async () => {
 function fromHash() { const d = dpHashGet('g'); return !!d && apply(d, false); }
 // Link im selben Tab eingefügt (nur der Hash ändert sich): übernehmen, Rückgängig möglich
 window.addEventListener('hashchange', () => { const keep = snap(); if (fromHash()) { pushUndo(keep); S.theta = 0; $('tilt').value = 0; recompute(); fitView(); drawAll(); } });
-window.addEventListener('resize', () => { fitView(); drawAll(); });
+let lastW = 0; // Telefon: Adressleiste ändert beim Scrollen nur die Höhe – dann Zoom behalten
+window.addEventListener('resize', () => { if (ed.clientWidth === lastW) return; lastW = ed.clientWidth; fitView(); drawAll(); });
 dpHeader('gefaess'); dpIcons(); dpMenu($('fitB').parentNode, [$('fitB'), $('photoB')]);
 if (!fromHash()) setKind('rot', true);
 recompute(); sloshButtons();

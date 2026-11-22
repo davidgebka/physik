@@ -41,6 +41,21 @@ Ziel: Persona A skizziert in Werkstatt oder Studio am Telefon eine Variante in u
 8. **Werte eintippen statt fummeln:** gewählter Punkt zeigt Felder x/z (wie die Auswahlzeile in Statik/Elektronik), für präzise Maße ohne Feinmotorik.
 9. **Querformat:** Editor links, Kennwerte rechts ab 640 px Breite und geringer Höhe.
 
+## Stand 22.11.2026 (Stufe 1–2 umgesetzt)
+
+Entscheidungen: Lupe statt Versatz (Punkt bleibt unter dem Finger wie am Desktop), Symbole statt Beschriftung in der Telefonleiste, Vollbild-Editor zurückgestellt bis zum Test auf echten Geräten.
+
+| Maßnahme | Stand |
+|---|---|
+| 1 Scrollen/Bearbeiten trennen | alle Module (`dpTouchGuard`): `busy()` = das Modul hat bei pointerdown ein Ziehen/Zeichnen begonnen; Setzwerkzeuge setzen beim Antippen, Wischen scrollt |
+| 2 Trefferzonen | alle Module 24 px (`DP_HIT`; Elektronik in Rastereinheiten umgerechnet) |
+| 3 Telefonleiste | Symbole für Vorlage/Stand merken überall, Art und Freihand/Punkte in Gefäß/Licht. Editor-Oberkante (iPhone 13): Gefäß 573 → 407, Licht 456 → 336, Statik 335, Mechanik 441, Elektronik 500 px. Das Kriterium ≤ 300 px ist mit Kopfzeile und zwei Leistenzeilen nicht erreichbar (≈ 336 px); Mechanik und Elektronik bleiben wegen ihrer Werkzeugpaletten höher → Vollbild-Editor (7) |
+| 4 Kontextleiste | alle Module (`dpCtxBar`, nur Finger): Löschen; Elektronik zusätzlich Drehen |
+| 5 Lupe | alle Module (`dpLoupe`) beim Ziehen und Freihandzeichnen |
+| 6 Zwei Finger | Gefäß, Licht, Mechanik, Elektronik (`dpPinch`); Statik ohne Zoom. Nach dem Zoomen passt sich die Ansicht nicht mehr von selbst an; „Einpassen“ (neu in Mechanik und Elektronik) setzt zurück. Ein-Finger-Schritt, der beim Aufsetzen des zweiten Fingers begonnen hatte, wird in Gefäß/Licht zurückgenommen, in den anderen Modulen übernommen |
+
+Geprüft mit Playwright (iPhone 13, Touch-Ereignisse über CDP) und Desktop 1400 px. Offen: echte Geräte (iOS Safari: Reihenfolge pointerdown vor touchstart, auf die `dpTouchGuard` baut), Stufe 3.
+
 ## Reihenfolge und Prüfung
 
 - Reihenfolge 1 → 2 → 3 → 4 → 5 → 6; 7–9 nach Test auf echten Geräten (Roadmap „Danach“ Punkt 8).

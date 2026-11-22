@@ -30,7 +30,7 @@ select{max-width:100%}
       <span class="seg" id="tools"><button data-t="drag" class="on">Ziehen</button><button data-t="sup">+ Lager</button><button data-t="pl">+ Last</button><button data-t="ql">+ Strecke</button><button data-t="del">Löschen</button></span>
     </div>
     <div class="row">
-      <button id="tpl"></button><button id="cmp"></button><button id="undo" class="q ico" data-i="undo" disabled>Rückgängig</button>
+      <button id="tpl" class="ico"></button><button id="cmp" class="ico"></button><button id="undo" class="q ico" data-i="undo" disabled>Rückgängig</button>
     </div>
     <canvas id="ed" role="img"></canvas>
     <div class="ctl"><label for="len">Länge L</label><input type="range" id="len" min="100" max="6000" step="10"><output id="lenO"></output></div>
@@ -584,6 +584,7 @@ function drawEd() {
   for (let i = 1; i < xs.length; i++) if ((xs[i] - xs[i - 1]) * k > 30) text((xs[i] + xs[i - 1]) / 2 * k, Yd + 14, nf0.format(xs[i] - xs[i - 1]), 'center');
   scr();
   const dh = UI.tool === 'del' && UI.delHov; if (dh) { const b = hbox(g, dh); if (b) delMark(ctx, ...g.tf(b[0], b[1]), ...g.tf(b[2], b[3])); }
+  touchUi(ctx, g);
 }
 // Lösch-Vorschau: Ziel unter dem Zeiger blass, gestrichelt umrahmt (Bildschirmkoordinaten)
 function delMark(ctx, x0, y0, x1, y1) { const p = 6, x = Math.min(x0, x1) - p, y = Math.min(y0, y1) - p, w = Math.abs(x1 - x0) + 2 * p, h = Math.abs(y1 - y0) + 2 * p;
@@ -795,9 +796,8 @@ function setL(v) {
 }
 
 // ---- Zeiger ----
-const TOUCH = matchMedia('(pointer: coarse)').matches; // Finger: Trefferzone ~ halbe Bedienhöhe (48 px)
 function hit(X, Y) {
-  const g = UI.G, k = g.k, th = thick(g), r = TOUCH ? 24 : 14;
+  const g = UI.G, k = g.k, th = thick(g), r = DP_HIT; // Finger: Trefferzone ~ halbe Bedienhöhe (48 px)
   for (let i = S.pl.length - 1; i >= 0; i--) if (Math.abs(X - S.pl[i].x * k) < r && Y > -th / 2 - 46 - r && Y < -th / 2 + 4) return { t: 'p', i, mode: 'x' };
   for (const o of qBands(g).reverse()) { const X0 = o.a * k, X1 = o.b * k, top = o.Y0 - o.hq;
     if (Y > top - r && Y < o.Y0 + 4 && X > X0 - r && X < X1 + r) return { t: 'q', i: o.i, mode: Math.abs(X - X0) < r && X - X0 < X1 - X ? 'a' : Math.abs(X - X1) < r ? 'b' : 'm' }; }
@@ -805,6 +805,16 @@ function hit(X, Y) {
   return null;
 }
 function evLocal(e) { const r = cv.getBoundingClientRect(); return UI.G.inv(e.clientX - r.left, e.clientY - r.top); }
+// Finger (docs/mobil-editor.md): ins Leere wischen scrollt die Seite, Lupe beim Ziehen, Kontextleiste an der Auswahl
+let tpos = null; const ctxBar = dpCtxBar(cv);
+dpTouchGuard(cv, () => !!UI.drag);
+cv.addEventListener('pointerdown', e => { tpos = e.pointerType === 'touch' ? [e.clientX - cv.getBoundingClientRect().left, e.clientY - cv.getBoundingClientRect().top] : null; }, true);
+cv.addEventListener('pointermove', e => { if (tpos) tpos = [e.clientX - cv.getBoundingClientRect().left, e.clientY - cv.getBoundingClientRect().top]; }, true);
+function touchUi(ctx, g) {
+  if (tpos && UI.drag && UI.drag.moved) dpLoupe(ctx, ...tpos);
+  const b = UI.sel && !UI.drag && hbox(g, UI.sel); if (!b) return ctxBar.hide();
+  const s = UI.sel, [x, y] = g.tf((b[0] + b[2]) / 2, Math.min(b[1], b[3])); ctxBar.show(x, y, [['close', 'Löschen', () => { del(s.t, s.i); recompute(); }]]);
+}
 cv.addEventListener('pointerdown', e => {
   if (R.err && R.err.startsWith('Querschnitt')) return;
   const [X, Y] = evLocal(e), x = X / UI.G.k, hh = hit(X, Y); cv.setPointerCapture(e.pointerId);

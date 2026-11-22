@@ -23,7 +23,7 @@
     </span>
     </div>
     <div class="row">
-      <button id="tpl"></button><button id="cmp"></button><button id="undo" class="q ico" data-i="undo" disabled>Rückgängig</button>
+      <button id="tpl" class="ico"></button><button id="cmp" class="ico"></button><button id="undo" class="q ico" data-i="undo" disabled>Rückgängig</button><button id="fitB" class="q ico" data-i="fit" title="Ganzes Getriebe zeigen">Einpassen</button>
     </div>
     <canvas id="ed" role="img"></canvas>
     <div class="ctl"><label for="drv">Antrieb</label><input type="range" id="drv" step="0.1"><output id="drvO"></output></div>
@@ -549,6 +549,7 @@ function recompute(refit = true) {
 }
 // Ansicht: voll einpassen (Laden) oder nur erweitern, wenn Inhalt herausragt – kein Springen beim Konstruieren
 function fit(full) {
+  if (full) UI.zoomed = false; else if (UI.zoomed) return; // nach Zoomen mit zwei Fingern nicht von selbst erweitern
   let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
   const add = (x, y) => { x0 = Math.min(x0, x); x1 = Math.max(x1, x); y0 = Math.min(y0, y); y1 = Math.max(y1, y); };
   S.pts.forEach(p => add(p.x, p.y));
@@ -637,6 +638,7 @@ function drawEd() {
   if (S.out && S.out.link != null) tag(S.links[S.out.link], 'Abtrieb');
   if (UI.mode === 'build' && UI.sel && UI.sel.t === 'l') { const L = S.links[UI.sel.i]; if (L) { const a = pos(L[0]), b = pos(L[1]), m = T([(a[0] + b[0]) / 2, (a[1] + b[1]) / 2]);
     ctx.fillText(nf1.format(Math.hypot(b[0] - a[0], b[1] - a[1])) + ' mm', m[0] + 8, m[1] + 14); } }
+  touchUi(ctx, T);
   const dh = UI.mode === 'build' && UI.tool === 'del' && UI.delHov;
   if (dh) { const Q = (dh.t === 'p' ? [dh.i] : S.links[dh.i] || []).map(i => T(pos(i))); if (Q.length) { const xs = Q.map(q => q[0]), ys = Q.map(q => q[1]); delMark(ctx, Math.min(...xs) - 4, Math.min(...ys) - 4, Math.max(...xs) + 4, Math.max(...ys) + 4); } }
 }
@@ -794,9 +796,9 @@ function delLink(k) {
   S.links.splice(k, 1);
   for (const key of ['drive', 'out']) { const l = S[key].link; if (l === k) S[key] = {}; else if (l > k) S[key] = { link: l - 1 }; }
 }
-function hitPoint(sx, sy) { let best = -1, bd = 12; S.pts.forEach((p, i) => { const [x, y] = UI.T.f(pos(i, curX())), d = Math.hypot(x - sx, y - sy); if (d < bd) { bd = d; best = i; } }); return best; }
+function hitPoint(sx, sy) { let best = -1, bd = DP_HIT; S.pts.forEach((p, i) => { const [x, y] = UI.T.f(pos(i, curX())), d = Math.hypot(x - sx, y - sy); if (d < bd) { bd = d; best = i; } }); return best; }
 function hitLink(sx, sy) {
-  let best = -1, bd = 7;
+  let best = -1, bd = DP_HIT / 2;
   S.links.forEach((L, k) => { const h = hull(L.map(i => UI.T.f(pos(i)))); for (let j = 0; j < h.length; j++) { const a = h[j], b = h[(j + 1) % h.length], dx = b[0] - a[0], dy = b[1] - a[1];
     const t = Math.max(0, Math.min(1, ((sx - a[0]) * dx + (sy - a[1]) * dy) / (dx * dx + dy * dy || 1))), d = Math.hypot(a[0] + t * dx - sx, a[1] + t * dy - sy); if (d < bd) { bd = d; best = k; } } });
   return best;
@@ -804,6 +806,21 @@ function hitLink(sx, sy) {
 function evPos(e) { const r = cv.getBoundingClientRect(); return [e.clientX - r.left, e.clientY - r.top]; }
 const snap = v => Math.round(v);
 
+// Finger (docs/mobil-editor.md): ins Leere wischen scrollt die Seite, zwei Finger zoomen/verschieben, Lupe beim Ziehen, Kontextleiste an der Auswahl
+let tpos = null; const ctxBar = dpCtxBar(cv);
+dpTouchGuard(cv, () => !!UI.drag);
+dpPinch(cv, () => { if (UI.drag) { const d = UI.drag; UI.drag = null; if (d.move) save(); else recompute(true); } },
+  (f, cx, cy, dx, dy) => { const v = UI.view, T = UI.T, [wx, wy] = T.inv(cx, cy), k = T.k * f, z = (a, c) => c + (a - c) / f;
+    UI.view = { x0: z(v.x0, wx) - dx / k, x1: z(v.x1, wx) - dx / k, y0: z(v.y0, wy) + dy / k, y1: z(v.y1, wy) + dy / k }; UI.zoomed = true; drawEd(); });
+cv.addEventListener('pointerdown', e => { tpos = e.pointerType === 'touch' ? evPos(e) : null; }, true);
+cv.addEventListener('pointermove', e => { if (tpos) tpos = evPos(e); }, true);
+function touchUi(ctx, T) {
+  if (tpos && UI.drag && !UI.drag.move) dpLoupe(ctx, ...tpos);
+  const s = UI.sel; if (UI.mode !== 'build' || !s || UI.drag || (s.t === 'p' ? !S.pts[s.i] : !S.links[s.i])) return ctxBar.hide();
+  const Q = (s.t === 'p' ? [s.i] : S.links[s.i]).map(i => T(pos(i))), x = Q.reduce((a, q) => a + q[0], 0) / Q.length, y = Math.min(...Q.map(q => q[1]));
+  ctxBar.show(x, y, [['close', 'Löschen', () => { if (s.t === 'p') delPoint(s.i); else delLink(s.i); UI.sel = null; recompute(); }]]);
+}
+$('fitB').onclick = () => { fit(true); drawEd(); };
 cv.addEventListener('pointerdown', e => {
   const [sx, sy] = evPos(e), mm = UI.T.inv(sx, sy); cv.setPointerCapture(e.pointerId);
   if (UI.mode === 'move') { if (!ok()) return; UI.drag = { move: true, off: S.at - driveAt(mm) }; return; }
