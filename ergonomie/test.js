@@ -113,3 +113,9 @@ for (const [id, i, sx, iso, tol] of [['elbow', 0, 'f', 930, 0.05], ['elbow', 2, 
   ['thigh', 0, 'f', 125, 0], ['thigh', 2, 'm', 185, 0], ['bkl', 2, 'm', 687, 0.05], ['footL', 2, 'm', 285, 0], ['stature', 2, 'm', 1881, 0.05],
   ['popl', 0, 'f', 340, 0.12], ['popl', 2, 'm', 505, 0.05], ['hipS', 2, 'f', 440, 0], ['reachF', 0, 'f', 605, 0.06]])
   check(`ISO 14738 ${id} ${sx === 'f' ? 'P5 ♀' : 'P95 ♂'}`, BODY[id][sx][i], iso, tol);
+
+// Modulor: Reihen aus 1130 · φⁿ und 2260 · φⁿ gegen die veröffentlichten Werte (Le Corbusier, auf ganze mm gerundet; 1829 ist 6 Fuß, 1130 · φ = 1828,4)
+{ const M = Core.modulor(5, 2300), near = (a, v) => a.reduce((b, x) => Math.abs(x - v) < Math.abs(b - v) ? x : b);
+  for (const v of [6, 9, 15, 24, 39, 63, 102, 165, 267, 432, 698, 1130, 1829]) check(`Modulor rot ${v}`, near(M.red, v), v, v === 1829 ? 1 / 1829 : 0.6 / v);
+  for (const v of [11, 18, 30, 48, 78, 126, 204, 330, 534, 863, 1397, 2260]) check(`Modulor blau ${v}`, near(M.blue, v), v, 0.6 / v);
+  check('blau = 2 × rot', near(M.blue, 863) / near(M.red, 432), 2, 1e-12); check('rot: Summe zweier Nachbarn = nächster', M.red[5] + M.red[6], M.red[7], 1e-9); }

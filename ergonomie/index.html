@@ -58,10 +58,10 @@ table.bt{border-collapse:collapse;width:100%;font-size:14px;line-height:24px;fon
       <span class="seg" id="scene"><button data-s="sit" class="on">Sitzen</button><button data-s="stand">Stehen</button></span>
     </div>
     <div class="row">
-      <button id="tpl" class="ico"></button><button id="cmp" class="ico"></button><button id="undo" class="q ico" data-i="undo" disabled>Rückgängig</button>
+      <button id="tpl" class="ico"></button><button id="cmp" class="ico"></button><button id="undo" class="q ico" data-i="undo" disabled>Rückgängig</button><button id="modB" title="Modulor-Maße einblenden; Griffe rasten darauf ein">Modulor</button>
     </div>
     <canvas id="ed" role="img"></canvas>
-    <div class="row"><span class="seg" id="sex"><button data-x="f" class="on">Frau</button><button data-x="m">Mann</button></span></div>
+    <div class="row"><span class="seg" id="sex"><button data-x="f" class="on">Frau</button><button data-x="m">Mann</button><button data-x="mod" title="Le Corbusiers Modulor-Mann, 1829 mm">Modulor-Mann</button></span></div>
     <div class="ctl"><label for="pp" title="Perzentil: so viele Prozent ihres Geschlechts sind in diesem Maß kleiner">Figur, Perzentil</label><input type="range" id="pp" min="1" max="99" step="1"><output id="figO"></output></div>
     <p class="note" id="hint">Griffe ziehen: Höhen, Sitztiefe, Unterkante. Grau gestrichelt: kleine Frau (P5) und großer Mann (P95).</p>
   </section>
@@ -91,7 +91,7 @@ table.bt{border-collapse:collapse;width:100%;font-size:14px;line-height:24px;fon
   </section>
   <section class="panel wide">
     <h2>Referenzen <small>bekannte Maße und für wie viele der gewählten Nutzer sie passen</small></h2>
-    <div class="row"><span class="seg" id="refT"><button data-r="sitz" class="on">Sitzhöhen</button><button data-r="griff">Griffe</button><button data-r="raum">Höhen im Raum</button></span></div>
+    <div class="row"><span class="seg" id="refT"><button data-r="sitz" class="on">Sitzhöhen</button><button data-r="griff">Griffe</button><button data-r="raum">Höhen im Raum</button><button data-r="mod">Modulor</button></span></div>
     <div class="tw"><table class="bt rf" id="ref"></table></div>
     <p class="note" id="refN"></p>
   </section>
@@ -120,6 +120,7 @@ table.bt{border-collapse:collapse;width:100%;font-size:14px;line-height:24px;fon
     <h3>Rechenweg</h3><p>Je Geschlecht ist jedes Maß eine Glockenkurve (<a href="https://de.wikipedia.org/wiki/Normalverteilung" target="_blank" rel="noopener">Normalverteilung</a>) durch die Tabellenwerte P5, P50 und P95; ist die Verteilung schief (Körpermasse), bekommen beide Seiten eine eigene Breite. „Gemischt“ heißt je zur Hälfte Frauen und Männer. Ein Kriterium legt fest, zwischen welchen Körpermaßen jemand passt; der Anteil ist die Fläche unter der Kurve in diesem Band (siehe „Verteilung“). Bei Tisch und Beinfreiheit hängt das Ergebnis davon ab, wie jeder einstellt: Ein verstellbarer Stuhl wird so hoch gestellt, wie der Tisch es verlangt, solange die Füße noch aufstehen; ein verstellbarer Tisch folgt dem Ellenbogen. Gemittelt wird über alle Unterschenkellängen und Ellenbogenhöhen, beide innerhalb eines Geschlechts unabhängig angenommen. Geprüft gegen geschlossene Lösungen in <code>ergonomie/test.js</code>. Für Fachleute: zweiseitige Normalverteilung, σ<sub>links</sub> = (P50 − P5)/1,645, σ<sub>rechts</sub> = (P95 − P50)/1,645.</p>
     <h3>Kriterien</h3><p><i>Sitzhöhe</i>: Füße stehen auf, die Kniekehle wird nicht gedrückt – Sitz zwischen 87 und 100&nbsp;% der Kniekehlenhöhe (Parcells u.&nbsp;a. 1999); eine Fußstütze zählt wie ein höherer Boden. <i>Sitztiefe</i>: höchstens 95&nbsp;% der Gesäß-Kniekehlen-Länge, sonst drückt die Vorderkante in die Kniekehle (Parcells); dass Stühle mit Lehne für langes Sitzen mindestens 80&nbsp;% tief sein sollten, steht nur in der Empfehlung – Hocker und Bänke dürfen kürzer sein. <i>Sitzbreite</i>: mindestens Hüftbreite, zwischen Armlehnen 1,1-fach. <i>Tischhöhe</i>: Platte 30&nbsp;mm unter bis 70&nbsp;mm über dem entspannten Ellenbogen (Heuristik für Schreiben, Essen, Tastatur). <i>Beinfreiheit</i>: unter Platte bzw. Zarge mindestens Oberschenkeldicke + 20&nbsp;mm. <i>Arbeitshöhe stehend</i> nach Grandjean: feine Arbeit 50–100&nbsp;mm über, leichte 100–150&nbsp;mm und schwere 150–400&nbsp;mm unter dem Ellenbogen, je ±25&nbsp;mm Toleranz. <i>Oberes Fach</i>: Griff 50&nbsp;mm über dem Fachboden muss erreichbar sein, über eine Arbeitsplatte hinweg 150&nbsp;mm weniger (Heuristik). <i>Einsicht</i>: Fachboden unter Augenhöhe. <i>Kopffreiheit</i>: Körperhöhe mit Schuhen.</p>
     <h3>Urteil</h3><p>Komfort: passt, wenn mindestens 90&nbsp;% passen (P5 bis P95), knapp ab einem Drittel, darunter kritisch. Sicherheit (Kopffreiheit): passt ab 99&nbsp;%, knapp ab 95&nbsp;%. „Einsicht ins Fach“ ist ein Hinweis: steht unter dem Urteil, ändert es aber nicht. Feste Maße erreichen 90&nbsp;% oft gar nicht – dann sagt die Empfehlung, welcher Verstellbereich nötig wäre. „Alle Kriterien zugleich: höchstens …“ ist der kleinste Einzelwert – wie viele wirklich überall passen, lässt sich aus Einzelmaßen nicht genau sagen, es sind eher weniger. Niedrige Sitze (Sofa, Lounge) liegen außerhalb der Regeln für aufrechtes Sitzen: dann höchstens „knapp“.</p>
+    <h3>Modulor</h3><p>Le Corbusiers <a href="https://de.wikipedia.org/wiki/Modulor" target="_blank" rel="noopener">Modulor</a> (1948/1955) leitet Maße aus dem goldenen Schnitt ab: rote Reihe 1130&nbsp;mm × 1,618<sup>n</sup> (… 267 · 432 · 698 · 1130 · 1829), blaue Reihe doppelt so groß (… 534 · 863 · 1397 · 2260). Er entwirft für einen Mann von 1829&nbsp;mm – das Gegenmodell zu diesem Modul, das fragt, für wie viele ein Maß passt. Unter „Referenzen“ werden seine Haltungsmaße gegen heutige Nutzer geprüft; „Modulor“ in der Seitenansicht blendet die Reihen ein und lässt die Griffe darauf einrasten. Die Figur ist unsere eigene Typfigur, nicht seine Zeichnung.</p>
     <h3>Nicht enthalten</h3><p>Körperhaltung über Zeit (Ermüdung, Sitzwechsel), Polster und Neigung von Sitz und Lehne, Lendenstütze, Sicht und Blickwinkel, Kräfte beim Bedienen, Heben und Tragen (nur Richtwert), Greifen nach vorn und zur Seite, Kleidung im Winter, Kinder und Ältere, Rollstuhl. Für Arbeitsplätze, öffentliche Möbel, Kindermöbel und Barrierefreiheit gelten Normen (z.&nbsp;B. DIN EN 1335, DIN EN 527, DIN EN 1729, DIN 18040) – dort entscheidet die Norm, nicht dieses Modul.</p>
     <h3>Weiterführende Werkzeuge</h3><p><a href="https://koerpermass.kan-praxis.de/" target="_blank" rel="noopener">KANPraxis Körpermaße</a> – woher Daten kommen und wie man sie richtig verwendet<br><a href="https://www.dined.io/" target="_blank" rel="noopener">DINED</a> – englisch, TU Delft: Körpermaße vieler Länder, Perzentile, Vergleich<br><a href="https://www.peoplesize.com/" target="_blank" rel="noopener">PeopleSize</a> – Körpermaße mit Bildern, viele Bevölkerungen (kostenpflichtig)<br><a href="https://www.human-solutions.com/de/produkte/ramsis-allgemein/" target="_blank" rel="noopener">RAMSIS</a> – 3D-Menschmodell für Fahrzeug- und Arbeitsplatzgestaltung<br><a href="https://www.baua.de/DE/Themen/Arbeitsgestaltung/Physische-Belastung/Leitmerkmalmethode/_functions/Leitmerkmalmethoden.html" target="_blank" rel="noopener">Leitmerkmalmethode (BAuA)</a> – Heben, Halten, Tragen am Arbeitsplatz bewerten</p>
     </div></details>
@@ -315,7 +316,12 @@ const Core = (() => {
   const GOPT = 0.197, GTOL = 5, GW = 25;
   const gripDia = (lo, hi, pop) => evalSpec({ k: 'gd', kind: 'komfort', dim: 'handL', fLo: v => (v - GTOL) / GOPT, fHi: v => (v + GTOL) / GOPT, iLo: x => x * GOPT + GTOL, iHi: x => x * GOPT - GTOL }, lo, hi, pop);
   const gripWidth = (w, pop) => evalSpec({ k: 'gw', kind: 'komfort', dim: 'handB', fHi: v => v - GW, iHi: x => x + GW }, w, w, pop);
-  return { BODY, ncdf, gripDia, gripWidth, GOPT, GTOL, GW, nq, cdfQ, quantQ, cdf, pdf, quant, val, level, KIND, WORK, TAB, LEG, GRIP, OVER, SEAT_SET, C5, C30, evalSit, evalStand, tableEval, choose, rng };
+  // Modulor (Le Corbusier, 1948/1955): rote Reihe 1130 mm · φⁿ (Solarplexus des 1829-mm-Manns), blaue Reihe 2260 mm · φⁿ (Hand erhoben)
+  const PHI = (1 + Math.sqrt(5)) / 2;
+  function modulor(lo = 5, hi = 3000) { const ser = b => { const o = []; for (let n = -12; n <= 4; n++) { const v = b * PHI ** n; if (v >= lo && v <= hi) o.push(v); } return o; };
+    return { red: ser(1130), blue: ser(2260) }; }
+  const MOD_H = 1829; // Körperhöhe des Modulor-Manns (6 Fuß)
+  return { BODY, ncdf, gripDia, modulor, MOD_H, PHI, gripWidth, GOPT, GTOL, GW, nq, cdfQ, quantQ, cdf, pdf, quant, val, level, KIND, WORK, TAB, LEG, GRIP, OVER, SEAT_SET, C5, C30, evalSit, evalStand, tableEval, choose, rng };
 })();
 if (typeof module !== 'undefined') module.exports = Core;
 // === CORE END
@@ -324,7 +330,7 @@ if (typeof module !== 'undefined') module.exports = Core;
 const B = Core.BODY, RAD = Math.PI / 180;
 const SIT0 = { sh: 460, shHi: 510, shA: false, fr: 0, sd: 420, sw: 460, arm: false, table: true, th: 750, thHi: 850, thA: false, tu: 100 };
 const STAND0 = { workOn: true, wh: 900, whHi: 1000, whA: false, work: 'leicht', shelfOn: true, shelf: 1750, over: true, headOn: false, head: 2000 };
-let S = { scene: 'sit', pop: 'mix', shoe: 25, sex: 'f', p: 50, sit: { ...SIT0 }, stand: { ...STAND0 } };
+let S = { scene: 'sit', pop: 'mix', shoe: 25, sex: 'f', p: 50, mod: false, sit: { ...SIT0 }, stand: { ...STAND0 } };
 let R = [], REF = null;                 // Kriterien des Stands, des gemerkten Stands
 const UI = { crit: null, drag: null, handles: [], G: null, hov: null };
 const cv = $('ed'), TX = 330, CX = 300, WALL = 900; // Tischvorderkante, Arbeitsplatte vorn, Wand (mm)
@@ -390,6 +396,9 @@ function setting(sx, p, s) {
   if (S.scene === 'sit') { const c = Core.choose(sitP(s.sit), Core.val('popl', sx, p, shoe), Core.val('elbowS', sx, p)); return { SH: c.SH, TH: c.T }; }
   const q = s.stand, [a, b] = Core.WORK[q.work]; return { WH: !q.workOn ? null : q.whA ? clamp(Core.val('elbow', sx, p, shoe) - (a + b) / 2, q.wh, q.whHi) : q.wh };
 }
+// gewählte Figur: Frau/Mann mit Perzentil oder Modulor-Mann (Mann auf dem Perzentil seiner Körperhöhe, Typfigur)
+const P_MOD = 100 * Core.cdfQ(B.stature.m, Core.MOD_H), FX = () => S.sex === 'mod' ? ['m', P_MOD] : [S.sex, S.p];
+const figName = () => S.sex === 'mod' ? 'Modulor-Mann' : `${S.sex === 'f' ? 'Frau' : 'Mann'} P${S.p}`;
 const figure = (sx, p, s = S) => { const st = setting(sx, p, s); return S.scene === 'sit' ? figSit(sx, p, S.shoe, s.sit, st.SH, s.sit.table ? st.TH : null) : figStand(sx, p, S.shoe, s.stand, st.WH); };
 
 // ---- Produkt als Linien in mm (Editor und Vorlagen-Skizzen) ----
@@ -445,7 +454,7 @@ function drawEd() {
   const T = q => [ox + q[0] * k, oy - q[1] * k], I = css('--ink'), I2 = css('--ink2'); UI.G = { k, ox, oy, T, inv: (x, y) => [(x - ox) / k, (oy - y) / k] };
   const f0 = dpDots(ctx, w, h, k, ox, oy); ctx.font = DP_CFONT; ctx.fillStyle = I2; ctx.fillText(dpScale(f0), 6, h - 6);
   ctx.lineJoin = ctx.lineCap = 'round';
-  const set = setting(S.sex, S.p, S), q = S.scene === 'sit' ? S.sit : S.stand;
+  const set = setting(...FX(), S), q = S.scene === 'sit' ? S.sit : S.stand;
   // Boden
   ctx.strokeStyle = I; ctx.lineWidth = 1.5; ctx.beginPath(); const [fx0, fy] = T([x0, 0]), [fx1] = T([x1, 0]); ctx.moveTo(fx0, fy); ctx.lineTo(fx1, fy); ctx.stroke();
   // Extremfiguren (P5 Frau, P95 Mann), dann die gewählte Figur
@@ -453,7 +462,11 @@ function drawEd() {
   for (const [sx, p] of ghosts) drawBody(ctx, T, k, figure(sx, p), 'ghost');
   // Produkt
   for (const sp of prodShapes(S.scene, q, set)) { polyPath(ctx, sp.p, T); if (sp.z) ctx.closePath(); if (sp.f) { ctx.fillStyle = css(sp.f); ctx.fill(); } ctx.strokeStyle = css(sp.c || '--ink'); ctx.lineWidth = sp.w || 1.5; ctx.stroke(); }
-  const F = figure(S.sex, S.p); drawBody(ctx, T, k, F, 'main');
+  // Modulor-Maße: rote Reihe durchgezogen, blaue gestrichelt, in der Familie; Beschriftung rechts
+  if (S.mod) { const M = Core.modulor(200, y1); ctx.lineWidth = 1; ctx.strokeStyle = css('--mech'); ctx.font = DP_CFONT; ctx.fillStyle = I2; ctx.textAlign = 'right';
+    for (const [ser, dash] of [[M.red, []], [M.blue, [4, 4]]]) for (const v of ser) { const [, Y] = T([0, v]); ctx.setLineDash(dash); ctx.beginPath(); ctx.moveTo(0, Math.round(Y) + .5); ctx.lineTo(w - 36, Math.round(Y) + .5); ctx.stroke(); ctx.setLineDash([]); ctx.fillText(nf0.format(modR(v)), w - 2, Y + 4); }
+    ctx.textAlign = 'left'; }
+  const F = figure(...FX()); drawBody(ctx, T, k, F, 'main');
   // Beschriftung der Extremfiguren am Kopf
   ctx.font = DP_CFONT; ctx.fillStyle = I2; ctx.textAlign = 'center';
   for (const [sx, p, t] of ghosts) { const g = figure(sx, p), [hx, hy] = T([g.head.c[0], g.head.c[1] + g.head.r]); ctx.fillText(t, hx + (sx === 'f' ? -70 : 50), hy - 6); }
@@ -489,14 +502,18 @@ function drawEd() {
 }
 
 // ---- Bedienung im Editor ----
+// Einrasten: 5 mm, mit eingeblendetem Modulor auf das nächste Modulor-Maß
+const modR = v => Math.abs(v - 1828.4) < 1 ? 1829 : Math.round(v); // Le Corbusier rundet 1130 · φ = 1828,4 auf 1829 (6 Fuß)
+const MODV = (() => { const M = Core.modulor(60, 3000); return M.red.concat(M.blue).map(modR).sort((a, b) => a - b); })();
+const snapV = v => S.mod ? (MODV.reduce((b, x) => Math.abs(x - v) < Math.abs(b - v) ? x : b)) : Math.round(v / 5) * 5;
 const LIM = { sh: [150, 1000], shLo: [150, 1000], shHi: [150, 1000], sd: [200, 800], fr: [0, 600], th: [300, 1300], thLo: [300, 1300], thHi: [300, 1300], tu: [20, 400], wh: [500, 1400], whLo: [500, 1400], whHi: [500, 1400], shelf: [500, 2700], head: [1400, 2700] };
 function applyDrag(key, X, Y) {
-  const [x, y] = UI.G.inv(X, Y), v5 = v => Math.round(v / 5) * 5, L = LIM[key], c = v => clamp(v5(v), L[0], L[1]), q = S.sit, t = S.stand;
+  const [x, y] = UI.G.inv(X, Y), L = LIM[key], c = v => clamp(snapV(v), L[0], L[1]), q = S.sit, t = S.stand;
   switch (key) {
     case 'sh': q.sh = c(y); break; case 'shLo': q.sh = c(y); break; case 'shHi': q.shHi = c(y); break;
     case 'sd': q.sd = c(x); break; case 'fr': q.fr = c(y); break;
     case 'th': q.th = c(y); break; case 'thLo': q.th = c(y); break; case 'thHi': q.thHi = c(y); break;
-    case 'tu': q.tu = c(setting(S.sex, S.p, S).TH - y); break;
+    case 'tu': { const TH = setting(...FX(), S).TH; q.tu = clamp(TH - snapV(y), L[0], L[1]); break; } // Unterkante rastet absolut ein
     case 'wh': t.wh = c(y); break; case 'whLo': t.wh = c(y); break; case 'whHi': t.whHi = c(y); break;
     case 'shelf': t.shelf = c(y); break; case 'head': t.head = c(y); break;
   }
@@ -572,11 +589,11 @@ function renderStats() {
   const main = R.map(c => { const r = ref(c.k), d = r ? Math.round((c.ok - r.ok) * 100) : null;
     return { l: CN[c.k].n, v: pc(c.ok), n: (sideTxt(c) || 'passt für alle') + (r ? ` · gemerkt ${pc(r.ok)}${d ? ` (${d > 0 ? '+' : '−'}${Math.abs(d)} Pkt.)` : ''}` : ''), w: c.lv > 0, t: CN[c.k].t + ' – Anteil der Nutzer, für die es passt' }; });
   const pop = POP(), more = R.map(c => ({ l: CN[c.k].n + ': Empfehlung', v: '', n: recTxt(c) }));
-  const fv = (id, p) => Core.val(id, S.sex, p, S.shoe), sx = S.sex === 'f' ? 'Frau' : 'Mann';
-  more.push({ l: `Figur ${sx} P${S.p}: Körperhöhe`, v: mm(fv('stature', S.p)), n: S.shoe ? 'mit Schuhen' : 'barfuß' });
-  if (S.scene === 'sit') more.push({ l: 'Figur: Kniekehlenhöhe', v: mm(fv('popl', S.p)), n: 'passt zu Sitzhöhe ' + mm(fv('popl', S.p) * Core.C30) + ' bis ' + mm(fv('popl', S.p) * Core.C5) },
-    { l: 'Figur: Ellenbogen über Sitz', v: mm(fv('elbowS', S.p)) });
-  else more.push({ l: 'Figur: Ellenbogenhöhe', v: mm(fv('elbow', S.p)) }, { l: 'Figur: Reichweite nach oben', v: mm(fv('reach', S.p)) });
+  const [fsx, fp] = FX(), fv = id => Core.val(id, fsx, fp, S.shoe);
+  more.push({ l: `Figur ${figName()}: Körperhöhe`, v: mm(fv('stature')), n: S.shoe ? 'mit Schuhen' : 'barfuß' });
+  if (S.scene === 'sit') more.push({ l: 'Figur: Kniekehlenhöhe', v: mm(fv('popl')), n: 'passt zu Sitzhöhe ' + mm(fv('popl') * Core.C30) + ' bis ' + mm(fv('popl') * Core.C5) },
+    { l: 'Figur: Ellenbogen über Sitz', v: mm(fv('elbowS')) });
+  else more.push({ l: 'Figur: Ellenbogenhöhe', v: mm(fv('elbow')) }, { l: 'Figur: Reichweite nach oben', v: mm(fv('reach')) });
   const m99 = Core.quant('mass', pop, 0.99);
   more.push({ l: 'Schwerste 1 % der Nutzer', v: `ab ${nf0.format(m99)} kg`, n: `für die Statik ≈ ${nf0.format(Math.round(m99 * 9.81 / 10) * 10)} N, beim Hinsetzen mehr (Stoß)`, t: 'Körpermasse P99 der gewählten Nutzer' });
   $('stats').innerHTML = dpStats(dpVerdict(V.lv, V.txt, extra), main, more, 'more');
@@ -591,7 +608,7 @@ function renderCrit() {
 // Band im Körpermaß für das Diagramm; Tisch und Beinfreiheit für die Sitzeinstellung der Figur
 function bandOf(c) {
   if (c.band) return c.band;
-  const st = setting(S.sex, S.p, S), q = S.sit, tlo = q.th - st.SH, thi = (q.thA ? q.thHi : q.th) - st.SH;
+  const st = setting(...FX(), S), q = S.sit, tlo = q.th - st.SH, thi = (q.thA ? q.thHi : q.th) - st.SH;
   if (c.k === 'tab') return [tlo - Core.TAB[1], thi - Core.TAB[0]];
   return [-Infinity, st.TH - st.SH - q.tu - Core.LEG];
 }
@@ -606,12 +623,12 @@ function drawDist() {
   if (inB.length) series.push({ pts: inB, color: css('--mech'), width: 0.01, fill: css('--mech-a') });
   if (both) series.push({ pts: X.map(x => [x, pop.w * dens(x, 1)]), color: css('--ink'), dash: [4, 4], width: 1.5 }, { pts: X.map(x => [x, (1 - pop.w) * dens(x, 0)]), color: css('--mut'), dash: [3, 4], width: 1.5 });
   series.push({ pts: tot, color: css('--mech'), width: 2 });
-  const fig = (S.scene === 'sit' || id !== 'thigh') ? Core.val(id, S.sex, S.p, S.shoe) : null;
+  const fig = (S.scene === 'sit' || id !== 'thigh') ? Core.val(id, ...FX(), S.shoe) : null;
   chart($('dist'), { x0: xa, x1: xb, y0: 0, y1: ymax, xl: `${d.n} [${u}]${d.sh && S.shoe ? ', mit Schuhen' : ''}`, yl: `Anteil [% je ${u === 'kg' ? 'kg' : 'cm'}]`, series,
     vlines: fig != null ? [{ x: fig, color: css('--ink') }] : [], legend: [{ t: 'alle', color: css('--mech') }].concat(both ? [{ t: 'Frauen', color: css('--ink'), dash: [4, 4], width: 1.5 }, { t: 'Männer', color: css('--mut'), dash: [3, 4], width: 1.5 }] : []) });
   $('distT').textContent = `${CN[c.k].n}: ${d.n}`;
   const bt = isFinite(b0) && isFinite(b1) ? `zwischen ${nf0.format(b0)} und ${nf0.format(b1)} ${u}` : isFinite(b0) ? `ab ${nf0.format(b0)} ${u}` : `bis ${nf0.format(b1)} ${u}`;
-  $('distN').textContent = `Fläche = passt: ${d.n} ${bt}` + (c.k === 'tab' || c.k === 'leg' ? ' (für die Sitzeinstellung der Figur; der Anteil mittelt über alle Sitzeinstellungen)' : '') + `. Senkrechte Linie: Figur ${S.sex === 'f' ? 'Frau' : 'Mann'} P${S.p}.`;
+  $('distN').textContent = `Fläche = passt: ${d.n} ${bt}` + (c.k === 'tab' || c.k === 'leg' ? ' (für die Sitzeinstellung der Figur; der Anteil mittelt über alle Sitzeinstellungen)' : '') + `. Senkrechte Linie: Figur ${figName()}.`;
 }
 // Körpermaße zum Nachschlagen
 function renderBody() {
@@ -701,36 +718,56 @@ const REFS = {
     ['Oberschrank, Unterkante', { txt: '≈ 1400–1450 mm' }, 'üblich 500–550 mm über der Arbeitsplatte'],
     ['Garderobenhaken', { reach: 1750 }, '≈ 1700–1800 mm; Anteil: Haken mit der Hand erreichbar'],
     ['Tür, lichte Höhe', { head: 1985 }, 'DIN 18100 (Baurichtmaß 2010 mm)'],
-    ['Treppe, Kopfhöhe', { head: 2000 }, 'DIN 18065']]
+    ['Treppe, Kopfhöhe', { head: 2000 }, 'DIN 18065']],
+  // Le Corbusier, Le Modulor: Haltungen und ihre Maße, gegen heutige Nutzer geprüft
+  mod: [
+    ['27 · niedriger Sitz, Hocken', { sh: 267 }, 'rot; Lounge-Höhe – Regel für aufrechtes Sitzen nur Anhalt'],
+    ['43 · Sitz', { sh: 432 }, 'rot'],
+    ['70 · Tisch zum Sitz 43', { tab: [432, 698] }, 'rot; Platte + Zarge 60 mm angenommen'],
+    ['86 · Hand aufstützen, Ablage', { wh: 863 }, 'blau; geprüft als Arbeitshöhe für leichte Arbeit'],
+    ['113 · Solarplexus, Pult', { wh: 1130, work: 'fein' }, 'rot; geprüft als Arbeitshöhe für feine Arbeit'],
+    ['140 · Anlehnen, Brüstung', { txt: '1.397 mm' }, 'blau; zum Aufstützen der Unterarme im Stehen'],
+    ['183 · Körperhöhe', { head: 1829 }, 'rot; geprüft als Kopffreiheit'],
+    ['226 · Hand erhoben', { reach: 2260, grip: true }, 'blau; geprüft als Griffhöhe nach oben']]
 };
 let refTab = 'sitz';
+// Referenz in die Seitenansicht übernehmen (null = nicht übertragbar)
+function refLoad(sp) {
+  if (sp.sh != null) return { ...S, scene: 'sit', sit: { ...S.sit, sh: sp.sh, shHi: sp.hi || Math.max(S.sit.shHi, sp.sh), shA: !!sp.hi, fr: sp.fr || 0, th: sp.fr ? 1050 : S.sit.th, tu: sp.fr ? 40 : S.sit.tu } };
+  if (sp.tab) return { ...S, scene: 'sit', sit: { ...S.sit, sh: sp.tab[0], shA: false, fr: 0, table: true, th: sp.tab[1], thA: false, tu: 60 } };
+  if (sp.wh) return { ...S, scene: 'stand', stand: { ...S.stand, workOn: true, wh: sp.wh, whA: false, work: sp.work || 'leicht' } };
+  if (sp.head) return { ...S, scene: 'stand', stand: { ...S.stand, headOn: true, head: sp.head } };
+  if (sp.reach && sp.grip) return { ...S, scene: 'stand', stand: { ...S.stand, shelfOn: true, over: false, shelf: sp.reach - Core.GRIP } };
+  return null;
+}
 function refShare(sp, pop) {
+  if (sp.tab) { const t = Core.tableEval({ ...sitP(SIT0), sh: [sp.tab[0], sp.tab[0]], th: [sp.tab[1], sp.tab[1]], tu: 60, table: true }, pop); return [{ ...t.tab, leg: t.leg.ok }, 'tab']; }
   if (sp.sh != null) { const c = Core.evalSit({ ...sitP(SIT0), sh: [sp.sh, sp.hi || sp.sh], fr: sp.fr || 0, table: false }, pop)[0]; return [c, 'sh']; }
   if (sp.d) return [Core.gripDia(sp.d[0], sp.d[1], pop), 'gd'];
   if (sp.w != null) return [Core.gripWidth(sp.w, pop), 'gw'];
-  if (sp.wh) return [Core.evalStand({ wh: [sp.wh, sp.wh], work: 'leicht', shelf: null, head: null }, pop)[0], 'ah'];
+  if (sp.wh) return [Core.evalStand({ wh: [sp.wh, sp.wh], work: sp.work || 'leicht', shelf: null, head: null }, pop)[0], 'ah'];
   if (sp.reach) return [{ ok: 1 - Core.cdf('reach', pop, sp.reach), lo: Core.cdf('reach', pop, sp.reach), hi: 0 }, 'rc'];
   if (sp.head) return [{ ok: Core.cdf('stature', pop, sp.head), lo: 0, hi: 1 - Core.cdf('stature', pop, sp.head) }, 'head'];
   return [null];
 }
-const RSIDE = { sh: ['zu hoch', 'zu niedrig'], gd: ['zu dick', 'zu dünn'], gw: [null, 'zu schmal für die ganze Hand'], ah: ['zu hoch', 'zu niedrig'], rc: ['nicht erreichbar'], head: [null, 'stößt an'] };
+const RSIDE = { tab: ['zu hoch', 'zu niedrig'], sh: ['zu hoch', 'zu niedrig'], gd: ['zu dick', 'zu dünn'], gw: [null, 'zu schmal für die ganze Hand'], ah: ['zu hoch', 'zu niedrig'], rc: ['nicht erreichbar'], head: [null, 'stößt an'] };
 function renderRef() {
   document.querySelectorAll('#refT button').forEach(b => b.classList.toggle('on', b.dataset.r === refTab));
   const pop = POP(), mmv = sp => sp.txt || (sp.sh != null ? (sp.hi ? `${nf0.format(sp.sh)}–${nf0.format(sp.hi)} mm` : `${nf0.format(sp.sh)} mm`) + (sp.fr ? `, Fußring ${nf0.format(sp.fr)}` : '')
-    : sp.d ? `Ø ${sp.d[0]}–${sp.d[1]} mm` : sp.hook ? `Ø ${sp.hook[0]}–${sp.hook[1]} mm` : sp.fine ? `Ø ${sp.fine[0]}–${sp.fine[1]} mm` : sp.w != null ? `lichte Weite ${sp.w} mm` : sp.reach ? `${nf0.format(sp.reach)} mm` : sp.head ? `${nf0.format(sp.head)} mm` : '');
+    : sp.tab ? `Tisch ${nf0.format(sp.tab[1])}, Sitz ${nf0.format(sp.tab[0])} mm` : sp.wh ? `${nf0.format(sp.wh)} mm` : sp.d ? `Ø ${sp.d[0]}–${sp.d[1]} mm` : sp.hook ? `Ø ${sp.hook[0]}–${sp.hook[1]} mm` : sp.fine ? `Ø ${sp.fine[0]}–${sp.fine[1]} mm` : sp.w != null ? `lichte Weite ${sp.w} mm` : sp.reach ? `${nf0.format(sp.reach)} mm` : sp.head ? `${nf0.format(sp.head)} mm` : '');
   $('ref').innerHTML = `<thead><tr><th>Gegenstand</th><th>Maß</th><th>passt für</th><th>Herkunft, Hinweis</th><th></th></tr></thead><tbody>` + REFS[refTab].map(([n, sp, src], i) => {
     const [c, k] = refShare(sp, pop), sd = c ? [[0, c.lo], [1, c.hi]].filter(([j, v]) => RSIDE[k][j] && v >= 0.005).map(([j, v]) => `${RSIDE[k][j]} für ${pc(v)}`).join(' · ') : '';
     const lv = c ? Core.level(k === 'head' ? 'sicher' : 'komfort', c.ok) : 0;
-    return `<tr><td>${n}</td><td>${mmv(sp)}</td><td${lv ? ' class="warn"' : ''}>${c ? pc(c.ok) : '–'}</td><td>${sd ? sd + ' · ' : ''}${src}</td><td>${sp.sh != null ? `<button class="q" data-i="up" data-ref="${i}" title="In die Seitenansicht laden">Laden</button>` : ''}</td></tr>`;
+    const extra = c && c.leg != null ? ` · Beinfreiheit ${pc(c.leg)}` : '';
+    return `<tr><td>${n}</td><td>${mmv(sp)}</td><td${lv ? ' class="warn"' : ''}>${c ? pc(c.ok) : '–'}</td><td>${sd ? sd + ' · ' : ''}${src}${extra}</td><td>${refLoad(sp) ? `<button class="q" data-i="up" data-ref="${i}" title="In die Seitenansicht laden">Laden</button>` : ''}</td></tr>`;
   }).join('') + '</tbody>';
   dpIcons($('ref'));
-  $('ref').querySelectorAll('[data-ref]').forEach(b => b.onclick = () => { const sp = REFS.sitz[+b.dataset.ref][1];
-    load({ ...S, scene: 'sit', sit: { ...S.sit, sh: sp.sh, shHi: sp.hi || Math.max(S.sit.shHi, sp.sh), shA: !!sp.hi, fr: sp.fr || 0, th: sp.fr ? 1050 : S.sit.th, tu: sp.fr ? 40 : S.sit.tu } });
-    cv.scrollIntoView({ behavior: 'smooth', block: 'center' }); });
+  $('ref').querySelectorAll('[data-ref]').forEach(b => b.onclick = () => { load(refLoad(REFS[refTab][+b.dataset.ref][1])); cv.scrollIntoView({ behavior: 'smooth', block: 'center' }); });
   const g = Core.gripDia(30, 30, pop).rec.range;
   $('refN').textContent = refTab === 'sitz' ? 'Sitzhöhe nach Parcells (Füße stehen, Kniekehle frei) für die gewählten Nutzer und Schuhe. „Laden“ übernimmt die Höhe in die Seitenansicht.'
     : refTab === 'griff' ? `Kraftgriff: größte Greifkraft bei einem Durchmesser von 19,7 % der Handlänge (Edgren, Radwin, Irwin 2004), für diese Nutzer ${nf0.format(g[0] - Core.GTOL)}–${nf0.format(g[1] + Core.GTOL)} mm; passt = Optimum ±5 mm getroffen. Ganze Hand im Bügel: Handbreite + 25 mm.`
-    : 'Anteile: Arbeitsplatte nach Grandjean (leichte Arbeit), Haken mit der Hand erreichbar (Reichweite nach oben), Kopffreiheit mit Schuhen. Übrige Zeilen zum Nachschlagen.';
+    : refTab === 'raum' ? 'Anteile: Arbeitsplatte nach Grandjean (leichte Arbeit), Haken mit der Hand erreichbar (Reichweite nach oben), Kopffreiheit mit Schuhen. Übrige Zeilen zum Nachschlagen.'
+    : `Le Corbusier, Le Modulor (1948/1955): Maße aus dem goldenen Schnitt, rote Reihe 1130 mm · φⁿ, blaue Reihe doppelt so groß. Er entwirft für einen Mann von ${nf0.format(Core.MOD_H)} mm – heute etwa P${nf0.format(P_MOD)} der Männer, ${pc(Core.cdf('stature', { ...POP(), shoe: 0 }, Core.MOD_H))} der gewählten Nutzer sind kleiner. „Modulor“ in der Seitenansicht blendet die Reihen ein.`;
 }
 document.querySelectorAll('#refT button').forEach(b => b.onclick = () => { refTab = b.dataset.r; renderRef(); });
 function syncCtl() {
@@ -738,10 +775,10 @@ function syncCtl() {
   document.querySelectorAll('#sex button').forEach(b => b.classList.toggle('on', b.dataset.x === S.sex));
   document.querySelectorAll('#pop button').forEach(b => b.classList.toggle('on', b.dataset.p === S.pop));
   document.querySelectorAll('#shoe button').forEach(b => b.classList.toggle('on', +b.dataset.h === S.shoe));
-  $('pp').value = S.p; figOut();
+  $('pp').value = S.p; $('pp').disabled = S.sex === 'mod'; $('modB').classList.toggle('on', S.mod); figOut();
   $('popN').textContent = 'Erwachsene 18–65 Jahre, Deutschland. Schuhe +25 mm, Absatz +50 mm auf alle Höhen über dem Boden (Annahme).';
 }
-const figOut = () => { $('figO').textContent = `P${S.p} · ${nf0.format(Core.val('stature', S.sex, S.p))} mm`; };
+const figOut = () => { $('figO').textContent = S.sex === 'mod' ? `${nf0.format(Core.MOD_H)} mm ≈ P${nf0.format(P_MOD)} ♂` : `P${S.p} · ${nf0.format(Core.val('stature', S.sex, S.p))} mm`; };
 function recompute(dragging) {
   R = evalAll(S); syncDims(); drawEd();
   if (dragging) { renderStats(); renderCrit(); drawDist(); return; }
@@ -752,7 +789,7 @@ function drawAll() { drawEd(); drawDist(); }
 // ---- Zustand, Vorlagen, Datei ----
 const TYPE = 'designphysik/ergonomie';
 const pick = (o, ks) => Object.fromEntries(ks.map(k => [k, o[k]]));
-function exportObj() { return { type: TYPE, version: 1, scene: S.scene, pop: S.pop, shoe: S.shoe, sex: S.sex, p: S.p, sit: pick(S.sit, Object.keys(SIT0)), stand: pick(S.stand, Object.keys(STAND0)) }; }
+function exportObj() { return { type: TYPE, version: 1, scene: S.scene, pop: S.pop, shoe: S.shoe, sex: S.sex, p: S.p, mod: S.mod, sit: pick(S.sit, Object.keys(SIT0)), stand: pick(S.stand, Object.keys(STAND0)) }; }
 // fremde Eingänge (Datei, Link) prüfen: fehlende Werte aus den Grundwerten, Zahlen in ihren Grenzen
 function parse(o) {
   if (!o || o.type !== TYPE) return null;
@@ -761,14 +798,14 @@ function parse(o) {
     else if (k === 'work') { if (Core.WORK[v]) r[k] = v; }
     else if (v !== null && v !== '' && isFinite(v)) { const L = LIM[k] || LIM[k + 'Lo'] || (k === 'sw' ? [200, 1200] : [0, 3000]); r[k] = clamp(+v, L[0], L[1]); } }
     return r; };
-  return { scene: o.scene === 'stand' ? 'stand' : 'sit', pop: ['mix', 'f', 'm'].includes(o.pop) ? o.pop : 'mix', shoe: [0, 25, 50].includes(+o.shoe) ? +o.shoe : 25, sex: o.sex === 'm' ? 'm' : 'f',
+  return { scene: o.scene === 'stand' ? 'stand' : 'sit', pop: ['mix', 'f', 'm'].includes(o.pop) ? o.pop : 'mix', shoe: [0, 25, 50].includes(+o.shoe) ? +o.shoe : 25, sex: ['m', 'mod'].includes(o.sex) ? o.sex : 'f', mod: o.mod === true,
     p: isFinite(o.p) ? clamp(Math.round(+o.p), 1, 99) : 50, sit: sub(o.sit, SIT0), stand: sub(o.stand, STAND0) };
 }
 function load(m) { S = m; order(); UI.drag = null; UI.crit = null; syncCtl(); renderDims(); recompute(); }
 const HIST = dpHistory($('undo'), o => { const m = parse(o); if (m) { S = m; syncCtl(); renderDims(); R = evalAll(S); syncDims(); drawEd(); renderStats(); renderCrit(); drawDist(); renderRef(); renderBody(); renderRW(); dpHashSet('er', exportObj()); } });
 function save() { const o = exportObj(); HIST.save(o); dpHashSet('er', o); }
 dpCompare($('cmp'), exportObj, ref => { const m = ref && parse(ref); REF = m ? { s: m, R: evalAll(m) } : null; renderStats(); });
-const T0 = (scene, o) => () => parse({ type: TYPE, scene, pop: S.pop, shoe: S.shoe, sex: S.sex, p: S.p, sit: { ...SIT0, ...(scene === 'sit' ? o : {}) }, stand: { ...STAND0, ...(scene === 'stand' ? o : {}) } });
+const T0 = (scene, o) => () => parse({ type: TYPE, scene, pop: S.pop, shoe: S.shoe, sex: S.sex, p: S.p, mod: S.mod, sit: { ...SIT0, ...(scene === 'sit' ? o : {}) }, stand: { ...STAND0, ...(scene === 'stand' ? o : {}) } });
 const TPLS = [
   ['Sitzen', [
     ['esstisch', 'Stuhl und Esstisch', 'fest 460 / 750 mm', T0('sit', { sh: 460, sd: 420, sw: 440, th: 750, tu: 100 })],
@@ -823,6 +860,7 @@ document.querySelectorAll('#scene button').forEach(b => b.onclick = () => { S.sc
 document.querySelectorAll('#sex button').forEach(b => b.onclick = () => { S.sex = b.dataset.x; syncCtl(); recompute(); });
 document.querySelectorAll('#pop button').forEach(b => b.onclick = () => { S.pop = b.dataset.p; syncCtl(); recompute(); });
 document.querySelectorAll('#shoe button').forEach(b => b.onclick = () => { S.shoe = +b.dataset.h; syncCtl(); recompute(); });
+$('modB').onclick = () => { S.mod = !S.mod; syncCtl(); recompute(); };
 $('pp').oninput = e => { S.p = +e.target.value; figOut(); R = evalAll(S); drawEd(); drawDist(); };
 $('pp').onchange = () => recompute();
 $('pq').onchange = renderBody;
