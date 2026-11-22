@@ -43,7 +43,7 @@ nav span{color:var(--ink2)}
 /* Raster-Layout: Höhen und senkrechte Abstände in Vielfachen von --u (Telefon: Werkzeugzeilen 12 px).
    Linien als box-shadow statt border – sie liegen auf der Rasterkante und nehmen keinen Platz ein. */
 /* Seitenbreite und Spalten in ganzen Einheiten, links auf eine Punktspalte gerundet: alle Kanten liegen auf dem Raster */
-main,.intro,.cards{width:calc(round(down,min(100%,1440px) - 2*var(--pad),var(--u)) + 2*var(--pad));margin-left:max(0px,round(down,calc((100% - 1440px)/2),var(--u)));padding-left:var(--pad);padding-right:var(--pad)}
+main,.cards{width:calc(round(down,min(100%,1440px) - 2*var(--pad),var(--u)) + 2*var(--pad));margin-left:max(0px,round(down,calc((100% - 1440px)/2),var(--u)));padding-left:var(--pad);padding-right:var(--pad)}
 main{display:grid;grid-template-columns:repeat(2,round(down,calc((100% - var(--u))/2),var(--u)));gap:24px;padding-top:24px;padding-bottom:24px}
 .panel{box-shadow:inset 0 1px var(--ink);display:flex;flex-direction:column;gap:var(--u);min-width:0;container-type:inline-size}
 .panel h2{font-size:13px;line-height:24px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink);margin:0;font-weight:700}
@@ -143,16 +143,15 @@ table.kv tr.warn td:nth-child(2){color:var(--warn)}
 @media(max-width:480px){nav:has(>:nth-child(5)) :is(a,span){font-size:12px}}
 @media(max-width:340px){nav:has(>:nth-child(6)) .mq{display:none}} /* unter 340 px reicht die Zellbreite nicht für Quadrat + Name */
 
-/* Startseite */
-.intro{padding-top:24px}
-.intro p{margin:0;color:var(--ink2);max-width:68ch}
-.cards{display:grid;grid-template-columns:repeat(auto-fill,216px);gap:24px;padding-top:24px;padding-bottom:24px} /* feste Breite 9 Einheiten: Kanten auf dem Raster */
-@media(max-width:480px){.cards{grid-template-columns:1fr}}
-.card{box-shadow:inset 0 0 0 1px var(--ink);padding:12px;color:var(--ink);text-decoration:none;display:flex;flex-direction:column;gap:0}
-.card:hover,.card:focus-visible{background:var(--fill)} /* volle Umrandung (Nutzer 22.11.2026); ganze Karte reagiert */
-.card canvas{height:168px;background:transparent}
-.card h3{margin:0;font-size:18px;line-height:24px;display:flex;align-items:center;gap:12px;padding-top:0} /* Karte in ganzen Einheiten hoch */
-.card p{margin:0;color:var(--ink2);font-size:14px}
+/* Startseite: nur Skizze + Name, vier Spalten (Telefon zwei), Spaltenbreite in ganzen Einheiten; Karte mit voller Umrandung, 12 px Innenabstand */
+.cards{display:grid;grid-template-columns:repeat(4,round(down,calc((100% - 72px)/4),var(--u)));gap:24px;padding-top:48px;padding-bottom:48px}
+@media(max-width:860px){.cards{grid-template-columns:repeat(2,round(down,calc((100% - 24px)/2),var(--u)));padding-top:24px;padding-bottom:24px}}
+.card{box-shadow:inset 0 0 0 1px var(--ink);padding:12px;color:var(--ink);text-decoration:none;display:flex;flex-direction:column}
+.card:hover,.card:focus-visible{background:var(--fill)} /* ganze Karte reagiert */
+.card canvas{height:216px;background:transparent}
+@media(max-width:860px){.card canvas{height:144px}}
+.card h3{margin:0;font-size:18px;line-height:24px;display:flex;align-items:center;gap:12px}
+@media(max-width:480px){.card h3{font-size:14px;gap:6px}}
 .card.off{color:var(--ink2);pointer-events:none}
 .badge{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink2)}
 
