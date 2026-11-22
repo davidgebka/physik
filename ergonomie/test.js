@@ -97,3 +97,19 @@ const ST = { wh: [900, 900], work: 'leicht', shelf: 1800, over: false, head: 200
 
 // ohne Arbeitsfläche nur Fach und Kopffreiheit
 check('Stehen ohne Arbeitsfläche', Core.evalStand({ ...ST, wh: null }, { w: 0.5, shoe: 25 }).length, 3);
+
+// Griffe: Optimum 19,7 % der Handlänge ± 5 mm, lichte Breite = Handbreite + 25 mm
+{ const pop = { w: 0.5, shoe: 0 }, g = Core.gripDia(35, 35, pop);
+  check('Griff Ø 35 analytisch', g.ok, cdf('handL', pop, 40 / 0.197) - cdf('handL', pop, 30 / 0.197), 1e-12);
+  const [a, b] = g.rec.range; check('Griff-Bereich laut Empfehlung → 90 %', Core.gripDia(a, b, pop).ok, 0.9, 1e-6);
+  { const d = 0.197 * 175, r = Core.gripDia(d, d, { w: 1, shoe: 0 }); check('Griff = Optimum P50 ♀ → zu dünn für die größere Hälfte', r.hi, 1 - cdfQ(BODY.handL.f, 175 + 5 / 0.197), 1e-12); check('Griff P50 ♀ symmetrisch um den Median', r.lo + r.ok / 2, 0.5, 2e-2); }
+  check('Griffbreite 118 mm analytisch', Core.gripWidth(118, pop).ok, cdf('handB', pop, 93), 1e-12);
+  check('Griffbreite Empfehlung = P95 + 25', Core.gripWidth(100, pop).rec.min, quant('handB', pop, 0.95) + 25, 1e-9); }
+
+// Abgleich mit DIN EN ISO 14738:2005, Gestaltungsgrenzen europäische Bevölkerung (Tab. 1 in Çakir & Çakir 2006):
+// unser P5 ♀ bzw. P95 ♂ höchstens 5 % daneben (Europa streut etwas weiter), Oberschenkel und Fuß genau
+for (const [id, i, sx, iso, tol] of [['elbow', 0, 'f', 930, 0.05], ['elbow', 2, 'm', 1195, 0.05], ['crotch', 0, 'f', 665, 0.06], ['crotch', 2, 'm', 900, 0.05],
+  ['sitH', 0, 'f', 790, 0.05], ['sitH', 2, 'm', 1000, 0.05], ['eyeS', 0, 'f', 680, 0.05], ['eyeS', 2, 'm', 870, 0.05], ['shoulderS', 0, 'f', 505, 0.05],
+  ['thigh', 0, 'f', 125, 0], ['thigh', 2, 'm', 185, 0], ['bkl', 2, 'm', 687, 0.05], ['footL', 2, 'm', 285, 0], ['stature', 2, 'm', 1881, 0.05],
+  ['popl', 0, 'f', 340, 0.12], ['popl', 2, 'm', 505, 0.05], ['hipS', 2, 'f', 440, 0], ['reachF', 0, 'f', 605, 0.06]])
+  check(`ISO 14738 ${id} ${sx === 'f' ? 'P5 ♀' : 'P95 ♂'}`, BODY[id][sx][i], iso, tol);

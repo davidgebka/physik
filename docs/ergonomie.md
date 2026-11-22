@@ -2,7 +2,7 @@
 
 Vom Modul-Chat gepflegt (Branch `modul/ergonomie`). Verbindliche Konventionen stehen in `docs/konzept.md`.
 
-**Stand:** v1 (22.11.2026), Key `ergonomie`, Hash `#er=`, Export `{type:"designphysik/ergonomie", version:1, scene, pop, shoe, sex, p, sit, stand}`. In `DP_MODULES` mit `ready: true`, Farbe vorerst Familie Bewegung `--mech` (Körperhaltung, Reichweite = Biomechanik; Styleguide: „neue Module bekommen die Farbe ihrer Physik“). Eigene Familie „Körper“ siehe Wünsche in `konzept.md`.
+**Stand:** v1.1 (22.11.2026), Key `ergonomie`, Hash `#er=`, Export `{type:"designphysik/ergonomie", version:1, scene, pop, shoe, sex, p, sit, stand}`. In `DP_MODULES` mit `ready: true`, Farbe vorerst Familie Bewegung `--mech` (Körperhaltung, Reichweite = Biomechanik; Styleguide: „neue Module bekommen die Farbe ihrer Physik“). Eigene Familie „Körper“ siehe Wünsche in `konzept.md`.
 
 ## Entwurfsfrage
 „Für wie viele Menschen passt dieses Maß – und für wen nicht?“ Persona A legt Sitzhöhe, Sitztiefe, Tischhöhe, Zarge, Arbeitshöhe, oberstes Fach, Durchgangshöhe fest und entscheidet: für die Mitte, für ein Extrem oder verstellbar. Zugleich Nachschlagewerk (Körpermaße mit Perzentilen, Richtwerte mit Herkunft).
@@ -19,8 +19,8 @@ Vom Modul-Chat gepflegt (Branch `modul/ergonomie`). Verbindliche Konventionen st
 - Je Geschlecht und Maß zweiseitige Normalverteilung durch P5/P50/P95 (σ links/rechts getrennt) → trifft die Tabellenwerte exakt, bildet die schiefe Körpermasse ab. Bevölkerung = Mischung; Quantil der Mischung per Bisektion. Φ nach Numerical Recipes (erfc), Φ⁻¹ nach Acklam.
 - Kriterium = Band im Körpermaß, Anteil = F(oben) − F(unten); verstellbar: passt, wenn eine Stellung passt. Empfehlungen über die Umkehrfunktionen.
 - Tisch/Beinfreiheit: Einstellung des Einzelnen (`choose`): verstellbarer Sitz so hoch, wie der feste Tisch verlangt, solange die Füße stehen (cos 30° … cos 5° der Kniekehle), sonst 0,95 × Kniekehle; verstellbarer Tisch folgt dem Ellenbogen + 20 mm. Mittelung über 64 × 96 Quantile (Kniekehle × Ellenbogen) je Geschlecht; alles fest → geschlossene Lösung.
-- **Daten:** gerundete Richtwerte nach DIN 33402-2 und Pheasant & Haslegrave „Bodyspace“; Anker KAN-Leitfaden Anthropometrie 2013: Sitzflächenhöhe P5 ♀ … P95 ♂ = 375 … 490 mm. Die Normtabellen waren aus dieser Sitzung nicht abrufbar (Netz gesperrt) → **offen: Werte gegen DIN 33402-2:2020 abgleichen.**
-- `test.js`: 66 Prüfungen, < 1 s – Φ/Φ⁻¹, Tabellenwerte exakt, Schuhzuschlag, symmetrischer Fall (68,27 %), Mischquantil, Rangfolgen und Proportionen der Daten, jedes Kriterium gegen die geschlossene Formel, Fußstütze = höherer Boden, Verstellbereich aus der Empfehlung deckt genau 90 %, Tisch fest gegen geschlossene Lösung, verstellbar ≥ fest, Einstellung im Fußband, Kopffreiheit P99, Urteilsstufen.
+- **Daten:** gerundete Richtwerte nach DIN 33402-2 und Pheasant & Haslegrave „Bodyspace“; Anker KAN-Leitfaden Anthropometrie 2013: Sitzflächenhöhe P5 ♀ … P95 ♂ = 375 … 490 mm. Abgleich mit den Gestaltungsgrenzen nach DIN EN ISO 14738:2005 (europäische Bevölkerung P5/P95, Tab. 1 im Gutachten Çakir & Çakir 2006 zur Neufassung DIN 33402-2:2005, vom Nutzer bereitgestellt): fast alle Werte innerhalb 2–5 %, Oberschenkel und Fußlänge gleich; Hüftbreite sitzend P95 ♀ daraufhin 460 → 440 mm. Die Wertetabelle der DIN 33402-2 selbst lag nicht vor → **offen: Werte gegen DIN 33402-2:2020 abgleichen.**
+- `test.js`: 90 Prüfungen, < 1 s – Φ/Φ⁻¹, Tabellenwerte exakt, Schuhzuschlag, symmetrischer Fall (68,27 %), Mischquantil, Rangfolgen und Proportionen der Daten, jedes Kriterium gegen die geschlossene Formel, Fußstütze = höherer Boden, Verstellbereich aus der Empfehlung deckt genau 90 %, Tisch fest gegen geschlossene Lösung, verstellbar ≥ fest, Einstellung im Fußband, Kopffreiheit P99, Urteilsstufen.
 - Browser (Chromium, file://, 1280 px und iPhone 13 mit Touch über CDP): alle 26 Vorlagen, Ziehen (Maus/Finger, Lupe), Rückgängig, Stand merken, verstellbar, Link-Rundreise identisch, kaputter/teilgültiger Link, Konsole fehlerfrei, kein Querscrollen.
 
 ## Urteilsschwellen (Herkunft)
@@ -37,7 +37,18 @@ Vom Modul-Chat gepflegt (Branch `modul/ergonomie`). Verbindliche Konventionen st
 | Arbeitshöhe stehend | Ellenbogen − Fläche: fein −100…−50, leicht 100…150, schwer 150…400 mm, je ±25 mm | Grandjean, Physiologische Arbeitsgestaltung; Toleranz Heuristik |
 | Oberes Fach | Reichweite ≥ Fach + 50 mm (+150 mm über Arbeitsplatte) | Heuristik |
 | Kopffreiheit | Körperhöhe + Schuh ≤ Höhe | geometrisch |
+| Griffdurchmesser (Kraftgriff) | Optimum 19,7 % der Handlänge, passt bei ±5 mm | Edgren, Radwin, Irwin 2004; Toleranz Heuristik |
+| Griffbreite (ganze Hand) | lichte Weite ≥ Handbreite + 25 mm | Heuristik |
 | Gültigkeitswächter | Sitz − Fußstütze < 380 mm → höchstens knapp | Regeln gelten für aufrechtes Sitzen |
+
+## v1.1 (22.11.2026, Wunsch des Nutzers: Referenzen)
+- Neuer Abschnitt **Referenzen** mit drei Reitern, jede Zeile mit „passt für …“ für die gewählten Nutzer:
+  - *Sitzhöhen* (15): Schulstuhl DIN EN 1729 Größe 6/7, Bürostuhl DIN EN 1335, Esstischstuhl, Designklassiker, WC, WC barrierefrei, Bettkante, Sofa, Barhocker. „Laden“ übernimmt die Höhe in die Seitenansicht.
+  - *Griffe* (8): Handlauf DIN 18040, Fahrradgriff, Hammerstiel, Türdrücker, Kugelschreiber, Bügelgriffe 96/128/160 mm.
+  - *Höhen im Raum* (10): Schreibtisch, Arbeitsplatte, Theke, Türdrücker, Lichtschalter, Steckdose, Oberschrank, Garderobe, Tür, Treppe.
+- Kern: `gripDia` (Kraftgriff-Optimum nach Edgren u. a. 2004) und `gripWidth`; Richtwert „Griffdurchmesser“ berechnet statt fest.
+- Daten: Abgleich ISO 14738 als Test, Hüftbreite korrigiert (siehe Rechenkern).
+- Telefon: Referenzzeilen als Block (Name · Anteil · Laden, darunter Maß und Hinweis). Browser 1280/390 px, Konsole fehlerfrei.
 
 ## Offen (Vorschläge)
 - Daten gegen DIN 33402-2:2020 abgleichen, Altersgruppen (über 65), Kinder (DIN EN 1729 Größenklassen).

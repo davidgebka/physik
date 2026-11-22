@@ -29,7 +29,20 @@ table.bt{border-collapse:collapse;width:100%;font-size:14px;line-height:24px;fon
 .bt thead th{font-size:12px;color:var(--ink2);box-shadow:none}
 .bt th.g{font-size:13px;text-transform:uppercase;letter-spacing:.06em;font-weight:700;box-shadow:inset 0 1px var(--ink);color:var(--ink);text-align:left}
 .bt td.u{font-weight:700}
-.bt.rw td{text-align:left;white-space:normal}
+.bt.rw td,.bt.rf td{text-align:left;white-space:normal}
+.bt.rf td:nth-child(3){font-weight:700;white-space:nowrap}
+.bt.rf td:nth-child(4){font-size:12px;color:var(--ink2)}
+.bt.rf td:last-child{text-align:right;width:1%}
+.bt.rf .warn{color:var(--warn)}
+.bt.rf th,.bt.rw th{text-align:left}
+.bt.rf td button{vertical-align:top;height:24px}
+@media(max-width:600px){ /* Telefon: Zeile als Block – Name · Anteil · Laden, darunter Maß und Hinweis über die ganze Breite */
+  .bt.rf thead{display:none}
+  .bt.rf tr{display:grid;grid-template-columns:1fr auto auto;box-shadow:inset 0 1px var(--dot)}
+  .bt.rf td{box-shadow:none;width:auto!important}
+  .bt.rf td:nth-child(1){grid-area:1/1;font-weight:700}.bt.rf td:nth-child(3){grid-area:1/2}.bt.rf td:nth-child(5){grid-area:1/3}
+  .bt.rf td:nth-child(2){grid-area:2/1/3/4;white-space:normal}.bt.rf td:nth-child(4){grid-area:3/1/4/4}
+}
 .bt.rw td:first-child{width:30%}
 .bt.rw td:nth-child(2){font-weight:700}
 .bt.rw td:nth-child(3){font-size:12px;color:var(--ink2);width:30%}
@@ -77,6 +90,12 @@ table.bt{border-collapse:collapse;width:100%;font-size:14px;line-height:24px;fon
     <p class="note" id="distN"></p>
   </section>
   <section class="panel wide">
+    <h2>Referenzen <small>bekannte Maße und für wie viele der gewählten Nutzer sie passen</small></h2>
+    <div class="row"><span class="seg" id="refT"><button data-r="sitz" class="on">Sitzhöhen</button><button data-r="griff">Griffe</button><button data-r="raum">Höhen im Raum</button></span></div>
+    <div class="tw"><table class="bt rf" id="ref"></table></div>
+    <p class="note" id="refN"></p>
+  </section>
+  <section class="panel wide">
     <h2>Körpermaße <small>Erwachsene 18–65 Jahre, ohne Schuhe und Kleidung</small></h2>
     <div class="row"><label class="pair">Perzentil für „Nutzer“ <input type="number" id="pq" min="1" max="99" step="1" value="50"></label><span class="note" id="pqN"></span></div>
     <div class="tw"><table class="bt" id="body"></table></div>
@@ -97,7 +116,7 @@ table.bt{border-collapse:collapse;width:100%;font-size:14px;line-height:24px;fon
     <h2>Modell &amp; Gültigkeit</h2>
     <details data-k="model"><summary>Woher die Zahlen kommen, wie gerechnet wird, Grenzen und weiterführende Werkzeuge</summary><div class="txt">
     <h3>Was gerechnet wird</h3><p>Menschen sind verschieden groß. Für ein festes Maß – Sitzhöhe, Tischhöhe, Arbeitsfläche, oberstes Fach, Türhöhe – rechnet das Modul aus, <i>für wie viele</i> Erwachsene es passt, und für wen nicht (zu klein oder zu groß). Das ist die zentrale Entscheidung im Entwurf: für die Mitte entwerfen, für ein Extrem (die Kleinsten erreichen das Fach, die Größten stoßen nicht an) oder verstellbar machen. Ein „Durchschnittsmensch“ passt fast nie überall: Wer bei der Körperhöhe genau in der Mitte liegt, hat deshalb noch lange nicht mittellange Beine.</p>
-    <h3>Körpermaße und Perzentile</h3><p>Ein <a href="https://de.wikipedia.org/wiki/Perzentil" target="_blank" rel="noopener">Perzentil</a> sagt, wie viel Prozent kleiner sind: P5 Frau = nur 5&nbsp;% der Frauen sind kleiner, P95 Mann = 95&nbsp;% der Männer sind kleiner. Üblich ist, für den Bereich P5 Frau bis P95 Mann zu entwerfen; bei Sicherheit (Kopfstoß, Durchgänge) für P99. Die Werte sind gerundete Richtwerte für Erwachsene in Deutschland von 18 bis 65 Jahren, ohne Schuhe und Kleidung, zusammengestellt nach <a href="https://de.wikipedia.org/wiki/Anthropometrie" target="_blank" rel="noopener">anthropometrischen</a> Tabellen (DIN 33402-2, Pheasant &amp; Haslegrave „Bodyspace“). Sie weichen von der aktuellen Norm um einige Millimeter ab – für eine Serie mit der Norm bzw. dem KAN-Leitfaden abgleichen. Kinder, Ältere über 65, Schwangere und Menschen im Rollstuhl sind nicht abgebildet. Schuhe: +25&nbsp;mm, Absatz +50&nbsp;mm auf alle Höhen über dem Boden (Annahme).</p>
+    <h3>Körpermaße und Perzentile</h3><p>Ein <a href="https://de.wikipedia.org/wiki/Perzentil" target="_blank" rel="noopener">Perzentil</a> sagt, wie viel Prozent kleiner sind: P5 Frau = nur 5&nbsp;% der Frauen sind kleiner, P95 Mann = 95&nbsp;% der Männer sind kleiner. Üblich ist, für den Bereich P5 Frau bis P95 Mann zu entwerfen; bei Sicherheit (Kopfstoß, Durchgänge) für P99. Die Werte sind gerundete Richtwerte für Erwachsene in Deutschland von 18 bis 65 Jahren, ohne Schuhe und Kleidung, zusammengestellt nach <a href="https://de.wikipedia.org/wiki/Anthropometrie" target="_blank" rel="noopener">anthropometrischen</a> Tabellen (DIN 33402-2, Pheasant &amp; Haslegrave „Bodyspace“) und abgeglichen mit den Gestaltungsgrenzen der DIN EN ISO 14738 für die europäische Bevölkerung (meist innerhalb 2–4&nbsp;%; Europa streut etwas weiter). Sie können von der aktuellen Norm um einige Millimeter abweichen – für eine Serie mit DIN 33402-2 bzw. dem KAN-Leitfaden abgleichen. Kinder, Ältere über 65, Schwangere und Menschen im Rollstuhl sind nicht abgebildet. Schuhe: +25&nbsp;mm, Absatz +50&nbsp;mm auf alle Höhen über dem Boden (Annahme).</p>
     <h3>Rechenweg</h3><p>Je Geschlecht ist jedes Maß eine Glockenkurve (<a href="https://de.wikipedia.org/wiki/Normalverteilung" target="_blank" rel="noopener">Normalverteilung</a>) durch die Tabellenwerte P5, P50 und P95; ist die Verteilung schief (Körpermasse), bekommen beide Seiten eine eigene Breite. „Gemischt“ heißt je zur Hälfte Frauen und Männer. Ein Kriterium legt fest, zwischen welchen Körpermaßen jemand passt; der Anteil ist die Fläche unter der Kurve in diesem Band (siehe „Verteilung“). Bei Tisch und Beinfreiheit hängt das Ergebnis davon ab, wie jeder einstellt: Ein verstellbarer Stuhl wird so hoch gestellt, wie der Tisch es verlangt, solange die Füße noch aufstehen; ein verstellbarer Tisch folgt dem Ellenbogen. Gemittelt wird über alle Unterschenkellängen und Ellenbogenhöhen, beide innerhalb eines Geschlechts unabhängig angenommen. Geprüft gegen geschlossene Lösungen in <code>ergonomie/test.js</code>. Für Fachleute: zweiseitige Normalverteilung, σ<sub>links</sub> = (P50 − P5)/1,645, σ<sub>rechts</sub> = (P95 − P50)/1,645.</p>
     <h3>Kriterien</h3><p><i>Sitzhöhe</i>: Füße stehen auf, die Kniekehle wird nicht gedrückt – Sitz zwischen 87 und 100&nbsp;% der Kniekehlenhöhe (Parcells u.&nbsp;a. 1999); eine Fußstütze zählt wie ein höherer Boden. <i>Sitztiefe</i>: höchstens 95&nbsp;% der Gesäß-Kniekehlen-Länge, sonst drückt die Vorderkante in die Kniekehle (Parcells); dass Stühle mit Lehne für langes Sitzen mindestens 80&nbsp;% tief sein sollten, steht nur in der Empfehlung – Hocker und Bänke dürfen kürzer sein. <i>Sitzbreite</i>: mindestens Hüftbreite, zwischen Armlehnen 1,1-fach. <i>Tischhöhe</i>: Platte 30&nbsp;mm unter bis 70&nbsp;mm über dem entspannten Ellenbogen (Heuristik für Schreiben, Essen, Tastatur). <i>Beinfreiheit</i>: unter Platte bzw. Zarge mindestens Oberschenkeldicke + 20&nbsp;mm. <i>Arbeitshöhe stehend</i> nach Grandjean: feine Arbeit 50–100&nbsp;mm über, leichte 100–150&nbsp;mm und schwere 150–400&nbsp;mm unter dem Ellenbogen, je ±25&nbsp;mm Toleranz. <i>Oberes Fach</i>: Griff 50&nbsp;mm über dem Fachboden muss erreichbar sein, über eine Arbeitsplatte hinweg 150&nbsp;mm weniger (Heuristik). <i>Einsicht</i>: Fachboden unter Augenhöhe. <i>Kopffreiheit</i>: Körperhöhe mit Schuhen.</p>
     <h3>Urteil</h3><p>Komfort: passt, wenn mindestens 90&nbsp;% passen (P5 bis P95), knapp ab einem Drittel, darunter kritisch. Sicherheit (Kopffreiheit): passt ab 99&nbsp;%, knapp ab 95&nbsp;%. „Einsicht ins Fach“ ist ein Hinweis: steht unter dem Urteil, ändert es aber nicht. Feste Maße erreichen 90&nbsp;% oft gar nicht – dann sagt die Empfehlung, welcher Verstellbereich nötig wäre. „Alle Kriterien zugleich: höchstens …“ ist der kleinste Einzelwert – wie viele wirklich überall passen, lässt sich aus Einzelmaßen nicht genau sagen, es sind eher weniger. Niedrige Sitze (Sofa, Lounge) liegen außerhalb der Regeln für aufrechtes Sitzen: dann höchstens „knapp“.</p>
@@ -120,7 +139,9 @@ const Core = (() => {
   const Z95 = 1.6448536269514722, RAD = Math.PI / 180, C5 = Math.cos(5 * RAD), C30 = Math.cos(30 * RAD);
   // Richtwerte Erwachsene 18–65 Jahre, Deutschland, ohne Schuhe und Kleidung, gerundet auf 5 mm – zusammengestellt nach
   // DIN 33402-2 (Größenordnung der Ausgaben 2005/2020) und Pheasant & Haslegrave „Bodyspace“; Ankerwert KAN-Leitfaden
-  // Anthropometrie 2013: Sitzflächenhöhe P5 ♀ … P95 ♂ = 375 … 490 mm. f/m = [P5, P50, P95] Frauen/Männer; sh = Schuhe zählen mit.
+  // Anthropometrie 2013: Sitzflächenhöhe P5 ♀ … P95 ♂ = 375 … 490 mm. Abgleich mit den Gestaltungsgrenzen nach DIN EN ISO 14738:2005
+  // (europäische Bevölkerung, P5/P95; Tab. 1 in Çakir & Çakir 2006, Gutachten zur Neufassung DIN 33402-2:2005) in test.js.
+  // f/m = [P5, P50, P95] Frauen/Männer; sh = Schuhe zählen mit.
   const BODY = {
     stature:  { g: 'Stehen', n: 'Körperhöhe', f: [1535, 1625, 1720], m: [1650, 1750, 1855], sh: 1, t: 'Scheitel über dem Boden, aufrecht stehend' },
     eye:      { g: 'Stehen', n: 'Augenhöhe', f: [1430, 1515, 1605], m: [1535, 1630, 1735], sh: 1, t: 'Augen über dem Boden, stehend' },
@@ -137,7 +158,7 @@ const Core = (() => {
     popl:     { g: 'Sitzen', n: 'Kniekehlenhöhe', f: [375, 410, 445], m: [415, 450, 490], sh: 1, t: 'Unterschenkellänge: Kniekehle über dem Boden – bestimmt die passende Sitzhöhe' },
     bkl:      { g: 'Sitzen', n: 'Gesäß-Knie-Länge', f: [545, 590, 640], m: [565, 615, 665], sh: 0, t: 'Gesäßrückseite bis Vorderkante Knie' },
     bpl:      { g: 'Sitzen', n: 'Gesäß-Kniekehlen-Länge', f: [450, 490, 535], m: [455, 500, 545], sh: 0, t: 'Gesäßrückseite bis Kniekehle – bestimmt die passende Sitztiefe' },
-    hipS:     { g: 'Breiten & Reichweiten', n: 'Hüftbreite sitzend', f: [345, 390, 460], m: [335, 365, 405], sh: 0, t: 'breiteste Stelle an Hüfte und Oberschenkeln, sitzend – bei Frauen größer' },
+    hipS:     { g: 'Breiten & Reichweiten', n: 'Hüftbreite sitzend', f: [340, 385, 440], m: [335, 365, 405], sh: 0, t: 'breiteste Stelle an Hüfte und Oberschenkeln, sitzend – bei Frauen größer' },
     shoulderB:{ g: 'Breiten & Reichweiten', n: 'Schulterbreite', f: [375, 415, 460], m: [435, 475, 520], sh: 0, t: 'über die Oberarme gemessen (bideltoid), ohne Kleidung' },
     forearm:  { g: 'Breiten & Reichweiten', n: 'Ellenbogen–Griffachse', f: [305, 335, 365], m: [335, 365, 395], sh: 0, t: 'Unterarm mit Hand bis zur Mitte der geschlossenen Faust' },
     reachF:   { g: 'Breiten & Reichweiten', n: 'Reichweite nach vorn', f: [640, 695, 750], m: [700, 760, 820], sh: 0, t: 'Griffachse vor der Rückenlehne bzw. Wand, Arm waagerecht gestreckt' },
@@ -288,7 +309,13 @@ const Core = (() => {
     const [lo, hi] = P.wh ? rng(P.wh) : [0, 0];
     return specsStand(P).map(sp => sp.k === 'ah' ? evalSpec(sp, lo, hi, pop) : evalSpec(sp, sp.k === 'head' ? P.head : P.shelf, sp.k === 'head' ? P.head : P.shelf, pop));
   }
-  return { BODY, ncdf, nq, cdfQ, quantQ, cdf, pdf, quant, val, level, KIND, WORK, TAB, LEG, GRIP, OVER, SEAT_SET, C5, C30, evalSit, evalStand, tableEval, choose, rng };
+  // Griffe. Durchmesser für den Kraftgriff: größte Greifkraft bei 19,7 % der Handlänge (Edgren, Radwin, Irwin 2004);
+  // passt, wenn ein Durchmesser im Bereich lo…hi das persönliche Optimum auf ±5 mm trifft (Toleranz Heuristik).
+  // Lichte Breite für die ganze Hand: Handbreite + 25 mm (Fingerspiel, Heuristik).
+  const GOPT = 0.197, GTOL = 5, GW = 25;
+  const gripDia = (lo, hi, pop) => evalSpec({ k: 'gd', kind: 'komfort', dim: 'handL', fLo: v => (v - GTOL) / GOPT, fHi: v => (v + GTOL) / GOPT, iLo: x => x * GOPT + GTOL, iHi: x => x * GOPT - GTOL }, lo, hi, pop);
+  const gripWidth = (w, pop) => evalSpec({ k: 'gw', kind: 'komfort', dim: 'handB', fHi: v => v - GW, iHi: x => x + GW }, w, w, pop);
+  return { BODY, ncdf, gripDia, gripWidth, GOPT, GTOL, GW, nq, cdfQ, quantQ, cdf, pdf, quant, val, level, KIND, WORK, TAB, LEG, GRIP, OVER, SEAT_SET, C5, C30, evalSit, evalStand, tableEval, choose, rng };
 })();
 if (typeof module !== 'undefined') module.exports = Core;
 // === CORE END
@@ -602,7 +629,7 @@ function renderRW() {
     ['Sitzen'],
     ['Stuhl am Esstisch', 'Sitzhöhe 440–470 mm, Sitztiefe 400–450 mm', 'üblich im Möbelhandel'],
     ['Sitzhöhe für P5–P95', `${rg(shR)}; fest am besten ${mm(shR.fixed)} (${pc(shR.fixedOk)})`, 'berechnet: Kniekehlenhöhe, Parcells u. a. 1999'],
-    ['Bürostuhl', 'Sitzhöhe verstellbar etwa 400–510 mm', 'DIN EN 1335-1'],
+    ['Bürostuhl', 'Sitzhöhe verstellbar etwa 400–510 mm, ausgelegt für Körperhöhen 1510–1920 mm', 'DIN EN 1335-1'],
     ['Sitztiefe', `höchstens ${mm(sdR.max)} (Kniekehle frei für 95 %); Stuhl mit Lehne für langes Sitzen mindestens ${mm(0.8 * q('bpl', 0.95))}`, 'berechnet: Gesäß-Kniekehlen-Länge P5 bzw. P95, Parcells u. a. 1999'],
     ['Sitzbreite', `mindestens ${mm(q('hipS', 0.95))}, zwischen Armlehnen ${mm(1.1 * q('hipS', 0.95))}`, 'berechnet: Hüftbreite P95'],
     ['Barhocker', 'Sitzhöhe 750–800 mm an einer Theke von 1050–1100 mm, Fußstütze ≈ 300 mm unter dem Sitz', 'üblich'],
@@ -629,7 +656,7 @@ function renderRW() {
     ['Geländer, Brüstung', '900 mm, ab 12 m Absturzhöhe 1100 mm', 'Landesbauordnungen'],
     ['Hand'],
     ['Griff, lichte Breite', `mindestens ${mm(q('handB', 0.95) + 25)}, mit Handschuh mehr`, 'berechnet: Handbreite P95 + 25 mm'],
-    ['Griffdurchmesser', 'Kraftgriff etwa 30–40 mm', 'Richtwert aus der Literatur'],
+    ['Griffdurchmesser, Kraftgriff', `${mm(Core.gripDia(30, 30, pop).rec.range[0] - Core.GTOL)} bis ${mm(Core.gripDia(30, 30, pop).rec.range[1] + Core.GTOL)} (Optimum P5–P95)`, 'berechnet: 19,7 % der Handlänge (Edgren, Radwin, Irwin 2004)'],
     ['Gewicht und Last'],
     ['Schwere Person (P95 / P99)', `${nf0.format(q('mass', 0.95))} / ${nf0.format(q('mass', 0.99))} kg ≈ ${nf0.format(Math.round(q('mass', 0.99) * 9.81 / 10) * 10)} N`, 'berechnet; in der Statik plus Stoß beim Hinsetzen'],
     ['Heben, gelegentlich', 'Frauen bis ≈ 15 kg, Männer bis ≈ 25 kg, körpernah', 'Richtwert; am Arbeitsplatz mit der Leitmerkmalmethode bewerten'],
@@ -637,6 +664,75 @@ function renderRW() {
   ];
   $('rw').innerHTML = rows.map(r => r.length === 1 ? `<tr><th class="g" colspan="3">${r[0]}</th></tr>` : `<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td></tr>`).join('');
 }
+// ---- Referenzen: bekannte Maße, Anteil für die gewählten Nutzer (≈ = gerundet bzw. geschätzt) ----
+const REFS = {
+  sitz: [
+    ['Schulstuhl, Größe 6', { sh: 430 }, 'DIN EN 1729-1'],
+    ['Schulstuhl, Größe 7', { sh: 460 }, 'DIN EN 1729-1'],
+    ['Bürostuhl', { sh: 400, hi: 510 }, 'DIN EN 1335-1: verstellbar, ausgelegt für Körperhöhen 1510–1920 mm'],
+    ['Esstischstuhl', { sh: 460 }, 'üblich 440–470 mm'],
+    ['Ulmer Hocker', { sh: 440 }, 'Max Bill, Hans Gugelot · 1954'],
+    ['Stuhl Nr. 214', { sh: 460 }, 'Michael Thonet · 1859, ≈ nach Händlerangaben'],
+    ['Serie 7, niedrig', { sh: 440 }, 'Arne Jacobsen · 1955, in zwei Sitzhöhen erhältlich'],
+    ['Serie 7, hoch', { sh: 460 }, 'Arne Jacobsen · 1955'],
+    ['Cesca', { sh: 460 }, 'Marcel Breuer · 1928, ≈ nach Händlerangaben'],
+    ['Bierbank', { sh: 470 }, 'Festzeltgarnitur, ≈'],
+    ['WC', { sh: 410 }, 'üblich 400–420 mm mit Sitz'],
+    ['WC, barrierefrei', { sh: 470 }, 'DIN 18040-2: 460–480 mm mit Sitz; absichtlich höher zum Umsetzen aus dem Rollstuhl'],
+    ['Bettkante', { sh: 500 }, 'üblich 450–550 mm; Matratze gibt nach'],
+    ['Sofa', { sh: 420 }, 'üblich 380–450 mm; weich, Sitz sinkt ein – Regel nur Anhalt'],
+    ['Barhocker mit Fußring', { sh: 750, fr: 300 }, 'üblich an einer Theke von 1050–1100 mm']],
+  griff: [
+    ['Treppenhandlauf', { d: [30, 45] }, 'DIN 18040-1: Ø 30–45 mm'],
+    ['Fahrradgriff', { d: [30, 34] }, 'Lenker Ø 22,2 mm plus Griffgummi, ≈'],
+    ['Hammerstiel', { d: [30, 35] }, '≈, meist oval'],
+    ['Türdrücker', { hook: [19, 22] }, 'üblich Ø 19–22 mm; Hakengriff mit wenig Kraft – dünn genügt'],
+    ['Kugelschreiber', { fine: [8, 12] }, 'Feingriff mit den Fingerspitzen, kein Kraftgriff'],
+    ['Bügelgriff, Lochabstand 96 mm', { w: 86 }, '32-mm-System; lichte Weite ≈ 86 mm (geschätzt)'],
+    ['Bügelgriff, Lochabstand 128 mm', { w: 118 }, '32-mm-System; lichte Weite ≈ 118 mm (geschätzt)'],
+    ['Bügelgriff, Lochabstand 160 mm', { w: 150 }, '32-mm-System; lichte Weite ≈ 150 mm (geschätzt)']],
+  raum: [
+    ['Schreibtisch, fest', { txt: '740 mm' }, 'DIN EN 527-1 (Höhe ±15 mm); früher DIN 4549: 720 mm'],
+    ['Küchenarbeitsplatte', { txt: '900 mm', wh: 900 }, 'üblich 850–950 mm; Anteil für leichte Arbeit'],
+    ['Theke, Tresen', { txt: '1050–1100 mm' }, 'üblich'],
+    ['Türdrücker', { txt: '1050 mm, barrierefrei 850 mm' }, 'DIN 18101, DIN 18040'],
+    ['Lichtschalter', { txt: '1050 mm, barrierefrei 850 mm' }, 'üblich, DIN 18040-2'],
+    ['Steckdose', { txt: '300 mm' }, 'üblich, über dem Fußboden'],
+    ['Oberschrank, Unterkante', { txt: '≈ 1400–1450 mm' }, 'üblich 500–550 mm über der Arbeitsplatte'],
+    ['Garderobenhaken', { reach: 1750 }, '≈ 1700–1800 mm; Anteil: Haken mit der Hand erreichbar'],
+    ['Tür, lichte Höhe', { head: 1985 }, 'DIN 18100 (Baurichtmaß 2010 mm)'],
+    ['Treppe, Kopfhöhe', { head: 2000 }, 'DIN 18065']]
+};
+let refTab = 'sitz';
+function refShare(sp, pop) {
+  if (sp.sh != null) { const c = Core.evalSit({ ...sitP(SIT0), sh: [sp.sh, sp.hi || sp.sh], fr: sp.fr || 0, table: false }, pop)[0]; return [c, 'sh']; }
+  if (sp.d) return [Core.gripDia(sp.d[0], sp.d[1], pop), 'gd'];
+  if (sp.w != null) return [Core.gripWidth(sp.w, pop), 'gw'];
+  if (sp.wh) return [Core.evalStand({ wh: [sp.wh, sp.wh], work: 'leicht', shelf: null, head: null }, pop)[0], 'ah'];
+  if (sp.reach) return [{ ok: 1 - Core.cdf('reach', pop, sp.reach), lo: Core.cdf('reach', pop, sp.reach), hi: 0 }, 'rc'];
+  if (sp.head) return [{ ok: Core.cdf('stature', pop, sp.head), lo: 0, hi: 1 - Core.cdf('stature', pop, sp.head) }, 'head'];
+  return [null];
+}
+const RSIDE = { sh: ['zu hoch', 'zu niedrig'], gd: ['zu dick', 'zu dünn'], gw: [null, 'zu schmal für die ganze Hand'], ah: ['zu hoch', 'zu niedrig'], rc: ['nicht erreichbar'], head: [null, 'stößt an'] };
+function renderRef() {
+  document.querySelectorAll('#refT button').forEach(b => b.classList.toggle('on', b.dataset.r === refTab));
+  const pop = POP(), mmv = sp => sp.txt || (sp.sh != null ? (sp.hi ? `${nf0.format(sp.sh)}–${nf0.format(sp.hi)} mm` : `${nf0.format(sp.sh)} mm`) + (sp.fr ? `, Fußring ${nf0.format(sp.fr)}` : '')
+    : sp.d ? `Ø ${sp.d[0]}–${sp.d[1]} mm` : sp.hook ? `Ø ${sp.hook[0]}–${sp.hook[1]} mm` : sp.fine ? `Ø ${sp.fine[0]}–${sp.fine[1]} mm` : sp.w != null ? `lichte Weite ${sp.w} mm` : sp.reach ? `${nf0.format(sp.reach)} mm` : sp.head ? `${nf0.format(sp.head)} mm` : '');
+  $('ref').innerHTML = `<thead><tr><th>Gegenstand</th><th>Maß</th><th>passt für</th><th>Herkunft, Hinweis</th><th></th></tr></thead><tbody>` + REFS[refTab].map(([n, sp, src], i) => {
+    const [c, k] = refShare(sp, pop), sd = c ? [[0, c.lo], [1, c.hi]].filter(([j, v]) => RSIDE[k][j] && v >= 0.005).map(([j, v]) => `${RSIDE[k][j]} für ${pc(v)}`).join(' · ') : '';
+    const lv = c ? Core.level(k === 'head' ? 'sicher' : 'komfort', c.ok) : 0;
+    return `<tr><td>${n}</td><td>${mmv(sp)}</td><td${lv ? ' class="warn"' : ''}>${c ? pc(c.ok) : '–'}</td><td>${sd ? sd + ' · ' : ''}${src}</td><td>${sp.sh != null ? `<button class="q" data-i="up" data-ref="${i}" title="In die Seitenansicht laden">Laden</button>` : ''}</td></tr>`;
+  }).join('') + '</tbody>';
+  dpIcons($('ref'));
+  $('ref').querySelectorAll('[data-ref]').forEach(b => b.onclick = () => { const sp = REFS.sitz[+b.dataset.ref][1];
+    load({ ...S, scene: 'sit', sit: { ...S.sit, sh: sp.sh, shHi: sp.hi || Math.max(S.sit.shHi, sp.sh), shA: !!sp.hi, fr: sp.fr || 0, th: sp.fr ? 1050 : S.sit.th, tu: sp.fr ? 40 : S.sit.tu } });
+    cv.scrollIntoView({ behavior: 'smooth', block: 'center' }); });
+  const g = Core.gripDia(30, 30, pop).rec.range;
+  $('refN').textContent = refTab === 'sitz' ? 'Sitzhöhe nach Parcells (Füße stehen, Kniekehle frei) für die gewählten Nutzer und Schuhe. „Laden“ übernimmt die Höhe in die Seitenansicht.'
+    : refTab === 'griff' ? `Kraftgriff: größte Greifkraft bei einem Durchmesser von 19,7 % der Handlänge (Edgren, Radwin, Irwin 2004), für diese Nutzer ${nf0.format(g[0] - Core.GTOL)}–${nf0.format(g[1] + Core.GTOL)} mm; passt = Optimum ±5 mm getroffen. Ganze Hand im Bügel: Handbreite + 25 mm.`
+    : 'Anteile: Arbeitsplatte nach Grandjean (leichte Arbeit), Haken mit der Hand erreichbar (Reichweite nach oben), Kopffreiheit mit Schuhen. Übrige Zeilen zum Nachschlagen.';
+}
+document.querySelectorAll('#refT button').forEach(b => b.onclick = () => { refTab = b.dataset.r; renderRef(); });
 function syncCtl() {
   document.querySelectorAll('#scene button').forEach(b => b.classList.toggle('on', b.dataset.s === S.scene));
   document.querySelectorAll('#sex button').forEach(b => b.classList.toggle('on', b.dataset.x === S.sex));
@@ -649,7 +745,7 @@ const figOut = () => { $('figO').textContent = `P${S.p} · ${nf0.format(Core.val
 function recompute(dragging) {
   R = evalAll(S); syncDims(); drawEd();
   if (dragging) { renderStats(); renderCrit(); drawDist(); return; }
-  renderStats(); renderCrit(); drawDist(); renderBody(); renderRW(); save();
+  renderStats(); renderCrit(); drawDist(); renderRef(); renderBody(); renderRW(); save();
 }
 function drawAll() { drawEd(); drawDist(); }
 
@@ -669,7 +765,7 @@ function parse(o) {
     p: isFinite(o.p) ? clamp(Math.round(+o.p), 1, 99) : 50, sit: sub(o.sit, SIT0), stand: sub(o.stand, STAND0) };
 }
 function load(m) { S = m; order(); UI.drag = null; UI.crit = null; syncCtl(); renderDims(); recompute(); }
-const HIST = dpHistory($('undo'), o => { const m = parse(o); if (m) { S = m; syncCtl(); renderDims(); R = evalAll(S); syncDims(); drawEd(); renderStats(); renderCrit(); drawDist(); renderBody(); renderRW(); dpHashSet('er', exportObj()); } });
+const HIST = dpHistory($('undo'), o => { const m = parse(o); if (m) { S = m; syncCtl(); renderDims(); R = evalAll(S); syncDims(); drawEd(); renderStats(); renderCrit(); drawDist(); renderRef(); renderBody(); renderRW(); dpHashSet('er', exportObj()); } });
 function save() { const o = exportObj(); HIST.save(o); dpHashSet('er', o); }
 dpCompare($('cmp'), exportObj, ref => { const m = ref && parse(ref); REF = m ? { s: m, R: evalAll(m) } : null; renderStats(); });
 const T0 = (scene, o) => () => parse({ type: TYPE, scene, pop: S.pop, shoe: S.shoe, sex: S.sex, p: S.p, sit: { ...SIT0, ...(scene === 'sit' ? o : {}) }, stand: { ...STAND0, ...(scene === 'stand' ? o : {}) } });
