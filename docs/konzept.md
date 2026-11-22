@@ -63,7 +63,7 @@ Bei Zielkonflikten entscheidet A.
 | Mechanik | `mechanismus` | v1.9 | Wie bewegt sich das Getriebe, wo klemmt es, welche Kraft braucht es? |
 | Elektronik | `elektronik` | v3.3 | Hält der Akku lange genug, reicht der Strom, wird etwas zu heiß? |
 | Material | `material` | v0.5 | Welches Material macht das Brett, den Balken, den Stab leichter, günstiger, klimafreundlicher, und wie fühlt es sich an? |
-| Ergonomie | `ergonomie` | v1 | Für wie viele Menschen passt Sitz, Tisch, Arbeitsfläche, Fach oder Durchgang – fest oder verstellbar? |
+| Ergonomie | `ergonomie` | v1.3 | Für wie viele Menschen passt Sitz, Tisch, Arbeitsfläche, Fach oder Durchgang – fest oder verstellbar? |
 
 ## Roadmap (21.11.2026, nach Persona A)
 **Moratorium auf Tiefe:** In Gefäß und Licht keine neuen Physik-Verfeinerungen, bis die Punkte „Jetzt“ erledigt sind. Fehlerbehebungen und Bedienung gehen immer.
