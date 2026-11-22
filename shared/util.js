@@ -9,7 +9,8 @@ const DP_MODULES = [
   { key: 'mechanismus', name: 'Mechanik', desc: 'Klappen, Scharniere und Hebel als Gestänge zeichnen und bewegen: Bahn, Endstellungen, wo es klemmt, nötige Kraft', ready: true, color: '--mech' },
   { key: 'last',    name: 'Statik', desc: 'Brett, Balken oder Rohr mit Lasten: wie weit es sich durchbiegt, ob es hält, knickt oder nachfedert', ready: true, color: '--load' },
   { key: 'elektronik', name: 'Elektronik', desc: 'Einfache Schaltungen mit Batterie, LED, Motor oder Mikrocontroller: wie lange der Akku hält, ob der Strom reicht, was zu heiß wird', ready: true, color: '--elec' },
-  { key: 'material', name: 'Material', desc: 'Materialien auf einer Karte vergleichen: welches ein Brett, einen Balken oder Stab leichter, günstiger oder klimafreundlicher macht und wie es sich anfühlt', ready: true, color: '--load' } // Farbe vorläufig, eigene Familie: Style-Chat
+  { key: 'material', name: 'Material', desc: 'Materialien auf einer Karte vergleichen: welches ein Brett, einen Balken oder Stab leichter, günstiger oder klimafreundlicher macht und wie es sich anfühlt', ready: true, color: '--load' }, // Farbe vorläufig, eigene Familie: Style-Chat
+  { key: 'ergonomie', name: 'Ergonomie', desc: 'Sitz, Tisch, Arbeitsplatte oder Regal gegen Körpermaße prüfen: für wie viele Menschen es passt – dazu Körpermaße und Richtwerte zum Nachschlagen', ready: true, color: '--mech' }
 ];
 
 // Kopfzeile mit Modulnavigation in <header id="dp-header"> rendern; Modulquadrat in der Familienfarbe (Styleguide § 4)

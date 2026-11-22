@@ -43,7 +43,12 @@ const SK = {
     { p: [[330, 70], [360, 50]], c: '--mut', w: 1 }, { p: [[330, 90], [360, 110]], c: '--mut', w: 1 }],
   material: () => { const el = (x, y, a, b) => ({ p: Array.from({ length: 36 }, (_, i) => [x + a * Math.cos(i * Math.PI / 18), y + b * Math.sin(i * Math.PI / 18)]), z: true, f: '--load-a', c: '--load', w: 1 });
     return [{ p: [[0, 220], [0, 0], [300, 0]], w: 1.5 }, el(60, 70, 22, 30), el(105, 95, 18, 16), el(230, 185, 10, 8), el(180, 160, 9, 8), el(130, 45, 14, 18), el(155, 20, 10, 10),
-      { p: [[20, 30], [280, 210]], c: '--ink', w: 1, dash: [4, 4] }]; } // Material-Karte: Familien als Ellipsen, Linie gleicher Eignung
+      { p: [[20, 30], [280, 210]], c: '--ink', w: 1, dash: [4, 4] }]; }, // Material-Karte: Familien als Ellipsen, Linie gleicher Eignung
+  ergonomie: () => { const head = Array.from({ length: 17 }, (_, i) => [130 + 95 * Math.cos(i * Math.PI / 8), 1270 + 95 * Math.sin(i * Math.PI / 8)]); // sitzende Figur am Tisch
+    return [{ p: [[-150, 0], [1100, 0]], c: '--mut', w: 1 }, { p: [[-10, 460], [-35, 880]], w: 2 }, { p: [[0, 430], [420, 430], [420, 460], [0, 460]], z: true, f: '--fill', w: 1.5 },
+      { p: [[25, 430], [25, 0]], w: 1.5 }, { p: [[395, 430], [395, 0]], w: 1.5 }, { p: [[330, 725], [1100, 725], [1100, 750], [330, 750]], z: true, f: '--fill', w: 1.5 }, { p: [[1060, 725], [1060, 0]], w: 2 },
+      { p: [[120, 540], [560, 535]], c: '--mech', w: 2.5 }, { p: [[560, 535], [600, 75]], c: '--mech', w: 2.5 }, { p: [[560, 35], [770, 30]], c: '--mech', w: 2.5 },
+      { p: [[120, 540], [100, 1040]], c: '--mech', w: 2.5 }, { p: [[100, 1040], [115, 700], [420, 775]], c: '--mech', w: 2.5 }, { p: head, c: '--mech', w: 2.5 }]; }
 };
 const draw = () => document.querySelectorAll('.card canvas').forEach(c => SK[c.dataset.k] && dpSketch(c, SK[c.dataset.k]()));
 draw(); window.addEventListener('resize', draw);
