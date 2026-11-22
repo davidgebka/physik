@@ -2,7 +2,7 @@
 
 Vom Modul-Chat gepflegt (Branch `modul/ergonomie`). Verbindliche Konventionen stehen in `docs/konzept.md`.
 
-**Stand:** v1.1 (22.11.2026), Key `ergonomie`, Hash `#er=`, Export `{type:"designphysik/ergonomie", version:1, scene, pop, shoe, sex, p, sit, stand}`. In `DP_MODULES` mit `ready: true`, Farbe vorerst Familie Bewegung `--mech` (Körperhaltung, Reichweite = Biomechanik; Styleguide: „neue Module bekommen die Farbe ihrer Physik“). Eigene Familie „Körper“ siehe Wünsche in `konzept.md`.
+**Stand:** v1.3 (22.11.2026), Key `ergonomie`, Hash `#er=`, Export `{type:"designphysik/ergonomie", version:1, scene, pop, shoe, sex, p, sit, stand}`. In `DP_MODULES` mit `ready: true`, Farbe vorerst Familie Bewegung `--mech` (Körperhaltung, Reichweite = Biomechanik; Styleguide: „neue Module bekommen die Farbe ihrer Physik“). Eigene Familie „Körper“ siehe Wünsche in `konzept.md`.
 
 ## Entwurfsfrage
 „Für wie viele Menschen passt dieses Maß – und für wen nicht?“ Persona A legt Sitzhöhe, Sitztiefe, Tischhöhe, Zarge, Arbeitshöhe, oberstes Fach, Durchgangshöhe fest und entscheidet: für die Mitte, für ein Extrem oder verstellbar. Zugleich Nachschlagewerk (Körpermaße mit Perzentilen, Richtwerte mit Herkunft).
@@ -20,7 +20,7 @@ Vom Modul-Chat gepflegt (Branch `modul/ergonomie`). Verbindliche Konventionen st
 - Kriterium = Band im Körpermaß, Anteil = F(oben) − F(unten); verstellbar: passt, wenn eine Stellung passt. Empfehlungen über die Umkehrfunktionen.
 - Tisch/Beinfreiheit: Einstellung des Einzelnen (`choose`): verstellbarer Sitz so hoch, wie der feste Tisch verlangt, solange die Füße stehen (cos 30° … cos 5° der Kniekehle), sonst 0,95 × Kniekehle; verstellbarer Tisch folgt dem Ellenbogen + 20 mm. Mittelung über 64 × 96 Quantile (Kniekehle × Ellenbogen) je Geschlecht; alles fest → geschlossene Lösung.
 - **Daten:** gerundete Richtwerte nach DIN 33402-2 und Pheasant & Haslegrave „Bodyspace“; Anker KAN-Leitfaden Anthropometrie 2013: Sitzflächenhöhe P5 ♀ … P95 ♂ = 375 … 490 mm. Abgleich mit den Gestaltungsgrenzen nach DIN EN ISO 14738:2005 (europäische Bevölkerung P5/P95, Tab. 1 im Gutachten Çakir & Çakir 2006 zur Neufassung DIN 33402-2:2005, vom Nutzer bereitgestellt): fast alle Werte innerhalb 2–5 %, Oberschenkel und Fußlänge gleich; Hüftbreite sitzend P95 ♀ daraufhin 460 → 440 mm. Die Wertetabelle der DIN 33402-2 selbst lag nicht vor → **offen: Werte gegen DIN 33402-2:2020 abgleichen.**
-- `test.js`: 90 Prüfungen, < 1 s – Φ/Φ⁻¹, Tabellenwerte exakt, Schuhzuschlag, symmetrischer Fall (68,27 %), Mischquantil, Rangfolgen und Proportionen der Daten, jedes Kriterium gegen die geschlossene Formel, Fußstütze = höherer Boden, Verstellbereich aus der Empfehlung deckt genau 90 %, Tisch fest gegen geschlossene Lösung, verstellbar ≥ fest, Einstellung im Fußband, Kopffreiheit P99, Urteilsstufen.
+- `test.js`: 117 Prüfungen, < 1 s – Φ/Φ⁻¹, Tabellenwerte exakt, Schuhzuschlag, symmetrischer Fall (68,27 %), Mischquantil, Rangfolgen und Proportionen der Daten, jedes Kriterium gegen die geschlossene Formel, Fußstütze = höherer Boden, Verstellbereich aus der Empfehlung deckt genau 90 %, Tisch fest gegen geschlossene Lösung, verstellbar ≥ fest, Einstellung im Fußband, Kopffreiheit P99, Urteilsstufen.
 - Browser (Chromium, file://, 1280 px und iPhone 13 mit Touch über CDP): alle 26 Vorlagen, Ziehen (Maus/Finger, Lupe), Rückgängig, Stand merken, verstellbar, Link-Rundreise identisch, kaputter/teilgültiger Link, Konsole fehlerfrei, kein Querscrollen.
 
 ## Urteilsschwellen (Herkunft)
@@ -52,6 +52,12 @@ Vom Modul-Chat gepflegt (Branch `modul/ergonomie`). Verbindliche Konventionen st
 
 ## v1.2 (22.11.2026, Style-Chat: eigene Modulfarbe)
 - Farbe `--ergo` `#60a06e` statt `--mech`: helleres, weicheres Grün in der Familie Bewegung (Mensch statt Maschine), unterscheidbar von Mechanik. Nur Farbtokens getauscht, Rechnung unverändert, Tests grün.
+
+## v1.3 (22.11.2026, Wunsch des Nutzers: Modulor)
+- Kern `modulor()`: rote Reihe 1130 · φⁿ, blaue 2260 · φⁿ, Test gegen die veröffentlichten Werte (Le Corbusier, Le Modulor 1948/1955; 1130 · φ = 1828,4, veröffentlicht 1829 = 6 Fuß).
+- Seitenansicht: Schalter „Modulor“ blendet beide Reihen ab 200 mm ein (Modulfarbe `--ergo`: rot durchgezogen, blau gestrichelt – keine eigenen Farben); Griffe rasten dann auf Modulor-Maße ein. Figur „Modulor-Mann“: 1829 mm ≈ P89 der Männer, Typfigur auf diesem Perzentil (eigene Figur, nicht Le Corbusiers Zeichnung – urheberrechtlich geschützt).
+- Referenzen, Reiter „Modulor“: 27 · 43 · 70 · 86 · 113 · 140 · 183 · 226 gegen heutige Nutzer geprüft, „Laden“ übernimmt sie in die Seitenansicht. Ergebnis gemischt mit Schuhen: Sitz 43 und Tisch 70 passen gut (66 % / 90 %), Ablage 86 ist zu niedrig (16 %), Griff 226 erreichen 1 %.
+- Export/Link: `mod`, `sex: "mod"`.
 
 ## Offen (Vorschläge)
 - Daten gegen DIN 33402-2:2020 abgleichen, Altersgruppen (über 65), Kinder (DIN EN 1729 Größenklassen).
