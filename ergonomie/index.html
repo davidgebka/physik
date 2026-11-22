@@ -310,7 +310,7 @@ const Core = (() => {
     const [lo, hi] = P.wh ? rng(P.wh) : [0, 0];
     return specsStand(P).map(sp => sp.k === 'ah' ? evalSpec(sp, lo, hi, pop) : evalSpec(sp, sp.k === 'head' ? P.head : P.shelf, sp.k === 'head' ? P.head : P.shelf, pop));
   }
-  // Griffe. Durchmesser für den Kraftgriff: größte Greifkraft bei 19,7 % der Handlänge (Edgren, Radwin, Irwin 2004);
+  // Griffe. Durchmesser für den Kraftgriff: angenehmster Durchmesser bei 19,7 % der Handlänge (Kong & Lowe 2005, Int. J. Ind. Ergonomics 35);
   // passt, wenn ein Durchmesser im Bereich lo…hi das persönliche Optimum auf ±5 mm trifft (Toleranz Heuristik).
   // Lichte Breite für die ganze Hand: Handbreite + 25 mm (Fingerspiel, Heuristik).
   const GOPT = 0.197, GTOL = 5, GW = 25;
@@ -673,7 +673,7 @@ function renderRW() {
     ['Geländer, Brüstung', '900 mm, ab 12 m Absturzhöhe 1100 mm', 'Landesbauordnungen'],
     ['Hand'],
     ['Griff, lichte Breite', `mindestens ${mm(q('handB', 0.95) + 25)}, mit Handschuh mehr`, 'berechnet: Handbreite P95 + 25 mm'],
-    ['Griffdurchmesser, Kraftgriff', `${mm(Core.gripDia(30, 30, pop).rec.range[0] - Core.GTOL)} bis ${mm(Core.gripDia(30, 30, pop).rec.range[1] + Core.GTOL)} (Optimum P5–P95)`, 'berechnet: 19,7 % der Handlänge (Edgren, Radwin, Irwin 2004)'],
+    ['Griffdurchmesser, Kraftgriff', `${mm(Core.gripDia(30, 30, pop).rec.range[0] - Core.GTOL)} bis ${mm(Core.gripDia(30, 30, pop).rec.range[1] + Core.GTOL)} (Optimum P5–P95)`, 'berechnet: 19,7 % der Handlänge (Kong & Lowe 2005, Int. J. Ind. Ergonomics 35)'],
     ['Gewicht und Last'],
     ['Schwere Person (P95 / P99)', `${nf0.format(q('mass', 0.95))} / ${nf0.format(q('mass', 0.99))} kg ≈ ${nf0.format(Math.round(q('mass', 0.99) * 9.81 / 10) * 10)} N`, 'berechnet; in der Statik plus Stoß beim Hinsetzen'],
     ['Heben, gelegentlich', 'Frauen bis ≈ 15 kg, Männer bis ≈ 25 kg, körpernah', 'Richtwert; am Arbeitsplatz mit der Leitmerkmalmethode bewerten'],
@@ -765,7 +765,7 @@ function renderRef() {
   $('ref').querySelectorAll('[data-ref]').forEach(b => b.onclick = () => { load(refLoad(REFS[refTab][+b.dataset.ref][1])); cv.scrollIntoView({ behavior: 'smooth', block: 'center' }); });
   const g = Core.gripDia(30, 30, pop).rec.range;
   $('refN').textContent = refTab === 'sitz' ? 'Sitzhöhe nach Parcells (Füße stehen, Kniekehle frei) für die gewählten Nutzer und Schuhe. „Laden“ übernimmt die Höhe in die Seitenansicht.'
-    : refTab === 'griff' ? `Kraftgriff: größte Greifkraft bei einem Durchmesser von 19,7 % der Handlänge (Edgren, Radwin, Irwin 2004), für diese Nutzer ${nf0.format(g[0] - Core.GTOL)}–${nf0.format(g[1] + Core.GTOL)} mm; passt = Optimum ±5 mm getroffen. Ganze Hand im Bügel: Handbreite + 25 mm.`
+    : refTab === 'griff' ? `Kraftgriff: am angenehmsten bei einem Durchmesser von 19,7 % der Handlänge (Kong & Lowe 2005, Int. J. Ind. Ergonomics 35), für diese Nutzer ${nf0.format(g[0] - Core.GTOL)}–${nf0.format(g[1] + Core.GTOL)} mm; passt = Optimum ±5 mm getroffen. Ganze Hand im Bügel: Handbreite + 25 mm.`
     : refTab === 'raum' ? 'Anteile: Arbeitsplatte nach Grandjean (leichte Arbeit), Haken mit der Hand erreichbar (Reichweite nach oben), Kopffreiheit mit Schuhen. Übrige Zeilen zum Nachschlagen.'
     : `Le Corbusier, Le Modulor (1948/1955): Maße aus dem goldenen Schnitt, rote Reihe 1130 mm · φⁿ, blaue Reihe doppelt so groß. Er entwirft für einen Mann von ${nf0.format(Core.MOD_H)} mm – heute etwa P${nf0.format(P_MOD)} der Männer, ${pc(Core.cdf('stature', { ...POP(), shoe: 0 }, Core.MOD_H))} der gewählten Nutzer sind kleiner. „Modulor“ in der Seitenansicht blendet die Reihen ein.`;
 }

@@ -61,9 +61,9 @@ const loop = (bat, part, extra = []) => ({ parts: [{ t: 'bat', x: 0, y: 0, r: 0,
 // Urteile
 { const m = { parts: [{ t: 'bat', x: 0, y: 0, r: 0, cell: 'e9v' }, { t: 'r', x: 0, y: 2, r: 0, R: 330, Pn: 0.25 }, { t: 'led', x: 2, y: 2, r: 0, col: 'rot' }], wires: [[0, 0, 0, 2], [4, 2, 4, 0], [4, 0, 2, 0]] };
   const a = Core.analyze(m); ok('9 V + 330 Ω + rote LED: ≈ 20 mA, passt', a.issues.length === 0 && Math.abs(a.parts[2].I - 0.0205) < 0.001);
-  check('Nennabschätzung 9-V-Block = C/I', a.hNom, 0.55 / a.parts[0].I, 1e-9); ok('Laufzeit mit Entladekurve länger (Strom sinkt mit der Spannung)', a.h > a.hNom);
+  check('Nennabschätzung 9-V-Block = C/I', a.hNom, Core.CELLS.e9v.C / 1000 / a.parts[0].I, 1e-9); ok('Laufzeit mit Entladekurve länger (Strom sinkt mit der Spannung)', a.h > a.hNom);
   m.parts[1].R = 1e-3; ok('LED ohne Vorwiderstand: kritisch „brennt durch“', Core.analyze(m).issues[0][0] === 2); }
-{ const a = Core.analyze(loop({ cell: 'cr2032' }, { t: 'led', col: 'rot' })); check('CR2032 + LED direkt: Strom über Ri + Rs', a.parts[1].I, ledRef(3, 15, Core.LEDS.rot), 1e-6); ok('CR2032 + LED: Zelle überlastet (kritisch)', a.issues[0][0] === 2 && a.issues[0][2] === 0); }
+{ const a = Core.analyze(loop({ cell: 'cr2032' }, { t: 'led', col: 'rot' })); check('CR2032 + LED direkt: Strom über Ri + Rs', a.parts[1].I, ledRef(3, Core.CELLS.cr2032.Ri, Core.LEDS.rot), 1e-6); ok('CR2032 + LED: Zelle überlastet (kritisch)', a.issues[0][0] === 2 && a.issues[0][2] === 0); }
 { const a = Core.analyze(loop({ cell: 'aa', n: 2 }, { t: 'r', R: 0.01, Pn: 0.25 })); ok('Kurzschluss 2 × AA', a.issues[0][1].startsWith('Kurzschluss')); }
 { const a = Core.analyze(loop({ cell: 'aa', n: 1 }, { t: 'lamp', Un: 6, Pn: 3 })); ok('6-V-Lampe an 1,5 V glimmt', /glimmt/.test(a.issues[0][1])); }
 { const m = loop({ cell: 'aa', n: 2 }, { t: 'lamp', Un: 2.5, Pn: 0.75 }); m.soll = 10; const a = Core.analyze(m); ok('Taschenlampe: Soll 10 h nicht erreicht', a.issues.some(i => /Soll/.test(i[1]))); }
@@ -158,7 +158,7 @@ const regM = rt => (m => (m.wires = Core.tidy(m), m))({ parts: [{ t: 'bat', x: 0
   const a = Core.analyze(m); check('Raspberry Pi ohne Schlafmodus: Profil ändert nichts', a.h, a.h0, 1e-6); }
 { const m = { parts: [{ t: 'bat', x: 0, y: 0, r: 0, cell: 'e9v' }, { t: 'r', x: 0, y: 2, r: 0, R: 330, Pn: 0.25 }, { t: 'led', x: 2, y: 2, r: 0, col: 'rot' }], wires: [[0, 0, 0, 2], [4, 2, 4, 0], [4, 0, 2, 0]] };
   const a = Core.analyze(m), o = a.parts[1]; check('Widerstand: ΔT = P · 100 K / Nennleistung', o.dT, o.I * o.I * 330 * 100 / 0.25, 1e-9); ok('wärmste Stelle = Widerstand', a.hot.i === 1 && Math.abs(a.hot.T - 25 - o.dT) < 1e-9); }
-{ const a = Core.analyze(regM('l7805')); check('7805: ΔT = Verlust · 65 K/W', a.parts[1].dT, a.parts[1].P * 65, 1e-9); }
+{ const a = Core.analyze(regM('l7805')); check('7805: ΔT = Verlust · 50 K/W (ST, TO-220)', a.parts[1].dT, a.parts[1].P * 50, 1e-9); }
 
 // ---- Entladekurve, Kapazität nach Strom, Selbstentladung (Laufzeit) ----
 // Widerstand an AA: I(q) = U·f(q)/(R + Ri); f stückweise linear → t = ∫ C dq / I geschlossen (Logarithmus), unter I0 ohne Abschlag
@@ -166,7 +166,7 @@ const regM = rt => (m => (m.wires = Core.tidy(m), m))({ parts: [{ t: 'bat', x: 0
   let t = 0; for (let i = 1; i < d.length; i++) { const [q0, f0] = d[i - 1], [q1, f1] = d[i], k = (f1 - f0) / (q1 - q0); t += (R + c.Ri) * c.C / 1000 / c.U * Math.log(f1 / f0) / k; }
   t = t / (1 + c.sd * c.C / 1000 * (R + c.Ri) / (0.8 * c.U)); // Selbstentladung grob (≈ 1e-5): eigene Stufenrechnung prüft das genauer
   check('AA + 100 Ω: Laufzeit = ∫ C dq / I(q) (Mittelpunktregel, 11 Stufen)', a.h, t, 0.01); ok('… kein Ausfallgrund (Widerstand)', !a.why); }
-{ const c = Core.CELLS.aa; check('Kapazität bei 0,5 A = C·(I0/I)^0,2', Core.capAt(c, 0.5), 2.5 * Math.pow(0.025 / 0.5, 0.2), 1e-9); check('… unter I0 volle Kapazität', Core.capAt(c, 0.01), 2.5, 1e-12); }
+{ const c = Core.CELLS.aa; check('Kapazität bei 0,5 A = C·(I0/I)^k', Core.capAt(c, 0.5), 2.5 * Math.pow(0.05 / 0.5, 0.31), 1e-9); check('AA bei 1 A ≈ 1 Ah (Messung 0,8–1,2 Ah, PowerStream)', Core.capAt(c, 1), 1.0, 0.2); check('AA bei 100 mA ≈ 2,1 Ah (Messung 2,1–2,2 Ah)', Core.capAt(c, 0.1), 2.15, 0.08); check('… unter I0 volle Kapazität', Core.capAt(c, 0.01), 2.5, 1e-12); }
 { const m = { parts: [{ t: 'bat', x: 0, y: 2, r: 1, cell: 'pbank', n: 1 }, { t: 'mcu', x: 3, y: 2, r: 0, board: 'pi4', hi: false }], wires: [[0, 2, 3, 2], [0, 4, 3, 4]] }, a = Core.analyze(m), c = Core.CELLS.pbank;
   check('Powerbank (geregelt, k = 0): t = C / (I + Selbstentladung)', a.h, c.C / 1000 / (a.parts[0].I + c.sd * c.C / 1000), 1e-6); }
 { const m = { parts: [{ t: 'bat', x: 0, y: 2, r: 1, cell: 'pbank', n: 1 }, { t: 'mcu', x: 3, y: 2, r: 0, board: 'nano', hi: false }], wires: [[0, 2, 3, 2], [0, 4, 3, 4]] };

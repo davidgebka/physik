@@ -37,7 +37,7 @@ Vom Modul-Chat gepflegt (Branch `modul/ergonomie`). Verbindliche Konventionen st
 | Arbeitshöhe stehend | Ellenbogen − Fläche: fein −100…−50, leicht 100…150, schwer 150…400 mm, je ±25 mm | Grandjean, Physiologische Arbeitsgestaltung; Toleranz Heuristik |
 | Oberes Fach | Reichweite ≥ Fach + 50 mm (+150 mm über Arbeitsplatte) | Heuristik |
 | Kopffreiheit | Körperhöhe + Schuh ≤ Höhe | geometrisch |
-| Griffdurchmesser (Kraftgriff) | Optimum 19,7 % der Handlänge, passt bei ±5 mm | Edgren, Radwin, Irwin 2004; Toleranz Heuristik |
+| Griffdurchmesser (Kraftgriff) | Optimum 19,7 % der Handlänge, passt bei ±5 mm | Kong & Lowe 2005 (größter Komfort; vorher fälschlich Edgren u. a. 2004 zugeschrieben); Toleranz Heuristik |
 | Griffbreite (ganze Hand) | lichte Weite ≥ Handbreite + 25 mm | Heuristik |
 | Gültigkeitswächter | Sitz − Fußstütze < 380 mm → höchstens knapp | Regeln gelten für aufrechtes Sitzen |
 
@@ -46,7 +46,7 @@ Vom Modul-Chat gepflegt (Branch `modul/ergonomie`). Verbindliche Konventionen st
   - *Sitzhöhen* (15): Schulstuhl DIN EN 1729 Größe 6/7, Bürostuhl DIN EN 1335, Esstischstuhl, Designklassiker, WC, WC barrierefrei, Bettkante, Sofa, Barhocker. „Laden“ übernimmt die Höhe in die Seitenansicht.
   - *Griffe* (8): Handlauf DIN 18040, Fahrradgriff, Hammerstiel, Türdrücker, Kugelschreiber, Bügelgriffe 96/128/160 mm.
   - *Höhen im Raum* (10): Schreibtisch, Arbeitsplatte, Theke, Türdrücker, Lichtschalter, Steckdose, Oberschrank, Garderobe, Tür, Treppe.
-- Kern: `gripDia` (Kraftgriff-Optimum nach Edgren u. a. 2004) und `gripWidth`; Richtwert „Griffdurchmesser“ berechnet statt fest.
+- Kern: `gripDia` (Kraftgriff-Optimum nach Kong & Lowe 2005) und `gripWidth`; Richtwert „Griffdurchmesser“ berechnet statt fest.
 - Daten: Abgleich ISO 14738 als Test, Hüftbreite korrigiert (siehe Rechenkern).
 - Telefon: Referenzzeilen als Block (Name · Anteil · Laden, darunter Maß und Hinweis). Browser 1280/390 px, Konsole fehlerfrei.
 
@@ -58,6 +58,9 @@ Vom Modul-Chat gepflegt (Branch `modul/ergonomie`). Verbindliche Konventionen st
 - Seitenansicht: Schalter „Modulor“ blendet beide Reihen ab 200 mm ein (Modulfarbe `--ergo`: rot durchgezogen, blau gestrichelt – keine eigenen Farben); Griffe rasten dann auf Modulor-Maße ein. Figur „Modulor-Mann“: 1829 mm ≈ P89 der Männer, Typfigur auf diesem Perzentil (eigene Figur, nicht Le Corbusiers Zeichnung – urheberrechtlich geschützt).
 - Referenzen, Reiter „Modulor“: 27 · 43 · 70 · 86 · 113 · 140 · 183 · 226 gegen heutige Nutzer geprüft, „Laden“ übernimmt sie in die Seitenansicht. Ergebnis gemischt mit Schuhen: Sitz 43 und Tisch 70 passen gut (66 % / 90 %), Ablage 86 ist zu niedrig (16 %), Griff 226 erreichen 1 %.
 - Export/Link: `mod`, `sex: "mod"`.
+
+## Werte-Audit (22.11.2026, zentraler Chat)
+- Körperhöhe P5/P50/P95 bestätigt (DIN 33402-2: ♀ 1535/1625/1720, ♂ 1650/1750/1855). Arbeitshöhen nach Grandjean bestätigt (Sekundärquellen; leichte und schwere Arbeit streuen zwischen Quellen). Sitzhöhen-/Sitztiefenregel nach Parcells u. a. 1999 bzw. Gouvali & Boudolos bestätigt. **Korrigiert:** Der Griffdurchmesser 19,7 % der Handlänge stammt von Kong & Lowe 2005 und ist das Komfort-Optimum, nicht die größte Greifkraft (vorher Edgren u. a. 2004 zugeschrieben); Texte angepasst. Übrige Körpermaße weiter nicht gegen DIN 33402-2:2020 geprüft (Norm kostenpflichtig).
 
 ## Offen (Vorschläge)
 - Daten gegen DIN 33402-2:2020 abgleichen, Altersgruppen (über 65), Kinder (DIN EN 1729 Größenklassen).

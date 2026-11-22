@@ -40,6 +40,9 @@ Verbindliche Konventionen stehen in `docs/konzept.md`.
 - Datensatz ist Quelle für `shared/materials.js` (Schlüssel, Name, Kategorie; `tools/test.js` prüft die Übereinstimmung).
 - **103 Materialien:** neu Stahlblech DC01, Aluminium 5754, Aluminium 6061 (Grundwerkstoffe für Fertigung), Werte nach EN 10130, EN 485-2, EN 573-3 – **nicht gegen externe Quellen abgeglichen** (kein `chk`, in der Karte als ungeprüft markiert). test.js: 103 Materialien.
 
+## v0.6 (22.11.2026, zentraler Chat, Werte-Audit)
+- Sieben bisher ungeprüfte Werkstoffe belegt und teils korrigiert (`chk`): HDF E 3000–5000 (vorher ab 3500; Pfleiderer, Kastamonu), PTFE λ 0,20–0,26 (Röchling, Curbell), Aluminium-Druckguss λ 100–150 (AlSi9Cu3 100–120), Glasfaserbeton Dichte 1900–2100, E 10–20 GPa, f 10–30 (vorher 2000–2300, 15–30 GPa, 10–25), Steinzeug λ 0,8–1,3 (vorher 1–1,6), OSB (EN 300 OSB/3: f 18–22, E 3500) und Cortenstahl (S355J2W) bestätigt. Weiter ungeprüft: S235, DC01, Alu 5754/6061, PU-Schäume, Steingut, Papier, Karton, Wellpappe, Leder, Wollfilz, Tischlerplatte; Preise und CO₂.
+
 ## Urteilsschwellen (Herkunft)
 - passt, wenn kein Material das Ziel um mehr als Faktor 1,5 besser erreicht; sonst knapp mit dem besten Material und Ersparnis in % (Heuristik).
 - Berührgefühl: ≥ 28 °C „warm“, 24–28 °C „neutral bis kühl“, < 24 °C „kalt“ (Heuristik); Haut 33 °C, b_Haut = 1000 W·s½/(m²·K) (Literatur etwa 1000–1500).
