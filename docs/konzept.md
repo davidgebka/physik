@@ -1,4 +1,3 @@
-| Fertigung | `fertigung` | v1.3 | Lässt sich das so herstellen und verbinden, wie ich es gezeichnet habe? |
 # Designphysik – Konzept, Architektur, Konventionen
 
 Zentrales Dokument, kurz gehalten. Jede Sitzung liest es zuerst (siehe `CLAUDE.md`). Hier stehen nur Ziel, Regeln und Planung; Modulstände in `docs/<modul>.md`, Integrations-Historie in `docs/historie.md`.
@@ -58,12 +57,13 @@ Bei Zielkonflikten entscheidet A.
 | Modul | Key | Stand | Entwurfsfrage |
 |---|---|---|---|
 | Gefäß | `gefaess` | v1.19 | Wie viel passt rein, wo sind Eichstriche, wann gießt es aus, kippt es um, schwappt es beim Tragen über? |
-| Licht | `licht` | v2.11 | Wie verteilt der Schirm das Licht, wird der Tisch hell genug, blendet es? |
-| Statik | `last` | v1.12 | Hält das Brett/der Balken, wie stark hängt es durch, schwingt es? |
+| Licht | `licht` | v2.12 | Wie verteilt der Schirm das Licht, wird der Tisch hell genug, blendet es? |
+| Statik | `last` | v1.13 | Hält das Brett/der Balken, wie stark hängt es durch, schwingt es? |
 | Mechanik | `mechanismus` | v1.9 | Wie bewegt sich das Getriebe, wo klemmt es, welche Kraft braucht es? |
-| Elektronik | `elektronik` | v3.3 | Hält der Akku lange genug, reicht der Strom, wird etwas zu heiß? |
-| Material | `material` | v0.5 | Welches Material macht das Brett, den Balken, den Stab leichter, günstiger, klimafreundlicher, und wie fühlt es sich an? |
+| Elektronik | `elektronik` | v3.4 | Hält der Akku lange genug, reicht der Strom, wird etwas zu heiß? |
+| Material | `material` | v0.6 | Welches Material macht das Brett, den Balken, den Stab leichter, günstiger, klimafreundlicher, und wie fühlt es sich an? |
 | Ergonomie | `ergonomie` | v1.3 | Für wie viele Menschen passt Sitz, Tisch, Arbeitsfläche, Fach oder Durchgang – fest oder verstellbar? |
+| Fertigung | `fertigung` | v1.3 | Lässt sich das so herstellen und verbinden, wie ich es gezeichnet habe? |
 
 ## Roadmap (21.11.2026, nach Persona A)
 **Moratorium auf Tiefe:** In Gefäß und Licht keine neuen Physik-Verfeinerungen, bis die Punkte „Jetzt“ erledigt sind. Fehlerbehebungen und Bedienung gehen immer.

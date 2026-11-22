@@ -105,3 +105,6 @@ Faustregeln für Luftbiegen auf der Abkantbank und für Standardgewinde; keine B
 3. Vorlagen-Galerie, Rückgängig, Stand merken (`dpGallery`, `dpHistory`, `dpCompare`).
 4. Editor direkt: Schenkel ziehen, Löcher auf der Abwicklung setzen und gegen die Sperrzone prüfen; Winkel je Biegung.
 5. Weitere Werkzeuge nach Prüffrage (Holz verschrauben, Schneiden, Passungen, 3D-Druck, Spritzguss).
+
+## Werte-Audit (22.11.2026, zentraler Chat)
+- Bestätigt: Senkungen ISO 15065 (M3 6,3 … M10 20), Kernlöcher DIN 336, Durchgangslöcher ISO 273, Steigungen DIN 13, k-Faktor DIN 6935, Einpressmutter M3 ab 0,8 mm (PEM). Nicht belegt (bleiben Heuristik): Einschraubtiefen je Werkstoff, Mindestbiegeradien, Rückfederung, Einpressmutter M6–M12. Keine Wertänderung.

@@ -190,3 +190,101 @@ Alle Befunde A und B wurden bearbeitet; jede Kernänderung hat neue analytische 
 - Gültigkeitswächter und Schwellen mit Herkunft sind als Regel in `konzept.md` eingetragen.
 - Jedes `docs/<modul>.md` hat jetzt eine Liste „Urteilsschwellen (Herkunft)“.
 - Der Realitätscheck bleibt offen (Roadmap 7); er braucht Messungen.
+
+---
+
+# Teil 2: Werte-Audit (22.11.2026)
+
+Auftrag: alle Werte und Annahmen prüfen und wenn nötig korrigieren. Geprüft wurden die Datentabellen und Urteilsschwellen aller acht Module. Dafür liefen rund 35 Websuchen gegen Normen (über Herstellerblätter und Sekundärquellen, weil die Normtexte kostenpflichtig sind), Datenblätter und veröffentlichte Messungen. Seiten direkt abrufen war in dieser Umgebung gesperrt; belegt ist deshalb nur, was die Suchergebnisse zitieren. Werte, die ich als gesichertes Normwissen kenne (EN 338 C24, DIN 13, DIN 336, ISO 273, Dichten von Glas und Stahl), habe ich nicht eigens nachgeschlagen.
+
+## Korrigiert
+
+| Modul | Wert | vorher → jetzt | Beleg |
+|---|---|---|---|
+| Statik | Sicherheit Dauerlast `Sp` | ohne Lastfaktor → mit γG = 1,35: Holz/Sperrholz – → 2,9, Spanplatte 4,3 → 5,9, MDF 6,5 → 8,8 | EN 1995 k_mod (ständig 0,6/0,3/0,2), γM 1,3. **Fehler aus Teil 1:** Ich hatte γM/k_mod ohne Lastfaktor angesetzt |
+| Statik | Glas `Sp` 7 | Wert bleibt, Herleitung korrigiert | DIN 18008: k_mod 0,25, k_c 1,8 (nicht vorgespannt), Kante 80 %, γM 1,8 → 1,35 · 45/9 = 6,8 |
+| Statik | Buche D40 ρmean | 700 → 660 kg/m³ | EN 338:2016 (Blueprints-Doku) |
+| Statik | Schub fv D30/D40 | 4,0 → 3,0 / 3,8 | EN 338:2003. Die Werte der Ausgabe 2016 ließen sich nicht frei prüfen; der ältere, kleinere Wert liegt auf der sicheren Seite |
+| Statik | PA6 GF30 konditioniert E | 6500 → 6000 | BASF Ultramid B3EG6: 5650–6300 MPa |
+| Elektronik | AA-Alkali, Kapazität nach Strom | I0 25 mA, k 0,2 → I0 50 mA, k 0,31 | PowerStream: 100 mA 2,1–2,2 Ah, 1 A 0,8–1,2 Ah. Vorher bei 1 A 1,2 Ah (zu optimistisch) |
+| Elektronik | 9-V-Block | 550 mAh bei 10 mA → 600 mAh bei 25 mA | Energizer 522: 595–625 mAh bei 25 mA |
+| Elektronik | CR2032 Innenwiderstand | 15 → 20 Ω | Duracell: 20 Ω bei 1 kHz, 3 mA Dauerstrom |
+| Elektronik | 7805 Wärmewiderstand | 65 → 50 K/W | ST L78-Datenblatt, TO-220 |
+| Elektronik | Lastspitze Pi 4 / Pi 5 / Zero 2 W | 1,2 / 1,6 / 0,35 → 1,3 / 1,8 / 0,3 A | PiDramble (Pi 4: 1,28 A), Pi 5 bis 8,8 W, Zero 2 W 1,2 W |
+| Elektronik | Powerbank-Abschaltung | 80 mA, „50–100 mA“ → 100 mA, „50–200 mA“ | Nutzerberichte und Foren |
+| Licht | Aluminium gebürstet | 30 % gestreut + 26 % gespiegelt → 49 % + 7 % | IES-Tabelle (UNCG): ρ 55–58 %, gestreute Reflexion mit 5–10 % gerichtetem Anteil |
+| Licht | Spiegel, Spanne im Text | 75–95 % → 80–99 % | IES-Tabelle (UNCG) |
+| Material | HDF E | 3500–5000 → 3000–5000 | Pfleiderer, Kastamonu |
+| Material | PTFE λ | 0,24–0,26 → 0,20–0,26 | Röchling, Curbell |
+| Material | Alu-Druckguss λ | 120–150 → 100–150 | AlSi9Cu3: 100–120 |
+| Material | Glasfaserbeton | ρ 2000–2300, E 15–30 GPa, f 10–25 → 1900–2100, 10–20 GPa, 10–30 | GRCA-Werte (Wikipedia-Tabelle) |
+| Material | Steinzeug λ | 1–1,6 → 0,8–1,3 | Deutsche Steinzeug (Fliesen) |
+| Ergonomie | Griff 19,7 % der Handlänge | „größte Greifkraft, Edgren u. a. 2004“ → „Komfort-Optimum, Kong & Lowe 2005“ | Kong & Lowe 2005; Edgren u. a. 2004 nennt kein Prozent-Optimum |
+| Mechanik | μ ≥ 40° | „VDI 2727“ → Richtwert der Getriebelehre | In VDI 2727 nicht als Grenzwert gefunden. **Fehler aus Teil 1:** falsche Quellenangabe |
+| Konzept | Modultabelle | Zeile „Fertigung“ stand in Zeile 1 | Merge-Fehler, verschoben |
+
+**Wirkung auf die Vorlagen:**
+- Statik: Urteile unverändert.
+- Elektronik: Laufzeiten verschoben; LED am 9-V-Block 31 → 38 h, Uno 3,9 → 5,3 h. Urteilsstufen unverändert.
+- Licht: Golden Bell 36 → 32 %, ohne Lampenbild; Tiefstrahler 14 → 11 %. Urteilsstufen unverändert.
+
+## Bestätigt
+
+- **Statik:** EN 312 P2 (13–20 mm): f 11, E 1600 · EN 622-5 MDF (12–19 mm): f 20, E 2200 · DIN 18008: k_mod und k_c · EN 338:2016 D40: fm 40, E 13 000.
+- **Elektronik:**
+  - IRLZ44N: 22 / 25 / 35 mΩ bei 10 / 5 / 4 V, V_th 1–2 V.
+  - AMS1117: Dropout 1,1 V typisch (1,3 V max.), 15 V, θJA 90.
+  - ESP32-Spitze ≈ 350 mA; Espressif empfiehlt ≥ 500 mA Versorgung.
+  - Pi 4 im Leerlauf 0,54 A.
+  - Selbstentladung: NiMH 20–30 %/Monat, Li-Ion 2–3 %/Monat, Alkali 2–3 %/Jahr.
+  - Berührgrenze Metall (EN ISO 13732-1): 0,5 s 67–73 °C, 1 min 51 °C.
+- **Licht:** Opalglas τ 30–65 % · weiß lackiert 75–90 % · Klarglas 80–90 % · Abschirmtabelle EN 12464-1 (15° / 20° / 30°).
+- **Ergonomie:** Körperhöhen DIN 33402-2 · Arbeitshöhen nach Grandjean (Sekundärquellen) · Sitzregeln nach Parcells u. a. 1999.
+- **Fertigung:** ISO 15065 · DIN 336 · ISO 273 · DIN 13 · DIN 6935 · Einpressmutter M3 ab 0,8 mm.
+- **Material:** OSB/3 (EN 300: f 18–22, E 3500) · S355J2W.
+
+## Nicht belegbar (bleiben gekennzeichnete Richtwerte oder Heuristiken)
+
+- **Statik:** fv der EN 338:2016 · Multiplex Birke (Herstellerwerte nicht frei auffindbar).
+- **Elektronik:** genaue Form der Entladekurven · Wärmewiderstände von LEDs (Datenblätter nennen Sperrschicht → Pin 240–260 K/W; zur Luft hängt es von der Platine ab).
+- **Licht:**
+  - Papier, Stoff, Filz, halbopaker Kunststoff (keine Messdaten).
+  - Lampenleuchtdichten: Die Quellen streuen um eine Größenordnung (klare Glühlampe 5·10⁴ bis 10⁷ cd/m²). Die Schwellen ändern sich dadurch nicht, weil alle Werte in derselben Tabellenstufe bzw. über 20 000 cd/m² liegen.
+- **Gefäß:** Gang (1,8 Hz, ±10 mm) und Anhalten (1,4 m/s in 0,3 s). Mayer & Krechetnikov 2012 bestätigen nur qualitativ, dass Schritt- und Schwappfrequenz nahe beieinanderliegen.
+- **Mechanik:** Reibwert 0,2 (Tabellen: Stahl/Stahl 0,1–0,2).
+- **Fertigung:** Einschraubtiefen, Mindestbiegeradien, Rückfederung, Einpressmutter M6–M12.
+- **Ergonomie:** übrige Körpermaße gegen DIN 33402-2:2020 (die Norm ist kostenpflichtig).
+- **Material:** zwölf Werkstoffe weiter ohne Beleg; Preise und CO₂ allgemein.
+
+## Quellen (Auswahl)
+
+- **Statik:**
+  - [Swiss Krono P2](https://www.swisskrono.com/fileadmin/esign/SWISSSPAN-P2_ProductDatasheet_10173_EN_352799.pdf)
+  - [Swiss Krono MDF](https://www.swisskrono.com/pl-en/products/interiors/mdf-boards/technical-data/)
+  - [Blueprints EN 338:2016 Tab. 3](https://blueprints.readthedocs.io/en/stable/API%20reference/codes/eurocode/en_338_2016/chapter_5_classification_of_structural_timber/table_3/)
+  - [BS EN 338:2003](http://higiene.unex.es/Bibliogr/ISO_BS_USDA/ISO_BS/BS%20EN/BS%20EN%2000338-2003.pdf)
+  - [Leitfaden Glas im Bauwesen (DIN 18008)](https://glasstatik-hamm.de/wp-content/uploads/2021/06/Leitfaden-mit-GrafikenTabellen-stand-24.06.2021.pdf)
+  - [BASF Ultramid B3EG6](https://download.basf.com/p1/8a8081c57fd4b609017fd640cfa907fa/en/ULTRAMID%25C2%25AE_B3EG6)
+- **Elektronik:**
+  - [PowerStream AA-Tests](https://powerstream.com/AA-tests.htm)
+  - [Energizer 522](https://www-users.cs.york.ac.uk/~mjf/zergling/Datasheet/E522.pdf)
+  - [Duracell CR2032](https://www.duracell.com/wp-content/uploads/2021/06/CR2032CH_225mAh.pdf)
+  - [ST L7805](https://html.alldatasheet.com/html-pdf/555057/STMICROELECTRONICS/L7805/13630/7/L7805.html)
+  - [AMS1117](https://files.waveshare.com/upload/b/b8/AMS1117-datasheet.pdf)
+  - [Infineon IRLZ44N](https://www.infineon.com/assets/row/public/documents/24/49/infineon-irlz44npbf-datasheet-en.pdf)
+  - [PiDramble Leistungsaufnahme](https://pidramble.com/node/27)
+  - [ESP32-Lastspitzen (esp32.com)](https://esp32.com/viewtopic.php?p=13058)
+  - [Selbstentladung (Battery University)](https://batteryuniversity.com/article/elevating-self-discharge)
+  - [KomNet zu EN ISO 13732-1](https://www.komnet.nrw.de/_sitetools/dialog/4587)
+- **Licht:**
+  - [UNCG eLight Materialtabelle](https://iarc.uncg.edu/elight/learn/determine/lc_sub/mat_prop.html)
+  - [Fagerhult zu EN 12464-1](https://www.fagerhult.com/knowledge/light-planning/en-12464-1/glare/vision-impairment-glare/)
+- **Ergonomie:**
+  - [Kong & Lowe 2005 (CDC)](https://stacks.cdc.gov/view/cdc/197408)
+  - [Edgren u. a. 2004](https://ergo.wisc.edu/wp-content/uploads/sites/901/2020/04/Edgren-et-al-2004.pdf)
+- **Fertigung:** [ISO 15065 (Auszug)](https://cdn.standards.iteh.ai/samples/37365/57c8c6dac6864ac5a6f7bfa6fdd06111/ISO-15065-2005.pdf)
+- **Material:**
+  - [Pfleiderer HDF](https://www.pfleiderer.com/file_pim/Dokumente/technical-data-decoboard-hdf-im0039694.pdf)
+  - [Röchling PTFE](https://www.roechling.com/fileadmin/assets/Fibracon%C2%AE%20PTFE%20virgin%20-%20ASTM%20%E2%80%93%20Technical%20Data%20Sheet%20(EN).pdf)
+  - [GFRC (Wikipedia)](https://en.wikipedia.org/wiki/Glass_fiber_reinforced_concrete)
+  - [Deutsche Steinzeug Güteanforderungen](https://agrob-buchtal.de/upload/media/downloads/0001/07/04e403b6f15ab6b0a307fe6d087a17698e1d1b06/Gueteanforderungen_DE_Blau.pdf)
