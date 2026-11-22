@@ -1,3 +1,4 @@
+| Fertigung | `fertigung` | v1 | Lässt sich das so herstellen und verbinden, wie ich es gezeichnet habe? |
 # Designphysik – Konzept, Architektur, Konventionen
 
 Zentrales Dokument, kurz gehalten. Jede Sitzung liest es zuerst (siehe `CLAUDE.md`). Hier stehen nur Ziel, Regeln und Planung; Modulstände in `docs/<modul>.md`, Integrations-Historie in `docs/historie.md`.
@@ -28,7 +29,7 @@ Bei Zielkonflikten entscheidet A.
 5. **`shared/` nicht selbst ändern.** Bedarf unten unter „Wünsche an shared“ eintragen; bis dahin modul-lokal lösen.
 
 ## Architekturentscheidung (19.11.2026)
-- **Kein gemeinsamer Profil-Editor.** Jedes Modul bekommt einen Editor, der zu seinem Problem passt (Licht: offene Schale + Lampe; Gefäß: geschlossener Hohlraum; Last: Querschnitt, Spannweite, Auflager, Lasten; Mechanismen: ebenes Gelenkgetriebe).
+- **Kein gemeinsamer Profil-Editor.** Jedes Modul bekommt einen Editor, der zu seinem Problem passt (Licht: offene Schale + Lampe; Gefäß: geschlossener Hohlraum; Last: Querschnitt, Spannweite, Auflager, Lasten; Mechanismen: ebenes Gelenkgetriebe; Ergonomie: Seitenansicht mit Figur und wenigen Produktmaßen).
 - **Gemeinsam ist, was die Zusammenführung billig macht:** Einheiten, Look & Feel, Diagramme, Dateiformat, Dateistruktur – und künftig alles, was nur auf dem **Zustandsobjekt** arbeitet statt auf der Geometrie (Rückgängig, Vorlagen-Menü, Variantenvergleich, Urteil/Ampel; siehe Roadmap).
 - **Modulübergreifende Geometrie** (z. B. Gefäßprofil für Schwimmen/Nachtropfen, Schirm für Kühlkörper): gemeinsames Format erst festlegen, wenn der zweite Nutzer konkret entsteht – dann hier eintragen, kein drittes Profilformat erfinden.
 
@@ -49,7 +50,7 @@ Bei Zielkonflikten entscheidet A.
 - **Gültigkeitswächter** (22.11.2026, Physik-Audit): Verlässt ein Fall den Gültigkeitsbereich des Modells (z. B. hochkantes Brett → Kippen nicht gerechnet, Spiegel → Lampenbild, MOSFET unter der Datenblatt-Gate-Spannung), lautet das Urteil höchstens „knapp: …“ mit Begründung – nie „passt“.
 - **Urteilsschwellen mit Herkunft:** Jedes Modul führt in `docs/<modul>.md` eine Liste „Urteilsschwellen (Herkunft)“: Wert, Quelle (Norm, Literatur, Heuristik) und Bezug. Neue Schwellen dort eintragen; Heuristiken als solche benennen.
 - **Export:** JSON `{type:"designphysik/<modul>", version, …}`; Teilen per URL-Hash `#<kürzel>=…`
-- **Look:** Grundrichtung F „Punktraster“ (20.11.2026), verbindlich nach `docs/styleguide.md`. Farbe nur je **Physik-Familie** (`--water` Fluid, `--light` Licht, `--mech` Bewegung, reserviert `--load` Kraft & Festigkeit; jeweils `-a` für Flächen) und `--warn`. Alle Farben in style.css, Module definieren keine eigenen; Modulfarbe in `DP_MODULES[].color`. Canvas-Raster über `dpDots()`.
+- **Look:** Grundrichtung F „Punktraster“ (20.11.2026), verbindlich nach `docs/styleguide.md`. Farbe nur je **Physik-Familie** (`--water` Fluid, `--light` Licht, `--mech` Bewegung, `--load` Kraft & Festigkeit, `--elec` Elektrik, `--mat` Werkstoff; jeweils `-a` für Flächen; sechs Familien = Obergrenze) und `--warn`. Alle Farben in style.css, Module definieren keine eigenen; Modulfarbe in `DP_MODULES[].color`. Canvas-Raster über `dpDots()`.
 - **Modulgröße:** wächst ein `index.html` über ~1500 Zeilen, vor der nächsten Erweiterung Aufteilen oder eigenes Modul prüfen.
 
 ## Module (Stand 22.11.2026; Details in `docs/<modul>.md`; Spalte Modul = `name` in `DP_MODULES`)
@@ -60,6 +61,8 @@ Bei Zielkonflikten entscheidet A.
 | Statik | `last` | v1.11 | Hält das Brett/der Balken, wie stark hängt es durch, schwingt es? |
 | Mechanik | `mechanismus` | v1.9 | Wie bewegt sich das Getriebe, wo klemmt es, welche Kraft braucht es? |
 | Elektronik | `elektronik` | v3.3 | Hält der Akku lange genug, reicht der Strom, wird etwas zu heiß? |
+| Material | `material` | v0.4 | Welches Material macht das Brett, den Balken, den Stab leichter, günstiger, klimafreundlicher, und wie fühlt es sich an? |
+| Ergonomie | `ergonomie` | v1 | Für wie viele Menschen passt Sitz, Tisch, Arbeitsfläche, Fach oder Durchgang – fest oder verstellbar? |
 
 ## Roadmap (21.11.2026, nach Persona A)
 **Moratorium auf Tiefe:** In Gefäß und Licht keine neuen Physik-Verfeinerungen, bis die Punkte „Jetzt“ erledigt sind. Fehlerbehebungen und Bedienung gehen immer.
@@ -90,4 +93,5 @@ Bei Zielkonflikten entscheidet A.
 (Modul-Chats tragen hier ein; der zentrale Chat bzw. der Style-Chat arbeitet sie ab. Erledigtes wandert nach `docs/historie.md`.)
 
 Offen:
-- (keine)
+- **Material → andere Module** (später): Datensatz nach `shared/materials.js`, sobald ein zweites Modul ihn liest (Statik „In Statik verwenden“, Berührtemperatur, Gewicht/CO₂).
+- **Materialschlüssel in `shared/`** (Fertigung ist der zweite Nutzer nach Material): nur Schlüssel, Name, Familie, mit Werkstoffzustand im Schlüssel (z. B. `alu-6061-t6`); modulspezifische Werte bleiben im jeweiligen CORE. Mit dem Material-Chat abstimmen.

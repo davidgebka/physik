@@ -24,6 +24,9 @@ Funktioniert auch per Doppelklick auf index.html (file://).
     mechanismus/        Modul Mechanismen (+ test.js)
     last/               Modul Belastung – Balken 2D (+ test.js)
     elektronik/         Modul Einfache Schaltungen (+ test.js)
+    material/           Modul Material – Material-Karte nach Ashby (+ test.js)
+    ergonomie/          Modul Ergonomie: Körpermaße, wer passt (+ test.js)
+    fertigung/          Modul Fertigung: Biegen, Gewinde (+ test.js)
 
 ## Neues Modul
 1. _vorlage/ nach <modulkey>/ kopieren, MODULNAME/MODULKEY ersetzen
@@ -40,3 +43,6 @@ Laufen auch in der CI bei jedem Push (.github/workflows/test.yml).
     node mechanismus/test.js
     node last/test.js
     node elektronik/test.js
+    node material/test.js
+    node ergonomie/test.js
+    node fertigung/test.js
