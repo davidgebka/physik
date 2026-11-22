@@ -559,8 +559,9 @@ function drawEd() {
   // Rasterpunkte
   const [gx0, gy0] = TT.inv(0, 0), [gx1, gy1] = TT.inv(w, h);
   ctx.fillStyle = css('--dot'); ctx.beginPath();
-  const st = k >= 12 ? 1 : !dpPinching ? Math.round(DP_U / k) : k >= 8 ? 1 : k >= 4 ? 2 : 5; // klein: nur jeder 5. Schritt (= Seitenpunkt), beim Zoomen ausgedünnt (≥ 8 px)
-  for (let x = Math.ceil(gx0 / st) * st; x <= gx1; x += st) for (let y = Math.ceil(gy0 / st) * st; y <= gy1; y += st) { const [sx, sy] = T([x, y]); ctx.moveTo(sx + 1.5, sy); ctx.arc(sx, sy, 1.5, 0, 7); }
+  // Rasterschritte nur auf Seitenpunkten (k < 24: jeder 2. bzw. 5. Schritt; dazwischen liegt das helle Zwischenraster); beim Zoomen ausgedünnt (≥ 8 px)
+  const st = !dpPinching ? (k >= DP_U ? 1 : Math.round(DP_U / k)) : k >= 8 ? 1 : k >= 4 ? 2 : 5;
+  for (let x = Math.ceil(gx0 / st) * st; x <= gx1; x += st) for (let y = Math.ceil(gy0 / st) * st; y <= gy1; y += st) { const [sx, sy] = T([x, y]); if (sx < 1.5 || sy < 1.5 || sx > w - 1.5 || sy > h - 1.5) continue; ctx.moveTo(sx + 1.5, sy); ctx.arc(sx, sy, 1.5, 0, 7); }
   ctx.fill();
   ctx.lineCap = ctx.lineJoin = 'round';
   // Leitungen
@@ -612,7 +613,7 @@ function drawMulti(ctx, p, i, T, k) {
   // Beschriftung: Mikrocontroller unter, Wandler über dem Kasten, Transistor rechts daneben (Bildschirm, nicht mitgedreht)
   const pts = MBOX[p.t].map(Q), x0 = Math.min(...pts.map(q => q[0])), x1 = Math.max(...pts.map(q => q[0])), y0 = Math.min(...pts.map(q => q[1])), y1 = Math.max(...pts.map(q => q[1]));
   const rows = p.t === 'tr' && k >= 28 ? [[Core.TRANS[p.tt].n.replace(/ \(.*/, ''), '--ink2']] : [];
-  if (o) {
+  if (o && k >= DP_U) { // klein gezoomt keine Werte: 12-px-Schrift überdeckt sonst die Schaltung
     const r = p.t === 'mcu' ? fU(o.U) + ' · ' + fI(o.I) : p.t === 'reg' ? 'aus ' + fU(o.U) + ' · ' + fI(o.I) : fI(o.I) + (o.P > 0.01 ? ' · ' + fP(o.P) : '');
     rows.push([(warn ? '⚠ ' : '') + r, warn ? '--warn' : '--ink']);
     if (p.t === 'mcu' && Math.abs(o.pin) > 1e-6) rows.push(['Pin ' + fI(o.pin), '--ink']);
@@ -652,7 +653,7 @@ function drawPart(ctx, p, i, T, k) {
     if (vert) { ctx.textAlign = 'left'; ctx.fillText(t, C[0] + 0.6 * k, C[1] + side * 9); } else { ctx.textAlign = 'center'; ctx.fillText(t, C[0], C[1] + side * 0.72 * k); }
     ctx.textBaseline = 'alphabetic'; };
   ctx.font = DP_CFONT; if (k >= 28) lab(pv(p, true), -1, css('--ink2')); // eng (Telefon): nur Ergebnisse, Werte in der Auswahlzeile
-  if (o) { const r = p.t === 'bat' ? fU(o.U) + ' · ' + fI(o.I) : p.t === 'cab' ? 'ΔU ' + fU(Math.abs(o.U)) : p.t === 'sw' ? (p.on ? fI(o.I) : '') : fI(o.I) + (o.dT > 20 ? ' · ' + nf0.format(A.Tamb + o.dT) + ' °C' : '');
+  if (o && k >= DP_U) { const r = p.t === 'bat' ? fU(o.U) + ' · ' + fI(o.I) : p.t === 'cab' ? 'ΔU ' + fU(Math.abs(o.U)) : p.t === 'sw' ? (p.on ? fI(o.I) : '') : fI(o.I) + (o.dT > 20 ? ' · ' + nf0.format(A.Tamb + o.dT) + ' °C' : '');
     if (r || warn) lab((warn ? '⚠ ' : '') + r, 1, css(warn ? '--warn' : '--ink')); }
 }
 

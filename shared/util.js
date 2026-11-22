@@ -95,8 +95,9 @@ function dpSnap(cv, k, ox, oy, near, steps = DP_STEPS) {
 // Zwischenraster der Zeichenflächen: hellste Punkte (--dot-sub) auf halbem Seitenrasterabstand – macht die Zeichenfläche
 // erkennbar, ohne das durchlaufende Seitenraster zu unterbrechen
 function dpSubDots(ctx, w, h) {
-  const [px, py] = dpPhase(ctx.canvas), d = DP_U / 2, x0 = px % d, y0 = py % d; ctx.beginPath();
-  for (let x = x0, i = Math.round((x0 - px) / d); x <= w; x += d, i++) for (let y = y0, j = Math.round((y0 - py) / d); y <= h; y += d, j++) {
+  const [px, py] = dpPhase(ctx.canvas), d = DP_U / 2, e = 1.5, x0 = px % d + (px % d < e ? d : 0), y0 = py % d + (py % d < e ? d : 0); ctx.beginPath();
+  // nicht am Rand: angeschnittene Punkte zeichnen sonst eine Kante
+  for (let x = x0, i = Math.round((x0 - px) / d); x <= w - e; x += d, i++) for (let y = y0, j = Math.round((y0 - py) / d); y <= h - e; y += d, j++) {
     if (!(i & 1) && !(j & 1)) continue; // Seitenpunkte liegen schon darunter
     ctx.moveTo(x + 1, y); ctx.arc(x, y, 1, 0, 7);
   }
