@@ -501,7 +501,7 @@ function recompute(fast) {
 
 // ---- Editor-Geometrie: lokale Koordinaten X entlang des Balkens [px], Y quer (+ = Lastrichtung) ----
 function geo(w, h) {
-  const v = S.orient === 'v', k = (v ? h * 0.74 : w * 0.84) / S.L, ox = v ? w * 0.5 : w * 0.08, oy = v ? h * 0.9 : h * 0.5; // stehend: oben Platz für den Längsdruck
+  const v = S.orient === 'v', [k, ox, oy] = dpSnap(cv, (v ? h * 0.74 : w * 0.84) / S.L, v ? w * 0.5 : w * 0.08, v ? h * 0.9 : h * 0.5); // stehend: oben Platz für den Längsdruck; Raster auf das Seitenraster
   return { v, k, ox, oy, w, h,
     tf: (X, Y) => v ? [ox + Y, oy - X] : [ox + X, oy + Y],
     inv: (sx, sy) => v ? [oy - sy, sx - ox] : [sx - ox, sy - oy],
@@ -525,7 +525,7 @@ function drawEd() {
   const { ctx, w, h } = prep(cv), g = geo(w, h); UI.G = g;
   const dpr = window.devicePixelRatio || 1, loc = () => ctx.setTransform(dpr * g.m[0], dpr * g.m[1], dpr * g.m[2], dpr * g.m[3], dpr * g.m[4], dpr * g.m[5]), scr = () => ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   const f = dpDots(ctx, w, h, g.k, g.ox, g.oy), I = css('--ink'), I2 = css('--ink2'), C = css('--ctl'), th = thick(g), k = g.k, L = S.L;
-  ctx.font = DP_CFONT; ctx.fillStyle = I2; ctx.fillText(`1 Punkt = ${nf0.format(f)} mm`, 6, h - 6);
+  ctx.font = DP_CFONT; ctx.fillStyle = I2; ctx.fillText(dpScale(f), 6, h - 6);
   const sel = (t, i) => UI.sel && UI.sel.t === t && UI.sel.i === i;
   const handle = (X, Y, on) => { const s = on ? 10 : 8; loc(); ctx.fillStyle = on ? C : css('--bg'); ctx.fillRect(X - s / 2, Y - s / 2, s, s); if (!on) { ctx.strokeStyle = I; ctx.lineWidth = 1.5; ctx.strokeRect(X - s / 2, Y - s / 2, s, s); } };
   const text = (X, Y, t, al) => { scr(); const [x, y] = g.tf(X, Y); ctx.fillStyle = I2; ctx.textAlign = al || 'left'; ctx.fillText(t, x, y); ctx.textAlign = 'left'; };

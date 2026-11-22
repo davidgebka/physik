@@ -689,9 +689,10 @@ let stroke = null, drag = -1, dragSrc = false, lastTap = { t: 0, i: -1, p: -1 },
 function drawEditor() {
   if (!V) fitView();
   const { ctx, w, h } = prep(ed);
+  [V.s, V.ox, V.oy] = dpSnap(ed, V.s, V.ox, V.oy, zoomed); // Raster auf das Seitenraster (Styleguide § 2)
   const fDot = dpDots(ctx, w, h, V.s, V.ox, V.oy);
   ctx.font = DP_CFONT; ctx.fillStyle = css('--ink2'); ctx.textAlign = 'right';
-  ctx.fillText('1 Punkt = ' + nf0.format(fDot) + ' mm', w - 6, h - 6); ctx.textAlign = 'left';
+  ctx.fillText(dpScale(fDot), w - 6, h - 6); ctx.textAlign = 'left';
   ctx.setLineDash([3, 4]); ctx.strokeStyle = css('--mut'); ctx.lineWidth = 1;
   if (S.sym) { ctx.beginPath(); ctx.moveTo(V.ox + .5, 0); ctx.lineTo(V.ox + .5, h); ctx.stroke(); }
   // Tischebene

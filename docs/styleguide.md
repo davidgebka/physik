@@ -24,11 +24,12 @@ Verbindlich für Startseite und alle Module. Technische Quelle der Wahrheit ist 
 - **Erlaubte Maße:** 6 · 12 · 24 · 48 · 72 px und weitere Vielfache von 24. 6 px nur innerhalb eines Elements (Symbol–Text, Zellen-Innenabstand).
 - **Seite:** Punkte Ø 2 px in `--dot-bg` (heller als `--dot`, damit kleine Schrift darauf ruhig bleibt) im Abstand `--u` auf `--bg`, erster Punkt in der Ecke (0, 0). Das Raster liegt **überall**, auch hinter Text und Kennwerten (Entscheidung des Nutzers 21.11.2026). Kopfzeile 72 px (3 Einheiten), Seitenrand 24 px, Spaltenabstand 24 px.
 - **Schrift im Raster:** jede Textzeile 24 px hoch (auch 11–13 px Schrift); große Kennzahl 48 px.
-- **Senkrecht nur ganze Einheiten** (seit 20.11.2026): Höhen und senkrechte Abstände sind Vielfache von 24 px, auch zwischen Elementen. 12 px nur waagerecht (zwischen Gruppen einer Zeile); 6 px nur innerhalb eines Elements. Jede Oberkante liegt auf einer Punktreihe. **Ausnahme Telefon** (≤ 860 px): umgebrochene Werkzeugzeilen 12 px, sonst frisst die Leiste den Bildschirm.
+- **Senkrecht nur ganze Einheiten** (seit 20.11.2026): Höhen und senkrechte Abstände sind Vielfache von 24 px, auch zwischen Elementen. 12 px nur waagerecht (zwischen Gruppen einer Zeile); 6 px nur innerhalb eines Elements. Jede Oberkante liegt auf einer Punktreihe – auch auf dem Telefon (seit 22.11.2026 keine 12-px-Ausnahme mehr: umgebrochene Werkzeugzeilen 24 px, umbrochene Segmente mit Linien als `box-shadow`, damit sie 48 px je Zeile hoch bleiben).
 - **Linien nehmen keinen Platz ein:** Trennlinien und Zellrahmen als `box-shadow` (`inset 0 1px var(--ink)` oben), nicht als `border` – sonst wandert alles darunter je Linie 1 px aus dem Raster. `border` nur an Elementen fester Höhe (Buttons, Felder, Navigation; `box-sizing: border-box`).
 - **Zeichenflächen:** Höhe über `--ar` (Breite/Höhe) statt `aspect-ratio`, z. B. `#ed{--ar:calc(1/1.05)}`; style.css rundet die Höhe auf ein Vielfaches von 24 px ab (`round()` mit `cqw`, `.panel` ist Container). Ohne `--ar` gilt `aspect-ratio` – dann liegt alles darunter neben dem Raster.
-- **Zeichenfläche:** deckend `--bg`, eigenes Punktraster in Millimetern (§ 7). Die Seitenpunkte laufen nicht hindurch, weil Zeichenflächen zoomen.
-- Fließende Breiten (Spalten, Telefon) gehen nicht immer in ganzen Einheiten auf. Dann gilt: Höhen und senkrechte Abstände bleiben im Raster, Breiten dürfen fließen.
+- **Zeichenfläche und Diagramme:** durchsichtig, das Seitenraster läuft hindurch (Entscheidung des Nutzers 22.11.2026). Editoren legen ihr mm-Raster genau auf die Seitenpunkte (§ 7); nur während des Zoomens mit zwei Fingern deckend `--bg` mit eigenem Raster.
+- **Waagerecht durchgehend** (22.11.2026): Seitenbreite, Spalten, Kopfzeile und Startseiten-Karten (216 px) in ganzen Einheiten, die Seite links auf eine Punktspalte gerundet (`round()` in style.css); der Rest (< 24 px bzw. < 48 px bei zwei Spalten) bleibt rechts frei. Telefon: Seitenrand 12 px (`--pad`), das Raster ist dort um 12 px verschoben (`--gx`), damit die Kanten auf den Punkten liegen. Nur Breiten im Fluss (Knöpfe nach Text, Kennwert-Spalten `.sts`) dürfen neben dem Raster enden.
+- **Kein deckendes Weiß** außer bei Überlagerungen (Dialog, Menü, Kontextleiste, Telefon-Urteilsleiste): Knöpfe, Felder und Navigation sind durchsichtig, aktive Zustände behalten ihre Fläche.
 
 ## 3. Farb-Tokens (vollständige Liste)
 Nur diese Farben sind erlaubt. Module definieren **keine eigenen Farben** in `:root`; im Canvas nur über `css('--token')`.
@@ -125,7 +126,7 @@ Nur diese Farben sind erlaubt. Module definieren **keine eigenen Farben** in `:r
 - Keine Radien, keine Schatten, keine Verläufe (außer Falschfarbe und Feldbild).
 
 ## 7. Zeichenfläche (Editor-Canvas)
-- **Raster = Maßstab:** Punkte statt Linien über `dpDots(ctx, w, h, k, ox, oy)` aus `shared/util.js` (Bildschirm = `ox + x·k`, `oy − y·k`, mm). Fein alle 10 mm (Ø 2 px, `--dot`), grob alle 50 mm (Ø 3 px, `--mut`). Liegen feine Punkte enger als 8 px, wird die Stufe verfünffacht (50/250 mm …). Maßstab als Text in einer unteren Ecke: „1 Punkt = 10 mm“ (`dpDots` liefert die Stufe).
+- **Raster = Maßstab = Seitenraster** (22.11.2026): Maßstab nur in Stufen „1 Seitenpunkt (24 px) = s mm“, s = 1 · 1,5 · 2 · 2,5 · 3 · 4 · 5 · 6 · 8 × 10ⁿ; Ursprung auf einem Seitenpunkt. `dpSnap(cv, k, ox, oy, near)` rastet die Ansicht ein (Einpassen: nächstkleinere Stufe, nach Zoomen: nächstgelegene; Bildmitte bleibt), `dpDots(ctx, w, h, k, ox, oy)` zeichnet die feinen Punkte (Ø 2 px, `--dot`, etwas dunkler als die Seite – zeigt die Zeichenfläche) genau auf die Seitenpunkte, jeden 5. ab Ursprung grob (Ø 3 px, `--mut`). Maßstab als Text in einer unteren Ecke über `dpScale(s)`: „1 Punkt = 2,5 mm“. Elektronik: 1 Rasterschritt = ½, 1 oder 2 Seitenpunkte.
 - Kontur `--ink` 2 px (Hauptkörper 2,5 px); Hilfslinien und Achse `--mut` 1 px [2,4].
 - Medium: Familie, Fläche `--<familie>-a`.
 - **Griffe** (Stützpunkte): Quadrat 8 × 8 px `--bg` mit 1,5 px `--ink`; ausgewählt 10 × 10 px `--ctl` gefüllt. **Gelenke** (Mechanismen): Kreis r 5, sonst wie Griffe.
@@ -135,7 +136,7 @@ Nur diese Farben sind erlaubt. Module definieren **keine eigenen Farben** in `:r
 
 ## 8. Diagramme
 - Nur über `chart()` aus `shared/chart.js`; Seitenverhältnis `.ch` 16:8.
-- Keine Gitterlinien: Punkte `--dot` an den Tick-Kreuzungen, Achsen links und unten 1 px `--ink`, Beschriftung 11 px `--ink2`.
+- Keine Gitterlinien: das Seitenraster läuft durch den durchsichtigen Hintergrund; Achsen links und unten 1 px `--ink` mit Teilstrichen 4 px, Beschriftung 11 px `--ink2`.
 - Achsen mit Größe und Einheit: `Volumen [ml]`, `Winkel [°]`. Serien nach § 4.
 - **Legende** über `legend: [{t, color, width?, dash?}]` oben rechts im Diagramm (Strich im Muster der Serie) – nicht an die Achsenbeschriftung anhängen.
 - Linien in Zeichenflächen, die nicht selbsterklärend sind (Waagrechte, Geisterlagen), am Ende beschriften (12 px `--ink2`).
@@ -158,4 +159,5 @@ Nur diese Farben sind erlaubt. Module definieren **keine eigenen Farben** in `:r
 A Werkstattpapier · B Cargo Index · C Technische Zeichnung · D Ulmer Raster (19.–20.11.2026) · E Labor dunkel · Werkbank, Kennzahlen zuerst, Schrittfolge (Skizzen 20.11.2026).
 
 ## Offene Punkte
-- Seitenraster und Zeichenflächen-Raster decken sich nicht (Zoom). Möglich später: Maßstab in Stufen, bei denen 10 mm = 24 px × n.
+- ~~Seitenraster und Zeichenflächen-Raster decken sich nicht~~ – erledigt 22.11.2026 (Maßstabsstufen, § 7).
+- Telefon: Editor-Oberkanten liegen wegen der 12-px-Werkzeugzeilen nicht immer auf einer Punktreihe; das Canvas-Raster folgt trotzdem den Seitenpunkten (Phase aus der Lage im Dokument).

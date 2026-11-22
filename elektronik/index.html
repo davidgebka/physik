@@ -10,7 +10,7 @@
 #ed{aspect-ratio:4/3;--ar:calc(4/3);touch-action:none}
 .sel input[type=number]{width:80px}
 .sel b{font-size:14px}
-.pair{display:inline-flex;align-items:center;gap:6px;white-space:nowrap}.pair input{width:84px}
+.pair input{width:84px}
 </style>
 </head>
 <body>
@@ -541,7 +541,10 @@ function fit(reset) {
   UI.view = { x0: cx - wx / 2, x1: cx + wx / 2, y0: cy - wy / 2, y1: cy + wy / 2 };
 }
 function makeT(w, h) {
-  const v = UI.view, k = Math.min(w / (v.x1 - v.x0), h / (v.y1 - v.y0), 56), ox = w / 2 - (v.x0 + v.x1) / 2 * k, oy = h / 2 - (v.y0 + v.y1) / 2 * k;
+  const v = UI.view, k0 = Math.min(w / (v.x1 - v.x0), h / (v.y1 - v.y0), 56);
+  // Raster auf das Seitenraster: 1 Rasterschritt = ½, 1 oder 2 Seitenpunkte, Ursprung auf einem Seitenpunkt
+  const [k, ox, oy] = dpSnap(cv, k0, w / 2 - (v.x0 + v.x1) / 2 * k0, h / 2 - (v.y0 + v.y1) / 2 * k0, UI.zoomed, [1, 2, 5]);
+  if (!dpPinching) UI.view = { x0: -ox / k, x1: (w - ox) / k, y0: -oy / k, y1: (h - oy) / k }; // sichtbarer Ausschnitt, damit Zoomen ohne Sprung beginnt
   return { k, f: q => [ox + q[0] * k, oy + q[1] * k], inv: (sx, sy) => [(sx - ox) / k, (sy - oy) / k] };
 }
 
@@ -552,7 +555,7 @@ function recompute(save = true) { const n = S.wires.length; S.wires = Core.tidy(
 function drawAll() { drawEd(); renderStats(); renderSel(); }
 function drawEd() {
   const { ctx, w, h } = prep(cv), TT = makeT(w, h), T = TT.f, k = TT.k; UI.T = TT;
-  ctx.fillStyle = css('--bg'); ctx.fillRect(0, 0, w, h);
+  cv.style.background = dpPinching ? 'var(--bg)' : ''; // eingerastet durchsichtig (Seitenraster), beim Zoomen deckend
   // Rasterpunkte
   const [gx0, gy0] = TT.inv(0, 0), [gx1, gy1] = TT.inv(w, h);
   ctx.fillStyle = css('--dot'); ctx.beginPath();

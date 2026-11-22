@@ -3,7 +3,7 @@
    Farbe nur für Physik-Familien und Warnung. Module definieren keine eigenen Farben.
    Schriftstufen (§ 5): 12 Notiz/Achse · 14 Text/Bedienung · 18 Urteil/Tabellenwert · 28 Hauptkennwert. */
 :root{
-  --u:24px;--h:24px;
+  --u:24px;--h:24px;--pad:24px;--gx:0px; /* --pad Seitenrand, --gx waagerechte Lage des Seitenrasters (Telefon: Punkte auf dem 12-px-Rand) */
   --bg:#ffffff;--ink:#111111;--ink2:#4d4d4d;--mut:#767676;--dot:#c8c8c8;--dot-bg:#dcdcdc;--fill:#f0f0f0;
   --ctl:#111111;--ctl-ink:#ffffff;
   --warn:#d32f2f;--warn-a:rgba(211,47,47,.12);
@@ -19,39 +19,42 @@
 html,body{margin:0}
 /* Seitenraster überall, auch hinter Text: hell (--dot-bg), damit kleine Schrift darauf ruhig bleibt */
 body{font:14px/24px var(--font);color:var(--ink);background-color:var(--bg);
-  background-image:radial-gradient(circle,var(--dot-bg) 1px,transparent 1.5px);background-size:var(--u) var(--u);background-position:calc(var(--u)/-2) calc(var(--u)/-2)}
+  background-image:radial-gradient(circle,var(--dot-bg) 1px,transparent 1.5px);background-size:var(--u) var(--u);background-position:calc(var(--gx) - var(--u)/2) calc(var(--u)/-2)}
 :focus-visible{outline:2px solid var(--ink);outline-offset:2px}
 svg.i{width:16px;height:16px;flex:none;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;vertical-align:-3px}
 
 /* Kopfzeile: Wortmarke links, Modulnavigation rechts (das Modul steht nur einmal: aktives Segment) */
-header{display:flex;align-items:center;gap:24px;flex-wrap:wrap;min-height:72px;margin:0 24px;padding:12px 0;box-shadow:0 1px var(--ink)}
+header{display:flex;align-items:center;gap:24px;flex-wrap:wrap;min-height:72px;margin:0 var(--pad);max-width:round(down,calc(100% - 2*var(--pad)),var(--u));padding:12px 0;box-shadow:0 1px var(--ink)} /* Breite in ganzen Einheiten: rechte Kante auf dem Raster */
 header h1{font-size:14px;line-height:24px;margin:0;font-weight:700;text-transform:uppercase;letter-spacing:.12em;display:flex;align-items:center;gap:12px}
 header h1 a{color:inherit;text-decoration:none}
 header h1 small{font-weight:400;font-size:14px;letter-spacing:0;text-transform:none;color:var(--ink2)}
 .mq{display:inline-block;width:12px;height:12px;flex:none;background:var(--c,var(--ink))}
 .mq.off{background:none;border:1px solid var(--ink2);width:10px;height:10px}
 nav{display:flex;margin-left:auto}
-nav a,nav span{display:flex;align-items:center;gap:6px;height:var(--h);padding:0 12px;border:1px solid var(--ink);font-size:14px;color:var(--ink);text-decoration:none;background:var(--bg)}
+nav a,nav span{display:flex;align-items:center;gap:6px;height:var(--h);padding:0 12px;border:1px solid var(--ink);font-size:14px;color:var(--ink);text-decoration:none;background:transparent}
 nav>*+*{border-left:0}
 nav a.on{background:var(--ctl);color:var(--ctl-ink);border-color:var(--ctl)}
 nav span{color:var(--ink2)}
 
 /* Raster-Layout: Höhen und senkrechte Abstände in Vielfachen von --u (Telefon: Werkzeugzeilen 12 px).
    Linien als box-shadow statt border – sie liegen auf der Rasterkante und nehmen keinen Platz ein. */
-main{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:24px;padding:24px;max-width:1440px;margin:0 auto}
+/* Seitenbreite und Spalten in ganzen Einheiten, links auf eine Punktspalte gerundet: alle Kanten liegen auf dem Raster */
+main,.intro,.cards{width:calc(round(down,min(100%,1440px) - 2*var(--pad),var(--u)) + 2*var(--pad));margin-left:max(0px,round(down,calc((100% - 1440px)/2),var(--u)));padding-left:var(--pad);padding-right:var(--pad)}
+main{display:grid;grid-template-columns:repeat(2,round(down,calc((100% - var(--u))/2),var(--u)));gap:24px;padding-top:24px;padding-bottom:24px}
 .panel{box-shadow:inset 0 1px var(--ink);display:flex;flex-direction:column;gap:var(--u);min-width:0;container-type:inline-size}
 .panel h2{font-size:13px;line-height:24px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink);margin:0;font-weight:700}
 .panel h2 small{font-size:12px;line-height:1;font-weight:400;text-transform:none;letter-spacing:0;color:var(--ink2);margin-left:12px} /* line-height:1, sonst wird die Zeile 25 px hoch (gemischte Schriftgrößen) */
-canvas{width:100%;display:block;touch-action:none;background:var(--bg);
+canvas{width:100%;display:block;touch-action:none; /* durchsichtig: Seitenraster läuft durch (dpDots/dpSnap) */
   height:round(down,calc(100cqw / var(--ar)),var(--u))} /* mit --ar (Breite/Höhe): Höhe auf --u abgerundet; ohne --ar gilt aspect-ratio */
 .ch{aspect-ratio:16/8;--ar:2}
 .row{display:flex;gap:var(--u) 12px;flex-wrap:wrap;align-items:center}
+.pair{display:inline-flex;align-items:center;gap:6px;white-space:nowrap} /* Beschriftung + Feld in einer Zeile (sonst 25 px hoch) */
 .seg{display:inline-flex}.seg>*+*{border-left:0}
 .sep{width:0;height:var(--h)}
 
 /* Bedienelemente: Segment (.seg) = sich ausschließende Wahl, aktiv schwarz. Einzelner Schalter (.on außerhalb
    eines Segments) = Fläche --fill mit Unterstrich. Leise Aktion (.q) = ohne Rahmen. */
-button,select{font:inherit;font-size:14px;line-height:1;height:var(--h);padding:0 12px;border:1px solid var(--ink);background:var(--bg);border-radius:0;cursor:pointer;color:var(--ink);display:inline-flex;align-items:center;gap:6px}
+button,select{font:inherit;font-size:14px;line-height:1;height:var(--h);padding:0 12px;border:1px solid var(--ink);background:transparent;border-radius:0;cursor:pointer;color:var(--ink);display:inline-flex;align-items:center;gap:6px}
 select{display:inline-block}
 button:disabled{color:var(--ink2);border-color:var(--ink2);cursor:default}
 button.on{background:var(--fill);box-shadow:inset 0 -2px var(--ink)}
@@ -59,7 +62,7 @@ button.on{background:var(--fill);box-shadow:inset 0 -2px var(--ink)}
 button.q{border-color:transparent;background:transparent;padding:0 6px}
 button.q:hover:not(:disabled){box-shadow:inset 0 -1px var(--ink)}
 button.q:disabled{border-color:transparent}
-input[type=number],input[type=text]{font:inherit;font-size:14px;height:var(--h);padding:0 6px;border:1px solid var(--ink);border-radius:0;background:var(--bg);color:var(--ink);font-variant-numeric:tabular-nums}
+input[type=number],input[type=text]{font:inherit;font-size:14px;height:var(--h);padding:0 6px;border:1px solid var(--ink);border-radius:0;background:transparent;color:var(--ink);font-variant-numeric:tabular-nums}
 input[type=range]{width:100%;margin:0;height:var(--h);accent-color:var(--ctl)}
 input[type=checkbox]{accent-color:var(--ctl);margin:0}
 label.chk{font-size:14px;display:flex;gap:6px;align-items:center;color:var(--ink);min-height:var(--h)}
@@ -84,7 +87,7 @@ details>summary{font-size:14px;cursor:pointer;line-height:24px}
 .stat{box-shadow:inset 0 1px var(--ink),1px 0 var(--ink);padding:0 6px;min-width:0;display:grid;grid-row:span 3;grid-template-rows:subgrid;align-content:start}
 .stat>span:first-child{font-size:12px;line-height:24px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .stat b{display:block;font-size:28px;line-height:48px;font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.stat b small{font-size:60%;font-weight:400;margin-left:2px}
+.stat b small{font-size:60%;font-weight:400;margin-left:2px;line-height:0} /* sonst wächst die 48-px-Zeile auf 52 px */
 .stat b.txt{font-size:18px}
 .stat>span+b+span,.stat>b+span{font-size:12px;line-height:24px;color:var(--ink2)}
 .stat.warn b{color:var(--warn)}
@@ -112,13 +115,12 @@ table.kv tr.warn td:nth-child(2){color:var(--warn)}
 /* Telefon-Leiste mit dem Urteil (dpVerdict), springt zu den Kennwerten */
 #dp-bar{display:none}
 @media(max-width:860px){
-  main{grid-template-columns:1fr;padding:24px 12px}
+  :root{--pad:12px;--gx:12px}
+  main{grid-template-columns:1fr}
   .two{grid-template-columns:1fr}
-  header{margin:0 12px}
   nav{width:100%;margin-left:0}
   nav a,nav span{flex:1 1 auto;justify-content:center;padding:0 6px} /* Breite nach Namen: fünf Segmente passen auf 390 px */
-  .row{row-gap:12px}
-  .seg{flex-wrap:wrap}.seg>*+*{border-left:1px solid var(--ink)}.seg>*{margin:0 -1px -1px 0} /* lange Segmente umbrechen statt seitlich zu schieben */
+  .seg{flex-wrap:wrap}.seg>*,.seg>*+*{border:0;box-shadow:inset 1px 1px var(--ink),1px 1px var(--ink)} /* lange Segmente umbrechen statt seitlich zu schieben; Linien als Schatten, damit umbrochene Zeilen ganze Einheiten hoch bleiben */
   main>*{order:2} main>.panel:first-child{order:0} main>.kpi{order:1}
   .ico .lbl{display:none} /* nur ausgewählte leise Knöpfe (Rückgängig …) auf dem Telefon als Symbol */
   body.has-bar{padding-bottom:48px}
@@ -130,17 +132,17 @@ table.kv tr.warn td:nth-child(2){color:var(--warn)}
 @media(max-width:480px){nav:has(>:nth-child(5)) :is(a,span){font-size:12px}nav:has(>:nth-child(5)) .mq{display:none}}
 
 /* Startseite */
-.intro{max-width:1440px;margin:0 auto;padding:24px 24px 0}
+.intro{padding-top:24px}
 .intro p{margin:0;color:var(--ink2);max-width:68ch}
-.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(216px,1fr));gap:24px;padding:24px;max-width:1440px;margin:0 auto}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,216px);gap:24px;padding-top:24px;padding-bottom:24px} /* feste Breite 9 Einheiten: Kanten auf dem Raster */
+@media(max-width:480px){.cards{grid-template-columns:1fr}}
 .card{box-shadow:inset 0 1px var(--ink);padding:0 0 24px;color:var(--ink);text-decoration:none;display:flex;flex-direction:column;gap:0}
 .card:hover canvas,.card:focus-visible canvas{background:var(--fill)}
 .card canvas{height:168px;background:transparent}
-.card h3{margin:0;font-size:18px;line-height:24px;display:flex;align-items:center;gap:12px;padding-top:12px}
+.card h3{margin:0;font-size:18px;line-height:24px;display:flex;align-items:center;gap:12px;padding-top:0} /* Karte in ganzen Einheiten hoch */
 .card p{margin:0;color:var(--ink2);font-size:14px}
 .card.off{color:var(--ink2);pointer-events:none}
 .badge{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink2)}
-@media(max-width:860px){.intro{padding:24px 12px 0}.cards{padding:24px 12px}}
 
 /* Vorlagen-Galerie (dpGallery): Dialog über der Seite, Karten im 24-px-Raster, Skizze 96 px */
 dialog.gal{width:min(1008px,calc(100vw - 24px));max-height:calc(100vh - 48px);padding:0 24px 24px;border:1px solid var(--ink);border-radius:0;background:var(--bg);color:var(--ink)}
@@ -157,7 +159,7 @@ dialog.gal::backdrop{background:rgba(17,17,17,.4)}
 @media(max-width:860px){dialog.gal{padding:0 12px 24px}}
 
 /* Überlaufmenü (dpMenu): Nebenaktionen auf dem Telefon hinter „⋯“ */
-.menu{position:relative}
+.menu{position:relative;display:flex} /* sonst Zeilenkasten um die Schaltfläche: 27 statt 24 px */
 .menu>summary{list-style:none;display:inline-flex;align-items:center;height:var(--h);padding:0 12px;border:1px solid var(--ink)}
 .menu>summary::-webkit-details-marker{display:none}
 .menu[open]>div{position:absolute;right:0;top:calc(var(--h) + 6px);z-index:4;background:var(--bg);border:1px solid var(--ink);display:flex;flex-direction:column;align-items:stretch;min-width:192px;padding:6px 0}
